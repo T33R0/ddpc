@@ -71,6 +71,22 @@
   padding: 10px 15px;
   border-radius: 5px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addToGarageButton:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.addToGarageButton:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.addedButton {
+  background-color: #28a745 !important;
+  color: white;
 }
 
 .tabContainer {

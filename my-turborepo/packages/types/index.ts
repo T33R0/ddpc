@@ -74,7 +74,7 @@ export interface Vehicle {
   warranty_rust?: string;
   source_json?: string;
   source_url?: string;
-  imageUrl?: string;
+  image_url?: string;
   review?: string;
   pros?: string;
   cons?: string;

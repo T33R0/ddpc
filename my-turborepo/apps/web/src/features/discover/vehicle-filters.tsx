@@ -3,7 +3,7 @@
 import React from 'react';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
 import { Button } from '@repo/ui/button';
-import { mockVehicles } from '../../lib/mock-data';
+import type { Vehicle } from '@repo/types';
 
 export type FilterState = {
   minYear: number | null;
@@ -20,21 +20,22 @@ export type FilterState = {
 type VehicleFiltersProps = {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
+  vehicles: Vehicle[];
 };
 
-export function VehicleFilters({ filters, onFilterChange }: VehicleFiltersProps) {
+export function VehicleFilters({ filters, onFilterChange, vehicles }: VehicleFiltersProps) {
   const handleValueChange = (key: keyof FilterState) => (value: string | number | null) => {
     onFilterChange({ ...filters, [key]: value });
   };
 
-  const years = Array.from(new Set(mockVehicles.map(v => parseInt(v.year, 10)))).sort((a, b) => b - a);
-  const makes = Array.from(new Set(mockVehicles.map(v => v.make))).sort();
-  const models = Array.from(new Set(mockVehicles.filter(v => !filters.make || v.make === filters.make).map(v => v.model))).sort();
-  const engineTypes = Array.from(new Set(mockVehicles.map(v => v.engine_type).filter(Boolean))).sort() as string[];
-  const fuelTypes = Array.from(new Set(mockVehicles.map(v => v.fuel_type).filter(Boolean))).sort() as string[];
-  const drivetrains = Array.from(new Set(mockVehicles.map(v => v.drive_type).filter(Boolean))).sort() as string[];
-  const doors = Array.from(new Set(mockVehicles.map(v => v.doors).filter(Boolean))).sort() as string[];
-  const vehicleTypes = Array.from(new Set(mockVehicles.map(v => v.car_classification).filter(Boolean))).sort() as string[];
+  const years = Array.from(new Set(vehicles.map(v => parseInt(v.year, 10)))).sort((a, b) => b - a);
+  const makes = Array.from(new Set(vehicles.map(v => v.make))).sort();
+  const models = Array.from(new Set(vehicles.filter(v => !filters.make || v.make === filters.make).map(v => v.model))).sort();
+  const engineTypes = Array.from(new Set(vehicles.map(v => v.cylinders?.toString()).filter(Boolean))).sort() as string[];
+  const fuelTypes = Array.from(new Set(vehicles.map(v => v.fuel_type).filter(Boolean))).sort() as string[];
+  const drivetrains = Array.from(new Set(vehicles.map(v => v.drive_type).filter(Boolean))).sort() as string[];
+  const doors = Array.from(new Set(vehicles.map(v => v.body_type).filter(Boolean))).sort() as string[];
+  const vehicleTypes = Array.from(new Set(vehicles.map(v => v.body_type).filter(Boolean))).sort() as string[];
 
   return (
     <div className="flex flex-wrap items-center gap-4 mb-8">
