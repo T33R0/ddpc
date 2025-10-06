@@ -9,6 +9,7 @@ interface UserVehicle extends Vehicle {
   current_status: string;
   nickname?: string;
   title?: string;
+  garage_id: string;
 }
 
 type VehicleGalleryProps = {
