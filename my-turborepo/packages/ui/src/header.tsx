@@ -15,12 +15,46 @@ import {
   NavigationMenuContent,
   NavigationMenuLink,
 } from './navigation-menu';
-import { useAuth } from './auth-context';
+
+// Simple auth hook that doesn't require AuthProvider
+function useSimpleAuth() {
+  const [user, setUser] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // Check if we're in browser and have access to localStorage/sessionStorage
+    if (typeof window !== 'undefined') {
+      // Try to get user from session storage or other client-side storage
+      const storedUser = sessionStorage.getItem('user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+        }
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const signOut = React.useCallback(async () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('user');
+      setUser(null);
+      // Redirect to home page
+      window.location.href = '/';
+    }
+  }, []);
+
+  return { user, loading, signOut };
+}
 
 export function Header() {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
   const [chatDrawerOpen, setChatDrawerOpen] = React.useState(false);
-  const { user, signOut } = useAuth();
+
+  // Use simple auth that doesn't require AuthProvider
+  const { user, signOut } = useSimpleAuth();
 
   return (
     <>

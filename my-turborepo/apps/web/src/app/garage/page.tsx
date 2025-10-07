@@ -5,6 +5,7 @@ import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
 import { GarageShare } from "../../features/garage/components/garage-share";
 import { GarageStats } from "../../features/garage/garage-stats";
 import { supabase } from "../../lib/supabase";
+import { AuthProvider } from "@repo/ui/auth-context";
 import { useAuth } from "@repo/ui/auth-context";
 import type { Vehicle } from "@repo/types";
 
@@ -17,7 +18,7 @@ interface UserVehicle extends Vehicle {
   title?: string;
 }
 
-export default function Garage() {
+function GarageContent() {
   const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,5 +163,13 @@ export default function Garage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function Garage() {
+  return (
+    <AuthProvider supabase={supabase}>
+      <GarageContent />
+    </AuthProvider>
   );
 }

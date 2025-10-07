@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import React from 'react';
 import LandingLayout from './landing-layout';
 import { Hero, Features, Testimonials, Pricing, ZoomParallax } from '@repo/ui/landing';

@@ -14,7 +14,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: React.ReactNode;
-  supabase: SupabaseClient;
+  supabase?: SupabaseClient;
 }
 
 export function AuthProvider({ children, supabase }: AuthProviderProps) {
@@ -23,12 +23,25 @@ export function AuthProvider({ children, supabase }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined' || !supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setUser(null);
+        setSession(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getSession();
@@ -46,7 +59,13 @@ export function AuthProvider({ children, supabase }: AuthProviderProps) {
   }, [supabase]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
+    }
   };
 
   const value = {
