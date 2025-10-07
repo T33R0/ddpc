@@ -5,7 +5,7 @@ import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
 import { GarageShare } from "../../features/garage/components/garage-share";
 import { GarageStats } from "../../features/garage/garage-stats";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../lib/auth-context";
+import { useAuth } from "@repo/ui/auth-context";
 import type { Vehicle } from "@repo/types";
 
 interface UserVehicle extends Vehicle {
