@@ -4,12 +4,9 @@ import { Header } from "@repo/ui/header";
 import { Toaster } from 'react-hot-toast';
 import { Footer } from '@repo/ui/footer';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { AuthProvider, setSupabaseClient } from '@repo/ui/auth-context';
+import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../lib/supabase';
 import './globals.css';
-
-// Set the supabase client for the auth context
-setSupabaseClient(supabase);
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -25,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} font-sans`}>
       <body>
-        <AuthProvider>
+        <AuthProvider supabase={supabase}>
           <div className="relative flex flex-col min-h-screen bg-black">
             <div
               aria-hidden="true"
