@@ -5,6 +5,7 @@ import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
 import { GarageShare } from "../../features/garage/components/garage-share";
 import { GarageStats } from "../../features/garage/garage-stats";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../lib/auth-context";
 import type { Vehicle } from "@repo/types";
 
 interface UserVehicle extends Vehicle {
@@ -20,25 +21,19 @@ export default function Garage() {
   const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
   const [garagePrivacy, setGaragePrivacy] = useState('PRIVATE');
   const [garageData, setGarageData] = useState<any>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    async function checkAuthAndFetchVehicles() {
+    async function fetchGarageData() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-
-        // Check if user is authenticated (placeholder for now)
-        // In a real app, you'd use proper auth hooks
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-          setError('Please sign in to access your garage');
-          return;
-        }
-
-        setUser(user);
 
         // Fetch user's garage
         const { data: garageData, error: garageError } = await supabase
@@ -99,8 +94,8 @@ export default function Garage() {
       }
     }
 
-    checkAuthAndFetchVehicles();
-  }, []);
+    fetchGarageData();
+  }, [user]);
 
   if (loading) {
     return (

@@ -15,11 +15,12 @@ import {
   NavigationMenuContent,
   NavigationMenuLink,
 } from './navigation-menu';
-
+import { useAuth } from './auth-context';
 
 export function Header() {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
   const [chatDrawerOpen, setChatDrawerOpen] = React.useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <>
@@ -81,7 +82,29 @@ export function Header() {
             <Button onClick={() => setChatDrawerOpen(!chatDrawerOpen)} variant="outline" size="sm">
               Scrutineer
             </Button>
-            <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-neutral-300">
+                  {user.email}
+                </span>
+                <Button
+                  onClick={() => window.location.href = '/garage'}
+                  variant="outline"
+                  size="sm"
+                >
+                  Garage
+                </Button>
+                <Button
+                  onClick={signOut}
+                  variant="outline"
+                  size="sm"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>
+            )}
           </div>
         </div>
       </header>
