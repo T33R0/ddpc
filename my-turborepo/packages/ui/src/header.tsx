@@ -122,11 +122,11 @@ export function Header() {
                   {user.email}
                 </span>
                 <Button
-                  onClick={() => window.location.href = '/garage'}
+                  onClick={() => window.location.href = '/account'}
                   variant="outline"
                   size="sm"
                 >
-                  Garage
+                  Account
                 </Button>
                 <Button
                   onClick={signOut}

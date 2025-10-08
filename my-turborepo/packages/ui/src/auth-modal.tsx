@@ -10,14 +10,24 @@ import {
 import Link from 'next/link';
 import { Button } from './button';
 import { Input } from './input';
-import { AtSignIcon } from 'lucide-react';
+import { Label } from './label';
+import toast from 'react-hot-toast';
+import { AtSignIcon, Eye, EyeOff, Lock } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type AuthModalProps = Omit<React.ComponentProps<typeof Modal>, 'children'>;
 
 export function AuthModal(props: AuthModalProps) {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -26,48 +36,72 @@ export function AuthModal(props: AuthModalProps) {
       window.location.href = `/api/auth/google`;
     } catch (error) {
       console.error('Google sign-in error:', error);
-      setMessage('Failed to sign in with Google');
+      toast.error('Failed to sign in with Google');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
+
+    if (isSignUp && password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
 
     setIsLoading(true);
-    setMessage('');
 
     try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage('Check your email for the sign-in link!');
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Check your email for confirmation!');
+          props.onOpenChange?.(false);
+        }
       } else {
-        setMessage(data.error || 'Failed to send sign-in email');
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Welcome back!');
+          props.onOpenChange?.(false);
+        }
       }
     } catch (error) {
-      console.error('Email sign-in error:', error);
-      setMessage('Failed to send sign-in email');
+      console.error('Auth error:', error);
+      toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+  };
+
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp);
+    resetForm();
   };
 
   return (
     <Modal {...props}>
       <ModalContent>
         <ModalHeader>
-          <ModalTitle>Sign In or Join Now!</ModalTitle>
+          <ModalTitle>{isSignUp ? 'Create Account' : 'Welcome Back'}</ModalTitle>
         </ModalHeader>
         <ModalBody>
           <Button
@@ -83,48 +117,92 @@ export function AuthModal(props: AuthModalProps) {
 
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-slate-600" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background text-muted-foreground px-4 text-lg">
-                OR
-              </span>
+              <span className="bg-black px-2 text-gray-400">Or continue with</span>
             </div>
           </div>
 
-          {message && (
-            <p className={`text-sm mb-4 ${message.includes('Check your email') ? 'text-green-400' : 'text-red-400'}`}>
-              {message}
-            </p>
-          )}
-
-          <form onSubmit={handleEmailSignIn}>
-            <p className="text-muted-foreground mb-2 text-start text-xs">
-              Enter your email address to sign in or create an account
-            </p>
-            <div className="relative h-max">
-              <Input
-                placeholder="your.email@example.com"
-                className="peer ps-9 bg-transparent border-slate-700"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <div className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
-                <AtSignIcon className="size-4" aria-hidden="true" />
+          <form onSubmit={handleEmailAuth}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <AtSignIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 bg-transparent border-slate-700"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              variant="outline"
-              className="w-full mt-4 border-slate-700 hover:bg-slate-900/50"
-              disabled={isLoading || !email}
-            >
-              <span>{isLoading ? 'Sending...' : 'Continue With Email'}</span>
-            </Button>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 bg-transparent border-slate-700"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10 bg-transparent border-slate-700"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full border-slate-700 hover:bg-slate-900/50"
+                disabled={isLoading || !email || !password}
+              >
+                <span>{isLoading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}</span>
+              </Button>
+            </div>
           </form>
+
+          <div className="text-center text-sm mt-4">
+            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
+          </div>
         </ModalBody>
         <div className="p-4">
           <p className="text-muted-foreground text-center text-xs">

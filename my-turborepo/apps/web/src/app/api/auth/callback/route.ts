@@ -23,8 +23,8 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/?error=auth_callback_error', request.url));
     }
 
-    // Redirect to garage on success
-    return NextResponse.redirect(new URL('/garage', request.url));
+    // Redirect to account on success
+    return NextResponse.redirect(new URL('/account', request.url));
   } catch (error) {
     console.error('Auth callback error:', error);
     return NextResponse.redirect(new URL('/?error=auth_callback_error', request.url));
