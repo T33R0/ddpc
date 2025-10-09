@@ -23,6 +23,29 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/?error=auth_callback_error', request.url));
     }
 
+    // Ensure user profile exists
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('user_profile')
+        .upsert({
+          user_id: data.user.id,
+          username: data.user.email?.split('@')[0] || `user_${data.user.id.slice(0, 8)}`,
+          display_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0],
+          email: data.user.email,
+          is_public: true,
+          role: 'user',
+          plan: 'free',
+          banned: false,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        // Don't fail the auth flow for profile creation errors
+      }
+    }
+
     // Redirect to account on success
     return NextResponse.redirect(new URL('/account', request.url));
   } catch (error) {

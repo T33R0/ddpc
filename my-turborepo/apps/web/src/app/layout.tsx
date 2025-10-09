@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Header } from "@repo/ui/header";
+import { HeaderWithAuth } from '../components/HeaderWithAuth';
 import { Toaster } from 'react-hot-toast';
 import { Footer } from '@repo/ui/footer';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
               <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
             </div>
-            <Header />
+            <HeaderWithAuth />
             <Toaster />
             <main className="flex-grow">
               {children}

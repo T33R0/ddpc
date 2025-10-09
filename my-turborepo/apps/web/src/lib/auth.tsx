@@ -45,10 +45,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username: email.split('@')[0],
+          display_name: email.split('@')[0],
+        }
+      }
     });
+
+    // Create user profile if signup was successful
+    if (!error && data.user) {
+      const { error: profileError } = await supabase
+        .from('user_profile')
+        .upsert({
+          user_id: data.user.id,
+          username: email.split('@')[0],
+          display_name: email.split('@')[0],
+          email: email,
+          is_public: true,
+          role: 'user',
+          plan: 'free',
+          banned: false,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+      }
+    }
+
     return { error };
   };
 

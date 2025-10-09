@@ -16,49 +16,27 @@ import {
   NavigationMenuLink,
 } from './navigation-menu';
 
-// Simple auth hook that doesn't require AuthProvider
-function useSimpleAuth() {
-  const [user, setUser] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    // Check if we're in browser and have access to localStorage/sessionStorage
-    if (typeof window !== 'undefined') {
-      // Try to get user from session storage or other client-side storage
-      const storedUser = sessionStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error('Error parsing stored user:', e);
-        }
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  const signOut = React.useCallback(async () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('user');
-      setUser(null);
-      // Redirect to home page
-      window.location.href = '/';
-    }
-  }, []);
-
-  return { user, loading, signOut };
+interface HeaderProps {
+  user?: any;
+  onSignOut?: () => void;
+  onGoogleSignIn?: () => void;
+  onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
+  onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
 }
 
-export function Header() {
+export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmailSignIn }: HeaderProps) {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
   const [chatDrawerOpen, setChatDrawerOpen] = React.useState(false);
 
-  // Use simple auth that doesn't require AuthProvider
-  const { user, signOut } = useSimpleAuth();
-
   return (
     <>
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        onGoogleSignIn={onGoogleSignIn}
+        onEmailSignUp={onEmailSignUp}
+        onEmailSignIn={onEmailSignIn}
+      />
       <ChatDrawer open={chatDrawerOpen} onOpenChange={setChatDrawerOpen} />
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-neutral-800">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between text-white">
@@ -129,7 +107,7 @@ export function Header() {
                   Account
                 </Button>
                 <Button
-                  onClick={signOut}
+                  onClick={() => onSignOut?.()}
                   variant="outline"
                   size="sm"
                 >

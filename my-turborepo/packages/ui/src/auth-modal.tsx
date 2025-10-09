@@ -13,15 +13,14 @@ import { Input } from './input';
 import { Label } from './label';
 import toast from 'react-hot-toast';
 import { AtSignIcon, Eye, EyeOff, Lock } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+type AuthModalProps = Omit<React.ComponentProps<typeof Modal>, 'children'> & {
+  onGoogleSignIn?: () => void;
+  onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
+  onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
+};
 
-type AuthModalProps = Omit<React.ComponentProps<typeof Modal>, 'children'>;
-
-export function AuthModal(props: AuthModalProps) {
+export function AuthModal({ onGoogleSignIn, onEmailSignUp, onEmailSignIn, ...props }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,8 +31,7 @@ export function AuthModal(props: AuthModalProps) {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Redirect to Supabase Google OAuth
-      window.location.href = `/api/auth/google`;
+      onGoogleSignIn?.();
     } catch (error) {
       console.error('Google sign-in error:', error);
       toast.error('Failed to sign in with Google');
@@ -54,28 +52,15 @@ export function AuthModal(props: AuthModalProps) {
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) {
-          toast.error(error.message);
-        } else {
-          toast.success('Check your email for confirmation!');
-          props.onOpenChange?.(false);
-        }
+      const result = isSignUp
+        ? await onEmailSignUp?.(email, password)
+        : await onEmailSignIn?.(email, password);
+
+      if (result?.error) {
+        toast.error(result.error.message || 'Authentication failed');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) {
-          toast.error(error.message);
-        } else {
-          toast.success('Welcome back!');
-          props.onOpenChange?.(false);
-        }
+        toast.success(isSignUp ? 'Check your email for confirmation!' : 'Welcome back!');
+        props.onOpenChange?.(false);
       }
     } catch (error) {
       console.error('Auth error:', error);
