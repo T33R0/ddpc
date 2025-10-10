@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { User, Mail, Calendar, Shield } from 'lucide-react';
 
 export default function AccountPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -20,15 +20,17 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       router.push('/');
       return;
     }
-    setEmail(user.email || '');
-  }, [user, router]);
+    if (user) {
+      setEmail(user.email || '');
+    }
+  }, [user, loading, router]);
 
   const handleUpdateEmail = async () => {
-    if (!email || email === user?.email) return;
+    if (!email || email === authenticatedUser?.email) return;
 
     setIsLoading(true);
     try {
@@ -64,13 +66,16 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
     );
   }
+
+  // At this point, user is guaranteed to be non-null since we redirect if not authenticated
+  const authenticatedUser = user!;
 
   return (
     <div className="min-h-screen bg-black text-white p-4">
@@ -105,7 +110,7 @@ export default function AccountPage() {
                   />
                   <Button
                     onClick={handleUpdateEmail}
-                    disabled={isLoading || email === user.email}
+                    disabled={isLoading || email === authenticatedUser.email}
                     variant="outline"
                   >
                     Update
@@ -115,12 +120,12 @@ export default function AccountPage() {
 
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <Calendar className="h-4 w-4" />
-                <span>Member since: {new Date(user.created_at).toLocaleDateString()}</span>
+                <span>Member since: {new Date(authenticatedUser.created_at).toLocaleDateString()}</span>
               </div>
 
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <Mail className="h-4 w-4" />
-                <span>Email confirmed: {user.email_confirmed_at ? 'Yes' : 'No'}</span>
+                <span>Email confirmed: {authenticatedUser.email_confirmed_at ? 'Yes' : 'No'}</span>
               </div>
             </CardContent>
           </Card>
