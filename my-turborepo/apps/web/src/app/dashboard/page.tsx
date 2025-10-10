@@ -47,7 +47,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" onClick={() => router.push('/account')}>
+              <Button variant="outline" className="w-full border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white" onClick={() => router.push('/account')}>
                 My Account
               </Button>
             </CardContent>
@@ -65,7 +65,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" onClick={() => router.push('/discover')}>
+              <Button variant="outline" className="w-full border-green-400 text-green-400 hover:bg-green-400 hover:text-white" onClick={() => router.push('/discover')}>
                 Explore Vehicles
               </Button>
             </CardContent>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" onClick={() => router.push('/community')}>
+              <Button variant="outline" className="w-full border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white" onClick={() => router.push('/community')}>
                 Join Community
               </Button>
             </CardContent>
