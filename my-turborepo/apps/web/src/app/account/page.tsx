@@ -8,7 +8,7 @@ import { Label } from '@repo/ui/label';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { User, Mail, Calendar, Shield } from 'lucide-react';
+import { User, Mail, Calendar, Shield, ArrowLeft } from 'lucide-react';
 
 export default function AccountPage() {
   const { user, signOut, loading } = useAuth();
@@ -18,6 +18,7 @@ export default function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -62,14 +63,23 @@ export default function AccountPage() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      toast.success('Successfully signed out!');
+      // The useEffect will handle redirecting when user becomes null
+    } catch (error) {
+      toast.error('Error signing out');
+      setIsSigningOut(false);
+    }
   };
 
-  if (loading) {
+  if (loading || isSigningOut) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white">
+          {isSigningOut ? 'Signing out...' : 'Loading...'}
+        </div>
       </div>
     );
   }
@@ -80,7 +90,15 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen bg-black text-white p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-6">
+          <Button
+            onClick={() => router.push('/dashboard')}
+            variant="ghost"
+            className="mb-4 text-gray-400 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
           <h1 className="text-3xl font-bold mb-2">Account Management</h1>
           <p className="text-gray-400">Manage your account settings and preferences</p>
         </div>
@@ -197,10 +215,11 @@ export default function AccountPage() {
               <div className="flex gap-4">
                 <Button
                   onClick={handleSignOut}
+                  disabled={isSigningOut}
                   variant="outline"
                   className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                 >
-                  Sign Out
+                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                 </Button>
               </div>
             </CardContent>

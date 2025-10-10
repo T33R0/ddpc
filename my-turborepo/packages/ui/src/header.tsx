@@ -100,11 +100,11 @@ export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmail
                   {user.email}
                 </span>
                 <Button
-                  onClick={() => window.location.href = '/account'}
+                  onClick={() => window.location.href = '/dashboard'}
                   variant="outline"
                   size="sm"
                 >
-                  Account
+                  Dashboard
                 </Button>
                 <Button
                   onClick={() => onSignOut?.()}

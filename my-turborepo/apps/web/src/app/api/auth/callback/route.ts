@@ -46,8 +46,8 @@ export async function GET(request: Request) {
       }
     }
 
-    // Redirect to account on success
-    return NextResponse.redirect(new URL('/account', request.url));
+    // Redirect to dashboard on success
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   } catch (error) {
     console.error('Auth callback error:', error);
     return NextResponse.redirect(new URL('/?error=auth_callback_error', request.url));
