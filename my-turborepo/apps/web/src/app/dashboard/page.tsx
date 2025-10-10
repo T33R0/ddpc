@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '../../lib/auth';
-import { Button } from '@repo/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
 import { useRouter } from 'next/navigation';
 import { Car, Settings, Users, BarChart3, Plus } from 'lucide-react';
@@ -47,9 +46,9 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white" onClick={() => router.push('/account')}>
+              <button className="w-full h-10 px-4 py-2 border border-blue-400 bg-transparent text-blue-400 hover:bg-blue-400 hover:text-white rounded-md text-sm font-medium transition-colors" onClick={() => { console.log('Account button clicked'); router.push('/account'); }}>
                 My Account
-              </Button>
+              </button>
             </CardContent>
           </Card>
 
@@ -65,9 +64,9 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full border-green-400 text-green-400 hover:bg-green-400 hover:text-white" onClick={() => router.push('/discover')}>
+              <button className="w-full h-10 px-4 py-2 border border-green-400 bg-transparent text-green-400 hover:bg-green-400 hover:text-white rounded-md text-sm font-medium transition-colors" onClick={() => { console.log('Discover button clicked'); router.push('/discover'); }}>
                 Explore Vehicles
-              </Button>
+              </button>
             </CardContent>
           </Card>
 
@@ -83,9 +82,9 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white" onClick={() => router.push('/community')}>
+              <button className="w-full h-10 px-4 py-2 border border-purple-400 bg-transparent text-purple-400 hover:bg-purple-400 hover:text-white rounded-md text-sm font-medium transition-colors" onClick={() => { console.log('Community button clicked'); router.push('/community'); }}>
                 Join Community
-              </Button>
+              </button>
             </CardContent>
           </Card>
         </div>
