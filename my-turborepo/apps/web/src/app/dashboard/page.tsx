@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto pt-24">
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">
@@ -35,12 +35,8 @@ export default function DashboardPage() {
             Here's your DDPC dashboard - manage your vehicles and track your builds.
           </p>
         </div>
-
-        {/* Quick Actions Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Account Management */}
-          <Card className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer"
-                onClick={() => router.push('/account')}>
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Settings className="h-6 w-6 text-blue-400" />
@@ -51,15 +47,14 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
-                Manage Account
+              <Button variant="outline" className="w-full" onClick={() => router.push('/account')}>
+                My Account
               </Button>
             </CardContent>
           </Card>
 
           {/* Vehicle Discovery */}
-          <Card className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer"
-                onClick={() => router.push('/discover')}>
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Car className="h-6 w-6 text-green-400" />
@@ -70,15 +65,14 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => router.push('/discover')}>
                 Explore Vehicles
               </Button>
             </CardContent>
           </Card>
 
           {/* Community */}
-          <Card className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer"
-                onClick={() => router.push('/community')}>
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <Users className="h-6 w-6 text-purple-400" />
@@ -89,7 +83,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => router.push('/community')}>
                 Join Community
               </Button>
             </CardContent>
