@@ -20,7 +20,17 @@ function GarageContent() {
   const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, loading: authLoading } = useAuth();
+
+  // Safely use auth hook with error handling
+  let authData;
+  try {
+    authData = useAuth();
+  } catch (error) {
+    // During build time, useAuth might throw - provide fallback
+    authData = { user: null, loading: true };
+  }
+
+  const { user, loading: authLoading } = authData;
 
   if (authLoading) {
     return (
