@@ -75,6 +75,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Error creating user profile:', profileError);
+      } else {
+        // After creating the profile, create a garage for the user
+        const { error: garageError } = await supabase
+          .from('garage')
+          .insert({
+            owner_id: data.user.id,
+            name: `${data.user.email?.split('@')[0] ?? 'My'}'s Garage`,
+          });
+
+        if (garageError) {
+          console.error('Error creating user garage:', garageError);
+        }
       }
     }
 

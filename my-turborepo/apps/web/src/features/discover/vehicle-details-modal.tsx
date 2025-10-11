@@ -41,16 +41,38 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
       }
       const accessToken = sessionData.session.access_token;
 
+      let garageId: string;
+
+      // Try to fetch the user's garage
       const { data: garageData, error: garageError } = await supabase
         .from('garage')
         .select('id')
         .eq('owner_id', user.id)
         .single();
 
-      if (garageError || !garageData) {
-        throw new Error('Could not find your garage.');
+      if (garageError && garageError.code !== 'PGRST116') {
+        // 'PGRST116' means no rows found, which is expected for a new user
+        throw new Error('Could not find your garage. ' + garageError.message);
       }
-      const garageId = garageData.id;
+
+      if (garageData) {
+        garageId = garageData.id;
+      } else {
+        // No garage found, so create one
+        const { data: newGarage, error: createError } = await supabase
+          .from('garage')
+          .insert({
+            owner_id: user.id,
+            name: `${user.email ?? 'New User'}'s Garage`,
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          throw new Error('Could not create a new garage. ' + createError.message);
+        }
+        garageId = newGarage.id;
+      }
 
       const response = await fetch('/api/garage/add-vehicle', {
         method: 'POST',
