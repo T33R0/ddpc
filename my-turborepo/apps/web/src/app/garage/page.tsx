@@ -101,7 +101,7 @@ function GarageContent() {
     }
 
     fetchCollectionData();
-  }, [user]);
+  }, [user?.id]);
 
   if (loading) {
     return (
