@@ -26,28 +26,19 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
   };
 
   const handleAddToGarage = async () => {
-    console.log('handleAddToGarage called for vehicle:', vehicle.id);
-
     if (!user) {
-      console.log('No user found');
       toast.error('You must be signed in to add a vehicle to your collection.');
       return;
     }
-
-    console.log('User found:', user.id);
     setIsAddingToGarage(true);
 
     try {
-      console.log('Getting session...');
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
-        console.error('Session error:', sessionError);
         throw new Error('Could not get user session.');
       }
       const accessToken = sessionData.session.access_token;
-      console.log('Got access token, length:', accessToken.length);
 
-      console.log('Making API call to /api/garage/add-vehicle');
       const response = await fetch('/api/garage/add-vehicle', {
         method: 'POST',
         headers: {
@@ -58,8 +49,6 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
           vehicleDataId: vehicle.id,
         }),
       });
-
-      console.log('API response status:', response.status);
 
       const data = await response.json();
 

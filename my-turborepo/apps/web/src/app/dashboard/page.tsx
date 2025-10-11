@@ -70,6 +70,24 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
+          {/* My Collection */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Car className="h-6 w-6 text-purple-400" />
+                My Collection
+              </CardTitle>
+              <CardDescription>
+                View and manage your personal vehicle collection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <button className="w-full h-10 px-4 py-2 border border-purple-400 bg-transparent text-purple-400 hover:bg-purple-400 hover:text-white rounded-md text-sm font-medium transition-colors" onClick={() => { console.log('Collection button clicked'); router.push('/garage'); }}>
+                View Collection
+              </button>
+            </CardContent>
+          </Card>
+
           {/* Community */}
           <Card className="bg-gray-900 border-gray-800">
             <CardHeader>

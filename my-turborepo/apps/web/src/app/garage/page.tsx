@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
 import { GarageStats } from "../../features/garage/garage-stats";
 import { supabase } from "../../lib/supabase";
-import { AuthProvider } from "@repo/ui/auth-context";
 import { useAuth } from "@repo/ui/auth-context";
 import type { Vehicle } from "@repo/types";
 
@@ -123,9 +122,5 @@ function GarageContent() {
 }
 
 export default function Garage() {
-  return (
-    <AuthProvider supabase={supabase}>
-      <GarageContent />
-    </AuthProvider>
-  );
+  return <GarageContent />;
 }
