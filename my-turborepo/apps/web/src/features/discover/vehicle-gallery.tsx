@@ -52,7 +52,7 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
                 </div>
               </div>
               <ImageWithFallback
-                src={vehicle.image_url || ''}
+                src={(vehicle.image_url || '').split(';')[0] || ''}
                 fallbackSrc="/branding/fallback-logo.png"
                 alt={`${vehicle.make} ${vehicle.model}`}
                 width={400}

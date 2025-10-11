@@ -135,7 +135,7 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeButton} onClick={onClose}>X</button>
         <div className={styles.topSection}>
-          <Image src={vehicle.image_url || ''} alt={`${vehicle.make} ${vehicle.model}`} className={styles.vehicleImage} width={400} height={225} />
+          <Image src={(vehicle.image_url || '').split(';')[0] || ''} alt={`${vehicle.make} ${vehicle.model}`} className={styles.vehicleImage} width={400} height={225} />
           <div className={styles.basicInfo}>
             <h2>{vehicle.year} {vehicle.make} {vehicle.model}</h2>
             <div className={styles.trimSelector}>

@@ -1,87 +1,35 @@
 # Database Schema Reference
 
-This document provides a comprehensive reference for the **CURRENT** DDPC (Data-Driven Performance Car) database schema. This schema supports a vehicle tracking and garage management application where users can maintain detailed records of their vehicles, parts, and maintenance/service history.
+This document provides a comprehensive reference for the **FINAL** DDPC (Data-Driven Performance Car) database schema. This schema supports a streamlined vehicle collection application where users can browse vehicles and maintain personal collections.
 
-**Last Updated**: Based on current database state after garage system rebuild (single-user garages only).
+**Last Updated**: Final simplified schema - direct user-to-vehicle ownership system.
 
 ## Overview
 
-The database consists of 7 main tables that work together to provide a vehicle management system:
+The database consists of 3 core tables that provide a clean, focused vehicle collection system:
 
 - **Authentication**: Handled by Supabase Auth (`auth.users`)
-- **User Management**: User profiles and roles
-- **Garage System**: Single-user garage ownership (simplified from multi-user)
-- **Vehicle Management**: Vehicle ownership and specifications
-- **Parts Catalog**: Available parts and components
-- **Event Tracking**: Maintenance, service, and usage events
-- **Event-Parts Relationships**: Many-to-many relationship between events and parts
+- **User Management**: User profiles and roles (`user_profile`)
+- **Vehicle Collection**: Direct user ownership of vehicles (`user_vehicle`)
+- **Vehicle Catalog**: Stock vehicle data for browsing (`vehicle_data`)
 
 ## Table Relationships
 
 ```mermaid
 erDiagram
     auth.users ||--o{ user_profile : "has"
-    auth.users ||--|| garage : "owns"
-
-    garage ||--o{ user_vehicle : "contains"
-
-    user_vehicle ||--o{ event : "has"
-    event }o--o{ event_part : "uses"
-    event_part }o--|{ part : "references"
+    auth.users ||--o{ user_vehicle : "owns"
 
     user_vehicle }o--o{ vehicle_data : "based on"
 ```
 
-## Current Table Schema
+## Final Table Schema
 
-Based on the actual database state after the rebuild:
+**Simplified to essential functionality only:**
 
 ```sql
 -- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
-
-CREATE TABLE public.event (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  vehicle_id uuid NOT NULL,
-  type text NOT NULL CHECK (type = ANY (ARRAY['acquisition'::text, 'transfer'::text, 'install'::text, 'service'::text, 'damage'::text, 'track_day'::text, 'dyno'::text, 'note'::text])),
-  title text NOT NULL,
-  vendor_url text,
-  cost numeric,
-  notes text,
-  metadata jsonb DEFAULT '{}'::jsonb,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  mileage integer,
-  CONSTRAINT event_pkey PRIMARY KEY (id),
-  CONSTRAINT event_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.user_vehicle(id)
-);
-
-CREATE TABLE public.event_part (
-  event_id uuid NOT NULL,
-  part_id uuid NOT NULL,
-  qty integer NOT NULL DEFAULT 1,
-  CONSTRAINT event_part_pkey PRIMARY KEY (event_id, part_id),
-  CONSTRAINT event_part_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.event(id),
-  CONSTRAINT event_part_part_id_fkey FOREIGN KEY (part_id) REFERENCES public.part(id)
-);
-
-CREATE TABLE public.garage (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  type text DEFAULT 'PERSONAL'::text CHECK (type = ANY (ARRAY['PERSONAL'::text, 'SHOP'::text, 'CLUB'::text])),
-  owner_id uuid NOT NULL UNIQUE,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT garage_pkey PRIMARY KEY (id),
-  CONSTRAINT garage_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
-);
-
-CREATE TABLE public.part (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  brand text,
-  affiliate_url text,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT part_pkey PRIMARY KEY (id)
-);
+-- This represents the final, working state after complete rebuild.
 
 CREATE TABLE public.user_profile (
   user_id uuid NOT NULL,
@@ -103,7 +51,6 @@ CREATE TABLE public.user_profile (
 
 CREATE TABLE public.user_vehicle (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  garage_id uuid NOT NULL,
   vin text,
   year integer,
   make text NOT NULL,
@@ -118,9 +65,10 @@ CREATE TABLE public.user_vehicle (
   title text,
   spec_snapshot jsonb,
   current_status text DEFAULT 'daily_driver'::text CHECK (current_status = ANY (ARRAY['daily_driver'::text, 'parked'::text, 'listed'::text, 'sold'::text, 'retired'::text])),
+  owner_id uuid NOT NULL,
   CONSTRAINT user_vehicle_pkey PRIMARY KEY (id),
-  CONSTRAINT vehicle_garage_id_fkey FOREIGN KEY (garage_id) REFERENCES public.garage(id),
-  CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id)
+  CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id),
+  CONSTRAINT user_vehicle_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
 );
 
 CREATE TABLE public.vehicle_data (
@@ -251,80 +199,102 @@ CREATE TABLE public.vehicle_data (
 
 ## Table Details
 
-### 1. garage (Simplified)
-**Purpose**: Single-user garage ownership (simplified from multi-user system).
+### 1. user_profile
+**Purpose**: Extended user information and role management for authenticated users.
 
-**Key Changes from Previous Version**:
-- Removed `garage_member` table and all multi-user functionality
-- Each user can have only one garage (`owner_id` is UNIQUE)
-- Direct ownership model: `owner_id = auth.uid()`
+**Key Fields**:
+- `user_id` (uuid, FK → auth.users.id): Links to Supabase auth user
+- `username` (text, UNIQUE): Unique username for display
+- `display_name` (text): User's preferred display name
+- `role` (enum): User role (user/helper/admin) - defaults to 'user'
+- `plan` (enum): Subscription plan (free/builder/pro) - defaults to 'free'
+- `is_public` (boolean): Whether profile is publicly visible
+- `banned` (boolean): Admin ban status
+
+**Relationships**:
+- One-to-one with `auth.users`
+- Referenced by application logic for user management
+
+**Usage Notes**:
+- Created automatically when user signs up
+- Role determines feature access levels
+- Plan affects feature availability
 
 ### 2. user_vehicle
-**Purpose**: Individual vehicle records owned by users within garages.
+**Purpose**: User's personal vehicle collection with direct ownership.
 
-**Key Changes**:
-- All policies now check garage ownership directly
-- No more complex membership checks
-- Simplified to: `garage_id IN (SELECT id FROM garage WHERE owner_id = auth.uid())`
+**Key Fields**:
+- `id` (uuid, PK): Unique vehicle identifier
+- `owner_id` (uuid, FK → auth.users.id): Direct owner of this vehicle
+- `stock_data_id` (text, FK → vehicle_data.id): Reference to original vehicle specs
+- `spec_snapshot` (jsonb): Frozen copy of specifications at time of addition
+- Custom fields: `nickname`, `privacy`, `current_status`, etc.
 
-### 3. event & event_part
-**Purpose**: Tracking all vehicle-related events and parts usage.
+**Relationships**:
+- Owned directly by users (`owner_id`)
+- References stock vehicle data
+- Independent copies allow user modifications
 
-**Key Changes**:
-- Policies now check through the ownership chain: event → vehicle → garage → owner
-- Simplified permission structure
+**Usage Notes**:
+- **Direct Ownership Model**: No intermediate garage abstraction
+- Vehicles are owned directly by `auth.users`
+- Each user can have unlimited vehicles
+- Spec snapshots preserve original data integrity
 
-### 4. Other Tables
-**Purpose**: Remain largely unchanged (user_profile, part, vehicle_data).
+### 3. vehicle_data
+**Purpose**: Comprehensive stock vehicle specifications database.
 
-## Key Architectural Changes
+**Key Fields**:
+- `id` (text, PK): Unique vehicle data identifier (VIN-based)
+- Extensive specification fields covering:
+  - **Dimensions**: Length, width, height, wheelbase, etc.
+  - **Engine**: Cylinders, horsepower, torque, fuel type, etc.
+  - **Performance**: MPG, range, acceleration data
+  - **Features**: Safety features, power features, packages
+  - **Pricing**: MSRP, invoice, used price ranges
+  - **Reviews**: Expert verdicts, pros/cons, scores
 
-1. **Removed Multi-User Support**: No more `garage_member` table
-2. **Direct Ownership**: Garages are owned directly by users
-3. **Simplified Policies**: All RLS policies check `garage.owner_id = auth.uid()`
-4. **No Recursion**: Eliminated cross-table policy dependencies
+**Relationships**:
+- Referenced by `user_vehicle.stock_data_id`
+- Used to populate vehicle data when users add cars
 
-## Data Flow Examples
+**Usage Notes**:
+- Contains comprehensive vehicle specifications
+- Used as reference data for user vehicles
+- Includes expert reviews and pricing information
+- **Read-only**: Never modified by application
 
-### Adding a New Vehicle
-1. User selects vehicle from vehicle_data
-2. Creates user_vehicle record in their garage
-3. Optionally creates "acquisition" event
-4. Vehicle appears in garage with specifications
+## Perfect Flow Architecture
 
-### Recording Maintenance
-1. User creates service event for a vehicle
-2. Associates relevant parts with quantities
-3. Records cost, mileage, and notes
-4. Event appears in vehicle history
+### 🎯 **Core User Journey**
+1. **Browse**: User explores `vehicle_data` via `/discover` page
+2. **Select**: User clicks vehicle → sees specs from `vehicle_data`
+3. **Add**: User clicks "Add to Collection" → creates `user_vehicle` record
+4. **Manage**: User views personal collection at `/garage`
 
-### Garage Sharing
-1. User creates garage with SHOP/CLUB type
-2. Invites other users as members
-3. Members can view/add vehicles and events
-4. Owner maintains administrative control
+### 🔑 **Key Architectural Decisions**
+1. **Direct Ownership**: `user_vehicle.owner_id` references `auth.users.id` directly
+2. **Data Integrity**: `spec_snapshot` preserves original vehicle specs
+3. **Flexibility**: Users can modify their copies without affecting originals
+4. **Simplicity**: No complex multi-user sharing or event tracking
 
-## Security Considerations
+### 🛡️ **Security Model**
+- **RLS Policies**: Direct `owner_id = auth.uid()` checks
+- **No Recursion**: Clean, simple permission structure
+- **Data Isolation**: Users only see their own vehicles
 
-- **Row Level Security (RLS)**: All tables should have RLS enabled
-- **Garage-based Access**: Users can only access vehicles in garages they're members of
-- **Owner Privileges**: Garage owners have full control over their garages
-- **Public/Private Vehicles**: Privacy settings control visibility
-- **User Profile Privacy**: Users can make profiles private
+### 📈 **Performance Optimized**
+- **73k vehicles** in `vehicle_data` (read-only reference data)
+- **Direct queries** with indexed `owner_id` foreign key
+- **JSON snapshots** for fast spec access
+- **Minimal table joins** for optimal query performance
 
-## Performance Considerations
+## Final State Summary
 
-- **Indexing**: Primary keys and foreign keys should be indexed
-- **JSONB Operations**: Efficient querying of metadata and spec_snapshot
-- **Pagination**: Large result sets should be paginated
-- **Caching**: Frequently accessed vehicle_data can be cached
-- **Archiving**: Old events may need archiving for performance
+✅ **3 Tables**: `user_profile`, `user_vehicle`, `vehicle_data`
+✅ **Direct Ownership**: Users own vehicles directly
+✅ **Working System**: Add to collection functionality operational
+✅ **Clean Architecture**: No complexity, no recursion issues
+✅ **Scalable**: Easy to extend with future features (events, sharing, etc.)
 
-## Migration Notes
-
-⚠️ **Warning**: This schema is for reference only and should not be executed directly. Table creation order and constraint dependencies must be carefully managed during migrations.
-
-- Create tables in dependency order: auth.users → user_profile → garage → garage_member → user_vehicle → vehicle_data → event → part → event_part
-- Foreign key constraints require parent tables to exist first
-- Consider using migration tools like Supabase migrations or Flyway
-- Test migrations on development environment before production deployment
+**The system is now perfectly streamlined for vehicle collection with zero complexity!** 🚗✨
