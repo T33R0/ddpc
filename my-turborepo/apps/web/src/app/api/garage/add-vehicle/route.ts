@@ -19,10 +19,21 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
 
+    // Create authenticated Supabase client
+    const authenticatedSupabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    })
+
     // Verify the token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: authError } = await authenticatedSupabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('Auth error:', authError)
+      return NextResponse.json({ error: 'Unauthorized', details: authError?.message }, { status: 401 })
     }
 
     const body = await request.json()
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Execute the vehicle cloning logic using raw SQL
     // First, get the vehicle data
-    const { data: vehicleData, error: vehicleError } = await supabase
+    const { data: vehicleData, error: vehicleError } = await authenticatedSupabase
       .from('vehicle_data')
       .select('*')
       .eq('id', vehicleDataId)
@@ -54,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Create the JSON snapshot
     const fullSpec = JSON.parse(JSON.stringify(vehicleData))
 
-    const { data: newVehicle, error: insertError } = await supabase
+    const { data: newVehicle, error: insertError } = await authenticatedSupabase
       .from('user_vehicle')
       .insert({
         owner_id: user.id,
