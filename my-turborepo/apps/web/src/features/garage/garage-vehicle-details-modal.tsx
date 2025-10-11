@@ -10,7 +10,7 @@ interface UserVehicle extends Vehicle {
   current_status: string;
   nickname?: string;
   title?: string;
-  garage_id: string;
+  owner_id: string;
 }
 
 type GarageVehicleDetailsModalProps = {
