@@ -33,9 +33,16 @@ export async function POST(request: NextRequest) {
     const fullSpec = JSON.parse(JSON.stringify(vehicleData))
 
     // Insert into user_vehicle table
+    // Get the current user's ID from the session
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { data: newVehicle, error: insertError } = await supabase
       .from('user_vehicle')
       .insert({
+        owner_id: user.id,
         garage_id: garageId,
         vin: null,
         year: parseInt(vehicleData.year),
