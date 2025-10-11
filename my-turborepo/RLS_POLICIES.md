@@ -94,10 +94,38 @@ This table links parts to specific events.
 
 This table defines garages, which act as containers for vehicles and members.
 
-### garage members can select
+### **[CORRECTED]** Garages are visible to members and owners
 
 - **Applies To**: SELECT
-- **Rule**: A user can read a garage's details if they are a member of that garage.
+- **Rule**: A user can read a garage's details if they are not banned AND they are either the owner or a member of that garage. This policy replaces the previous `garage members can select` and `garage_select` policies to resolve an infinite recursion issue.
+- **SQL**:
+  ```sql
+  -- USING
+  (
+    (
+      SELECT
+        (NOT is_user_banned (auth.uid ()))
+    )
+    AND (
+      (owner_id = auth.uid ())
+      OR (
+        EXISTS (
+          SELECT
+            1
+          FROM
+            garage_member gm
+          WHERE
+            ((gm.garage_id = garage.id) AND (gm.user_id = auth.uid ()))
+        )
+      )
+    )
+  )
+  ```
+
+### **[DEPRECATED]** garage members can select
+
+- **Applies To**: SELECT
+- **Rule**: A user can read a garage's details if they are a member of that garage. **This policy should be removed.**
 - **SQL**:
   ```sql
   -- USING
@@ -118,10 +146,10 @@ This table defines garages, which act as containers for vehicles and members.
   (NOT is_user_banned(auth.uid())) AND (owner_id = auth.uid())
   ```
 
-### garage_select
+### **[DEPRECATED]** garage_select
 
 - **Applies To**: SELECT
-- **Rule**: A user can read a garage's details if they are not banned AND they are either the owner or a member of that garage.
+- **Rule**: A user can read a garage's details if they are not banned AND they are either the owner or a member of that garage. **This policy should be removed.**
 - **SQL**:
   ```sql
   -- USING
