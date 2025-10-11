@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
 import { GarageStats } from "../../features/garage/garage-stats";
 import { supabase } from "../../lib/supabase";
+import { AuthProvider } from "@repo/ui/auth-context";
 import { useAuth } from "@repo/ui/auth-context";
 import type { Vehicle } from "@repo/types";
 
@@ -21,17 +22,7 @@ function GarageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Safely use auth hook with error handling
-  let authData;
-  try {
-    authData = useAuth();
-  } catch (error) {
-    // During build time or if AuthProvider is missing, provide fallback
-    console.warn('useAuth error caught, using fallback:', error);
-    authData = { user: null, loading: true };
-  }
-
-  const { user, loading: authLoading } = authData;
+  const { user, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return (
@@ -173,5 +164,9 @@ function GarageContent() {
 }
 
 export default function Garage() {
-  return <GarageContent />;
+  return (
+    <AuthProvider supabase={supabase}>
+      <GarageContent />
+    </AuthProvider>
+  );
 }
