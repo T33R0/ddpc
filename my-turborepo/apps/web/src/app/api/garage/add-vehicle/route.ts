@@ -37,11 +37,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { vehicleDataId, garageId } = body
+    const { vehicleDataId } = body
 
-    if (!vehicleDataId || !garageId) {
+    if (!vehicleDataId) {
       return NextResponse.json(
-        { error: 'Missing required fields: vehicleDataId and garageId' },
+        { error: 'Missing required field: vehicleDataId' },
         { status: 400 }
       )
     }
@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
       .from('user_vehicle')
       .insert({
         owner_id: user.id,
-        garage_id: garageId,
         vin: null,
         year: parseInt(vehicleData.year),
         make: vehicleData.make,

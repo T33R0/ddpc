@@ -27,52 +27,17 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
 
   const handleAddToGarage = async () => {
     if (!user) {
-      toast.error('You must be signed in to add a vehicle to your garage.');
+      toast.error('You must be signed in to add a vehicle to your collection.');
       return;
     }
     setIsAddingToGarage(true);
 
     try {
-      // For now, we'll use a placeholder garage ID
-      // In a real app, you'd get this from the authenticated user
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         throw new Error('Could not get user session.');
       }
       const accessToken = sessionData.session.access_token;
-
-      let garageId: string;
-
-      // Try to fetch the user's garage
-      const { data: garageData, error: garageError } = await supabase
-        .from('garage')
-        .select('id')
-        .eq('owner_id', user.id)
-        .single();
-
-      if (garageError && garageError.code !== 'PGRST116') {
-        // 'PGRST116' means no rows found, which is expected for a new user
-        throw new Error('Could not find your garage. ' + garageError.message);
-      }
-
-      if (garageData) {
-        garageId = garageData.id;
-      } else {
-        // No garage found, so create one
-        const { data: newGarage, error: createError } = await supabase
-          .from('garage')
-          .insert({
-            owner_id: user.id,
-            name: `${user.email ?? 'New User'}'s Garage`,
-          })
-          .select('id')
-          .single();
-
-        if (createError) {
-          throw new Error('Could not create a new garage. ' + createError.message);
-        }
-        garageId = newGarage.id;
-      }
 
       const response = await fetch('/api/garage/add-vehicle', {
         method: 'POST',
@@ -82,18 +47,17 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
         },
         body: JSON.stringify({
           vehicleDataId: vehicle.id,
-          garageId,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to add vehicle to garage');
+        throw new Error(data.error || 'Failed to add vehicle to collection');
       }
 
       setIsAddedToGarage(true);
-      toast.success('Vehicle successfully added to your garage!');
+      toast.success('Vehicle successfully added to your collection!');
 
       // Close modal after a short delay
       setTimeout(() => {
@@ -101,8 +65,8 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
       }, 2000);
 
     } catch (error) {
-      console.error('Error adding vehicle to garage:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');
+      console.error('Error adding vehicle to collection:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to collection');
     } finally {
       setIsAddingToGarage(false);
     }
@@ -191,10 +155,10 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
               disabled={isAddingToGarage || isAddedToGarage}
             >
               {isAddingToGarage
-                ? 'Adding to Garage...'
+                ? 'Adding to Collection...'
                 : isAddedToGarage
-                ? '✓ Added to Garage'
-                : 'Add to Garage'
+                ? '✓ Added to Collection'
+                : 'Add to Collection'
               }
             </button>
           </div>

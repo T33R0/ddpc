@@ -13,29 +13,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user's garage
-    const { data: garageData, error: garageError } = await supabase
-      .from('garage')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single()
-
-    if (garageError) {
-      if (garageError.code === 'PGRST116') {
-        // No garage found, return empty array
-        return NextResponse.json({
-          vehicles: [],
-          message: 'No garage found for user'
-        })
-      }
-      throw garageError
-    }
-
-    // Fetch user's vehicles from this garage
+    // Fetch user's vehicles directly
     const { data: userVehicles, error: vehiclesError } = await supabase
       .from('user_vehicle')
       .select('*')
-      .eq('garage_id', garageData.id)
+      .eq('owner_id', user.id)
 
     if (vehiclesError) {
       console.error('Error fetching vehicles:', vehiclesError)
@@ -49,7 +31,7 @@ export async function GET(request: NextRequest) {
     const vehicles = (userVehicles || []).map((uv: any) => ({
       ...uv.spec_snapshot,
       id: uv.id,
-      garage_id: uv.garage_id,
+      owner_id: uv.owner_id,
       nickname: uv.nickname,
       current_status: uv.current_status,
       privacy: uv.privacy,

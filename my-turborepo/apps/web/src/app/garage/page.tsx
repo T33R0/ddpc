@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
-import { GarageShare } from "../../features/garage/components/garage-share";
 import { GarageStats } from "../../features/garage/garage-stats";
 import { supabase } from "../../lib/supabase";
 import { AuthProvider } from "@repo/ui/auth-context";
@@ -11,7 +10,7 @@ import type { Vehicle } from "@repo/types";
 
 interface UserVehicle extends Vehicle {
   id: string;
-  garage_id: string;
+  owner_id: string;
   nickname?: string;
   current_status: string;
   privacy: string;
@@ -22,12 +21,10 @@ function GarageContent() {
   const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [garagePrivacy, setGaragePrivacy] = useState('PRIVATE');
-  const [garageData, setGarageData] = useState<any>(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    async function fetchGarageData() {
+    async function fetchCollectionData() {
       if (!user) {
         setLoading(false);
         return;
@@ -35,38 +32,6 @@ function GarageContent() {
 
       try {
         setLoading(true);
-
-        // Fetch user's garage
-        const { data: garageData, error: garageError } = await supabase
-          .from('garage')
-          .select('*')
-          .eq('owner_id', user.id)
-          .single();
-
-        if (garageError) {
-          if (garageError.code === 'PGRST116') {
-            // No garage found, create one
-            const { data: newGarage, error: createError } = await supabase
-              .from('garage')
-              .insert({
-                owner_id: user.id,
-                name: `${user.email}'s Garage`,
-                description: 'My personal garage',
-                privacy: 'PRIVATE'
-              })
-              .select()
-              .single();
-
-            if (createError) throw createError;
-
-            setError('Welcome to your new garage! Start by adding some vehicles.');
-            setGaragePrivacy('PRIVATE');
-          }
-          throw garageError;
-        }
-
-        setGarageData(garageData);
-        setGaragePrivacy(garageData.privacy);
 
         // Fetch user's vehicles using the API
         const response = await fetch('/api/garage/vehicles', {
@@ -78,7 +43,7 @@ function GarageContent() {
         if (!response.ok) {
           const errorData = await response.json();
           if (response.status === 401) {
-            setError('Please sign in to access your garage');
+            setError('Please sign in to access your collection');
             return;
           }
           throw new Error(errorData.error || 'Failed to fetch vehicles');
@@ -86,23 +51,22 @@ function GarageContent() {
 
         const data = await response.json();
         setVehicles(data.vehicles);
-        setGaragePrivacy(garageData.privacy);
       } catch (err) {
-        console.error('Failed to fetch garage data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load garage');
+        console.error('Failed to fetch collection data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load collection');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchGarageData();
+    fetchCollectionData();
   }, [user]);
 
   if (loading) {
     return (
       <section className="relative py-12 bg-black min-h-screen">
         <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-white text-lg">Loading your garage...</div>
+          <div className="text-white text-lg">Loading your collection...</div>
         </div>
       </section>
     );
@@ -129,7 +93,7 @@ function GarageContent() {
       </div>
       <div className="relative container px-4 md:px-6 pt-24">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">My Garage</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">My Collection</h1>
           <p className="text-neutral-400">
             {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} in your collection
           </p>
@@ -142,7 +106,7 @@ function GarageContent() {
         ) : (
           <div className="text-center py-12">
             <div className="text-neutral-400 text-lg mb-4">
-              Your garage is empty. Start by discovering and adding vehicles!
+              Your collection is empty. Start by discovering and adding vehicles!
             </div>
             <a
               href="/discover"
@@ -153,14 +117,6 @@ function GarageContent() {
           </div>
         )}
 
-        {/* Garage Sharing Section */}
-        <div className="mt-12">
-          <GarageShare
-            garageId={garageData?.id || 'new-garage'}
-            currentPrivacy={garagePrivacy}
-            onPrivacyChange={setGaragePrivacy}
-          />
-        </div>
       </div>
     </section>
   );
