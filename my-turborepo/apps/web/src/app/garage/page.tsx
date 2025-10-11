@@ -26,7 +26,8 @@ function GarageContent() {
   try {
     authData = useAuth();
   } catch (error) {
-    // During build time, useAuth might throw - provide fallback
+    // During build time or if AuthProvider is missing, provide fallback
+    console.warn('useAuth error caught, using fallback:', error);
     authData = { user: null, loading: true };
   }
 
@@ -42,8 +43,18 @@ function GarageContent() {
     );
   }
 
+  if (!user) {
+    return (
+      <section className="relative py-12 bg-black min-h-screen">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-red-400 text-lg">Please sign in to view your collection</div>
+        </div>
+      </section>
+    );
+  }
+
   useEffect(() => {
-    console.log('useEffect running, user:', user, 'authLoading:', authLoading);
+    console.log('useEffect running, user:', user);
 
     async function fetchCollectionData() {
       console.log('fetchCollectionData called, user exists:', !!user);
@@ -99,7 +110,7 @@ function GarageContent() {
     }
 
     fetchCollectionData();
-  }, [user, authLoading]);
+  }, [user]);
 
   if (loading) {
     return (
