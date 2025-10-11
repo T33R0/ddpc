@@ -1,20 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function GET(request: NextRequest) {
   try {
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    console.log('Vehicles API called')
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    })
+
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No auth header in vehicles API')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+    console.log('Token extracted, length:', token.length)
+
+    // Create authenticated Supabase client
+    const authenticatedSupabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    })
+
+    // Verify the token and get user
+    const { data: { user }, error: authError } = await authenticatedSupabase.auth.getUser()
+    if (authError || !user) {
+      console.log('Auth error in vehicles API:', authError)
+      return NextResponse.json({ error: 'Unauthorized', details: authError?.message }, { status: 401 })
+    }
+
+    console.log('User authenticated in vehicles API:', user.id)
+
     // Fetch user's vehicles directly
-    const { data: userVehicles, error: vehiclesError } = await supabase
+    const { data: userVehicles, error: vehiclesError } = await authenticatedSupabase
       .from('user_vehicle')
       .select('*')
       .eq('owner_id', user.id)
@@ -27,6 +54,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log('Fetched vehicles from DB, count:', userVehicles?.length || 0)
+
     // Transform the data to match expected format
     const vehicles = (userVehicles || []).map((uv: any) => ({
       ...uv.spec_snapshot,
@@ -37,6 +66,8 @@ export async function GET(request: NextRequest) {
       privacy: uv.privacy,
       title: uv.title,
     }))
+
+    console.log('Returning vehicles, count:', vehicles.length)
 
     return NextResponse.json({
       vehicles,
