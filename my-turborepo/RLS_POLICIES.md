@@ -175,10 +175,70 @@ This table defines garages, which act as containers for vehicles and members.
 
 This table manages user roles within a garage.
 
-### members_can_view_garage_members
+### **[NEW FUNCTION REQUIRED]**
+**Important:** The following policies depend on a new SQL function `is_garage_owner`. Please run the following SQL in your Supabase SQL Editor before applying these policies:
+```sql
+CREATE OR REPLACE FUNCTION is_garage_owner(g_id uuid)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.garage g
+    WHERE g.id = g_id AND g.owner_id = auth.uid()
+  );
+$$;
+```
+
+### **[CORRECTED]** members_can_view_garage_members
 
 - **Applies To**: SELECT
-- **Rule**: A user can read the list of members for a garage if they are the owner of that garage or a fellow member.
+- **Rule**: A user can read the list of members for a garage if they are the owner of that garage or a fellow member. This policy uses the `is_garage_owner` function to prevent recursion.
+- **SQL**:
+  ```sql
+  -- USING
+  is_garage_owner(garage_id) OR
+  EXISTS (
+      SELECT 1
+      FROM garage_member gm
+      WHERE gm.garage_id = garage_member.garage_id AND gm.user_id = auth.uid()
+  )
+  ```
+
+### **[CORRECTED]** owners_can_add_members
+
+- **Applies To**: INSERT
+- **Rule**: A user can add a new member to a garage if they are the owner of that garage.
+- **SQL**:
+  ```sql
+  -- WITH CHECK
+  is_garage_owner(garage_id)
+  ```
+
+### **[CORRECTED]** owners_can_remove_members
+
+- **Applies To**: DELETE
+- **Rule**: A user can remove a member from a garage if they are the owner of that garage.
+- **SQL**:
+  ```sql
+  -- USING
+  is_garage_owner(garage_id)
+  ```
+
+### **[CORRECTED]** owners_can_update_members
+
+- **Applies To**: UPDATE
+- **Rule**: A user can update a member's details (e.g., role) if they are the owner of that garage.
+- **SQL**:
+  ```sql
+  -- USING
+  is_garage_owner(garage_id)
+  ```
+
+### **[DEPRECATED]** members_can_view_garage_members
+- **Applies To**: SELECT
+- **Rule**: A user can read the list of members for a garage if they are the owner of that garage or a fellow member. **This policy should be removed.**
 - **SQL**:
   ```sql
   -- USING
@@ -189,30 +249,27 @@ This table manages user roles within a garage.
   )
   ```
 
-### owners_can_add_members
-
+### **[DEPRECATED]** owners_can_add_members
 - **Applies To**: INSERT
-- **Rule**: A user can add a new member to a garage if they are the owner of that garage.
+- **Rule**: A user can add a new member to a garage if they are the owner of that garage. **This policy should be removed.**
 - **SQL**:
   ```sql
   -- WITH CHECK
   garage_id IN (SELECT garage.id FROM garage WHERE garage.owner_id = auth.uid())
   ```
 
-### owners_can_remove_members
-
+### **[DEPRECATED]** owners_can_remove_members
 - **Applies To**: DELETE
-- **Rule**: A user can remove a member from a garage if they are the owner of that garage.
+- **Rule**: A user can remove a member from a garage if they are the owner of that garage. **This policy should be removed.**
 - **SQL**:
   ```sql
   -- USING
   garage_id IN (SELECT garage.id FROM garage WHERE garage.owner_id = auth.uid())
   ```
 
-### owners_can_update_members
-
+### **[DEPRECATED]** owners_can_update_members
 - **Applies To**: UPDATE
-- **Rule**: A user can update a member's details (e.g., role) if they are the owner of that garage.
+- **Rule**: A user can update a member's details (e.g., role) if they are the owner of that garage. **This policy should be removed.**
 - **SQL**:
   ```sql
   -- USING
