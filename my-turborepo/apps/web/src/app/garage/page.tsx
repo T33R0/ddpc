@@ -20,7 +20,17 @@ function GarageContent() {
   const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <section className="relative py-12 bg-black min-h-screen">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-white text-lg">Loading...</div>
+        </div>
+      </section>
+    );
+  }
 
   useEffect(() => {
     async function fetchCollectionData() {
