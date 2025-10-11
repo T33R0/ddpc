@@ -18,52 +18,27 @@ interface UserVehicle extends Vehicle {
 }
 
 function GarageContent() {
-  const [vehicles, setVehicles] = useState<UserVehicle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [vehicles, setVehicles] = useState<UserVehicle[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   const { user, loading: authLoading } = useAuth();
 
-  if (authLoading) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-white text-lg">Loading...</div>
-        </div>
-      </section>
-    );
-  }
-
-  if (!user) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-red-400 text-lg">Please sign in to view your collection</div>
-        </div>
-      </section>
-    );
-  }
-
-  // Effect to handle initial loading state
   useEffect(() => {
-    if (!authLoading && !user) {
-      setLoading(false);
+    // 1. Wait for authentication to resolve.
+    if (authLoading) {
+      return; // Do nothing until auth is complete.
     }
-  }, [authLoading, user]);
 
-  // Effect to fetch data when user becomes available
-  useEffect(() => {
-    if (authLoading || !user) return;
+    // 2. If no user, set vehicles to an empty array to stop loading.
+    if (!user) {
+      setVehicles([]);
+      return;
+    }
 
     let isMounted = true;
 
     async function fetchCollectionData() {
       try {
-        if (isMounted) {
-          setLoading(true);
-          setError(null);
-        }
-
+        setError(null);
         const session = await supabase.auth.getSession();
         if (!session.data.session?.access_token) {
           throw new Error('No access token available');
@@ -79,12 +54,6 @@ function GarageContent() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          if (response.status === 401) {
-            if (isMounted) {
-              setError('Please sign in to access your collection');
-            }
-            return;
-          }
           throw new Error(errorData.error || 'Failed to fetch vehicles');
         }
 
@@ -97,10 +66,6 @@ function GarageContent() {
           console.error('Failed to fetch collection data:', err);
           setError(err instanceof Error ? err.message : 'Failed to load collection');
         }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
       }
     }
 
@@ -109,9 +74,12 @@ function GarageContent() {
     return () => {
       isMounted = false;
     };
-  }, [authLoading, user]);
+  }, [user, authLoading]); // Effect runs when auth state changes.
 
-  if (loading) {
+  // --- Render Logic ---
+
+  // Show loading indicator if auth is in progress OR if the vehicle fetch hasn't started/finished.
+  if (authLoading || vehicles === null) {
     return (
       <section className="relative py-12 bg-black min-h-screen">
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -121,11 +89,23 @@ function GarageContent() {
     );
   }
 
+  // After loading, if there's no user, prompt to sign in.
+  if (!user) {
+    return (
+      <section className="relative py-12 bg-black min-h-screen">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-red-400 text-lg">Please sign in to view your collection</div>
+        </div>
+      </section>
+    );
+  }
+
+  // If there was an error during fetch.
   if (error) {
     return (
       <section className="relative py-12 bg-black min-h-screen">
         <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-red-400 text-lg">Error: {error}</div>
+          <div className="text-red-400 text-lg">{error}</div>
         </div>
       </section>
     );
