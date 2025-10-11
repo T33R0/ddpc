@@ -130,8 +130,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
+  // During build time or SSR, provide a default loading state
   if (context === undefined) {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      // SSR/build time - return loading state
+      return {
+        user: null,
+        session: null,
+        loading: true,
+        signUp: async () => ({ error: null }),
+        signIn: async () => ({ error: null }),
+        signInWithGoogle: async () => ({ error: null }),
+        signOut: async () => {},
+      };
+    }
+    // Client-side but no provider - this is an error
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 }
