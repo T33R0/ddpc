@@ -3,6 +3,8 @@ import Image from 'next/image';
 import styles from './vehicle-details-modal.module.css';
 import type { Vehicle } from '@repo/types';
 import toast from 'react-hot-toast';
+import { useAuth } from '@repo/ui/auth-context';
+import { supabase } from '../../lib/supabase';
 
 type VehicleDetailsModalProps = {
   vehicle: Vehicle;
@@ -10,6 +12,7 @@ type VehicleDetailsModalProps = {
 };
 
 const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Overview');
   const [selectedTrim, setSelectedTrim] = useState(vehicle.trim);
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
@@ -23,17 +26,37 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
   };
 
   const handleAddToGarage = async () => {
+    if (!user) {
+      toast.error('You must be signed in to add a vehicle to your garage.');
+      return;
+    }
     setIsAddingToGarage(true);
 
     try {
       // For now, we'll use a placeholder garage ID
       // In a real app, you'd get this from the authenticated user
-      const garageId = 'placeholder-garage-id';
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error('Could not get user session.');
+      }
+      const accessToken = sessionData.session.access_token;
+
+      const { data: garageData, error: garageError } = await supabase
+        .from('garage')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (garageError || !garageData) {
+        throw new Error('Could not find your garage.');
+      }
+      const garageId = garageData.id;
 
       const response = await fetch('/api/garage/add-vehicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           vehicleDataId: vehicle.id,
