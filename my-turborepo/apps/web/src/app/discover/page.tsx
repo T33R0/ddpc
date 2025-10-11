@@ -5,8 +5,10 @@ import { VehicleFilters, type FilterState } from "../../features/discover/vehicl
 import { VehicleGallery } from "../../features/discover/vehicle-gallery";
 import { getVehicles } from "../../lib/supabase";
 import type { Vehicle } from "@repo/types";
+import { AuthProvider } from '@repo/ui/auth-context';
+import { supabase } from '../../lib/supabase';
 
-export default function Discover() {
+function DiscoverContent() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,5 +67,13 @@ export default function Discover() {
         <VehicleGallery vehicles={vehicles} filters={filters} />
       </div>
     </section>
+  );
+}
+
+export default function Discover() {
+  return (
+    <AuthProvider supabase={supabase}>
+      <DiscoverContent />
+    </AuthProvider>
   );
 }
