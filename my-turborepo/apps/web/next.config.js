@@ -14,6 +14,10 @@ const config = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'media.ed.edmunds-media.com',
+      },
     ],
   },
   ...nextConfig,
