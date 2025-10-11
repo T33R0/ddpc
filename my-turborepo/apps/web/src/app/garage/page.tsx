@@ -44,64 +44,72 @@ function GarageContent() {
     );
   }
 
+  // Effect to handle initial loading state
   useEffect(() => {
-    console.log('useEffect running, user:', user);
+    if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [authLoading, user]);
+
+  // Effect to fetch data when user becomes available
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    let isMounted = true;
 
     async function fetchCollectionData() {
-      console.log('fetchCollectionData called, user exists:', !!user);
-
-      if (!user) {
-        console.log('No user, setting loading false');
-        setLoading(false);
-        return;
-      }
-
       try {
-        console.log('Setting loading true and fetching data');
-        setLoading(true);
+        if (isMounted) {
+          setLoading(true);
+          setError(null);
+        }
 
-        // Get session token
         const session = await supabase.auth.getSession();
-        console.log('Session data:', session.data.session ? 'exists' : 'null');
-
         if (!session.data.session?.access_token) {
           throw new Error('No access token available');
         }
 
-        // Fetch user's vehicles using the API
-        console.log('Making API call to /api/garage/vehicles');
         const response = await fetch('/api/garage/vehicles', {
           headers: {
             'Authorization': `Bearer ${session.data.session.access_token}`,
           },
         });
 
-        console.log('API response status:', response.status);
+        if (!isMounted) return;
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.log('API error response:', errorData);
           if (response.status === 401) {
-            setError('Please sign in to access your collection');
+            if (isMounted) {
+              setError('Please sign in to access your collection');
+            }
             return;
           }
           throw new Error(errorData.error || 'Failed to fetch vehicles');
         }
 
         const data = await response.json();
-        console.log('API success, vehicles count:', data.vehicles?.length || 0);
-        setVehicles(data.vehicles || []);
+        if (isMounted) {
+          setVehicles(data.vehicles || []);
+        }
       } catch (err) {
-        console.error('Failed to fetch collection data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load collection');
+        if (isMounted) {
+          console.error('Failed to fetch collection data:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load collection');
+        }
       } finally {
-        console.log('Setting loading to false');
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchCollectionData();
-  }, [user?.id]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authLoading, user]);
 
   if (loading) {
     return (
