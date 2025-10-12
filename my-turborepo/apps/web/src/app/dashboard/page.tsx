@@ -175,7 +175,7 @@ export default function DashboardPage() {
         )}
 
         {/* Orbital Navigation Section */}
-        <div className="mt-20 mb-8">
+        <div className="my-auto">
           <DDPCDashboardOrbital nodes={dashboardNodes} />
         </div>
       </div>

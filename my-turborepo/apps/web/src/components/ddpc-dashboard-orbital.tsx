@@ -39,6 +39,22 @@ export default function DDPCDashboardOrbital({
   const orbitRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const router = useRouter();
+  const [radius, setRadius] = useState(220);
+
+  useEffect(() => {
+    const updateRadius = () => {
+      if (containerRef.current) {
+        const size = Math.min(containerRef.current.offsetWidth, containerRef.current.offsetHeight);
+        const newRadius = Math.max(140, Math.min(240, size * 0.3));
+        setRadius(newRadius);
+      }
+    };
+
+    updateRadius();
+    window.addEventListener('resize', updateRadius);
+    return () => window.removeEventListener('resize', updateRadius);
+  }, []);
+
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current || e.target === orbitRef.current) {
@@ -111,7 +127,6 @@ export default function DDPCDashboardOrbital({
 
   const calculateNodePosition = (index: number, total: number) => {
     const angle = ((index / total) * 360 + rotationAngle) % 360;
-    const radius = 180;
     const radian = (angle * Math.PI) / 180;
 
     const x = radius * Math.cos(radian) + centerOffset.x;
@@ -162,10 +177,13 @@ export default function DDPCDashboardOrbital({
         return "AVAILABLE";
     }
   };
+  
+  const nodeSize = radius * 0.3;
+  const logoSize = radius * 0.5;
 
   return (
     <div
-      className="w-full h-[70vh] flex flex-col items-center justify-center"
+      className="w-full h-[80vh] min-h-[600px] flex flex-col items-center justify-center"
       ref={containerRef}
       onClick={handleContainerClick}
     >
@@ -179,19 +197,28 @@ export default function DDPCDashboardOrbital({
           }}
         >
           {/* DDPC Logo Center */}
-          <div className="absolute w-[100px] h-[100px] rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-600 flex items-center justify-center z-10 shadow-lg">
-            <div className="w-[60px] h-[60px] flex items-center justify-center">
+          <div
+            className="absolute rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-600 flex items-center justify-center z-10 shadow-lg"
+            style={{ width: logoSize, height: logoSize }}
+          >
+            <div style={{ width: logoSize * 0.6, height: logoSize * 0.6 }} className="flex items-center justify-center">
               <Logo />
             </div>
-            <div className="absolute w-[120px] h-[120px] rounded-full border border-gray-500/30 animate-ping opacity-50"></div>
             <div
-              className="absolute w-[140px] h-[140px] rounded-full border border-gray-400/20 animate-ping opacity-30"
-              style={{ animationDelay: "0.5s" }}
+              className="absolute rounded-full border border-gray-500/30 animate-ping opacity-50"
+              style={{ width: logoSize * 1.2, height: logoSize * 1.2 }}
+            ></div>
+            <div
+              className="absolute rounded-full border border-gray-400/20 animate-ping opacity-30"
+              style={{ animationDelay: "0.5s", width: logoSize * 1.4, height: logoSize * 1.4 }}
             ></div>
           </div>
 
           {/* Orbital Ring */}
-          <div className="absolute w-80 h-80 rounded-full border border-gray-600/20"></div>
+          <div
+            className="absolute rounded-full border border-gray-600/20"
+            style={{ width: radius * 2.2, height: radius * 2.2 }}
+          ></div>
 
           {nodes.map((node, index) => {
             const position = calculateNodePosition(index, nodes.length);
@@ -223,16 +250,16 @@ export default function DDPCDashboardOrbital({
                   }`}
                   style={{
                     background: `radial-gradient(circle, ${node.color}20 0%, transparent 70%)`,
-                    width: "75px",
-                    height: "75px",
-                    left: "-37.5px",
-                    top: "-37.5px",
+                    width: nodeSize * 1.25,
+                    height: nodeSize * 1.25,
+                    left: -(nodeSize * 0.125),
+                    top: -(nodeSize * 0.125),
                   }}
                 ></div>
 
                 <div
                   className={`
-                  w-[60px] h-[60px] rounded-full flex items-center justify-center
+                  rounded-full flex items-center justify-center
                   ${isExpanded ? "text-black" : "text-white"}
                   border-2
                   ${isExpanded ? "border-white shadow-lg shadow-white/20" : "border-gray-600"}
@@ -240,25 +267,33 @@ export default function DDPCDashboardOrbital({
                   ${isExpanded ? "scale-125" : ""}
                   ${isRelated ? "animate-pulse border-white/60" : ""}
                 `}
-                  style={{ backgroundColor: isExpanded ? 'white' : node.color }}
+                  style={{ 
+                    backgroundColor: isExpanded ? 'white' : node.color,
+                    width: nodeSize,
+                    height: nodeSize,
+                  }}
                 >
-                  <Icon size={24} />
+                  <Icon size={nodeSize * 0.4} />
                 </div>
 
                 <div
                   className={`
-                  absolute top-14 whitespace-nowrap
+                  absolute whitespace-nowrap
                   text-xs font-semibold tracking-wider
                   transition-all duration-300
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? "text-white scale-110" : "text-gray-400"}
                 `}
+                  style={{ top: nodeSize * 0.9 }}
                 >
                   {node.title}
                 </div>
 
                 {isExpanded && (
-                  <Card className="absolute top-20 left-1/2 -translate-x-1/2 w-72 bg-gray-900/95 backdrop-blur-lg border-gray-600 shadow-xl shadow-black/50 overflow-visible">
+                  <Card 
+                    className="absolute left-1/2 -translate-x-1/2 w-72 bg-gray-900/95 backdrop-blur-lg border-gray-600 shadow-xl shadow-black/50 overflow-visible"
+                    style={{ top: nodeSize * 1.2 }}
+                  >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-center">
