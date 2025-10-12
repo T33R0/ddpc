@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ImageWithFallback } from '../../components/image-with-fallback';
 import type { VehicleSummary } from '@repo/types';
 import type { FilterState } from './vehicle-filters';
@@ -9,6 +9,9 @@ import VehicleDetailsModal from './vehicle-details-modal';
 type VehicleGalleryProps = {
   vehicles: VehicleSummary[];
   filters: FilterState;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  hasMore?: boolean;
 };
 
 type SelectedVehicle = {
@@ -16,8 +19,27 @@ type SelectedVehicle = {
   initialTrimId?: string;
 };
 
-export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
+export function VehicleGallery({ vehicles, filters, onLoadMore, loadingMore = false, hasMore = false }: VehicleGalleryProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<SelectedVehicle | null>(null);
+
+  // Infinite scroll logic
+  const handleScroll = useCallback(() => {
+    if (!onLoadMore || loadingMore || !hasMore) return;
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    // Load more when user is within 300px of the bottom
+    if (scrollTop + windowHeight >= documentHeight - 300) {
+      onLoadMore();
+    }
+  }, [onLoadMore, loadingMore, hasMore]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   const filteredVehicles = vehicles.filter((summary) => {
     const vehicleYear = parseInt(summary.year, 10);
@@ -85,6 +107,21 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
           </div>
         ))}
       </div>
+
+      {/* Loading more indicator */}
+      {loadingMore && (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-white text-lg">Loading more vehicles...</div>
+        </div>
+      )}
+
+      {/* No more vehicles message */}
+      {!loadingMore && !hasMore && vehicles.length > 0 && (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-neutral-400 text-sm">No more vehicles to load</div>
+        </div>
+      )}
+
       {selectedVehicle && (
         <VehicleDetailsModal
           summary={selectedVehicle.summary}

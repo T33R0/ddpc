@@ -10,7 +10,16 @@ type VehicleSummaryResponse = {
   data: VehicleSummary[]
   page: number
   pageSize: number
-  total: number
+}
+
+type FilterOptions = {
+  years: number[]
+  makes: string[]
+  models: string[]
+  engineTypes: string[]
+  fuelTypes: string[]
+  drivetrains: string[]
+  bodyTypes: string[]
 }
 
 export async function getVehicleSummaries(page = 1, pageSize = 24): Promise<VehicleSummary[]> {
@@ -35,6 +44,24 @@ export async function getVehicleSummaries(page = 1, pageSize = 24): Promise<Vehi
 
   const payload = (await response.json()) as VehicleSummaryResponse
   return payload.data
+}
+
+export async function getVehicleFilterOptions(): Promise<FilterOptions> {
+  const response = await fetch('/api/discover/filters', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}))
+    const message = (errorBody && errorBody.error) || 'Failed to fetch filter options'
+    throw new Error(message)
+  }
+
+  return await response.json()
 }
 
 export async function getVehicleById(id: string): Promise<Vehicle | null> {
