@@ -129,6 +129,26 @@ export interface Vehicle {
   new_year?: string;
 }
 
+export interface TrimVariant extends Vehicle {
+  /**
+   * Convenience field that contains the first image URL associated with this trim.
+   * Consumers can fall back to the full `image_url` list if this field is undefined.
+   */
+  primaryImage?: string;
+}
+
+export interface VehicleSummary {
+  /**
+   * Stable identifier for the summary entry. Typically derived from year/make/model.
+   */
+  id: string;
+  year: string;
+  make: string;
+  model: string;
+  heroImage?: string;
+  trims: TrimVariant[];
+}
+
 export interface WorkItem {
   id: string;
   vehicleId: string;

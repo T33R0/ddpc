@@ -3,7 +3,7 @@
 import React from 'react';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
 import { Button } from '@repo/ui/button';
-import type { Vehicle } from '@repo/types';
+import type { VehicleSummary } from '@repo/types';
 
 export type FilterState = {
   minYear: number | null;
@@ -20,7 +20,7 @@ export type FilterState = {
 type VehicleFiltersProps = {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
-  vehicles: Vehicle[];
+  vehicles: VehicleSummary[];
 };
 
 export function VehicleFilters({ filters, onFilterChange, vehicles }: VehicleFiltersProps) {
@@ -28,14 +28,19 @@ export function VehicleFilters({ filters, onFilterChange, vehicles }: VehicleFil
     onFilterChange({ ...filters, [key]: value });
   };
 
+  const allTrims = vehicles.flatMap((summary) => summary.trims);
   const years = Array.from(new Set(vehicles.map(v => parseInt(v.year, 10)))).sort((a, b) => b - a);
   const makes = Array.from(new Set(vehicles.map(v => v.make))).sort();
-  const models = Array.from(new Set(vehicles.filter(v => !filters.make || v.make === filters.make).map(v => v.model))).sort();
-  const engineTypes = Array.from(new Set(vehicles.map(v => v.cylinders?.toString()).filter(Boolean))).sort() as string[];
-  const fuelTypes = Array.from(new Set(vehicles.map(v => v.fuel_type).filter(Boolean))).sort() as string[];
-  const drivetrains = Array.from(new Set(vehicles.map(v => v.drive_type).filter(Boolean))).sort() as string[];
-  const doors = Array.from(new Set(vehicles.map(v => v.body_type).filter(Boolean))).sort() as string[];
-  const vehicleTypes = Array.from(new Set(vehicles.map(v => v.body_type).filter(Boolean))).sort() as string[];
+  const models = Array.from(new Set(
+    vehicles
+      .filter(v => !filters.make || v.make === filters.make)
+      .map(v => v.model)
+  )).sort();
+  const engineTypes = Array.from(new Set(allTrims.map(trim => trim.cylinders?.toString()).filter(Boolean))).sort() as string[];
+  const fuelTypes = Array.from(new Set(allTrims.map(trim => trim.fuel_type).filter(Boolean))).sort() as string[];
+  const drivetrains = Array.from(new Set(allTrims.map(trim => trim.drive_type).filter(Boolean))).sort() as string[];
+  const doors = Array.from(new Set(allTrims.map(trim => trim.doors).filter(Boolean))).sort() as string[];
+  const vehicleTypes = Array.from(new Set(allTrims.map(trim => trim.body_type).filter(Boolean))).sort() as string[];
 
   return (
     <div className="flex flex-wrap items-center gap-4 mb-8">

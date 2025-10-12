@@ -2,37 +2,50 @@
 
 import React, { useState } from 'react';
 import { ImageWithFallback } from '../../components/image-with-fallback';
-import toast from 'react-hot-toast';
-import type { Vehicle } from '@repo/types';
+import type { VehicleSummary } from '@repo/types';
 import type { FilterState } from './vehicle-filters';
 import VehicleDetailsModal from './vehicle-details-modal';
 
 type VehicleGalleryProps = {
-  vehicles: Vehicle[];
+  vehicles: VehicleSummary[];
   filters: FilterState;
 };
 
+type SelectedVehicle = {
+  summary: VehicleSummary;
+  initialTrimId?: string;
+};
+
 export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<SelectedVehicle | null>(null);
 
-  const filteredVehicles = vehicles.filter(vehicle => {
-    const vehicleYear = parseInt(vehicle.year, 10);
+  const filteredVehicles = vehicles.filter((summary) => {
+    const vehicleYear = parseInt(summary.year, 10);
 
-    return (
+    const matchesBaseFilters =
       (!filters.minYear || vehicleYear >= filters.minYear) &&
       (!filters.maxYear || vehicleYear <= filters.maxYear) &&
-      (!filters.make || vehicle.make === filters.make) &&
-      (!filters.model || vehicle.model === filters.model) &&
-      (!filters.engineType || vehicle.cylinders?.toString() === filters.engineType) &&
-      (!filters.fuelType || vehicle.fuel_type === filters.fuelType) &&
-      (!filters.drivetrain || vehicle.drive_type === filters.drivetrain) &&
-      (!filters.doors || vehicle.body_type === filters.doors) &&
-      (!filters.vehicleType || vehicle.body_type === filters.vehicleType)
-    );
+      (!filters.make || summary.make === filters.make) &&
+      (!filters.model || summary.model === filters.model);
+
+    if (!matchesBaseFilters) {
+      return false;
+    }
+
+    return summary.trims.some((trim) => (
+      (!filters.engineType || trim.cylinders?.toString() === filters.engineType) &&
+      (!filters.fuelType || trim.fuel_type === filters.fuelType) &&
+      (!filters.drivetrain || trim.drive_type === filters.drivetrain) &&
+      (!filters.doors || trim.doors === filters.doors) &&
+      (!filters.vehicleType || trim.body_type === filters.vehicleType)
+    ));
   });
 
-  const handleOpenModal = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
+  const handleOpenModal = (summary: VehicleSummary) => {
+    setSelectedVehicle({
+      summary,
+      initialTrimId: summary.trims[0]?.id,
+    });
   };
 
   const handleCloseModal = () => {
@@ -42,8 +55,8 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
   return (
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
-        {filteredVehicles.map((vehicle) => (
-          <div key={vehicle.id} className="group transition-all duration-300" onClick={() => handleOpenModal(vehicle)}>
+        {filteredVehicles.map((summary) => (
+          <div key={summary.id} className="group transition-all duration-300" onClick={() => handleOpenModal(summary)}>
             <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer">
               <div className="flex items-center text-xs text-neutral-400">
                 <div className="flex items-center gap-2">
@@ -52,26 +65,32 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
                 </div>
               </div>
               <ImageWithFallback
-                src={(vehicle.image_url || '').split(';')[0] || ''}
+                src={summary.heroImage || summary.trims[0]?.primaryImage || summary.trims[0]?.image_url?.split(';')[0] || ''}
                 fallbackSrc="/branding/fallback-logo.png"
-                alt={`${vehicle.make} ${vehicle.model}`}
+                alt={`${summary.make} ${summary.model}`}
                 width={400}
                 height={225}
                 className="rounded-lg object-cover aspect-video bg-white/10"
               />
               <div className="text-center">
-                <h3 className="font-bold text-lg">{vehicle.year} {vehicle.make} {vehicle.model}</h3>
-                <p className="text-neutral-400 text-sm">{vehicle.trim}</p>
+                <h3 className="font-bold text-lg">{summary.year} {summary.make} {summary.model}</h3>
+                <p className="text-neutral-400 text-sm">
+                  {summary.trims[0]?.trim || `${summary.trims.length} trims available`}
+                </p>
               </div>
               <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg">
-                {Math.floor(Math.random() * 50)} public builds
+                {summary.trims.length} trims · {Math.floor(Math.random() * 50)} public builds
               </div>
             </div>
           </div>
         ))}
       </div>
       {selectedVehicle && (
-        <VehicleDetailsModal vehicle={selectedVehicle} onClose={handleCloseModal} />
+        <VehicleDetailsModal
+          summary={selectedVehicle.summary}
+          initialTrimId={selectedVehicle.initialTrimId}
+          onClose={handleCloseModal}
+        />
       )}
     </>
   );

@@ -1,24 +1,40 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Vehicle } from '@repo/types'
+import type { Vehicle, VehicleSummary } from '@repo/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// API functions to fetch vehicle data from v_vehicle_discovery view
-export async function getVehicles(): Promise<Vehicle[]> {
-  const { data, error } = await supabase
-    .from('v_vehicle_discovery')
-    .select('*')
-    .order('year', { ascending: false })
+type VehicleSummaryResponse = {
+  data: VehicleSummary[]
+  page: number
+  pageSize: number
+  total: number
+}
 
-  if (error) {
-    console.error('Error fetching vehicles:', error)
-    throw new Error(`Failed to fetch vehicles: ${error.message}`)
+export async function getVehicleSummaries(page = 1, pageSize = 24): Promise<VehicleSummary[]> {
+  const searchParams = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  })
+
+  const response = await fetch(`/api/discover/vehicles?${searchParams.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}))
+    const message = (errorBody && errorBody.error) || 'Failed to fetch vehicle summaries'
+    throw new Error(message)
   }
 
-  return (data || []) as Vehicle[]
+  const payload = (await response.json()) as VehicleSummaryResponse
+  return payload.data
 }
 
 export async function getVehicleById(id: string): Promise<Vehicle | null> {
