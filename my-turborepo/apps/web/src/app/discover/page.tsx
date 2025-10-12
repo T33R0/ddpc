@@ -1,39 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { VehicleFilters, type FilterState } from "../../features/discover/vehicle-filters";
 import { VehicleGallery } from "../../features/discover/vehicle-gallery";
-import { getVehicles } from "../../lib/supabase";
-import type { Vehicle } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
+import { useInfiniteVehicleDiscovery } from './use-infinite-vehicle-discovery';
 
 function DiscoverContent() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterState>({ minYear: null, maxYear: null, make: null, model: null, engineType: null, fuelType: null, drivetrain: null, doors: null, vehicleType: null });
+  const [filters, setFilters] = useState<FilterState>({ minYear: null, maxYear: null, make: null, model: null, engineType: null,
+ fuelType: null, drivetrain: null, doors: null, vehicleType: null });
+  const { vehicles, isInitialLoading, isLoadingMore, error, sentinelRef, hasMore } = useInfiniteVehicleDiscovery(filters);
 
-  useEffect(() => {
-    async function fetchVehicles() {
-      try {
-        setLoading(true);
-        const vehicleData = await getVehicles();
-
-        // Vehicle data is already in correct Vehicle format
-        setVehicles(vehicleData);
-      } catch (err) {
-        console.error('Failed to fetch vehicles:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load vehicles');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchVehicles();
-  }, []);
-
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <section className="relative py-12 bg-black min-h-screen">
         <div className="flex items-center justify-center min-h-[50vh]">
@@ -64,7 +43,13 @@ function DiscoverContent() {
       </div>
       <div className="relative container px-4 md:px-6 pt-24">
         <VehicleFilters filters={filters} onFilterChange={setFilters} vehicles={vehicles} />
-        <VehicleGallery vehicles={vehicles} filters={filters} />
+        <VehicleGallery
+          vehicles={vehicles}
+          filters={filters}
+          sentinelRef={sentinelRef}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+        />
       </div>
     </section>
   );
