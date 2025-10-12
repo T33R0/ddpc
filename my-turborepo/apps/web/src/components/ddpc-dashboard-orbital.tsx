@@ -179,13 +179,13 @@ export default function DDPCDashboardOrbital({
           }}
         >
           {/* DDPC Logo Center */}
-          <div className="absolute w-20 h-20 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-600 flex items-center justify-center z-10 shadow-lg">
-            <div className="w-12 h-12 flex items-center justify-center">
+          <div className="absolute w-[100px] h-[100px] rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-600 flex items-center justify-center z-10 shadow-lg">
+            <div className="w-[60px] h-[60px] flex items-center justify-center">
               <Logo />
             </div>
-            <div className="absolute w-24 h-24 rounded-full border border-gray-500/30 animate-ping opacity-50"></div>
+            <div className="absolute w-[120px] h-[120px] rounded-full border border-gray-500/30 animate-ping opacity-50"></div>
             <div
-              className="absolute w-28 h-28 rounded-full border border-gray-400/20 animate-ping opacity-30"
+              className="absolute w-[140px] h-[140px] rounded-full border border-gray-400/20 animate-ping opacity-30"
               style={{ animationDelay: "0.5s" }}
             ></div>
           </div>
@@ -223,25 +223,26 @@ export default function DDPCDashboardOrbital({
                   }`}
                   style={{
                     background: `radial-gradient(circle, ${node.color}20 0%, transparent 70%)`,
-                    width: "60px",
-                    height: "60px",
-                    left: "-30px",
-                    top: "-30px",
+                    width: "75px",
+                    height: "75px",
+                    left: "-37.5px",
+                    top: "-37.5px",
                   }}
                 ></div>
 
                 <div
                   className={`
-                  w-12 h-12 rounded-full flex items-center justify-center
-                  ${isExpanded ? "bg-white text-black" : "bg-gray-800 text-white"}
+                  w-[60px] h-[60px] rounded-full flex items-center justify-center
+                  ${isExpanded ? "text-black" : "text-white"}
                   border-2
                   ${isExpanded ? "border-white shadow-lg shadow-white/20" : "border-gray-600"}
                   transition-all duration-300 transform
                   ${isExpanded ? "scale-125" : ""}
                   ${isRelated ? "animate-pulse border-white/60" : ""}
                 `}
+                  style={{ backgroundColor: isExpanded ? 'white' : node.color }}
                 >
-                  <Icon size={20} />
+                  <Icon size={24} />
                 </div>
 
                 <div

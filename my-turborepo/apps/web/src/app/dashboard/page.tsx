@@ -175,11 +175,7 @@ export default function DashboardPage() {
         )}
 
         {/* Orbital Navigation Section */}
-        <div className="mt-16 mb-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">Navigate Your DDPC Experience</h2>
-            <p className="text-gray-400">Click on any orbiting icon to explore different sections of your dashboard</p>
-          </div>
+        <div className="mt-20 mb-8">
           <DDPCDashboardOrbital nodes={dashboardNodes} />
         </div>
       </div>
