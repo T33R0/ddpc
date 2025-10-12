@@ -118,8 +118,8 @@ function DiscoverContent() {
     if (!current) return;
 
     const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries;
-      if (entry.isIntersecting) {
+      const entry = entries.find((candidate) => candidate.isIntersecting);
+      if (entry) {
         loadVehicles({ reset: false });
       }
     }, { rootMargin: '200px' });
