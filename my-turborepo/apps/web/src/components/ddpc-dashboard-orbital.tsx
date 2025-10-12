@@ -165,7 +165,7 @@ export default function DDPCDashboardOrbital({
 
   return (
     <div
-      className="w-full h-96 flex flex-col items-center justify-center overflow-hidden"
+      className="w-full h-[70vh] flex flex-col items-center justify-center"
       ref={containerRef}
       onClick={handleContainerClick}
     >
