@@ -104,81 +104,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-6xl mx-auto pt-24">
-        {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Here&apos;s your DDPC dashboard - manage your vehicles and track your builds.
-          </p>
-        </div>
-
-        {/* Get Started Section - Moved to Top */}
-        {showGetStarted && (
-          <Card className="bg-gradient-to-r from-blue-900 to-purple-900 border-blue-500 mb-8 relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-4 right-4 text-blue-200 hover:text-white hover:bg-blue-800/50"
-              onClick={handleDismissGetStarted}
-            >
-              <X size={16} />
-            </Button>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Plus className="h-6 w-6" />
-                Get Started with DDPC
-              </CardTitle>
-              <CardDescription className="text-blue-100">
-                Ready to start tracking your vehicle projects? Here&apos;s how to get started.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-white font-bold">1</span>
-                  </div>
-                  <h4 className="font-semibold mb-2">Add Your Vehicle</h4>
-                  <p className="text-sm text-blue-100">Browse our database and add your first vehicle to start tracking.</p>
-                </div>
-                <div className="text-center">
-                  <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-white font-bold">2</span>
-                  </div>
-                  <h4 className="font-semibold mb-2">Create Your Garage</h4>
-                  <p className="text-sm text-blue-100">Set up your personal garage to organize your vehicles and projects.</p>
-                </div>
-                <div className="text-center">
-                  <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-white font-bold">3</span>
-                  </div>
-                  <h4 className="font-semibold mb-2">Start Tracking</h4>
-                  <p className="text-sm text-blue-100">Log maintenance, track modifications, and document your builds.</p>
-                </div>
-              </div>
-              <div className="flex justify-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-blue-200 border-blue-400 hover:bg-blue-800 hover:text-white"
-                  onClick={handleNeverShowAgain}
-                >
-                  Don&apos;t show this again
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Orbital Navigation Section */}
-        <div className="my-auto">
-          <DDPCDashboardOrbital nodes={dashboardNodes} />
-        </div>
-      </div>
+    <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center justify-center">
+      <DDPCDashboardOrbital nodes={dashboardNodes} />
     </div>
   );
 }

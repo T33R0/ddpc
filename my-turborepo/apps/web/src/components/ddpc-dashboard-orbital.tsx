@@ -39,22 +39,6 @@ export default function DDPCDashboardOrbital({
   const orbitRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const router = useRouter();
-  const [radius, setRadius] = useState(220);
-
-  useEffect(() => {
-    const updateRadius = () => {
-      if (containerRef.current) {
-        const size = Math.min(containerRef.current.offsetWidth, containerRef.current.offsetHeight);
-        const newRadius = Math.max(140, Math.min(240, size * 0.3));
-        setRadius(newRadius);
-      }
-    };
-
-    updateRadius();
-    window.addEventListener('resize', updateRadius);
-    return () => window.removeEventListener('resize', updateRadius);
-  }, []);
-
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current || e.target === orbitRef.current) {
@@ -127,6 +111,7 @@ export default function DDPCDashboardOrbital({
 
   const calculateNodePosition = (index: number, total: number) => {
     const angle = ((index / total) * 360 + rotationAngle) % 360;
+    const radius = 250;
     const radian = (angle * Math.PI) / 180;
 
     const x = radius * Math.cos(radian) + centerOffset.x;
@@ -178,12 +163,12 @@ export default function DDPCDashboardOrbital({
     }
   };
   
-  const nodeSize = radius * 0.3;
-  const logoSize = radius * 0.5;
+  const nodeSize = 75;
+  const logoSize = 75;
 
   return (
     <div
-      className="w-full h-[80vh] min-h-[600px] flex flex-col items-center justify-center"
+      className="w-full h-full flex flex-col items-center justify-center"
       ref={containerRef}
       onClick={handleContainerClick}
     >
@@ -199,25 +184,25 @@ export default function DDPCDashboardOrbital({
           {/* DDPC Logo Center */}
           <div
             className="absolute rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-600 flex items-center justify-center z-10 shadow-lg"
-            style={{ width: logoSize, height: logoSize }}
+            style={{ width: 125, height: 125 }}
           >
-            <div style={{ width: logoSize * 0.6, height: logoSize * 0.6 }} className="flex items-center justify-center">
+            <div style={{ width: 75, height: 75 }} className="flex items-center justify-center">
               <Logo />
             </div>
             <div
               className="absolute rounded-full border border-gray-500/30 animate-ping opacity-50"
-              style={{ width: logoSize * 1.2, height: logoSize * 1.2 }}
+              style={{ width: 150, height: 150 }}
             ></div>
             <div
               className="absolute rounded-full border border-gray-400/20 animate-ping opacity-30"
-              style={{ animationDelay: "0.5s", width: logoSize * 1.4, height: logoSize * 1.4 }}
+              style={{ animationDelay: "0.5s", width: 175, height: 175 }}
             ></div>
           </div>
 
           {/* Orbital Ring */}
           <div
             className="absolute rounded-full border border-gray-600/20"
-            style={{ width: radius * 2.2, height: radius * 2.2 }}
+            style={{ width: 550, height: 550 }}
           ></div>
 
           {nodes.map((node, index) => {
@@ -250,10 +235,10 @@ export default function DDPCDashboardOrbital({
                   }`}
                   style={{
                     background: `radial-gradient(circle, ${node.color}20 0%, transparent 70%)`,
-                    width: nodeSize * 1.25,
-                    height: nodeSize * 1.25,
-                    left: -(nodeSize * 0.125),
-                    top: -(nodeSize * 0.125),
+                    width: 94,
+                    height: 94,
+                    left: -9,
+                    top: -9,
                   }}
                 ></div>
 
@@ -269,11 +254,11 @@ export default function DDPCDashboardOrbital({
                 `}
                   style={{ 
                     backgroundColor: isExpanded ? 'white' : node.color,
-                    width: nodeSize,
-                    height: nodeSize,
+                    width: 75,
+                    height: 75,
                   }}
                 >
-                  <Icon size={nodeSize * 0.4} />
+                  <Icon size={30} />
                 </div>
 
                 <div
@@ -284,7 +269,7 @@ export default function DDPCDashboardOrbital({
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? "text-white scale-110" : "text-gray-400"}
                 `}
-                  style={{ top: nodeSize * 0.9 }}
+                  style={{ top: 68 }}
                 >
                   {node.title}
                 </div>
@@ -292,7 +277,7 @@ export default function DDPCDashboardOrbital({
                 {isExpanded && (
                   <Card 
                     className="absolute left-1/2 -translate-x-1/2 w-72 bg-gray-900/95 backdrop-blur-lg border-gray-600 shadow-xl shadow-black/50 overflow-visible"
-                    style={{ top: nodeSize * 1.2 }}
+                    style={{ top: 90 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
                     <CardHeader className="pb-2">
