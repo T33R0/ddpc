@@ -88,18 +88,18 @@ export default function DashboardPage() {
       category: "Social",
       relatedIds: [3, 5],
       status: "available" as const,
-      color: "#f59e0b"
+      color: "#8b5cf6" // Purple
     },
     {
       id: 5,
-      title: "AI Assistant",
-      route: "/ai",
-      description: "Get intelligent recommendations for your builds, part compatibility checks, and maintenance scheduling powered by AI.",
+      title: "Scrutineer",
+      route: "/scrutineer",
+      description: "Get intelligent recommendations for your builds, part compatibility checks, and maintenance scheduling powered by our Scrutineer AI.",
       icon: Zap,
       category: "AI",
       relatedIds: [2, 3, 4],
       status: "new" as const,
-      color: "#ef4444"
+      color: "#06b6d4" // Cyan
     },
   ];
 
@@ -175,7 +175,7 @@ export default function DashboardPage() {
         )}
 
         {/* Orbital Navigation Section */}
-        <div className="mb-8">
+        <div className="mt-16 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold mb-2">Navigate Your DDPC Experience</h2>
             <p className="text-gray-400">Click on any orbiting icon to explore different sections of your dashboard</p>

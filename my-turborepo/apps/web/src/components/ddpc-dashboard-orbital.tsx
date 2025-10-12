@@ -249,6 +249,7 @@ export default function DDPCDashboardOrbital({
                   absolute top-14 whitespace-nowrap
                   text-xs font-semibold tracking-wider
                   transition-all duration-300
+                  left-1/2 -translate-x-1/2
                   ${isExpanded ? "text-white scale-110" : "text-gray-400"}
                 `}
                 >
