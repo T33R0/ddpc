@@ -6,7 +6,6 @@ import { Button } from "@repo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Logo } from "@repo/ui/logo";
 import { useRouter } from "next/navigation";
-import { useMediaQuery } from "@repo/ui/hooks/use-media-query";
 
 interface DashboardNode {
   id: number;
@@ -40,7 +39,6 @@ export default function DDPCDashboardOrbital({
   const orbitRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const router = useRouter();
-  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current || e.target === orbitRef.current) {
@@ -120,10 +118,7 @@ export default function DDPCDashboardOrbital({
     const y = radius * Math.sin(radian) + centerOffset.y;
 
     const zIndex = Math.round(100 + 50 * Math.cos(radian));
-    const opacity = Math.max(
-      0.5,
-      Math.min(1, 0.5 + 0.5 * ((1 + Math.sin(radian)) / 2))
-    );
+    const opacity = 1;
 
     return { x, y, angle, zIndex, opacity };
   };
@@ -168,42 +163,13 @@ export default function DDPCDashboardOrbital({
   const nodeSize = 75;
   const logoSize = 75;
 
-  if (isMobile) {
-    return (
-      <div className="w-full max-w-md p-4">
-        <div className="grid grid-cols-1 gap-4">
-          {nodes.map((node) => {
-            const Icon = node.icon;
-            return (
-              <Card
-                key={node.id}
-                className="bg-gray-900 border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors"
-                onClick={() => router.push(node.route)}
-              >
-                <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                  <div className="p-3 rounded-full" style={{ backgroundColor: node.color }}>
-                    <Icon size={24} className="text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{node.title}</CardTitle>
-                    <p className="text-sm text-gray-400">{node.category}</p>
-                  </div>
-                </CardHeader>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-center"
+      className="w-[800px] h-[800px] flex flex-col items-center justify-center relative"
       ref={containerRef}
       onClick={handleContainerClick}
     >
-      <div className="relative w-full max-w-4xl h-full flex items-center justify-center">
+      <div className="relative w-full h-full flex items-center justify-center">
         <div
           className="absolute w-full h-full flex items-center justify-center"
           ref={orbitRef}
@@ -214,27 +180,15 @@ export default function DDPCDashboardOrbital({
         >
           {/* DDPC Logo Center */}
           <div
-            className="absolute rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-gray-600 flex items-center justify-center z-10 shadow-lg"
-            style={{ width: 125, height: 125 }}
+            className="absolute rounded-full bg-black border-2 border-red-500/50 flex items-center justify-center z-10 shadow-lg"
+            style={{ width: 150, height: 150 }}
           >
-            <div style={{ width: 75, height: 75 }} className="flex items-center justify-center">
-              <Logo />
-            </div>
+            <Logo size={100} />
             <div
-              className="absolute rounded-full border border-gray-500/30 animate-ping opacity-50"
-              style={{ width: 150, height: 150 }}
-            ></div>
-            <div
-              className="absolute rounded-full border border-gray-400/20 animate-ping opacity-30"
-              style={{ animationDelay: "0.5s", width: 175, height: 175 }}
+              className="absolute rounded-full border border-red-500/30 animate-ping opacity-50"
+              style={{ width: 170, height: 170 }}
             ></div>
           </div>
-
-          {/* Orbital Ring */}
-          <div
-            className="absolute rounded-full border border-gray-600/20"
-            style={{ width: 550, height: 550 }}
-          ></div>
 
           {nodes.map((node, index) => {
             const position = calculateNodePosition(index, nodes.length);
@@ -253,7 +207,7 @@ export default function DDPCDashboardOrbital({
               <div
                 key={node.id}
                 ref={(el) => { nodeRefs.current[node.id] = el; }}
-                className="absolute transition-all duration-700 cursor-pointer"
+                className="absolute transition-transform duration-300 cursor-pointer hover:scale-110"
                 style={nodeStyle}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -268,8 +222,8 @@ export default function DDPCDashboardOrbital({
                     background: `radial-gradient(circle, ${node.color}20 0%, transparent 70%)`,
                     width: 94,
                     height: 94,
-                    left: -9,
-                    top: -9,
+                    left: -9.5,
+                    top: -9.5,
                   }}
                 ></div>
 
@@ -280,7 +234,7 @@ export default function DDPCDashboardOrbital({
                   border-2
                   ${isExpanded ? "border-white shadow-lg shadow-white/20" : "border-gray-600"}
                   transition-all duration-300 transform
-                  ${isExpanded ? "scale-125" : "hover:scale-110"}
+                  ${isExpanded ? "scale-125" : ""}
                   ${isRelated ? "animate-pulse border-white/60" : ""}
                 `}
                   style={{ 
@@ -295,12 +249,12 @@ export default function DDPCDashboardOrbital({
                 <div
                   className={`
                   absolute whitespace-nowrap
-                  text-base font-semibold tracking-wider
+                  text-lg font-semibold tracking-wider
                   transition-all duration-300
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? "text-white scale-110" : "text-gray-400"}
                 `}
-                  style={{ top: 85 }}
+                  style={{ top: 90 }}
                 >
                   {node.title}
                 </div>
@@ -308,7 +262,7 @@ export default function DDPCDashboardOrbital({
                 {isExpanded && (
                   <Card 
                     className="absolute left-1/2 -translate-x-1/2 w-72 bg-gray-900/95 backdrop-blur-lg border-gray-600 shadow-xl shadow-black/50 overflow-visible"
-                    style={{ top: 110 }}
+                    style={{ top: 120 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
                     <CardHeader className="pb-2">
