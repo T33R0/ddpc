@@ -30,7 +30,11 @@ export function VehicleGallery({ vehicles }: VehicleGalleryProps) {
         )}
         {vehicles.map((vehicle) => {
           const fallbackTrim = vehicle.trims[0];
-          const heroImage = vehicle.heroImage || fallbackTrim?.imageUrl || '';
+          const fallbackImageSrc = '/branding/fallback-logo.png';
+          const candidateSrc = (vehicle.heroImage || fallbackTrim?.imageUrl || '')
+            .split(';')[0]
+            ?.trim();
+          const imageSrc = candidateSrc ? candidateSrc : fallbackImageSrc;
 
           return (
             <div
@@ -46,8 +50,8 @@ export function VehicleGallery({ vehicles }: VehicleGalleryProps) {
                   </div>
                 </div>
                 <ImageWithFallback
-                  src={(heroImage || '').split(';')[0]}
-                  fallbackSrc="/branding/fallback-logo.png"
+                  src={imageSrc}
+                  fallbackSrc={fallbackImageSrc}
                   alt={`${vehicle.make} ${vehicle.model}`}
                   width={400}
                   height={225}

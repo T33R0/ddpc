@@ -29,6 +29,12 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
     [vehicle.trims, selectedTrimId]
   );
 
+  const fallbackImageSrc = '/branding/fallback-logo.png';
+  const candidateImageSrc = (selectedTrim?.imageUrl || vehicle.heroImage || '')
+    .split(';')[0]
+    ?.trim();
+  const displayImageSrc = candidateImageSrc ? candidateImageSrc : fallbackImageSrc;
+
   useEffect(() => {
     setSelectedTrimId(vehicle.trims[0]?.id ?? null);
     setTrimError(null);
@@ -207,7 +213,7 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
         <button className={styles.closeButton} onClick={onClose}>X</button>
         <div className={styles.topSection}>
           <Image
-            src={((selectedTrim?.imageUrl || vehicle.heroImage || '').split(';')[0]) || ''}
+            src={displayImageSrc}
             alt={`${vehicle.make} ${vehicle.model}`}
             className={styles.vehicleImage}
             width={400}
