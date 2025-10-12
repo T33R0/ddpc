@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { VehicleFilters, type FilterState } from "../../features/discover/vehicle-filters";
 import { VehicleGallery } from "../../features/discover/vehicle-gallery";
-import { getVehicles } from "../../lib/supabase";
-import type { Vehicle } from "@repo/types";
+import { getVehicleSummaries } from "../../lib/supabase";
+import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 
 function DiscoverContent() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({ minYear: null, maxYear: null, make: null, model: null, engineType: null, fuelType: null, drivetrain: null, doors: null, vehicleType: null });
@@ -18,7 +18,7 @@ function DiscoverContent() {
     async function fetchVehicles() {
       try {
         setLoading(true);
-        const vehicleData = await getVehicles();
+        const vehicleData = await getVehicleSummaries();
 
         // Vehicle data is already in correct Vehicle format
         setVehicles(vehicleData);
