@@ -36,7 +36,7 @@ function DiscoverContent() {
         setLoading(true);
       }
 
-      const vehicleData = await getVehicleSummaries(page, 24);
+      const vehicleData = await getVehicleSummaries(page, 24, filters);
 
       if (append) {
         setVehicles(prev => [...prev, ...vehicleData]);
@@ -52,7 +52,7 @@ function DiscoverContent() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [filters]);
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -61,6 +61,14 @@ function DiscoverContent() {
       loadVehicles(nextPage, true);
     }
   }, [currentPage, loadingMore, hasMore, loadVehicles]);
+
+  // Effect to reload vehicles when filters change
+  useEffect(() => {
+    if (filterOptions) { // Only reload if filter options are loaded
+      loadVehicles(1, false);
+      setCurrentPage(1);
+    }
+  }, [filters, filterOptions, loadVehicles]);
 
   useEffect(() => {
     async function initializeData() {
@@ -72,9 +80,7 @@ function DiscoverContent() {
         const options = await getVehicleFilterOptions();
         setFilterOptions(options);
 
-        // Load first page of vehicles
-        await loadVehicles(1, false);
-        setCurrentPage(1);
+        // Load first page of vehicles (this will be triggered by the filter effect above)
       } catch (err) {
         console.error('Failed to initialize data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -83,7 +89,7 @@ function DiscoverContent() {
     }
 
     initializeData();
-  }, [loadVehicles]);
+  }, []); // Remove loadVehicles dependency to avoid infinite loops
 
   if (loading || !filterOptions) {
     return (
@@ -116,7 +122,7 @@ function DiscoverContent() {
       </div>
       <div className="relative container px-4 md:px-6 pt-24">
         <VehicleFilters filters={filters} onFilterChange={setFilters} filterOptions={filterOptions} />
-        <VehicleGallery vehicles={vehicles} filters={filters} onLoadMore={loadMore} loadingMore={loadingMore} hasMore={hasMore} />
+        <VehicleGallery vehicles={vehicles} onLoadMore={loadMore} loadingMore={loadingMore} hasMore={hasMore} />
       </div>
     </section>
   );

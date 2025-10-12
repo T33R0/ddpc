@@ -3,12 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ImageWithFallback } from '../../components/image-with-fallback';
 import type { VehicleSummary } from '@repo/types';
-import type { FilterState } from './vehicle-filters';
 import VehicleDetailsModal from './vehicle-details-modal';
 
 type VehicleGalleryProps = {
   vehicles: VehicleSummary[];
-  filters: FilterState;
   onLoadMore?: () => void;
   loadingMore?: boolean;
   hasMore?: boolean;
@@ -19,7 +17,7 @@ type SelectedVehicle = {
   initialTrimId?: string;
 };
 
-export function VehicleGallery({ vehicles, filters, onLoadMore, loadingMore = false, hasMore = false }: VehicleGalleryProps) {
+export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasMore = false }: VehicleGalleryProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<SelectedVehicle | null>(null);
 
   // Infinite scroll logic
@@ -41,27 +39,7 @@ export function VehicleGallery({ vehicles, filters, onLoadMore, loadingMore = fa
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  const filteredVehicles = vehicles.filter((summary) => {
-    const vehicleYear = parseInt(summary.year, 10);
-
-    const matchesBaseFilters =
-      (!filters.minYear || vehicleYear >= filters.minYear) &&
-      (!filters.maxYear || vehicleYear <= filters.maxYear) &&
-      (!filters.make || summary.make === filters.make) &&
-      (!filters.model || summary.model === filters.model);
-
-    if (!matchesBaseFilters) {
-      return false;
-    }
-
-    return summary.trims.some((trim) => (
-      (!filters.engineType || trim.cylinders?.toString() === filters.engineType) &&
-      (!filters.fuelType || trim.fuel_type === filters.fuelType) &&
-      (!filters.drivetrain || trim.drive_type === filters.drivetrain) &&
-      (!filters.doors || trim.doors === filters.doors) &&
-      (!filters.vehicleType || trim.body_type === filters.vehicleType)
-    ));
-  });
+  // Vehicles are already filtered at the database level, so no need for frontend filtering
 
   const handleOpenModal = (summary: VehicleSummary) => {
     setSelectedVehicle({
@@ -77,7 +55,7 @@ export function VehicleGallery({ vehicles, filters, onLoadMore, loadingMore = fa
   return (
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
-        {filteredVehicles.map((summary) => (
+        {vehicles.map((summary) => (
           <div key={summary.id} className="group transition-all duration-300" onClick={() => handleOpenModal(summary)}>
             <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer">
               <div className="flex items-center text-xs text-neutral-400">

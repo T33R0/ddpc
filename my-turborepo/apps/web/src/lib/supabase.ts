@@ -22,11 +22,52 @@ type FilterOptions = {
   bodyTypes: string[]
 }
 
-export async function getVehicleSummaries(page = 1, pageSize = 24): Promise<VehicleSummary[]> {
+export async function getVehicleSummaries(
+  page = 1,
+  pageSize = 24,
+  filters?: {
+    minYear?: number | null;
+    maxYear?: number | null;
+    make?: string | null;
+    model?: string | null;
+    engineType?: string | null;
+    fuelType?: string | null;
+    drivetrain?: string | null;
+    vehicleType?: string | null;
+  }
+): Promise<VehicleSummary[]> {
   const searchParams = new URLSearchParams({
     page: page.toString(),
     pageSize: pageSize.toString(),
   })
+
+  // Add filter parameters if provided
+  if (filters) {
+    if (filters.minYear !== null && filters.minYear !== undefined) {
+      searchParams.set('minYear', filters.minYear.toString());
+    }
+    if (filters.maxYear !== null && filters.maxYear !== undefined) {
+      searchParams.set('maxYear', filters.maxYear.toString());
+    }
+    if (filters.make) {
+      searchParams.set('make', filters.make);
+    }
+    if (filters.model) {
+      searchParams.set('model', filters.model);
+    }
+    if (filters.engineType) {
+      searchParams.set('engineType', filters.engineType);
+    }
+    if (filters.fuelType) {
+      searchParams.set('fuelType', filters.fuelType);
+    }
+    if (filters.drivetrain) {
+      searchParams.set('drivetrain', filters.drivetrain);
+    }
+    if (filters.vehicleType) {
+      searchParams.set('vehicleType', filters.vehicleType);
+    }
+  }
 
   const response = await fetch(`/api/discover/vehicles?${searchParams.toString()}`, {
     method: 'GET',

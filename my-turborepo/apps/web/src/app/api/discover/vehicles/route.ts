@@ -23,10 +23,28 @@ export async function GET(request: NextRequest) {
   const pageSize = Math.min(Math.max(pageSizeParam, 1), 100);
   const offset = (page - 1) * pageSize;
 
-  // Use the SQL function to get unique vehicles with all their trims
+  // Extract filter parameters
+  const minYear = searchParams.get('minYear') ? parseInt(searchParams.get('minYear')!, 10) : null;
+  const maxYear = searchParams.get('maxYear') ? parseInt(searchParams.get('maxYear')!, 10) : null;
+  const make = searchParams.get('make') || null;
+  const model = searchParams.get('model') || null;
+  const engineType = searchParams.get('engineType') || null;
+  const fuelType = searchParams.get('fuelType') || null;
+  const drivetrain = searchParams.get('drivetrain') || null;
+  const vehicleType = searchParams.get('vehicleType') || null;
+
+  // Use the SQL function to get unique vehicles with all their trims (with filtering)
   const { data, error } = await supabase.rpc('get_unique_vehicles_with_trims', {
     limit_param: pageSize,
     offset_param: offset,
+    min_year_param: minYear,
+    max_year_param: maxYear,
+    make_param: make,
+    model_param: model,
+    engine_type_param: engineType,
+    fuel_type_param: fuelType,
+    drivetrain_param: drivetrain,
+    vehicle_type_param: vehicleType,
   });
 
   if (error) {
