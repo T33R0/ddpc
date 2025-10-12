@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
   const pageSize = Math.min(Math.max(pageSizeParam, 1), 100);
   const offset = (page - 1) * pageSize;
 
-  // Use the SQL function to get unique vehicles
-  const { data, error } = await supabase.rpc('get_unique_vehicles', {
+  // Use the SQL function to get unique vehicles with all their trims
+  const { data, error } = await supabase.rpc('get_unique_vehicles_with_trims', {
     limit_param: pageSize,
     offset_param: offset,
   });
@@ -38,18 +38,18 @@ export async function GET(request: NextRequest) {
 
   // Transform the data into VehicleSummary format
   const summaries: VehicleSummary[] = (data as any[] | null)?.map((vehicle) => {
-    const heroImage = vehicle.image_url?.split(';')[0];
+    const trims: TrimVariant[] = vehicle.trims.map((trimData: any) => ({
+      ...trimData,
+      primaryImage: trimData.image_url?.split(';')[0] ?? undefined,
+    }));
 
     return {
-      id: `${vehicle.year}-${vehicle.make}-${vehicle.model}`,
+      id: vehicle.id,
       year: vehicle.year,
       make: vehicle.make,
       model: vehicle.model,
-      heroImage: heroImage ?? undefined,
-      trims: [{
-        ...vehicle,
-        primaryImage: heroImage ?? undefined,
-      } as TrimVariant],
+      heroImage: vehicle.hero_image?.split(';')[0] ?? undefined,
+      trims,
     };
   }) ?? [];
 
