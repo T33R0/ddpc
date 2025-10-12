@@ -6,6 +6,7 @@ import { Button } from "@repo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Logo } from "@repo/ui/logo";
 import { useRouter } from "next/navigation";
+import { useMediaQuery } from "@repo/ui/hooks/use-media-query";
 
 interface DashboardNode {
   id: number;
@@ -39,6 +40,7 @@ export default function DDPCDashboardOrbital({
   const orbitRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current || e.target === orbitRef.current) {
@@ -166,6 +168,35 @@ export default function DDPCDashboardOrbital({
   const nodeSize = 75;
   const logoSize = 75;
 
+  if (isMobile) {
+    return (
+      <div className="w-full max-w-md p-4">
+        <div className="grid grid-cols-1 gap-4">
+          {nodes.map((node) => {
+            const Icon = node.icon;
+            return (
+              <Card
+                key={node.id}
+                className="bg-gray-900 border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => router.push(node.route)}
+              >
+                <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                  <div className="p-3 rounded-full" style={{ backgroundColor: node.color }}>
+                    <Icon size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{node.title}</CardTitle>
+                    <p className="text-sm text-gray-400">{node.category}</p>
+                  </div>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center"
@@ -249,7 +280,7 @@ export default function DDPCDashboardOrbital({
                   border-2
                   ${isExpanded ? "border-white shadow-lg shadow-white/20" : "border-gray-600"}
                   transition-all duration-300 transform
-                  ${isExpanded ? "scale-125" : ""}
+                  ${isExpanded ? "scale-125" : "hover:scale-110"}
                   ${isRelated ? "animate-pulse border-white/60" : ""}
                 `}
                   style={{ 
@@ -258,18 +289,18 @@ export default function DDPCDashboardOrbital({
                     height: 75,
                   }}
                 >
-                  <Icon size={30} />
+                  <Icon size={40} />
                 </div>
 
                 <div
                   className={`
                   absolute whitespace-nowrap
-                  text-xs font-semibold tracking-wider
+                  text-base font-semibold tracking-wider
                   transition-all duration-300
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? "text-white scale-110" : "text-gray-400"}
                 `}
-                  style={{ top: 68 }}
+                  style={{ top: 85 }}
                 >
                   {node.title}
                 </div>
@@ -277,7 +308,7 @@ export default function DDPCDashboardOrbital({
                 {isExpanded && (
                   <Card 
                     className="absolute left-1/2 -translate-x-1/2 w-72 bg-gray-900/95 backdrop-blur-lg border-gray-600 shadow-xl shadow-black/50 overflow-visible"
-                    style={{ top: 90 }}
+                    style={{ top: 110 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
                     <CardHeader className="pb-2">

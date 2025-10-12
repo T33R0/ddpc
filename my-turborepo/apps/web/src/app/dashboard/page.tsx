@@ -104,8 +104,22 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center justify-center">
-      <DDPCDashboardOrbital nodes={dashboardNodes} />
+    <div className="min-h-screen bg-black text-white p-4 flex flex-col">
+      <div className="max-w-6xl w-full mx-auto pt-24">
+        {/* Welcome Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">
+            Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Here&apos;s your DDPC dashboard - manage your vehicles and track your builds.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex-grow flex items-center justify-center">
+        <DDPCDashboardOrbital nodes={dashboardNodes} />
+      </div>
     </div>
   );
 }
