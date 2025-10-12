@@ -129,6 +129,25 @@ export interface Vehicle {
   new_year?: string;
 }
 
+export interface VehicleTrim {
+  id: string;
+  trim: string;
+  imageUrl?: string | null;
+  fuelType?: string | null;
+  driveType?: string | null;
+  cylinders?: string | null;
+  bodyType?: string | null;
+  doors?: string | null;
+}
+
+export interface VehicleSummary {
+  year: number;
+  make: string;
+  model: string;
+  heroImage: string | null;
+  trims: VehicleTrim[];
+}
+
 export interface WorkItem {
   id: string;
   vehicleId: string;

@@ -1,28 +1,81 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import styles from './vehicle-details-modal.module.css';
-import type { Vehicle } from '@repo/types';
+import type { Vehicle, VehicleSummary } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
+import { supabase, getVehicleById } from '../../lib/supabase';
 
 type VehicleDetailsModalProps = {
-  vehicle: Vehicle;
+  vehicle: VehicleSummary;
   onClose: () => void;
 };
 
 const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Overview');
-  const [selectedTrim, setSelectedTrim] = useState(vehicle.trim);
+  const [selectedTrimId, setSelectedTrimId] = useState<string | null>(vehicle.trims[0]?.id ?? null);
+  const [selectedTrimDetails, setSelectedTrimDetails] = useState<Vehicle | null>(null);
+  const [isLoadingTrim, setIsLoadingTrim] = useState(false);
+  const [trimError, setTrimError] = useState<string | null>(null);
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
   const [isAddedToGarage, setIsAddedToGarage] = useState(false);
 
   if (!vehicle) return null;
 
+  const hasTrims = vehicle.trims.length > 0;
+  const selectedTrim = useMemo(
+    () => vehicle.trims.find((trim) => trim.id === selectedTrimId) ?? vehicle.trims[0] ?? null,
+    [vehicle.trims, selectedTrimId]
+  );
+
+  useEffect(() => {
+    setSelectedTrimId(vehicle.trims[0]?.id ?? null);
+    setTrimError(null);
+    setSelectedTrimDetails(null);
+    setIsAddedToGarage(false);
+  }, [vehicle]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTrimDetails(trimId: string | null) {
+      if (!trimId) {
+        setSelectedTrimDetails(null);
+        return;
+      }
+
+      try {
+        setIsLoadingTrim(true);
+        setTrimError(null);
+        const details = await getVehicleById(trimId);
+        if (!details) {
+          throw new Error('Vehicle trim not found');
+        }
+        if (isMounted) {
+          setSelectedTrimDetails(details);
+        }
+      } catch (error) {
+        console.error('Failed to load trim details', error);
+        if (isMounted) {
+          setTrimError(error instanceof Error ? error.message : 'Unable to load trim details');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingTrim(false);
+        }
+      }
+    }
+
+    loadTrimDetails(selectedTrim?.id ?? null);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTrim?.id]);
+
   const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTrim(event.target.value);
-    // Here you would typically fetch new data based on the selected trim
+    setSelectedTrimId(event.target.value);
   };
 
   const handleAddToGarage = async () => {
@@ -30,6 +83,12 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
       toast.error('You must be signed in to add a vehicle to your collection.');
       return;
     }
+
+    if (!selectedTrimDetails) {
+      toast.error('Please wait for the trim details to load.');
+      return;
+    }
+
     setIsAddingToGarage(true);
 
     try {
@@ -46,7 +105,7 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          vehicleDataId: vehicle.id,
+          vehicleDataId: selectedTrimDetails.id,
         }),
       });
 
@@ -73,22 +132,34 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
   };
 
   const renderTabContent = () => {
+    if (isLoadingTrim) {
+      return <div className={styles.tabContentLayout}>Loading trim specifications...</div>;
+    }
+
+    if (trimError) {
+      return <div className={styles.tabContentLayout}>Failed to load trim details: {trimError}</div>;
+    }
+
+    if (!selectedTrimDetails) {
+      return <div className={styles.tabContentLayout}>Select a trim to view details.</div>;
+    }
+
     switch (activeTab) {
       case 'Overview':
         return (
           <div className={styles.overviewLayout}>
             <div>
-              <p><strong>Body Type:</strong> {vehicle.body_type}</p>
-              <p><strong>Fuel Type:</strong> {vehicle.fuel_type}</p>
-              <p><strong>Transmission:</strong> {vehicle.transmission}</p>
-              <p><strong>Drive Type:</strong> {vehicle.drive_type}</p>
-              <p><strong>Curb Weight:</strong> {vehicle.curb_weight_lbs} lbs</p>
+              <p><strong>Body Type:</strong> {selectedTrimDetails.body_type}</p>
+              <p><strong>Fuel Type:</strong> {selectedTrimDetails.fuel_type}</p>
+              <p><strong>Transmission:</strong> {selectedTrimDetails.transmission}</p>
+              <p><strong>Drive Type:</strong> {selectedTrimDetails.drive_type}</p>
+              <p><strong>Curb Weight:</strong> {selectedTrimDetails.curb_weight_lbs} lbs</p>
             </div>
             <div>
-              <p><strong>Engine:</strong> {vehicle.cylinders} cylinders, {vehicle.engine_size_l}L</p>
-              <p><strong>Power:</strong> {vehicle.horsepower_hp} HP @ {vehicle.horsepower_rpm} RPM</p>
-              <p><strong>Torque:</strong> {vehicle.torque_ft_lbs} lb-ft @ {vehicle.torque_rpm} RPM</p>
-              <p><strong>MPG:</strong> {vehicle.epa_combined_mpg} combined</p>
+              <p><strong>Engine:</strong> {selectedTrimDetails.cylinders} cylinders, {selectedTrimDetails.engine_size_l}L</p>
+              <p><strong>Power:</strong> {selectedTrimDetails.horsepower_hp} HP @ {selectedTrimDetails.horsepower_rpm} RPM</p>
+              <p><strong>Torque:</strong> {selectedTrimDetails.torque_ft_lbs} lb-ft @ {selectedTrimDetails.torque_rpm} RPM</p>
+              <p><strong>MPG:</strong> {selectedTrimDetails.epa_combined_mpg} combined</p>
             </div>
           </div>
         );
@@ -96,12 +167,12 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
         return (
           <div className={styles.tabContentLayout}>
             <div className={styles.tabData}>
-              <p><strong>Engine:</strong> {vehicle.cylinders} cylinders, {vehicle.engine_size_l}L</p>
-              <p><strong>Horsepower:</strong> {vehicle.horsepower_hp} HP @ {vehicle.horsepower_rpm} RPM</p>
-              <p><strong>Torque:</strong> {vehicle.torque_ft_lbs} lb-ft @ {vehicle.torque_rpm} RPM</p>
-              <p><strong>Fuel Efficiency:</strong> {vehicle.epa_combined_mpg} MPG combined</p>
-              <p><strong>Fuel Type:</strong> {vehicle.fuel_type}</p>
-              <p><strong>Transmission:</strong> {vehicle.transmission}</p>
+              <p><strong>Engine:</strong> {selectedTrimDetails.cylinders} cylinders, {selectedTrimDetails.engine_size_l}L</p>
+              <p><strong>Horsepower:</strong> {selectedTrimDetails.horsepower_hp} HP @ {selectedTrimDetails.horsepower_rpm} RPM</p>
+              <p><strong>Torque:</strong> {selectedTrimDetails.torque_ft_lbs} lb-ft @ {selectedTrimDetails.torque_rpm} RPM</p>
+              <p><strong>Fuel Efficiency:</strong> {selectedTrimDetails.epa_combined_mpg} MPG combined</p>
+              <p><strong>Fuel Type:</strong> {selectedTrimDetails.fuel_type}</p>
+              <p><strong>Transmission:</strong> {selectedTrimDetails.transmission}</p>
             </div>
             <div className={styles.tabImage}>
               <Image src="/branding/dyno-graph.png" alt="Dyno graph" width={400} height={225} />
@@ -112,13 +183,13 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
         return (
           <div className={styles.tabContentLayout}>
             <div className={styles.tabData}>
-              <p><strong>Length:</strong> {vehicle.length_in}&quot;</p>
-              <p><strong>Width:</strong> {vehicle.width_in}&quot;</p>
-              <p><strong>Height:</strong> {vehicle.height_in}&quot;</p>
-              <p><strong>Wheelbase:</strong> {vehicle.wheelbase_in}&quot;</p>
-              <p><strong>Front Track:</strong> {vehicle.front_track_in}&quot;</p>
-              <p><strong>Rear Track:</strong> {vehicle.rear_track_in}&quot;</p>
-              <p><strong>Ground Clearance:</strong> {vehicle.ground_clearance_in}&quot;</p>
+              <p><strong>Length:</strong> {selectedTrimDetails.length_in}&quot;</p>
+              <p><strong>Width:</strong> {selectedTrimDetails.width_in}&quot;</p>
+              <p><strong>Height:</strong> {selectedTrimDetails.height_in}&quot;</p>
+              <p><strong>Wheelbase:</strong> {selectedTrimDetails.wheelbase_in}&quot;</p>
+              <p><strong>Front Track:</strong> {selectedTrimDetails.front_track_in}&quot;</p>
+              <p><strong>Rear Track:</strong> {selectedTrimDetails.rear_track_in}&quot;</p>
+              <p><strong>Ground Clearance:</strong> {selectedTrimDetails.ground_clearance_in}&quot;</p>
             </div>
             <div className={styles.tabImage}>
               <Image src="/branding/turning-radius.png" alt="Turning radius diagram" width={400} height={225} />
@@ -135,16 +206,32 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeButton} onClick={onClose}>X</button>
         <div className={styles.topSection}>
-          <Image src={(vehicle.image_url || '').split(';')[0] || ''} alt={`${vehicle.make} ${vehicle.model}`} className={styles.vehicleImage} width={400} height={225} />
+          <Image
+            src={((selectedTrim?.imageUrl || vehicle.heroImage || '').split(';')[0]) || ''}
+            alt={`${vehicle.make} ${vehicle.model}`}
+            className={styles.vehicleImage}
+            width={400}
+            height={225}
+          />
           <div className={styles.basicInfo}>
             <h2>{vehicle.year} {vehicle.make} {vehicle.model}</h2>
             <div className={styles.trimSelector}>
               <label htmlFor="trim-select">Trim:</label>
-              <select id="trim-select" value={selectedTrim} onChange={handleTrimChange}>
-                {/* Add dummy trim options here, later this will be dynamic */}
-                <option value="Base">Base</option>
-                <option value="Sport">Sport</option>
-                <option value="Limited">Limited</option>
+              <select
+                id="trim-select"
+                value={selectedTrim?.id ?? ''}
+                onChange={handleTrimChange}
+                disabled={!hasTrims}
+              >
+                {hasTrims ? (
+                  vehicle.trims.map((trim) => (
+                    <option key={trim.id} value={trim.id}>
+                      {trim.trim || 'Unknown Trim'}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No trims available</option>
+                )}
               </select>
             </div>
             <button
@@ -152,7 +239,7 @@ const VehicleDetailsModal = ({ vehicle, onClose }: VehicleDetailsModalProps) => 
                 isAddedToGarage ? styles.addedButton : ''
               }`}
               onClick={handleAddToGarage}
-              disabled={isAddingToGarage || isAddedToGarage}
+              disabled={isAddingToGarage || isAddedToGarage || isLoadingTrim || !!trimError || !selectedTrim}
             >
               {isAddingToGarage
                 ? 'Adding to Collection...'
