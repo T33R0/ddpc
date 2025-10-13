@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { ImageWithFallback } from '../../components/image-with-fallback';
+import { getVehicleImageSources } from '../../lib/vehicle-images';
 import styles from './vehicle-details-modal.module.css';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
@@ -118,7 +120,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
               <p><strong>Transmission:</strong> {selectedTrim.transmission}</p>
             </div>
             <div className={styles.tabImage}>
-              <Image src="/branding/dyno-graph.png" alt="Dyno graph" width={400} height={225} />
+              <Image src="/media/images/placeholder dyno chart.png" alt="Dyno graph" width={400} height={225} />
             </div>
           </div>
         );
@@ -135,7 +137,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
               <p><strong>Ground Clearance:</strong> {selectedTrim.ground_clearance_in}&quot;</p>
             </div>
             <div className={styles.tabImage}>
-              <Image src="/branding/turning-radius.png" alt="Turning radius diagram" width={400} height={225} />
+              <Image src="/media/images/placeholder dimensions chart.png" alt="Turning radius diagram" width={400} height={225} />
             </div>
           </div>
         );
@@ -144,14 +146,26 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
     }
   };
 
-  const imageSrc = selectedTrim.primaryImage || selectedTrim.image_url?.split(';')[0] || summary.heroImage || '/branding/fallback-logo.png';
+  const imageSources = getVehicleImageSources(
+    selectedTrim.image_url || summary.heroImage,
+    summary.make,
+    summary.model,
+    summary.year
+  );
 
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeButton} onClick={onClose}>X</button>
         <div className={styles.topSection}>
-          <Image src={imageSrc} alt={`${summary.make} ${summary.model}`} className={styles.vehicleImage} width={400} height={225} />
+          <ImageWithFallback
+            src={imageSources}
+            fallbackSrc="/branding/fallback-logo.png"
+            alt={`${summary.make} ${summary.model}`}
+            className={styles.vehicleImage}
+            width={400}
+            height={225}
+          />
           <div className={styles.basicInfo}>
             <h2>{summary.year} {summary.make} {summary.model}</h2>
             <div className={styles.trimSelector}>

@@ -18,6 +18,27 @@ const config = {
         protocol: 'https',
         hostname: 'media.ed.edmunds-media.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.edmunds.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.edmundsapps.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'commons.wikimedia.org',
+      },
+      // Allow localhost for development
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
   },
   ...nextConfig,

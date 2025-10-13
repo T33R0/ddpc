@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	Modal,
 	ModalBody,
@@ -18,15 +18,24 @@ type AuthModalProps = Omit<React.ComponentProps<typeof Modal>, 'children'> & {
   onGoogleSignIn?: () => void;
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
+  initialMode?: 'signin' | 'signup';
 };
 
-export function AuthModal({ onGoogleSignIn, onEmailSignUp, onEmailSignIn, ...props }: AuthModalProps) {
-  const [isSignUp, setIsSignUp] = useState(false);
+export function AuthModal({ onGoogleSignIn, onEmailSignUp, onEmailSignIn, initialMode = 'signin', ...props }: AuthModalProps) {
+  const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Reset to initial mode when modal opens
+  useEffect(() => {
+    if (props.open) {
+      setIsSignUp(initialMode === 'signup');
+      resetForm();
+    }
+  }, [props.open, initialMode]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);

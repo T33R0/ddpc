@@ -7,6 +7,7 @@ import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
+import { AuthModal } from '@repo/ui/auth-modal';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -28,12 +29,14 @@ import { User as UserType } from '@repo/types';
 type TabType = 'profile' | 'security' | 'billing' | 'account';
 
 export default function AccountPage() {
-  const { user: authUser, signOut, loading, session } = useAuth();
+  const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
 
   // Profile form state
   const [username, setUsername] = useState('');
@@ -51,7 +54,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!loading && !authUser) {
-      router.push('/');
+      // Don't redirect, let the component handle unauthorized access
       return;
     }
     if (authUser && session?.access_token) {
@@ -186,12 +189,106 @@ export default function AccountPage() {
     }
   };
 
+  const handleSignInClick = () => {
+    setIsSignUpMode(false);
+    setAuthModalOpen(true);
+  };
+
+  const handleSignUpClick = () => {
+    setIsSignUpMode(true);
+    setAuthModalOpen(true);
+  };
+
+  const handleGoBack = () => {
+    // Try to go back in browser history first
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // If no history, go to home
+      router.push('/');
+    }
+  };
+
+  const handleEmailSignUp = async (email: string, password: string) => {
+    const result = await signUp(email, password);
+    return result;
+  };
+
+  const handleEmailSignIn = async (email: string, password: string) => {
+    const result = await signIn(email, password);
+    return result;
+  };
+
+  const handleGoogleSignIn = async () => {
+    await signInWithGoogle();
+  };
+
   if (loading || isSigningOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">
           {isSigningOut ? 'Signing out...' : 'Loading...'}
         </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized access page for non-authenticated users
+  if (!loading && !authUser) {
+    return (
+      <div className="min-h-screen bg-black text-white p-4">
+        <div className="max-w-md mx-auto flex items-center justify-center min-h-screen">
+          <Card className="bg-gray-900 border-gray-800 w-full">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Access Restricted</CardTitle>
+              <CardDescription className="text-gray-400">
+                You must be signed in to access this page
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Button
+                  onClick={handleSignInClick}
+                  className="w-full"
+                  size="lg"
+                >
+                  Sign In
+                </Button>
+
+                <Button
+                  onClick={handleSignUpClick}
+                  variant="outline"
+                  className="w-full border-gray-700 hover:bg-gray-800"
+                  size="lg"
+                >
+                  Create Account
+                </Button>
+
+                <Button
+                  onClick={handleGoBack}
+                  variant="ghost"
+                  className="w-full text-gray-400 hover:text-white hover:bg-gray-800"
+                >
+                  Go Back
+                </Button>
+              </div>
+
+              <div className="text-center text-sm text-gray-500 mt-6">
+                <p>Manage your profile, security settings, and account preferences</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Auth Modal */}
+        <AuthModal
+          open={authModalOpen}
+          onOpenChange={setAuthModalOpen}
+          onGoogleSignIn={handleGoogleSignIn}
+          onEmailSignUp={handleEmailSignUp}
+          onEmailSignIn={handleEmailSignIn}
+          initialMode={isSignUpMode ? 'signup' : 'signin'}
+        />
       </div>
     );
   }

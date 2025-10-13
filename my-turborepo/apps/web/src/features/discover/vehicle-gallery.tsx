@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ImageWithFallback } from '../../components/image-with-fallback';
+import { getVehicleImageSources } from '../../lib/vehicle-images';
 import type { VehicleSummary } from '@repo/types';
 import VehicleDetailsModal from './vehicle-details-modal';
 
@@ -65,7 +66,12 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                 </div>
               </div>
               <ImageWithFallback
-                src={summary.heroImage || summary.trims[0]?.primaryImage || summary.trims[0]?.image_url?.split(';')[0] || ''}
+                src={getVehicleImageSources(
+                  summary.heroImage || summary.trims[0]?.image_url,
+                  summary.make,
+                  summary.model,
+                  summary.year
+                )}
                 fallbackSrc="/branding/fallback-logo.png"
                 alt={`${summary.make} ${summary.model}`}
                 width={400}
