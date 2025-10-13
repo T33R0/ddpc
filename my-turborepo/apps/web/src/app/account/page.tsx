@@ -5,57 +5,170 @@ import { Button } from '@repo/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
+import { Textarea } from '@repo/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { User, Mail, Calendar, Shield, ArrowLeft } from 'lucide-react';
+import {
+  User,
+  Mail,
+  Calendar,
+  Shield,
+  ArrowLeft,
+  CreditCard,
+  MapPin,
+  Globe,
+  Image as ImageIcon,
+  FileText,
+  Settings,
+  Crown,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import { User as UserType } from '@repo/types';
+
+type TabType = 'profile' | 'security' | 'billing' | 'account';
 
 export default function AccountPage() {
-  const { user, signOut, loading } = useAuth();
+  const { user: authUser, signOut, loading, session } = useAuth();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Profile form state
+  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [location, setLocation] = useState('');
+  const [website, setWebsite] = useState('');
+  const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
+
+  // Security form state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !authUser) {
       router.push('/');
       return;
     }
-    if (user) {
-      setEmail(user.email || '');
+    if (authUser && session?.access_token) {
+      fetchUserProfile();
     }
-  }, [user, loading, router]);
+  }, [authUser, loading, session, router]);
 
-  const handleUpdateEmail = async () => {
-    if (!email || email === authenticatedUser?.email) return;
+  const fetchUserProfile = async () => {
+    if (!session?.access_token) return;
+
+    try {
+      const response = await fetch('/api/account/profile', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        // Populate form fields
+        setUsername(data.user.username || '');
+        setDisplayName(data.user.displayName || '');
+        setLocation(data.user.location || '');
+        setWebsite(data.user.website || '');
+        setBio(data.user.bio || '');
+        setAvatarUrl(data.user.avatarUrl || '');
+        setIsPublic(data.user.isPublic);
+      } else {
+        toast.error('Failed to load profile data');
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error('Failed to load profile data');
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!session?.access_token || !user) return;
 
     setIsLoading(true);
     try {
-      // Supabase doesn't allow direct email updates from client
-      // This would need to be handled via API route or admin function
-      toast.error('Email updates are not implemented yet');
+      const response = await fetch('/api/account/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          displayName,
+          location,
+          website,
+          bio,
+          avatarUrl,
+          isPublic,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+        toast.success('Profile updated successfully!');
+      } else {
+        toast.error(data.error || 'Failed to update profile');
+      }
     } catch (error) {
-      toast.error('Failed to update email');
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleUpdatePassword = async () => {
+    if (!session?.access_token) return;
+
     if (!newPassword || newPassword !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // This would need to be implemented with proper password update flow
-      toast.error('Password updates are not implemented yet');
+      const response = await fetch('/api/account/password', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password updated successfully!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(data.error || 'Failed to update password');
+      }
     } catch (error) {
+      console.error('Error updating password:', error);
       toast.error('Failed to update password');
     } finally {
       setIsLoading(false);
@@ -67,7 +180,6 @@ export default function AccountPage() {
     try {
       await signOut();
       toast.success('Successfully signed out!');
-      // The useEffect will handle redirecting when user becomes null
     } catch (error) {
       toast.error('Error signing out');
       setIsSigningOut(false);
@@ -84,8 +196,31 @@ export default function AccountPage() {
     );
   }
 
-  // At this point, user is guaranteed to be non-null since we redirect if not authenticated
-  const authenticatedUser = user!;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white">Loading profile...</div>
+      </div>
+    );
+  }
+
+  const getPlanColor = (plan: string) => {
+    switch (plan) {
+      case 'free': return 'text-gray-400';
+      case 'builder': return 'text-blue-400';
+      case 'pro': return 'text-yellow-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getPlanIcon = (plan: string) => {
+    switch (plan) {
+      case 'free': return '🆓';
+      case 'builder': return '🔧';
+      case 'pro': return '👑';
+      default: return '🆓';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-4">
@@ -101,129 +236,452 @@ export default function AccountPage() {
           </Button>
           <h1 className="text-3xl font-bold mb-2">Account Management</h1>
           <p className="text-gray-400">Manage your account settings and preferences</p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Profile Information */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>
-                Your basic account details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-gray-800 border-gray-700"
-                  />
-                  <Button
-                    onClick={handleUpdateEmail}
-                    disabled={isLoading || email === authenticatedUser.email}
-                    variant="outline"
-                  >
-                    Update
-                  </Button>
+          {/* Member info bar */}
+          <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-400">
+                    Member since: {new Date(user.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Crown className={`h-4 w-4 ${getPlanColor(user.plan)}`} />
+                  <span className={`text-sm font-medium ${getPlanColor(user.plan)}`}>
+                    {getPlanIcon(user.plan)} {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-400">
+                    Email confirmed
+                  </span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Calendar className="h-4 w-4" />
-                <span>Member since: {new Date(authenticatedUser.created_at).toLocaleDateString()}</span>
-              </div>
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <ToggleGroup
+            type="single"
+            value={activeTab}
+            onValueChange={(value) => value && setActiveTab(value as TabType)}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="profile" className="data-[state=on]:bg-gray-700">
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </ToggleGroupItem>
+            <ToggleGroupItem value="security" className="data-[state=on]:bg-gray-700">
+              <Shield className="h-4 w-4 mr-2" />
+              Security
+            </ToggleGroupItem>
+            <ToggleGroupItem value="billing" className="data-[state=on]:bg-gray-700">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Billing
+            </ToggleGroupItem>
+            <ToggleGroupItem value="account" className="data-[state=on]:bg-gray-700">
+              <Settings className="h-4 w-4 mr-2" />
+              Account
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Mail className="h-4 w-4" />
-                <span>Email confirmed: {authenticatedUser.email_confirmed_at ? 'Yes' : 'No'}</span>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Tab Content */}
+        <div className="space-y-6">
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Profile Information */}
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Profile Information
+                  </CardTitle>
+                  <CardDescription>
+                    Update your public profile information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="username">Username *</Label>
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="bg-gray-800 border-gray-700 mt-1"
+                      placeholder="your_username"
+                    />
+                  </div>
 
-          {/* Security Settings */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security Settings
-              </CardTitle>
-              <CardDescription>
-                Update your password and security preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="bg-gray-800 border-gray-700 mt-1"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="bg-gray-800 border-gray-700 mt-1"
+                      placeholder="Your Display Name"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-gray-800 border-gray-700 mt-1"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="bg-gray-800 border-gray-700 mt-1"
+                      placeholder="City, Country"
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-gray-800 border-gray-700 mt-1"
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      className="bg-gray-800 border-gray-700 mt-1"
+                      placeholder="https://yourwebsite.com"
+                    />
+                  </div>
 
-              <Button
-                onClick={handleUpdatePassword}
-                disabled={isLoading || !newPassword || !confirmPassword}
-                className="w-full"
-              >
-                {isLoading ? 'Updating...' : 'Update Password'}
-              </Button>
-            </CardContent>
-          </Card>
+                  <div>
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="bg-gray-800 border-gray-700 mt-1"
+                      placeholder="Tell us about yourself..."
+                      rows={3}
+                    />
+                  </div>
 
-          {/* Account Actions */}
-          <Card className="bg-gray-900 border-gray-800 md:col-span-2">
-            <CardHeader>
-              <CardTitle>Account Actions</CardTitle>
-              <CardDescription>
-                Manage your account status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
+                  <Button
+                    onClick={handleUpdateProfile}
+                    disabled={isLoading}
+                    className="w-full"
+                  >
+                    {isLoading ? 'Updating...' : 'Update Profile'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Avatar & Privacy Settings */}
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Avatar & Privacy
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your profile picture and privacy settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="avatarUrl">Avatar URL</Label>
+                    <Input
+                      id="avatarUrl"
+                      type="url"
+                      value={avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      className="bg-gray-800 border-gray-700 mt-1"
+                      placeholder="https://example.com/avatar.jpg"
+                    />
+                  </div>
+
+                  {avatarUrl && (
+                    <div className="flex justify-center">
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar preview"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isPublic"
+                      checked={isPublic}
+                      onChange={(e) => setIsPublic(e.target.checked)}
+                      className="rounded border-gray-700 bg-gray-800"
+                    />
+                    <Label htmlFor="isPublic" className="text-sm">
+                      Make profile public
+                    </Label>
+                  </div>
+
+                  <div className="text-xs text-gray-400">
+                    {isPublic ? (
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        Your profile is visible to other users
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <EyeOff className="h-3 w-3" />
+                        Your profile is private
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Security Tab */}
+          {activeTab === 'security' && (
+            <Card className="bg-gray-900 border-gray-800 max-w-2xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Security Settings
+                </CardTitle>
+                <CardDescription>
+                  Update your password and security preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="bg-gray-800 border-gray-700 mt-1"
+                    placeholder="Enter your current password"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="bg-gray-800 border-gray-700 mt-1"
+                    placeholder="Enter your new password"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-gray-800 border-gray-700 mt-1"
+                    placeholder="Confirm your new password"
+                  />
+                </div>
+
                 <Button
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                  variant="outline"
-                  className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                  onClick={handleUpdatePassword}
+                  disabled={isLoading || !newPassword || !confirmPassword || !currentPassword}
+                  className="w-full"
                 >
-                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                  {isLoading ? 'Updating Password...' : 'Update Password'}
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Billing Tab */}
+          {activeTab === 'billing' && (
+            <div className="space-y-6">
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Current Plan
+                  </CardTitle>
+                  <CardDescription>
+                    Your current subscription and billing information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">{getPlanIcon(user.plan)}</div>
+                      <div>
+                        <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
+                          {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          {user.plan === 'free' && 'Basic features with limited usage'}
+                          {user.plan === 'builder' && 'Enhanced features for enthusiasts'}
+                          {user.plan === 'pro' && 'Full access to all premium features'}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="outline" disabled>
+                      Current Plan
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 p-4 border border-gray-700 rounded-lg">
+                    <h4 className="font-medium mb-2">Plan Features</h4>
+                    <ul className="text-sm text-gray-400 space-y-1">
+                      {user.plan === 'free' && (
+                        <>
+                          <li>• Access to basic vehicle database</li>
+                          <li>• Limited garage size (5 vehicles)</li>
+                          <li>• Basic search and filtering</li>
+                        </>
+                      )}
+                      {user.plan === 'builder' && (
+                        <>
+                          <li>• Everything in Free</li>
+                          <li>• Unlimited garage size</li>
+                          <li>• Advanced search and filtering</li>
+                          <li>• Export capabilities</li>
+                        </>
+                      )}
+                      {user.plan === 'pro' && (
+                        <>
+                          <li>• Everything in Builder</li>
+                          <li>• Priority support</li>
+                          <li>• Advanced analytics</li>
+                          <li>• API access</li>
+                          <li>• Custom integrations</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle>Upgrade Options</CardTitle>
+                  <CardDescription>
+                    Unlock more features with a premium plan
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-gray-400 mb-4">
+                      Billing management and plan upgrades coming soon!
+                    </p>
+                    <Button variant="outline" disabled>
+                      Manage Billing
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Account Tab */}
+          {activeTab === 'account' && (
+            <div className="space-y-6">
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Account Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your account preferences and data
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <h4 className="font-medium mb-2">Account Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">User ID:</span>
+                          <span className="font-mono text-xs">{user.id.slice(0, 8)}...</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Email:</span>
+                          <span>{user.email}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Role:</span>
+                          <span className="capitalize">{user.role}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Status:</span>
+                          <span className={user.banned ? 'text-red-400' : 'text-green-400'}>
+                            {user.banned ? 'Banned' : 'Active'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-800 rounded-lg">
+                      <h4 className="font-medium mb-2">Privacy Settings</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Profile Visibility:</span>
+                          <span>{isPublic ? 'Public' : 'Private'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Last Updated:</span>
+                          <span>{new Date(user.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle>Account Actions</CardTitle>
+                  <CardDescription>
+                    Manage your account status and data
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 flex-wrap">
+                    <Button
+                      onClick={handleSignOut}
+                      disabled={isSigningOut}
+                      variant="outline"
+                      className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                    >
+                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                    </Button>
+
+                    <Button variant="outline" disabled>
+                      Export Data
+                    </Button>
+
+                    <Button variant="outline" disabled className="border-red-600 text-red-400">
+                      Delete Account
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 p-4 bg-red-900/20 border border-red-800 rounded-lg">
+                    <h4 className="font-medium text-red-400 mb-2">Danger Zone</h4>
+                    <p className="text-sm text-gray-400">
+                      Account deletion and data export features are coming soon. These actions cannot be undone.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>

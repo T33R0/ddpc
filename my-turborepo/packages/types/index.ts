@@ -3,6 +3,16 @@ export interface User {
   username: string;
   email: string;
   avatarUrl?: string;
+  displayName?: string;
+  location?: string;
+  website?: string;
+  bio?: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  role: 'user' | 'helper' | 'admin';
+  plan: 'free' | 'builder' | 'pro';
+  banned: boolean;
 }
 
 export interface Vehicle {
