@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getBestVehicleImage } from '../../../lib/vehicle-images';
+import { getBestVehicleImage } from '../../../../lib/vehicle-images';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

@@ -26,7 +26,8 @@ export function ImageWithFallback({
   useEffect(() => {
     // Reset state when src changes
     setAttemptedSources(new Set());
-    setCurrentSrc(sources[0] || fallbackSrc);
+    const sourceArray = Array.isArray(src) ? src : [src];
+    setCurrentSrc(sourceArray[0] || fallbackSrc);
   }, [src, fallbackSrc]);
 
   const handleError = () => {
