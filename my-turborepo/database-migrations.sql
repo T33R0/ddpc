@@ -1,3 +1,14 @@
+-- Fix RLS Policies for user_profile table
+-- Run this in Supabase SQL editor to fix the profile creation issue
+
+-- Drop the old restrictive policy if it exists
+DROP POLICY IF EXISTS up_insert_self ON public.user_profile;
+
+-- Create a more permissive policy for initial profile creation
+CREATE POLICY up_insert_self ON public.user_profile
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 -- Vehicle aggregation functions for DDPC discover page
 -- These functions need to be created in Supabase SQL editor
 

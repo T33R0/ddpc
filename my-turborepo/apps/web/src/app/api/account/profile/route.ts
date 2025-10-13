@@ -83,20 +83,7 @@ export async function GET(request: NextRequest) {
         banned: false,
       };
 
-      // Use service role for initial profile creation to bypass RLS
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (!serviceRoleKey) {
-        console.error('Service role key not available');
-        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-      }
-
-      const serviceSupabase = createClient(
-        supabaseUrl!,
-        serviceRoleKey,
-        { auth: { persistSession: false, autoRefreshToken: false } }
-      );
-
-      const { data: newProfile, error: createError } = await serviceSupabase
+      const { data: newProfile, error: createError } = await supabase
         .from('user_profile')
         .insert(defaultProfile)
         .select('*')
