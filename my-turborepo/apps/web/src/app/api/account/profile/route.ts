@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
         user_id: user.id,
         username: username,
         display_name: user.email?.split('@')[0] || 'User',
-        email: user.email,
         is_public: true,
         role: 'user',
         plan: 'free',
@@ -105,7 +104,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
     }
 
-    // Return the combined user data
+    // Return the combined user data (email comes from auth.users)
     const userData = {
       id: user.id,
       email: user.email,
@@ -176,6 +175,8 @@ export async function PUT(request: NextRequest) {
       avatarUrl,
       isPublic
     } = body;
+
+    // Note: email is not stored in user_profile table, it comes from auth.users
 
     // Validate required fields
     if (!username || username.trim() === '') {
