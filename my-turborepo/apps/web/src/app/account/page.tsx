@@ -7,7 +7,7 @@ import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
@@ -57,9 +57,10 @@ export default function AccountPage() {
     if (authUser && session?.access_token) {
       fetchUserProfile();
     }
-  }, [authUser, loading, session, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser, loading, session?.access_token, router]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     if (!session?.access_token) return;
 
     try {
@@ -81,13 +82,15 @@ export default function AccountPage() {
         setAvatarUrl(data.user.avatarUrl || '');
         setIsPublic(data.user.isPublic);
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Profile fetch failed:', errorData);
         toast.error('Failed to load profile data');
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile data');
     }
-  };
+  }, [session?.access_token]);
 
   const handleUpdateProfile = async () => {
     if (!session?.access_token || !user) return;

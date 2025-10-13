@@ -37,13 +37,65 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch the user profile
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile, error: profileError } = await supabase
       .from('user_profile')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError) {
+    // If profile doesn't exist, create a default one
+    if (profileError && profileError.code === 'PGRST116') {
+      console.log('User profile not found, creating default profile for user:', user.id);
+
+      // Generate a unique username by appending a random number if needed
+      let baseUsername = user.email?.split('@')[0] || 'user';
+      let username = baseUsername;
+      let counter = 1;
+
+      // Keep trying until we find a unique username
+      while (true) {
+        const { data: existing } = await supabase
+          .from('user_profile')
+          .select('user_id')
+          .eq('username', username)
+          .single();
+
+        if (!existing) break;
+
+        username = `${baseUsername}${counter}`;
+        counter++;
+
+        // Prevent infinite loops
+        if (counter > 100) {
+          username = `user_${user.id.slice(0, 8)}`;
+          break;
+        }
+      }
+
+      const defaultProfile = {
+        user_id: user.id,
+        username: username,
+        display_name: user.email?.split('@')[0] || 'User',
+        email: user.email,
+        is_public: true,
+        role: 'user',
+        plan: 'free',
+        banned: false,
+      };
+
+      const { data: newProfile, error: createError } = await supabase
+        .from('user_profile')
+        .insert(defaultProfile)
+        .select('*')
+        .single();
+
+      if (createError) {
+        console.error('Error creating default profile:', createError);
+        return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });
+      }
+
+      profile = newProfile;
+    } else if (profileError) {
       console.error('Error fetching profile:', profileError);
       return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
     }
