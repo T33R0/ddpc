@@ -4,9 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { Logo } from './logo';
 import { AuthModal } from './auth-modal';
-import { ChatDrawer } from './chat-drawer';
 import { Button } from './button';
 import { GridCard } from './grid-card';
+import { UserAccountDropdown } from './user-account-dropdown';
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -26,7 +26,7 @@ interface HeaderProps {
 
 export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmailSignIn }: HeaderProps) {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
-  const [chatDrawerOpen, setChatDrawerOpen] = React.useState(false);
+
 
   return (
     <>
@@ -37,7 +37,7 @@ export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmail
         onEmailSignUp={onEmailSignUp}
         onEmailSignIn={onEmailSignIn}
       />
-      <ChatDrawer open={chatDrawerOpen} onOpenChange={setChatDrawerOpen} />
+      
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-neutral-800">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between text-white">
           <div className="flex items-center">
@@ -91,29 +91,9 @@ export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmail
           </div>
 
           <div className="flex items-center gap-4">
-            <Button onClick={() => setChatDrawerOpen(!chatDrawerOpen)} variant="outline" size="sm">
-              Scrutineer
-            </Button>
+            
             {user ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-300">
-                  {user.email}
-                </span>
-                <Button
-                  onClick={() => window.location.href = '/dashboard'}
-                  variant="outline"
-                  size="sm"
-                >
-                  Dashboard
-                </Button>
-                <Button
-                  onClick={() => onSignOut?.()}
-                  variant="outline"
-                  size="sm"
-                >
-                  Sign Out
-                </Button>
-              </div>
+              <UserAccountDropdown user={user} onSignOut={onSignOut} />
             ) : (
               <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>
             )}

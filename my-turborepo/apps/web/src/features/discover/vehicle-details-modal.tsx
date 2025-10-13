@@ -120,7 +120,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
               <p><strong>Transmission:</strong> {selectedTrim.transmission}</p>
             </div>
             <div className={styles.tabImage}>
-              <Image src="/media/images/placeholder dyno chart.png" alt="Dyno graph" width={400} height={225} />
+              <Image src="/media/images/placeholder-dyno-chart.png" alt="Dyno graph" width={400} height={225} />
             </div>
           </div>
         );
@@ -137,7 +137,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
               <p><strong>Ground Clearance:</strong> {selectedTrim.ground_clearance_in}&quot;</p>
             </div>
             <div className={styles.tabImage}>
-              <Image src="/media/images/placeholder dimensions chart.png" alt="Turning radius diagram" width={400} height={225} />
+              <Image src="/media/images/placeholder-dimensions-chart.png" alt="Turning radius diagram" width={400} height={225} />
             </div>
           </div>
         );
