@@ -91,7 +91,12 @@ export async function GET(request: NextRequest) {
 
       if (createError) {
         console.error('Error creating default profile:', createError);
-        return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });
+        console.error('Profile data being inserted:', defaultProfile);
+        return NextResponse.json({
+          error: 'Failed to create profile',
+          details: createError.message,
+          code: createError.code
+        }, { status: 500 });
       }
 
       profile = newProfile;

@@ -1,6 +1,13 @@
 -- Fix RLS Policies for user_profile table
 -- Run this in Supabase SQL editor to fix the profile creation issue
 
+-- Create user role enum if it doesn't exist
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('user', 'helper', 'admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Drop the old restrictive policy if it exists
 DROP POLICY IF EXISTS up_insert_self ON public.user_profile;
 
