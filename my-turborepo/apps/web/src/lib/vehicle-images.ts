@@ -26,9 +26,9 @@ export function parseImageUrls(imageUrlString?: string | null): string[] {
  */
 export function getVehicleImageSources(
   imageUrlString?: string | null,
-  make?: string,
-  model?: string,
-  year?: string
+  _make?: string,
+  _model?: string,
+  _year?: string
 ): string[] {
   const parsedUrls = parseImageUrls(imageUrlString);
 
@@ -50,22 +50,9 @@ export function getVehicleImageSources(
     return url;
   });
 
-  // Add fallback image sources if we have make/model/year info
-  const fallbacks: string[] = [];
-
-  if (make && model && year) {
-    // Try alternative stock image services
-    const searchTerm = `${year} ${make} ${model}`.toLowerCase().replace(/\s+/g, '-');
-
-    // Unsplash has some car photos but limited selection
-    fallbacks.push(`https://source.unsplash.com/featured/?${make}-${model},car&w=400&h=225`);
-
-    // Wikimedia Commons (limited car photos) - proxy it
-    const wikiUrl = `https://commons.wikimedia.org/w/index.php?title=Special:Redirect/file/${make}_${model}_${year}.jpg&w=400&h=225`;
-    fallbacks.push(`/api/images/proxy?url=${encodeURIComponent(wikiUrl)}`);
-  }
-
-  return [...proxiedUrls, ...fallbacks];
+  // For now, just return the proxied Edmunds URLs
+  // TODO: Implement proper cached fallback images later
+  return proxiedUrls;
 }
 
 /**
@@ -73,10 +60,10 @@ export function getVehicleImageSources(
  */
 export function getBestVehicleImage(
   imageUrlString?: string | null,
-  make?: string,
-  model?: string,
-  year?: string
+  _make?: string,
+  _model?: string,
+  _year?: string
 ): string | undefined {
-  const sources = getVehicleImageSources(imageUrlString, make, model, year);
+  const sources = getVehicleImageSources(imageUrlString, _make, _model, _year);
   return sources[0];
 }

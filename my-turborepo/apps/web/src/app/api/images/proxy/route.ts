@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -24,6 +27,31 @@ export async function GET(request: NextRequest) {
 
     if (!allowedDomains.some(domain => parsedUrl.hostname.includes(domain))) {
       return NextResponse.json({ error: 'Domain not allowed' }, { status: 403 });
+    }
+
+    // Create cache key from URL
+    const cacheKey = crypto.createHash('md5').update(url).digest('hex');
+    const cacheDir = path.join(process.cwd(), 'public', 'cache', 'images');
+    const metadataFilePath = path.join(cacheDir, `${cacheKey}.meta`);
+    const imageFilePath = path.join(cacheDir, `${cacheKey}.img`);
+
+    try {
+      const [metadataData, imageData] = await Promise.all([
+        fs.readFile(metadataFilePath, 'utf8'),
+        fs.readFile(imageFilePath)
+      ]);
+
+      const cacheMetadata = JSON.parse(metadataData);
+
+      // Return cached image
+      return new NextResponse(new Uint8Array(imageData), {
+        headers: {
+          'Content-Type': cacheMetadata.contentType || 'image/jpeg',
+          'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        },
+      });
+    } catch (cacheError) {
+      // Cache miss, continue to fetch
     }
 
     // Fetch the image with better error handling
@@ -76,11 +104,27 @@ export async function GET(request: NextRequest) {
                 );
               }
 
+              // Cache the redirect response
               const redirectImageBuffer = await redirectResponse.arrayBuffer();
-              return new NextResponse(redirectImageBuffer, {
+              const redirectMetadata = {
+                url: redirectUrl,
+                contentType: redirectResponse.headers.get('content-type') || 'image/jpeg',
+                fetchedAt: new Date().toISOString(),
+              };
+
+              // Ensure cache directory exists
+              await fs.mkdir(cacheDir, { recursive: true });
+
+              // Save to cache
+              await Promise.all([
+                fs.writeFile(metadataFilePath, JSON.stringify(redirectMetadata)),
+                fs.writeFile(imageFilePath, Buffer.from(redirectImageBuffer))
+              ]);
+
+              return new NextResponse(new Uint8Array(redirectImageBuffer), {
                 headers: {
-                  'Content-Type': redirectResponse.headers.get('content-type') || 'image/jpeg',
-                  'Cache-Control': 'public, max-age=86400',
+                  'Content-Type': redirectMetadata.contentType,
+                  'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
                 },
               });
             } catch (redirectError) {
@@ -101,11 +145,27 @@ export async function GET(request: NextRequest) {
       // Get the image buffer
       const imageBuffer = await response.arrayBuffer();
 
+      // Cache the image
+      const metadata = {
+        url: url,
+        contentType: response.headers.get('content-type') || 'image/jpeg',
+        fetchedAt: new Date().toISOString(),
+      };
+
+      // Ensure cache directory exists
+      await fs.mkdir(cacheDir, { recursive: true });
+
+      // Save to cache
+      await Promise.all([
+        fs.writeFile(metadataFilePath, JSON.stringify(metadata)),
+        fs.writeFile(imageFilePath, Buffer.from(imageBuffer))
+      ]);
+
       // Return the image with appropriate headers
-      return new NextResponse(imageBuffer, {
+      return new NextResponse(new Uint8Array(imageBuffer), {
         headers: {
-          'Content-Type': response.headers.get('content-type') || 'image/jpeg',
-          'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+          'Content-Type': metadata.contentType,
+          'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
         },
       });
 
