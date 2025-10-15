@@ -34,6 +34,14 @@ const config = {
         protocol: 'https',
         hostname: 'commons.wikimedia.org',
       },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
       // Allow localhost for development
       {
         protocol: 'http',
