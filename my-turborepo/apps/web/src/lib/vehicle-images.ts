@@ -14,10 +14,15 @@ export function parseImageUrls(imageUrlString?: string | null): string[] {
     ? imageUrlString.slice(1)
     : imageUrlString;
 
+  const isAcceptableUrl = (url: string) => {
+    if (!url) return false;
+    if (url.startsWith('/api/')) return true;
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
   return cleaned
     .split(';')
     .map(url => url.trim())
-    .filter(url => url.length > 0 && url.startsWith('http'));
+    .filter(url => isAcceptableUrl(url));
 }
 
 /**
@@ -61,25 +66,7 @@ export function getVehicleImageSources(
   }
 
   // Fallback: Generate placeholder images based on vehicle info
-  const fallbacks: string[] = [];
-
-  if (make && model && year) {
-    // Create a consistent search term for image generation
-    const searchTerm = `${year} ${make} ${model}`.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
-
-    // Primary fallback: Use picsum.photos with a consistent seed (more reliable than placeholder services)
-    const seed = searchTerm.replace(/\s+/g, '-');
-    fallbacks.push(`https://picsum.photos/seed/${seed}/400/225`);
-
-    // Secondary fallback: Use a simple colored background with text (if picsum fails)
-    const encodedSearch = encodeURIComponent(searchTerm);
-    fallbacks.push(`https://via.placeholder.com/400x225/2563eb/ffffff?text=${encodedSearch}`);
-  }
-
-  // Final fallback: Use local DDPC logo
-  fallbacks.push('/branding/fallback-logo.png');
-
-  return fallbacks;
+  return [];
 }
 
 /**
