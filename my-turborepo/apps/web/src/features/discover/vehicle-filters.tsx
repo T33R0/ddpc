@@ -98,14 +98,14 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
   return (
     <div className="mb-8 p-4 bg-gray-900/50 rounded-lg">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('minYear')(null) }, ...filterOptions.years.map(y => ({ label: y.toString(), onClick: () => handleValueChange('minYear')(y) }))]} >{filters.minYear || 'Min Year'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('maxYear')(null) }, ...filterOptions.years.map(y => ({ label: y.toString(), onClick: () => handleValueChange('maxYear')(y) }))]} >{filters.maxYear || 'Max Year'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('make')(null) }, ...filterOptions.makes.map(m => ({ label: m, onClick: () => handleValueChange('make')(m) }))]} >{filters.make || 'Make'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('model')(null) }, ...filteredModels.map(m => ({ label: m, onClick: () => handleValueChange('model')(m) }))]} >{filters.model || 'Model'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('engineType')(null) }, ...filterOptions.engineTypes.map(e => ({ label: e, onClick: () => handleValueChange('engineType')(e) }))]} >{filters.engineType || 'Engine'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('fuelType')(null) }, ...filterOptions.fuelTypes.map(f => ({ label: f, onClick: () => handleValueChange('fuelType')(f) }))]} >{filters.fuelType || 'Fuel'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('drivetrain')(null) }, ...filterOptions.drivetrains.map(d => ({ label: d, onClick: () => handleValueChange('drivetrain')(d) }))]} >{filters.drivetrain || 'Drivetrain'}</DropdownMenu>
-        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('vehicleType')(null) }, ...filterOptions.bodyTypes.map(v => ({ label: v, onClick: () => handleValueChange('vehicleType')(v) }))]} >{filters.vehicleType || 'Type'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('minYear')(null) }, ...filterOptions.years.map((y: number) => ({ label: y.toString(), onClick: () => handleValueChange('minYear')(y) }))]} >{filters.minYear || 'Min Year'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('maxYear')(null) }, ...filterOptions.years.map((y: number) => ({ label: y.toString(), onClick: () => handleValueChange('maxYear')(y) }))]} >{filters.maxYear || 'Max Year'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('make')(null) }, ...filterOptions.makes.map((m: string) => ({ label: m, onClick: () => handleValueChange('make')(m) }))]} >{filters.make || 'Make'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('model')(null) }, ...filteredModels.map((m: string) => ({ label: m, onClick: () => handleValueChange('model')(m) }))]} >{filters.model || 'Model'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('engineType')(null) }, ...filterOptions.engineTypes.map((e: string) => ({ label: e, onClick: () => handleValueChange('engineType')(e) }))]} >{filters.engineType || 'Engine'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('fuelType')(null) }, ...filterOptions.fuelTypes.map((f: string) => ({ label: f, onClick: () => handleValueChange('fuelType')(f) }))]} >{filters.fuelType || 'Fuel'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('drivetrain')(null) }, ...filterOptions.drivetrains.map((d: string) => ({ label: d, onClick: () => handleValueChange('drivetrain')(d) }))]} >{filters.drivetrain || 'Drivetrain'}</DropdownMenu>
+        <DropdownMenu options={[{ label: 'All', onClick: () => handleValueChange('vehicleType')(null) }, ...filterOptions.bodyTypes.map((v: string) => ({ label: v, onClick: () => handleValueChange('vehicleType')(v) }))]} >{filters.vehicleType || 'Type'}</DropdownMenu>
       </div>
 
       {/* Add by VIN Section */}
