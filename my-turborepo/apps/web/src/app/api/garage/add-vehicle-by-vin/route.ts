@@ -39,6 +39,14 @@ export async function POST(request: NextRequest) {
     const vinData = await nhtsaResponse.json();
     const results = vinData.Results;
 
+    // Check if the VIN was valid according to NHTSA
+    const hasError = results.some((r: any) => r.ErrorCode && r.ErrorCode !== '0');
+    if (hasError || results.length === 0) {
+      return NextResponse.json({ 
+        error: "We're unable to match this VIN to a vehicle in the NHTSA database. Please ensure you entered your VIN correctly." 
+      }, { status: 404 });
+    }
+
     const getValue = (variable: string) => results.find((r: any) => r.Variable === variable)?.Value || null;
 
     const make = getValue('Make');
@@ -47,6 +55,7 @@ export async function POST(request: NextRequest) {
     const trim = getValue('Trim');
 
     let vehicleDataToInsert;
+    let matchFound = false;
 
     // First, try to find a match in our curated vehicle_data table
     const { data: matchedVehicle } = await supabase
@@ -60,6 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (matchedVehicle) {
       // Match found! Use our rich, internal data.
+      matchFound = true;
       const fullSpec = JSON.parse(JSON.stringify(matchedVehicle));
       vehicleDataToInsert = {
         owner_id: user.id,
@@ -99,14 +109,18 @@ export async function POST(request: NextRequest) {
     const { data: newVehicle, error: insertError } = await supabase
       .from('user_vehicle')
       .insert(vehicleDataToInsert)
-      .select()
+      .select('id') // Only select the ID
       .single();
 
     if (insertError) {
       return NextResponse.json({ error: 'Failed to add vehicle', details: insertError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, vehicle: newVehicle });
+    return NextResponse.json({ 
+      success: true, 
+      vehicleId: newVehicle.id,
+      matchFound: matchFound 
+    });
 
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
 import { Button } from '@repo/ui/button';
 import type { VehicleSummary } from '@repo/types';
@@ -36,11 +37,11 @@ type VehicleFiltersProps = {
 };
 
 export function VehicleFilters({ filters, onFilterChange, filterOptions }: VehicleFiltersProps) {
+  const router = useRouter();
   const { session } = useAuth();
   const [vin, setVin] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const [addSuccess, setAddSuccess] = useState<string | null>(null);
 
   const handleValueChange = (key: keyof FilterState) => (value: string | number | null) => {
     onFilterChange({ ...filters, [key]: value });
@@ -67,8 +68,7 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
 
     setIsAdding(true);
     setAddError(null);
-    setAddSuccess(null);
-
+    
     try {
       const response = await fetch('/api/garage/add-vehicle-by-vin', {
         method: 'POST',
@@ -85,8 +85,15 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
         throw new Error(result.error || 'Failed to add vehicle');
       }
 
-      setAddSuccess(`Vehicle added successfully! You can view it in your garage.`);
-      setVin('');
+      // Store a temporary success message in session storage to display after navigation
+      if (!result.matchFound) {
+        sessionStorage.setItem('addVehicleMessage', "We don't know much about the vehicle you entered. Please help us learn more about your ride.");
+      } else {
+        sessionStorage.setItem('addVehicleMessage', 'Vehicle successfully added to your garage!');
+      }
+
+      // Navigate to the garage and open the new vehicle's modal
+      router.push(`/garage?openVehicle=${result.vehicleId}`);
 
     } catch (error) {
       setAddError(error instanceof Error ? error.message : 'An unknown error occurred.');
@@ -128,7 +135,6 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
           </button>
         </div>
         {addError && <p className="text-red-400 mt-2">{addError}</p>}
-        {addSuccess && <p className="text-green-400 mt-2">{addSuccess}</p>}
       </div>
     </div>
   );

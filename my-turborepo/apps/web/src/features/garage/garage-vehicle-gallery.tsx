@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ImageWithFallback } from '../../components/image-with-fallback';
 import type { Vehicle } from '@repo/types';
+import toast from 'react-hot-toast';
 
 const VehicleDetailsModal = dynamic(() => import('./garage-vehicle-details-modal'), {
   ssr: false,
@@ -24,6 +25,27 @@ type VehicleGalleryProps = {
 
 export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<UserVehicle | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    // Show toast message if one is stored in session storage
+    const message = sessionStorage.getItem('addVehicleMessage');
+    if (message) {
+      toast.success(message);
+      sessionStorage.removeItem('addVehicleMessage');
+    }
+
+    const vehicleIdToOpen = searchParams.get('openVehicle');
+    if (vehicleIdToOpen && vehicles.length > 0) {
+      const vehicleToSelect = vehicles.find((v) => v.id === vehicleIdToOpen);
+      if (vehicleToSelect) {
+        setSelectedVehicle(vehicleToSelect);
+        // Clean the URL
+        router.replace('/garage', { scroll: false });
+      }
+    }
+  }, [vehicles, searchParams, router]);
 
   const handleOpenModal = (vehicle: UserVehicle) => {
     setSelectedVehicle(vehicle);
