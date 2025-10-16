@@ -30,6 +30,11 @@ export function getVehicleImageSources(
   model?: string,
   year?: string
 ): string[] {
+  // If the input is already a proxied URL, return it directly
+  if (imageUrlString && imageUrlString.startsWith('/api/images/proxy?url=')) {
+    return [imageUrlString];
+  }
+
   const parsedUrls = parseImageUrls(imageUrlString);
 
   // If we have parsed URLs, prioritize media.ed.edmunds-media.com over www.edmunds.com
