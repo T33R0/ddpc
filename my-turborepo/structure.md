@@ -157,3 +157,34 @@ This separation ensures that our routing is decoupled from our feature logic, wh
 ### 3.4. State Management
 
 Each MFE is responsible for its own state management. If you need to share state between MFEs, consider using a global state management library (e.g., Zustand, Redux) or passing state via URL parameters or a shared parent application (if applicable).
+
+### 3.5. API Endpoints
+
+-   **`/api/discover/vehicles`**: Retrieves a paginated and filtered list of unique vehicles from the master `vehicle_data` catalog.
+-   **`/api/garage/vehicles`**: Fetches all vehicles owned by the currently authenticated user.
+-   **`/api/garage/add-vehicle`**: Adds a vehicle to a user's collection by cloning it from the `vehicle_data` catalog.
+-   **`/api/garage/add-vehicle-by-vin`**: Adds a vehicle to a user's collection by decoding a VIN via an external API.
+-   **`/api/garage/update-vehicle`**: Updates details (e.g., nickname, status) for a vehicle in a user's collection.
+
+### Supabase Edge Functions
+
+-   **`check-maintenance-due`**: A function (designed to be run on a schedule) that checks all user vehicles against their service intervals and triggers reminders for overdue maintenance.
+
+## Frontend Structure
+
+The frontend is a Next.js application located in `apps/web`.
+
+### Core Pages
+
+-   **`/`**: Landing page.
+-   **`/discover`**: Vehicle discovery and browsing page.
+-   **`/garage`**: Displays the authenticated user's vehicle collection.
+-   **`/financials`**: A dashboard for viewing vehicle-related financial analytics.
+-   **`/dashboard`**: The main user dashboard and navigation hub.
+
+### Key Components (`features/`)
+
+-   **`discover/`**: Components for the vehicle discovery page, including filters (`vehicle-filters.tsx`) and the main gallery view (`vehicle-gallery.tsx`).
+-   **`garage/`**: Components for the user's personal garage, including the gallery view (`garage-vehicle-gallery.tsx`), statistics (`garage-stats.tsx`), and the detailed vehicle modal (`garage-vehicle-details-modal.tsx`).
+-   **`financials/`**: Components for the financials page, including the main dashboard (`financials-dashboard.tsx`).
+-   **`build-thread/`**: The component responsible for rendering the chronological history of a vehicle (`build-thread.tsx`).

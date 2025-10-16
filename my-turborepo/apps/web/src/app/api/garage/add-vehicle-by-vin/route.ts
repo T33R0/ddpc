@@ -41,19 +41,26 @@ export async function POST(request: NextRequest) {
 
     const getValue = (variable: string) => results.find((r: any) => r.Variable === variable)?.Value || null;
 
+    // The established schema stores detailed specs in a JSONB column.
+    // We will gather all relevant specs into a snapshot object.
+    const specSnapshot = results.reduce((acc: any, curr: any) => {
+      if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
+        // Sanitize the key to be valid for a JSON object
+        const key = curr.Variable.replace(/ /g, '_').toLowerCase();
+        acc[key] = curr.Value;
+      }
+      return acc;
+    }, {});
+
     const vehicleData = {
       owner_id: user.id,
       vin: vin,
       year: parseInt(getValue('Model Year'), 10),
       make: getValue('Make'),
       model: getValue('Model'),
-      trim: getValue('Trim'),
-      body_type: getValue('Body Class'),
-      drive_type: getValue('Drivetrain'),
-      engine_cylinders: getValue('Engine Number of Cylinders'),
-      engine_displacement_l: getValue('Displacement (L)'),
-      fuel_type: getValue('Fuel Type - Primary'),
-      // Add other relevant fields here
+      trim: getValue('Trim') || 'N/A',
+      // Store the detailed specs in the JSONB snapshot field
+      spec_snapshot: specSnapshot,
     };
 
     const { data: newVehicle, error: insertError } = await supabase

@@ -54,6 +54,15 @@ export function BuildThread({ vehicleId }: BuildThreadProps) {
     return <div className="text-red-500">Error: {error}</div>;
   }
 
+  if (events.length === 0) {
+    return (
+      <div className="text-center text-gray-400 py-8">
+        <p>No build history yet.</p>
+        <p className="text-sm mt-2">Add modifications or maintenance logs to start your build thread.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {events.map((event) => (
