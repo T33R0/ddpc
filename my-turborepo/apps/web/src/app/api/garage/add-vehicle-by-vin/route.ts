@@ -41,31 +41,64 @@ export async function POST(request: NextRequest) {
 
     const getValue = (variable: string) => results.find((r: any) => r.Variable === variable)?.Value || null;
 
-    // The established schema stores detailed specs in a JSONB column.
-    // We will gather all relevant specs into a snapshot object.
-    const specSnapshot = results.reduce((acc: any, curr: any) => {
-      if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
-        // Sanitize the key to be valid for a JSON object
-        const key = curr.Variable.replace(/ /g, '_').toLowerCase();
-        acc[key] = curr.Value;
-      }
-      return acc;
-    }, {});
+    const make = getValue('Make');
+    const model = getValue('Model');
+    const year = parseInt(getValue('Model Year'), 10);
+    const trim = getValue('Trim');
 
-    const vehicleData = {
-      owner_id: user.id,
-      vin: vin,
-      year: parseInt(getValue('Model Year'), 10),
-      make: getValue('Make'),
-      model: getValue('Model'),
-      trim: getValue('Trim') || 'N/A',
-      // Store the detailed specs in the JSONB snapshot field
-      spec_snapshot: specSnapshot,
-    };
+    let vehicleDataToInsert;
+
+    // First, try to find a match in our curated vehicle_data table
+    const { data: matchedVehicle } = await supabase
+      .from('vehicle_data')
+      .select('*')
+      .eq('make', make)
+      .eq('model', model)
+      .eq('year', year)
+      .limit(1)
+      .maybeSingle();
+
+    if (matchedVehicle) {
+      // Match found! Use our rich, internal data.
+      const fullSpec = JSON.parse(JSON.stringify(matchedVehicle));
+      vehicleDataToInsert = {
+        owner_id: user.id,
+        vin: vin,
+        year: matchedVehicle.year,
+        make: matchedVehicle.make,
+        model: matchedVehicle.model,
+        trim: matchedVehicle.trim,
+        photo_url: matchedVehicle.image_url,
+        stock_data_id: matchedVehicle.id,
+        title: matchedVehicle.trim_description || matchedVehicle.trim,
+        spec_snapshot: fullSpec,
+        current_status: 'daily_driver'
+      };
+    } else {
+      // No match found. Fallback to building the snapshot from NHTSA data.
+      const specSnapshot = results.reduce((acc: any, curr: any) => {
+        if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
+          const key = curr.Variable.replace(/ /g, '_').toLowerCase();
+          acc[key] = curr.Value;
+        }
+        return acc;
+      }, {});
+
+      vehicleDataToInsert = {
+        owner_id: user.id,
+        vin: vin,
+        year: year,
+        make: make,
+        model: model,
+        trim: trim || 'N/A',
+        spec_snapshot: specSnapshot,
+        current_status: 'daily_driver'
+      };
+    }
 
     const { data: newVehicle, error: insertError } = await supabase
       .from('user_vehicle')
-      .insert(vehicleData)
+      .insert(vehicleDataToInsert)
       .select()
       .single();
 
