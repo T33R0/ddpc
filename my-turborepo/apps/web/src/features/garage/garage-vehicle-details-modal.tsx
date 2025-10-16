@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import type { Vehicle } from '@repo/types';
-import { supabase } from '../../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
 import { BuildThread } from '../build-thread/build-thread';
 
