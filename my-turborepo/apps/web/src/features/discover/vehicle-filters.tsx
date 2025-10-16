@@ -48,7 +48,7 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
 
   // Filter models based on selected make
   const filteredModels = filters.make
-    ? filterOptions.models.filter(model => {
+    ? filterOptions.models.filter((model: string) => {
         // Note: This is a simplified approach. In a real app, you'd need to know which models belong to which makes
         // For now, we'll show all models when a make is selected
         return true;
