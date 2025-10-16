@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { ImageWithFallback } from '../../components/image-with-fallback';
 import type { Vehicle } from '@repo/types';
-import VehicleDetailsModal from './garage-vehicle-details-modal';
+
+const VehicleDetailsModal = dynamic(() => import('./garage-vehicle-details-modal'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black/80 flex items-center justify-center"><div className="text-white">Loading...</div></div>,
+});
 
 interface UserVehicle extends Vehicle {
   current_status: string;
