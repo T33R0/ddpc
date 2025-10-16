@@ -93,4 +93,33 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
               <ImageWithFallback
                 src={vehicle.image_url || ''}
                 fallbackSrc="/branding/fallback-logo.png"
-                alt={`${vehicle.make} ${vehicle.model}`
+                alt={`${vehicle.make} ${vehicle.model}`}
+                width={400}
+                height={225}
+                className="rounded-lg object-cover aspect-video bg-white/10"
+              />
+
+              <div className="text-center">
+                <h3 className="font-bold text-lg">
+                  {vehicle.year} {vehicle.make} {vehicle.model}
+                </h3>
+                {vehicle.nickname && (
+                  <p className="text-lime-400 text-sm font-medium">{vehicle.nickname}</p>
+                )}
+                <p className="text-neutral-400 text-sm">{vehicle.trim}</p>
+              </div>
+
+              <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg">
+                {vehicle.title || 'Ready to build'}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selectedVehicle && (
+        <VehicleDetailsModal vehicle={selectedVehicle} onClose={handleCloseModal} />
+      )}
+    </>
+  );
+}
