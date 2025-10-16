@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import type { Vehicle } from '@repo/types';
+import { supabase } from '../../../../lib/supabase';
+import { useAuth } from '@repo/ui/auth-context';
+import { BuildThread } from '../../../build-thread/build-thread';
 
 interface UserVehicle extends Vehicle {
   id: string;
@@ -24,6 +27,7 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
   const [vehicleStatus, setVehicleStatus] = useState(vehicle.current_status);
   const [vehicleNickname, setVehicleNickname] = useState(vehicle.nickname || '');
   const [isUpdating, setIsUpdating] = useState(false);
+  const { session } = useAuth();
 
   const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTrim(event.target.value);
@@ -132,6 +136,8 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
             </div>
           </div>
         );
+      case 'Build Thread':
+        return <BuildThread vehicleId={vehicle.id} />;
       default:
         return null;
     }
@@ -197,7 +203,8 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
               {[
                 { id: 'Overview', label: 'Overview' },
                 { id: 'Build Tracking', label: 'Build Tracking' },
-                { id: 'Maintenance Log', label: 'Maintenance' }
+                { id: 'Maintenance Log', label: 'Maintenance' },
+                { id: 'Build Thread', label: 'Build Thread' }
               ].map((tab) => (
                 <button
                   key={tab.id}
