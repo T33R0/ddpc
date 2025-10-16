@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import type { Vehicle } from '@repo/types';
 import { supabase } from '../../../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
-import { BuildThread } from '../../build-thread/build-thread';
+import { BuildThread } from '../build-thread/build-thread';
 
 interface UserVehicle extends Vehicle {
   id: string;

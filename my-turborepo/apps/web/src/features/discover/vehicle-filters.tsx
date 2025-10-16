@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
 import { Button } from '@repo/ui/button';
 import type { VehicleSummary } from '@repo/types';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
 
 export type FilterState = {
