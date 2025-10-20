@@ -55,29 +55,31 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {vehicles.map((summary) => (
-          <div key={summary.id} className="group transition-all duration-300" onClick={() => handleOpenModal(summary)}>
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer">
+          <div key={summary.id} className="group transition-all duration-300 w-full" onClick={() => handleOpenModal(summary)}>
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer h-full">
               <div className="flex items-center text-xs text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
                   In {Math.floor(Math.random() * 100)} garages
                 </div>
               </div>
-              <ImageWithFallback
-                src={getVehicleImageSources(
-                  summary.heroImage || summary.trims[0]?.image_url,
-                  summary.make,
-                  summary.model,
-                  summary.year
-                )}
-                fallbackSrc="/branding/fallback-logo.png"
-                alt={`${summary.make} ${summary.model}`}
-                width={400}
-                height={225}
-                className="rounded-lg object-cover aspect-video bg-white/10"
-              />
+              <div className="w-full">
+                <ImageWithFallback
+                  src={getVehicleImageSources(
+                    summary.heroImage || summary.trims[0]?.image_url,
+                    summary.make,
+                    summary.model,
+                    summary.year
+                  )}
+                  fallbackSrc="/branding/fallback-logo.png"
+                  alt={`${summary.make} ${summary.model}`}
+                  width={400}
+                  height={225}
+                  className="rounded-lg object-cover aspect-video bg-white/10 w-full"
+                />
+              </div>
               <div className="text-center">
                 <h3 className="font-bold text-lg">{summary.year} {summary.make} {summary.model}</h3>
                 <p className="text-neutral-400 text-sm">

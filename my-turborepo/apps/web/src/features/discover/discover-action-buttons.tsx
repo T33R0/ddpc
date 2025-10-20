@@ -24,35 +24,60 @@ export function DiscoverActionButtons({
   const [showFilter, setShowFilter] = useState(false);
   const [showScrutineer, setShowScrutineer] = useState(false);
 
+  const handleReset = () => {
+    onFilterChange({
+      minYear: null,
+      maxYear: null,
+      make: null,
+      model: null,
+      engineType: null,
+      fuelType: null,
+      drivetrain: null,
+      doors: null,
+      vehicleType: null,
+    });
+    onSearch(''); // Clear search as well
+  };
+
   return (
     <>
-      <div className="flex gap-3 mb-6">
-        <Button
-          onClick={() => setShowSearch(true)}
-          variant="outline"
-          className="flex items-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white"
-        >
-          <Search className="w-4 h-4" />
-          Search
-        </Button>
-        
-        <Button
-          onClick={() => setShowFilter(true)}
-          variant="outline"
-          className="flex items-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white"
-        >
-          <Filter className="w-4 h-4" />
-          Filter
-        </Button>
-        
-        <Button
-          onClick={() => setShowScrutineer(true)}
-          variant="outline"
-          className="flex items-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white"
-        >
-          <Sparkles className="w-4 h-4" />
-          Scrutineer
-        </Button>
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <span className="text-white text-lg font-medium">Find your next vehicle:</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={() => setShowSearch(true)}
+            variant="outline"
+            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[140px]"
+          >
+            <Search className="w-4 h-4" />
+            Search
+          </Button>
+          
+          <Button
+            onClick={() => setShowFilter(true)}
+            variant="outline"
+            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[140px]"
+          >
+            <Filter className="w-4 h-4" />
+            Filter
+          </Button>
+          
+          <Button
+            onClick={() => setShowScrutineer(true)}
+            variant="outline"
+            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[140px]"
+          >
+            <Sparkles className="w-4 h-4" />
+            Scrutineer
+          </Button>
+          
+          <button
+            onClick={handleReset}
+            className="text-gray-400 hover:text-white transition-colors text-sm underline underline-offset-4"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       <SearchModal 
