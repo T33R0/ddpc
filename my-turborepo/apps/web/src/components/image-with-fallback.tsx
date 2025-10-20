@@ -51,17 +51,13 @@ export function ImageWithFallback({
   const isExternalUrl = currentSrc.startsWith('http://') || currentSrc.startsWith('https://');
   const needsProxy = isExternalUrl && (currentSrc.includes('edmunds.com') || currentSrc.includes('edmunds-media.com'));
 
-  // Create proxy URL for external images
-  const displaySrc = needsProxy ? `/api/images/proxy?url=${encodeURIComponent(currentSrc)}` : currentSrc;
-
-  // For external URLs that need proxying, use a regular img tag to avoid Next.js optimization issues
+  // For external URLs that need proxying, just use fallback immediately to avoid repeated failed requests
   if (needsProxy) {
     return (
       <img
         {...rest}
         alt={alt}
-        src={displaySrc}
-        onError={handleError}
+        src={fallbackSrc}
         style={{ width: rest.width, height: rest.height }}
       />
     );
