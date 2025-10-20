@@ -78,14 +78,15 @@ function DiscoverContent() {
     }
   }, [currentPage, loadingMore, hasMore, loadVehicles]);
 
-  // Effect to reload vehicles when filters change
+  // Effect to reload vehicles when filters change (but not on initial filterOptions load)
   useEffect(() => {
-    if (filterOptions) { // Only reload if filter options are loaded
+    // Skip if this is the initial load (vehicles array is empty means we're still loading initially)
+    if (filterOptions && vehicles.length > 0) {
       loadVehicles(1, false);
       setCurrentPage(1);
       setSearchQuery(''); // Clear search when filters change
     }
-  }, [filters, filterOptions, loadVehicles]);
+  }, [filters]); // Only depend on filters, not filterOptions
 
   // Load filter options immediately (doesn't block UI)
   useEffect(() => {
@@ -141,40 +142,18 @@ function DiscoverContent() {
   }, [allVehicles]);
 
   return (
-    <section className="relative py-12 bg-black min-h-screen">
-      {/* Gradient Background - Always visible */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-      >
-        <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-        <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-      </div>
-      
+    <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-8">Discover</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">Discover</h1>
         
-        {/* Action Buttons - Show immediately with or without filterOptions */}
-        {filterOptions ? (
-          <DiscoverActionButtons 
-            filters={filters} 
-            onFilterChange={setFilters} 
-            filterOptions={filterOptions}
-            onSearch={handleSearch}
-          />
-        ) : (
-          <div className="mb-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-white text-lg font-medium">Find your next vehicle:</span>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="h-10 w-[150px] bg-gray-800/50 rounded-lg animate-pulse" />
-                <div className="h-10 w-[150px] bg-gray-800/50 rounded-lg animate-pulse" />
-                <div className="h-10 w-[150px] bg-gray-800/50 rounded-lg animate-pulse" />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Action Buttons - Always show immediately */}
+        <DiscoverActionButtons 
+          filters={filters} 
+          onFilterChange={setFilters} 
+          filterOptions={filterOptions || { years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: [] }}
+          onSearch={handleSearch}
+        />
         
         {/* Gallery or Loading State */}
         {error ? (
