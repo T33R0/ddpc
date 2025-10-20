@@ -55,17 +55,17 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
 
   return (
     <>
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
         {vehicles.map((summary) => (
-          <div key={summary.id} className="group transition-all duration-300 w-full" onClick={() => handleOpenModal(summary)}>
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer h-full">
-              <div className="flex items-center text-xs text-neutral-400">
+          <div key={summary.id} className="group transition-all duration-300 flex" onClick={() => handleOpenModal(summary)}>
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer w-full">
+              <div className="flex items-center text-xs text-neutral-400 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
                   In {Math.floor(Math.random() * 100)} garages
                 </div>
               </div>
-              <div className="w-full">
+              <div className="w-full flex-shrink-0">
                 <ImageWithFallback
                   src={getVehicleImageSources(
                     summary.heroImage || summary.trims[0]?.image_url,
@@ -77,16 +77,16 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                   alt={`${summary.make} ${summary.model}`}
                   width={400}
                   height={225}
-                  className="rounded-lg object-cover aspect-video bg-white/10 w-full"
+                  className="rounded-lg object-cover aspect-video bg-white/10 w-full h-auto"
                 />
               </div>
-              <div className="text-center">
+              <div className="text-center flex-shrink-0">
                 <h3 className="font-bold text-lg">{summary.year} {summary.make} {summary.model}</h3>
                 <p className="text-neutral-400 text-sm">
                   {summary.trims[0]?.trim || `${summary.trims.length} trims available`}
                 </p>
               </div>
-              <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg">
+              <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg flex-shrink-0">
                 {summary.trims.length} trims · {Math.floor(Math.random() * 50)} public builds
               </div>
             </div>

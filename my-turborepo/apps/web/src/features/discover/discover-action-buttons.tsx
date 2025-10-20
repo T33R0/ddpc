@@ -41,13 +41,13 @@ export function DiscoverActionButtons({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <span className="text-white text-lg font-medium">Find your next vehicle:</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex flex-wrap items-center gap-3">
+          <span className="text-white text-lg font-medium">Find your next vehicle:</span>
           <Button
             onClick={() => setShowSearch(true)}
             variant="outline"
-            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[140px]"
+            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[150px]"
           >
             <Search className="w-4 h-4" />
             Search
@@ -56,7 +56,7 @@ export function DiscoverActionButtons({
           <Button
             onClick={() => setShowFilter(true)}
             variant="outline"
-            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[140px]"
+            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[150px]"
           >
             <Filter className="w-4 h-4" />
             Filter
@@ -65,19 +65,19 @@ export function DiscoverActionButtons({
           <Button
             onClick={() => setShowScrutineer(true)}
             variant="outline"
-            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[140px]"
+            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[150px]"
           >
             <Sparkles className="w-4 h-4" />
             Scrutineer
           </Button>
-          
-          <button
-            onClick={handleReset}
-            className="text-gray-400 hover:text-white transition-colors text-sm underline underline-offset-4"
-          >
-            Reset
-          </button>
         </div>
+        
+        <button
+          onClick={handleReset}
+          className="text-red-500 hover:text-red-400 transition-colors text-sm font-medium"
+        >
+          Reset
+        </button>
       </div>
 
       <SearchModal 
