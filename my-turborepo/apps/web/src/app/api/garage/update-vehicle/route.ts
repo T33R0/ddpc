@@ -6,12 +6,16 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Update vehicle API called')
+
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No auth header in update vehicle API')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+    console.log('Token extracted, length:', token.length)
 
     // Create authenticated Supabase client
     const authenticatedSupabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -26,13 +30,18 @@ export async function POST(request: NextRequest) {
     // Verify the token and get user
     const { data: { user }, error: authError } = await authenticatedSupabase.auth.getUser()
     if (authError || !user) {
+      console.log('Auth error in update vehicle API:', authError)
       return NextResponse.json({ error: 'Unauthorized', details: authError?.message }, { status: 401 })
     }
 
+    console.log('User authenticated in update vehicle API:', user.id)
+
     const body = await request.json()
     const { vehicleId, nickname, status } = body
+    console.log('Request body:', { vehicleId, nickname, status })
 
     if (!vehicleId) {
+      console.log('Missing vehicleId')
       return NextResponse.json(
         { error: 'Missing required field: vehicleId' },
         { status: 400 }
