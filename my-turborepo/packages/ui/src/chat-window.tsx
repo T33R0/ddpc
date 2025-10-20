@@ -58,15 +58,15 @@ export function ChatWindow({
 }: ChatWindowProps) {
 
     return (
-        <div className="w-full max-w-5xl mx-auto p-6 bg-white dark:bg-black rounded-3xl shadow-lg flex flex-col h-[550px] border border-gray-200 dark:border-gray-800">
-            <header className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-4 mb-4">
+        <div className="w-full max-w-5xl mx-auto p-6 bg-black/50 backdrop-blur-lg rounded-2xl shadow-lg flex flex-col h-[550px] border border-white/30">
+            <header className="flex justify-between items-center border-b border-white/30 pb-4 mb-4">
                 <div className="flex items-center gap-4">
                     <Logo />
                     <div>
-                        <h2 className="text-xl font-bold text-black dark:text-white">
+                        <h2 className="text-xl font-bold text-white">
                             Scrutineer
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-white/80">
                             Your AI assistant for vehicle insights and recommendations.
                         </p>
                     </div>
@@ -74,23 +74,23 @@ export function ChatWindow({
                 <div className="flex items-center gap-2">
                     <button
                         aria-label="More options"
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                        className="p-2 rounded-full hover:bg-white/10 transition-colors"
                     >
-                        <MoreHorizontal className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <MoreHorizontal className="w-5 h-5 text-white/80" />
                     </button>
                     {onClose && (
                         <button
                             onClick={onClose}
                             aria-label="Close chat"
-                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors"
                         >
-                            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            <X className="w-5 h-5 text-white/80" />
                         </button>
                     )}
                 </div>
             </header>
 
-            <main className="flex-1 flex flex-col bg-white dark:bg-black">
+            <main className="flex-1 flex flex-col bg-transparent">
                 <div className="flex-1 p-4 overflow-y-auto space-y-6">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
@@ -173,19 +173,19 @@ export function ChatWindow({
                         })
                     )}
                 </div>
-                <footer className="mt-auto flex items-center gap-2 p-4 border-t border-gray-200 dark:border-gray-800">
+                <footer className="mt-auto flex items-center gap-2 p-4 border-t border-white/30">
                     <input
                         type="text"
                         placeholder="Ask Scrutineer anything about vehicles..."
                         className={cn(
-                            "flex-1 w-full px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700",
-                            "bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400",
-                            "focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-shadow"
+                            "flex-1 w-full px-4 py-2 rounded-full border border-white/30",
+                            "bg-black/50 backdrop-blur-sm text-white placeholder-white/60",
+                            "focus:outline-none focus:ring-2 focus:ring-lime-500 transition-shadow"
                         )}
                     />
                     <button
                         aria-label="Send message"
-                        className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white transition-all duration-200 shadow-lg"
+                        className="p-2 rounded-full bg-lime-500 hover:bg-lime-600 text-black transition-all duration-200 shadow-lg"
                     >
                         <Send className="w-5 h-5" />
                     </button>

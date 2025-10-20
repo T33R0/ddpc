@@ -162,6 +162,7 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
           onNavigate={handleNavigateVehicle}
           canNavigatePrev={selectedVehicle.index > 0}
           canNavigateNext={selectedVehicle.index < vehicles.length - 1}
+          open={true}
         />
       )}
     </>

@@ -5,7 +5,8 @@ import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent } from '@repo/ui/dialog';
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;
@@ -14,6 +15,7 @@ type VehicleDetailsModalProps = {
   onNavigate?: (direction: 'prev' | 'next') => void;
   canNavigatePrev?: boolean;
   canNavigateNext?: boolean;
+  open?: boolean;
 };
 
 // Helper function to format specs with proper units
@@ -91,13 +93,14 @@ const formatFuelEconomy = (trim: TrimVariant): string => {
   return parts.length > 0 ? parts.join(' ') : '—';
 };
 
-const VehicleDetailsModal = ({ 
-  summary, 
-  initialTrimId, 
-  onClose, 
+const VehicleDetailsModal = ({
+  summary,
+  initialTrimId,
+  onClose,
   onNavigate,
   canNavigatePrev = false,
-  canNavigateNext = false 
+  canNavigateNext = false,
+  open = true
 }: VehicleDetailsModalProps) => {
   const { user } = useAuth();
   const [selectedTrimId, setSelectedTrimId] = useState<string>(initialTrimId ?? summary.trims[0]?.id ?? '');
@@ -207,26 +210,16 @@ const VehicleDetailsModal = ({
   );
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div 
-        className="relative bg-gray-900 text-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-800"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-bold">{summary.year} {summary.make} {summary.model}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <div className="sticky top-0 bg-black/50 backdrop-blur-lg border-b border-white/30 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+          <h2 className="text-2xl font-bold text-white">{summary.year} {summary.make} {summary.model}</h2>
         </div>
 
         {/* Side Navigation Arrows - Fixed positioning */}
@@ -237,32 +230,12 @@ const VehicleDetailsModal = ({
               onNavigate?.('prev');
             }}
             aria-label="Previous vehicle"
-            style={{
-              position: 'fixed',
-              left: 'max(1rem, calc((100vw - 80rem) / 2 - 4rem))',
-              top: '50vh',
-              transform: 'translateY(-50%)',
-              zIndex: 60,
-              padding: '1rem',
-              backgroundColor: 'rgba(31, 41, 55, 0.95)',
-              borderRadius: '9999px',
-              transition: 'background-color 0.2s',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              color: 'white',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.95)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.95)';
-            }}
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-black/50 backdrop-blur-lg border border-white/30 rounded-full hover:bg-gray-700/50 transition-colors"
           >
-            <ChevronLeft style={{ width: '2rem', height: '2rem', display: 'block' }} />
+            <ChevronLeft className="w-8 h-8 text-white" />
           </button>
         )}
-        
+
         {canNavigateNext && (
           <button
             onClick={(e) => {
@@ -270,29 +243,9 @@ const VehicleDetailsModal = ({
               onNavigate?.('next');
             }}
             aria-label="Next vehicle"
-            style={{
-              position: 'fixed',
-              right: 'max(1rem, calc((100vw - 80rem) / 2 - 4rem))',
-              top: '50vh',
-              transform: 'translateY(-50%)',
-              zIndex: 60,
-              padding: '1rem',
-              backgroundColor: 'rgba(31, 41, 55, 0.95)',
-              borderRadius: '9999px',
-              transition: 'background-color 0.2s',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-              color: 'white',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.95)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.95)';
-            }}
+            className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-black/50 backdrop-blur-lg border border-white/30 rounded-full hover:bg-gray-700/50 transition-colors"
           >
-            <ChevronRight style={{ width: '2rem', height: '2rem', display: 'block' }} />
+            <ChevronRight className="w-8 h-8 text-white" />
           </button>
         )}
 
@@ -470,7 +423,7 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 pt-8 border-t border-gray-800 pb-2">
+          <div className="mt-6 pt-8 border-t border-white/30 pb-2">
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleAddToGarage}
@@ -488,7 +441,7 @@ const VehicleDetailsModal = ({
                   : 'Add to Garage'
                 }
               </button>
-              
+
               <button
                 onClick={() => setShowComingSoon(true)}
                 className="py-3 px-8 rounded-lg font-semibold transition-colors bg-gray-700 hover:bg-gray-600 text-white min-w-[200px]"
@@ -498,32 +451,32 @@ const VehicleDetailsModal = ({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Coming Soon Popup */}
-      {showComingSoon && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60]"
-          onClick={() => setShowComingSoon(false)}
-        >
-          <div 
-            className="bg-gray-900 text-white rounded-2xl p-8 border border-gray-800 max-w-md"
-            onClick={(e) => e.stopPropagation()}
+        {/* Coming Soon Popup */}
+        {showComingSoon && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+            onClick={() => setShowComingSoon(false)}
           >
-            <h3 className="text-2xl font-bold mb-4">Coming Soon</h3>
-            <p className="text-gray-300 mb-6">
-              This feature is currently under development and will be available soon!
-            </p>
-            <button
-              onClick={() => setShowComingSoon(false)}
-              className="w-full py-3 px-6 rounded-lg font-semibold bg-lime-500 hover:bg-lime-600 text-black transition-colors"
+            <div
+              className="bg-black/50 backdrop-blur-lg text-white rounded-2xl p-8 border border-white/30 max-w-md"
+              onClick={(e) => e.stopPropagation()}
             >
-              Got it
-            </button>
+              <h3 className="text-2xl font-bold mb-4 text-white">Coming Soon</h3>
+              <p className="text-white/80 mb-6">
+                This feature is currently under development and will be available soon!
+              </p>
+              <button
+                onClick={() => setShowComingSoon(false)}
+                className="w-full py-3 px-6 rounded-lg font-semibold bg-lime-500 hover:bg-lime-600 text-black transition-colors"
+              >
+                Got it
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

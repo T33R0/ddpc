@@ -41,7 +41,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'bg-black/80 backdrop-blur-md border-slate-800 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] rounded-lg border shadow-lg duration-200 sm:max-w-lg',
+          'bg-black/50 backdrop-blur-lg border-white/30 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] rounded-2xl shadow-lg duration-200 sm:max-w-lg',
           className
         )}
         {...props}>
@@ -52,14 +52,14 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
 }
 
 function DialogBody({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="dialog-body" className={cn('px-4 py-6', className)} {...props} />;
+  return <div data-slot="dialog-body" className={cn('px-6 py-6', className)} {...props} />;
 }
 
 function DialogHeader({ className, children, hideCloseButton = false, ...props }: React.ComponentProps<'div'> & { hideCloseButton?: boolean }) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn('bg-black/50 backdrop-blur-lg flex flex-col gap-2 rounded-t-lg border-b border-slate-800 p-4 text-center sm:text-left', className)}
+      className={cn('bg-black/50 backdrop-blur-lg flex flex-col gap-2 rounded-t-2xl border-b border-white/30 p-6 text-center sm:text-left', className)}
       {...props}>
       {children}
       {!hideCloseButton && (
@@ -76,7 +76,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('bg-transparent flex flex-col gap-2 rounded-b-lg border-t border-slate-800 px-4 py-3 sm:flex-row sm:justify-end', className)}
+      className={cn('bg-transparent flex flex-col gap-2 rounded-b-2xl border-t border-white/30 px-6 py-4 sm:flex-row sm:justify-end', className)}
       {...props}
     />
   );
@@ -86,7 +86,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn('font-heading text-lg leading-none font-medium text-white', className)}
+      className={cn('font-heading text-xl leading-none font-bold text-white', className)}
       {...props}
     />
   );
