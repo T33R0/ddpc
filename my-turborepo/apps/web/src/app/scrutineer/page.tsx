@@ -1,10 +1,18 @@
+import { Suspense } from 'react';
+import { ScrutineerAdmin } from '../../features/scrutineer/scrutineer-admin';
+
 export default function ScrutineerPage() {
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-5xl font-bold mb-4">Coming Soon</h1>
-        <p className="text-xl text-gray-400">The Scrutineer AI is currently under development. Check back later!</p>
+    <section className="relative py-12 min-h-screen">
+      <div className="relative container px-4 md:px-6 pt-24">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-4xl font-bold text-white mb-8">Scrutineer Admin Console</h1>
+
+          <Suspense fallback={<div className="text-white">Loading admin console...</div>}>
+            <ScrutineerAdmin />
+          </Suspense>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

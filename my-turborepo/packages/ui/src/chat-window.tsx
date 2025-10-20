@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
     SmilePlus,
     Send,
@@ -10,6 +10,7 @@ import {
     Users,
     X,
     ChevronUp,
+    Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import { Logo } from "./logo";
@@ -31,17 +32,19 @@ interface Message {
         count: number;
         reacted: boolean;
     }>;
+    isUser?: boolean;
 }
 
 interface ChatWindowProps {
     chatName?: string;
     messages?: Message[];
     onClose?: () => void;
+    skill?: "discover" | "maintenance" | "performance";
 }
 
 export function ChatWindow({
     chatName = "Scrutineer",
-    messages = [
+    messages: initialMessages = [
         {
             id: "1",
             content: "What can I help you with?",
@@ -55,7 +58,175 @@ export function ChatWindow({
         },
     ],
     onClose,
+    skill = "discover",
 }: ChatWindowProps) {
+    const [messages, setMessages] = useState<Message[]>(initialMessages);
+    const [inputValue, setInputValue] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const sendMessage = async () => {
+        if (!inputValue.trim() || isLoading) return;
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            content: inputValue,
+            sender: {
+                name: "You",
+                avatar: "",
+                isOnline: true,
+            },
+            timestamp: new Date().toLocaleTimeString(),
+            status: "sent",
+            isUser: true,
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setInputValue("");
+        setIsLoading(true);
+
+        try {
+            const response = await fetch("/api/scrutineer/message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    text: inputValue,
+                    skill: skill
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            const aiMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                content: data.reply || "Sorry, I couldn't process your request.",
+                sender: {
+                    name: "Scrutineer",
+                    avatar: "",
+                    isOnline: true,
+                },
+                timestamp: new Date().toLocaleTimeString(),
+                status: "delivered",
+            };
+
+            setMessages(prev => [...prev, aiMessage]);
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            const errorMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                content: "Sorry, I'm having trouble connecting right now. Please try again.",
+                sender: {
+                    name: "Scrutineer",
+                    avatar: "",
+                    isOnline: false,
+                },
+                timestamp: new Date().toLocaleTimeString(),
+                status: "delivered",
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    };
+
+    const renderMessage = (message: Message) => {
+        const isUser = message.isUser;
+        const isStructuredResult = message.content.startsWith("Here are some candidates:");
+
+        if (isStructuredResult && !isUser) {
+            // Parse structured results
+            const lines = message.content.split('\n');
+            const candidates = lines.slice(1).filter(line => line.trim().startsWith('•'));
+
+            return (
+                <div className={`flex gap-4 ${isUser ? 'items-start flex-row-reverse' : 'items-start'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-blue-600' : 'bg-gradient-to-br from-blue-500 to-purple-600'}`}>
+                        {isUser ? (
+                            <span className="text-white text-sm font-medium">
+                                {message.sender.name.charAt(0).toUpperCase()}
+                            </span>
+                        ) : (
+                            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-blue-600">AI</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className={`flex-1 ${isUser ? 'flex flex-col items-end' : ''}`}>
+                        <div className={`flex items-baseline gap-2 mb-1 ${isUser ? 'flex-row-reverse' : ''}`}>
+                            <p className="font-bold text-white">
+                                {message.sender.name}
+                            </p>
+                            <span className="text-xs text-white/60">
+                                {message.timestamp}
+                            </span>
+                        </div>
+                        <div className={`p-3 rounded-lg max-w-md ${isUser ? 'bg-blue-600 text-white' : 'bg-white/10 text-white'}`}>
+                            <div className="font-medium mb-3 text-white">{lines[0]}</div>
+                            <div className="space-y-2">
+                                {candidates.map((candidate, index) => (
+                                    <div key={index} className="text-sm text-white/90 p-2 bg-black/20 rounded border border-white/10">
+                                        {candidate.replace('•', '').trim()}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Regular message
+        return (
+            <div className={`flex gap-4 ${isUser ? 'items-start flex-row-reverse' : 'items-start'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-blue-600' : 'bg-gradient-to-br from-blue-500 to-purple-600'}`}>
+                    {isUser ? (
+                        <span className="text-white text-sm font-medium">
+                            {message.sender.name.charAt(0).toUpperCase()}
+                        </span>
+                    ) : (
+                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                            <span className="text-xs font-bold text-blue-600">AI</span>
+                        </div>
+                    )}
+                </div>
+                <div className={`flex-1 ${isUser ? 'flex flex-col items-end' : ''}`}>
+                    <div className={`flex items-baseline gap-2 mb-1 ${isUser ? 'flex-row-reverse' : ''}`}>
+                        <p className="font-bold text-white">
+                            {message.sender.name}
+                        </p>
+                        <span className="text-xs text-white/60">
+                            {message.timestamp}
+                        </span>
+                    </div>
+                    <div className={`p-3 rounded-lg max-w-md ${isUser ? 'bg-blue-600 text-white' : 'bg-white/10 text-white'}`}>
+                        <p className="whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="w-full max-w-5xl mx-auto p-6 bg-black/50 backdrop-blur-lg rounded-2xl shadow-lg flex flex-col h-[550px] border border-white/30">
@@ -92,7 +263,7 @@ export function ChatWindow({
 
             <main className="flex-1 flex flex-col bg-transparent">
                 <div className="flex-1 p-4 overflow-y-auto space-y-6">
-                    {messages.length === 0 ? (
+                    {messages.length === 1 && messages[0]?.content === "What can I help you with?" ? (
                         <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                                 <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
@@ -100,94 +271,81 @@ export function ChatWindow({
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <h3 className="text-xl font-semibold text-black dark:text-white">
+                                <h3 className="text-xl font-semibold text-white">
                                     Welcome to Scrutineer
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-400 max-w-md">
+                                <p className="text-white/60 max-w-md">
                                     I'm your AI assistant here to help you discover, research, and make informed decisions about vehicles. How can I assist you today?
                                 </p>
                             </div>
                             <div className="grid grid-cols-1 gap-3 max-w-lg">
-                                <button className="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-200 dark:border-gray-700">
-                                    <div className="font-medium text-black dark:text-white text-sm">
+                                <button
+                                    onClick={() => setInputValue("Show me around the site")}
+                                    className="p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition-colors border border-white/20"
+                                >
+                                    <div className="font-medium text-white text-sm">
                                         🏠 Show me around the site
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <div className="text-xs text-white/60 mt-1">
                                         Get a guided tour of all features
                                     </div>
                                 </button>
-                                <button className="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-200 dark:border-gray-700">
-                                    <div className="font-medium text-black dark:text-white text-sm">
+                                <button
+                                    onClick={() => setInputValue("Help me setup my garage")}
+                                    className="p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition-colors border border-white/20"
+                                >
+                                    <div className="font-medium text-white text-sm">
                                         🏗️ Help me setup my garage
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <div className="text-xs text-white/60 mt-1">
                                         Create and manage your vehicle collection
                                     </div>
                                 </button>
-                                <button className="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-200 dark:border-gray-700">
-                                    <div className="font-medium text-black dark:text-white text-sm">
+                                <button
+                                    onClick={() => setInputValue("Find me red BMW M3s from 2018")}
+                                    className="p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition-colors border border-white/20"
+                                >
+                                    <div className="font-medium text-white text-sm">
                                         🚗 Let's discover my next vehicle
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <div className="text-xs text-white/60 mt-1">
                                         Find the perfect car for your needs
                                     </div>
                                 </button>
                             </div>
                         </div>
                     ) : (
-                        messages.map((message) => {
-                            const isAI = message.sender.name === "Scrutineer";
-                            return (
-                                <div
-                                    key={message.id}
-                                    className={`flex gap-4 ${isAI ? 'items-start' : 'items-start flex-row-reverse'}`}
-                                >
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isAI ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gray-600'}`}>
-                                        {isAI ? (
-                                            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                                                <span className="text-xs font-bold text-blue-600">AI</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-white text-sm font-medium">
-                                                {message.sender.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className={`flex-1 ${!isAI ? 'flex flex-col items-end' : ''}`}>
-                                        <div className={`flex items-baseline gap-2 mb-1 ${!isAI ? 'flex-row-reverse' : ''}`}>
-                                            <p className="font-bold text-black dark:text-white">
-                                                {message.sender.name}
-                                            </p>
-                                            <span className="text-xs text-gray-400 dark:text-gray-500">
-                                                {message.timestamp}
-                                            </span>
-                                        </div>
-                                        <div className={`p-3 rounded-lg max-w-md ${isAI ? 'bg-gray-100 dark:bg-gray-800' : 'bg-blue-600 text-white'}`}>
-                                            <p className={`${isAI ? 'text-gray-800 dark:text-gray-200' : 'text-white'}`}>
-                                                {message.content}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })
+                        messages.map((message) => renderMessage(message))
                     )}
+                    <div ref={messagesEndRef} />
                 </div>
                 <footer className="mt-auto flex items-center gap-2 p-4 border-t border-white/30">
                     <input
+                        ref={inputRef}
                         type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
                         placeholder="Ask Scrutineer anything about vehicles..."
+                        disabled={isLoading}
                         className={cn(
                             "flex-1 w-full px-4 py-2 rounded-full border border-white/30",
                             "bg-black/50 backdrop-blur-sm text-white placeholder-white/60",
-                            "focus:outline-none focus:ring-2 focus:ring-lime-500 transition-shadow"
+                            "focus:outline-none focus:ring-2 focus:ring-lime-500 transition-shadow",
+                            "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
                     />
                     <button
+                        onClick={sendMessage}
+                        disabled={!inputValue.trim() || isLoading}
                         aria-label="Send message"
-                        className="p-2 rounded-full bg-lime-500 hover:bg-lime-600 text-black transition-all duration-200 shadow-lg"
+                        className="p-2 rounded-full bg-lime-500 hover:bg-lime-600 disabled:bg-gray-600 disabled:hover:bg-gray-600 text-black transition-all duration-200 shadow-lg disabled:cursor-not-allowed"
                     >
-                        <Send className="w-5 h-5" />
+                        {isLoading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Send className="w-5 h-5" />
+                        )}
                     </button>
                 </footer>
                 {/* Close button anchored to bottom of chat window */}
