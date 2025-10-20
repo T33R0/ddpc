@@ -2,9 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useClickOutside } from './hooks/use-click-outside';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from './avatar';
+import { Button } from './button';
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  ModalClose,
+} from './modal';
 
 interface UserAccountDropdownProps {
   user?: {
@@ -19,7 +30,9 @@ interface UserAccountDropdownProps {
 
 export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const ref = useClickOutside(() => setIsOpen(false));
+  const router = useRouter();
 
   const getInitials = () => {
     if (user?.user_metadata?.full_name) {
@@ -66,6 +79,8 @@ export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProp
               onClick={() => {
                 onSignOut?.();
                 setIsOpen(false);
+                router.push('/');
+                setShowLogoutModal(true);
               }}
               className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full"
             >
@@ -74,6 +89,24 @@ export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProp
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Modal open={showLogoutModal} onOpenChange={setShowLogoutModal}>
+        <ModalContent className="bg-black/90 border-neutral-800">
+          <ModalHeader>
+            <ModalTitle className="text-white">Logout Successful</ModalTitle>
+          </ModalHeader>
+          <ModalDescription className="text-gray-300">
+            You have successfully logged out of your account.
+          </ModalDescription>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-black">
+                Thanks!
+              </Button>
+            </ModalClose>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
