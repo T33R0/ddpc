@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ImageWithFallback } from '../../components/image-with-fallback';
+import { getVehicleImageSources } from '../../lib/vehicle-images';
 import type { Vehicle } from '@repo/types';
 import toast from 'react-hot-toast';
 
@@ -91,7 +92,7 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
               </div>
 
               <ImageWithFallback
-                src={vehicle.image_url || ''}
+                src={getVehicleImageSources(vehicle.image_url, vehicle.make, vehicle.model, vehicle.year)}
                 fallbackSrc="/branding/fallback-logo.png"
                 alt={`${vehicle.make} ${vehicle.model}`}
                 width={400}

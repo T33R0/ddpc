@@ -7,6 +7,7 @@ import type { Vehicle } from '@repo/types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
 import { BuildThread } from '../build-thread/build-thread';
+import { getVehicleImageSources } from '../../lib/vehicle-images';
 
 interface UserVehicle extends Vehicle {
   id: string;
@@ -157,7 +158,7 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
           {/* Left side - Image and basic info */}
           <div className="md:w-1/2 p-6 bg-black/50">
             <Image
-              src={vehicle.image_url || ''}
+              src={getVehicleImageSources(vehicle.image_url, vehicle.make, vehicle.model, vehicle.year)[0] || '/branding/fallback-logo.png'}
               alt={`${vehicle.make} ${vehicle.model}`}
               className="w-full h-48 object-cover rounded-lg mb-4"
               width={400}
