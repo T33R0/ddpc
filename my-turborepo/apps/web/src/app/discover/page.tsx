@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DiscoverActionButtons } from "../../features/discover/discover-action-buttons";
 import { VehicleGallery } from "../../features/discover/vehicle-gallery";
+import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
 import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
 import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
@@ -86,20 +87,28 @@ function DiscoverContent() {
     }
   }, [filters, filterOptions, loadVehicles]);
 
-  // Initialize data on mount
+  // Load filter options immediately (doesn't block UI)
   useEffect(() => {
-    async function initializeData() {
+    async function loadFilters() {
+      try {
+        const options = await getVehicleFilterOptions();
+        setFilterOptions(options);
+      } catch (err) {
+        console.error('Failed to load filter options:', err);
+      }
+    }
+    loadFilters();
+  }, []);
+
+  // Initialize vehicle data on mount
+  useEffect(() => {
+    async function initializeVehicles() {
       try {
         setLoading(true);
         setError(null);
 
-        // Load filter options and initial vehicles in parallel
-        const [options, vehicleData] = await Promise.all([
-          getVehicleFilterOptions(),
-          getVehicleSummaries(1, 24, filters)
-        ]);
+        const vehicleData = await getVehicleSummaries(1, 24, filters);
 
-        setFilterOptions(options);
         setVehicles(vehicleData);
         setAllVehicles(vehicleData);
         setHasMore(vehicleData.length === 24);
@@ -111,7 +120,7 @@ function DiscoverContent() {
       }
     }
 
-    initializeData();
+    initializeVehicles();
   }, []); // Only run on mount
 
   const handleSearch = useCallback((query: string) => {
@@ -131,28 +140,9 @@ function DiscoverContent() {
     setVehicles(filtered);
   }, [allVehicles]);
 
-  if (loading && !filterOptions) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-white text-lg">Loading vehicles...</div>
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-red-400 text-lg">Error: {error}</div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="relative py-12 bg-black min-h-screen">
+      {/* Gradient Background - Always visible */}
       <div
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -160,21 +150,47 @@ function DiscoverContent() {
         <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
         <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
       </div>
+      
       <div className="relative container px-4 md:px-6 pt-24">
-        {filterOptions && (
+        {/* Page Header */}
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-8">Discover</h1>
+        
+        {/* Action Buttons - Show immediately with or without filterOptions */}
+        {filterOptions ? (
           <DiscoverActionButtons 
             filters={filters} 
             onFilterChange={setFilters} 
             filterOptions={filterOptions}
             onSearch={handleSearch}
           />
+        ) : (
+          <div className="mb-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-white text-lg font-medium">Find your next vehicle:</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="h-10 w-[150px] bg-gray-800/50 rounded-lg animate-pulse" />
+                <div className="h-10 w-[150px] bg-gray-800/50 rounded-lg animate-pulse" />
+                <div className="h-10 w-[150px] bg-gray-800/50 rounded-lg animate-pulse" />
+              </div>
+            </div>
+          </div>
         )}
-        <VehicleGallery 
-          vehicles={vehicles} 
-          onLoadMore={loadMore} 
-          loadingMore={loadingMore} 
-          hasMore={hasMore && !searchQuery} 
-        />
+        
+        {/* Gallery or Loading State */}
+        {error ? (
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="text-red-400 text-lg">Error: {error}</div>
+          </div>
+        ) : loading ? (
+          <GalleryLoadingSkeleton />
+        ) : (
+          <VehicleGallery 
+            vehicles={vehicles} 
+            onLoadMore={loadMore} 
+            loadingMore={loadingMore} 
+            hasMore={hasMore && !searchQuery} 
+          />
+        )}
       </div>
     </section>
   );
