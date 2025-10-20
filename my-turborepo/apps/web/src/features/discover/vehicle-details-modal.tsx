@@ -93,6 +93,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
   const [selectedTrimId, setSelectedTrimId] = useState<string>(initialTrimId ?? summary.trims[0]?.id ?? '');
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
   const [isAddedToGarage, setIsAddedToGarage] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   useEffect(() => {
     setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
@@ -212,7 +213,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
                   id="trim-select"
                   value={selectedTrimId}
                   onChange={handleTrimChange}
-                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                  className="max-w-xs bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
                 >
                   {summary.trims.map((trim) => (
                     <option key={trim.id} value={trim.id} className="bg-gray-800 text-white">
@@ -360,27 +361,60 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
             </div>
           </div>
 
-          {/* Add to Garage Button */}
-          <div className="mt-8 pt-6 border-t border-gray-800">
-            <button
-              onClick={handleAddToGarage}
-              disabled={isAddingToGarage || isAddedToGarage}
-              className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-                isAddedToGarage
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-lime-500 hover:bg-lime-600 text-black'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {isAddingToGarage
-                ? 'Adding to Garage...'
-                : isAddedToGarage
-                ? '✓ Added to Garage'
-                : 'Add to Garage'
-              }
-            </button>
+          {/* Action Buttons */}
+          <div className="mt-8 pt-8 border-t border-gray-800">
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleAddToGarage}
+                disabled={isAddingToGarage || isAddedToGarage}
+                className={`py-3 px-8 rounded-lg font-semibold transition-colors ${
+                  isAddedToGarage
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-lime-500 hover:bg-lime-600 text-black'
+                } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
+              >
+                {isAddingToGarage
+                  ? 'Adding to Garage...'
+                  : isAddedToGarage
+                  ? '✓ Added to Garage'
+                  : 'Add to Garage'
+                }
+              </button>
+              
+              <button
+                onClick={() => setShowComingSoon(true)}
+                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-gray-700 hover:bg-gray-600 text-white min-w-[200px]"
+              >
+                More Details
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Coming Soon Popup */}
+      {showComingSoon && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60]"
+          onClick={() => setShowComingSoon(false)}
+        >
+          <div 
+            className="bg-gray-900 text-white rounded-2xl p-8 border border-gray-800 max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-bold mb-4">Coming Soon</h3>
+            <p className="text-gray-300 mb-6">
+              This feature is currently under development and will be available soon!
+            </p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="w-full py-3 px-6 rounded-lg font-semibold bg-lime-500 hover:bg-lime-600 text-black transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
