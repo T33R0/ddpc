@@ -236,15 +236,30 @@ const VehicleDetailsModal = ({
               e.stopPropagation();
               onNavigate?.('prev');
             }}
-            className="fixed z-[60] p-4 bg-gray-800/95 hover:bg-gray-700/95 rounded-full transition-colors shadow-xl"
+            aria-label="Previous vehicle"
             style={{
+              position: 'fixed',
               left: 'max(1rem, calc((100vw - 80rem) / 2 - 4rem))',
               top: '50vh',
               transform: 'translateY(-50%)',
+              zIndex: 60,
+              padding: '1rem',
+              backgroundColor: 'rgba(31, 41, 55, 0.95)',
+              borderRadius: '9999px',
+              transition: 'background-color 0.2s',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              color: 'white',
             }}
-            aria-label="Previous vehicle"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.95)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.95)';
+            }}
           >
-            <ChevronLeft className="w-8 h-8" />
+            <ChevronLeft style={{ width: '2rem', height: '2rem', display: 'block' }} />
           </button>
         )}
         
@@ -254,15 +269,30 @@ const VehicleDetailsModal = ({
               e.stopPropagation();
               onNavigate?.('next');
             }}
-            className="fixed z-[60] p-4 bg-gray-800/95 hover:bg-gray-700/95 rounded-full transition-colors shadow-xl"
+            aria-label="Next vehicle"
             style={{
+              position: 'fixed',
               right: 'max(1rem, calc((100vw - 80rem) / 2 - 4rem))',
               top: '50vh',
               transform: 'translateY(-50%)',
+              zIndex: 60,
+              padding: '1rem',
+              backgroundColor: 'rgba(31, 41, 55, 0.95)',
+              borderRadius: '9999px',
+              transition: 'background-color 0.2s',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              color: 'white',
             }}
-            aria-label="Next vehicle"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.95)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.95)';
+            }}
           >
-            <ChevronRight className="w-8 h-8" />
+            <ChevronRight style={{ width: '2rem', height: '2rem', display: 'block' }} />
           </button>
         )}
 

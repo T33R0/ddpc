@@ -91,15 +91,17 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
             <div 
               className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 cursor-pointer"
               style={{
-                border: '1px solid rgb(132, 204, 22)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 transition: 'all 0.3s ease-out',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
                 e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
