@@ -16,6 +16,7 @@ type VehicleGalleryProps = {
 type SelectedVehicle = {
   summary: VehicleSummary;
   initialTrimId?: string;
+  index: number;
 };
 
 export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasMore = false }: VehicleGalleryProps) {
@@ -42,10 +43,11 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
 
   // Vehicles are already filtered at the database level, so no need for frontend filtering
 
-  const handleOpenModal = (summary: VehicleSummary) => {
+  const handleOpenModal = (summary: VehicleSummary, index: number) => {
     setSelectedVehicle({
       summary,
       initialTrimId: summary.trims[0]?.id,
+      index,
     });
   };
 
@@ -53,16 +55,40 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
     setSelectedVehicle(null);
   };
 
+  const handleNavigateVehicle = (direction: 'prev' | 'next') => {
+    if (!selectedVehicle) return;
+    
+    const currentIndex = selectedVehicle.index;
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Check if we need to load more vehicles
+    if (direction === 'next' && newIndex >= vehicles.length - 1 && hasMore && !loadingMore && onLoadMore) {
+      onLoadMore();
+    }
+    
+    // Navigate to the new vehicle if it exists
+    if (newIndex >= 0 && newIndex < vehicles.length) {
+      const newVehicle = vehicles[newIndex];
+      if (newVehicle) {
+        setSelectedVehicle({
+          summary: newVehicle,
+          initialTrimId: newVehicle.trims[0]?.id,
+          index: newIndex,
+        });
+      }
+    }
+  };
+
   return (
     <>
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {vehicles.map((summary) => (
+        {vehicles.map((summary, index) => (
           <div 
             key={summary.id} 
             className="group transition-all duration-300" 
-            onClick={() => handleOpenModal(summary)}
+            onClick={() => handleOpenModal(summary, index)}
           >
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer">
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-lime-500 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(132,204,22,0.4)] cursor-pointer">
               <div className="flex items-center text-xs text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
@@ -117,6 +143,9 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
           summary={selectedVehicle.summary}
           initialTrimId={selectedVehicle.initialTrimId}
           onClose={handleCloseModal}
+          onNavigate={handleNavigateVehicle}
+          canNavigatePrev={selectedVehicle.index > 0}
+          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
         />
       )}
     </>

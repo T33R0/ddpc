@@ -5,12 +5,15 @@ import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;
   initialTrimId?: string;
   onClose: () => void;
+  onNavigate?: (direction: 'prev' | 'next') => void;
+  canNavigatePrev?: boolean;
+  canNavigateNext?: boolean;
 };
 
 // Helper function to format specs with proper units
@@ -88,7 +91,14 @@ const formatFuelEconomy = (trim: TrimVariant): string => {
   return parts.length > 0 ? parts.join(' ') : '—';
 };
 
-const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetailsModalProps) => {
+const VehicleDetailsModal = ({ 
+  summary, 
+  initialTrimId, 
+  onClose, 
+  onNavigate,
+  canNavigatePrev = false,
+  canNavigateNext = false 
+}: VehicleDetailsModalProps) => {
   const { user } = useAuth();
   const [selectedTrimId, setSelectedTrimId] = useState<string>(initialTrimId ?? summary.trims[0]?.id ?? '');
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
@@ -177,9 +187,27 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
         className="bg-gray-900 text-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header with Navigation */}
         <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-2xl font-bold">{summary.year} {summary.make} {summary.model}</h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onNavigate?.('prev')}
+              disabled={!canNavigatePrev}
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous vehicle"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-2xl font-bold">{summary.year} {summary.make} {summary.model}</h2>
+            <button
+              onClick={() => onNavigate?.('next')}
+              disabled={!canNavigateNext}
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Next vehicle"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-800 rounded-full transition-colors"
