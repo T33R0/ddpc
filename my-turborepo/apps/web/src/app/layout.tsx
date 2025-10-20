@@ -6,6 +6,7 @@ import { Footer } from '@repo/ui/footer';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AuthProvider } from '../lib/auth';
 import { ScrutineerButton } from '../components/ScrutineerButton';
+import { LogoutModal } from '../components/LogoutModal';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
             <Footer />
           </div>
+          <LogoutModal />
           <ScrutineerButton />
         </AuthProvider>
         <SpeedInsights />

@@ -1,18 +1,11 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useClickOutside } from './hooks/use-click-outside';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from './avatar';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-} from './modal';
 
 interface UserAccountDropdownProps {
   user?: {
@@ -27,18 +20,7 @@ interface UserAccountDropdownProps {
 
 export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const logoutInitiatedRef = useRef(false);
   const ref = useClickOutside(() => setIsOpen(false));
-  const router = useRouter();
-
-  // Preserve modal state when user changes during logout
-  useEffect(() => {
-    if (logoutInitiatedRef.current && !user) {
-      // User logged out, keep modal open
-      setShowLogoutModal(true);
-    }
-  }, [user]);
 
   const getInitials = () => {
     if (user?.user_metadata?.full_name) {
@@ -85,7 +67,6 @@ export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProp
               onClick={() => {
                 onSignOut?.();
                 setIsOpen(false);
-                setShowLogoutModal(true);
               }}
               className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full"
             >
@@ -94,24 +75,6 @@ export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProp
           </motion.div>
         )}
       </AnimatePresence>
-
-      <Modal open={showLogoutModal} onOpenChange={(open) => {
-        setShowLogoutModal(open);
-        if (!open) {
-          router.push('/');
-        }
-      }}>
-        <ModalContent>
-          <ModalHeader>
-            <ModalTitle>Logout Successful</ModalTitle>
-          </ModalHeader>
-          <ModalBody>
-            <p className="text-muted-foreground">
-              You have successfully logged out of your account.
-            </p>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     </div>
   );
 }

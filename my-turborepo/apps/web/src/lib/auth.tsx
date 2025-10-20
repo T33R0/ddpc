@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +13,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  showLogoutModal: boolean;
+  setShowLogoutModal: (show: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Get initial session
@@ -113,6 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    router.push('/');
+    setShowLogoutModal(true);
   };
 
   const value = {
@@ -123,6 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signInWithGoogle,
     signOut,
+    showLogoutModal,
+    setShowLogoutModal,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -144,6 +153,8 @@ export function useAuth() {
         signIn: async () => ({ error: null }),
         signInWithGoogle: async () => ({ error: null }),
         signOut: async () => {},
+        showLogoutModal: false,
+        setShowLogoutModal: () => {},
       };
     }
     // Client-side but no provider - this is an error
