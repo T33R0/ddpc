@@ -44,9 +44,15 @@ export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmail
             <Link href="/community" className="text-white hover:text-gray-300 transition-colors">
               Community
             </Link>
-            <Link href="/garage" className="text-white hover:text-gray-300 transition-colors">
-              Garage
-            </Link>
+            {user ? (
+              <Link href="/garage" className="text-white hover:text-gray-300 transition-colors">
+                Garage
+              </Link>
+            ) : (
+              <Link href="/pricing" className="text-white hover:text-gray-300 transition-colors">
+                Pricing
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-4">

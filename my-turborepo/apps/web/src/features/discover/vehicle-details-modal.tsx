@@ -229,11 +229,19 @@ const VehicleDetailsModal = ({
           </button>
         </div>
 
-        {/* Side Navigation Arrows */}
+        {/* Side Navigation Arrows - Fixed positioning */}
         {canNavigatePrev && (
           <button
-            onClick={() => onNavigate?.('prev')}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-gray-800/90 hover:bg-gray-700 rounded-full transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate?.('prev');
+            }}
+            className="fixed z-[60] p-4 bg-gray-800/95 hover:bg-gray-700/95 rounded-full transition-colors shadow-xl"
+            style={{
+              left: 'max(1rem, calc((100vw - 80rem) / 2 - 4rem))',
+              top: '50vh',
+              transform: 'translateY(-50%)',
+            }}
             aria-label="Previous vehicle"
           >
             <ChevronLeft className="w-8 h-8" />
@@ -242,8 +250,16 @@ const VehicleDetailsModal = ({
         
         {canNavigateNext && (
           <button
-            onClick={() => onNavigate?.('next')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-gray-800/90 hover:bg-gray-700 rounded-full transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate?.('next');
+            }}
+            className="fixed z-[60] p-4 bg-gray-800/95 hover:bg-gray-700/95 rounded-full transition-colors shadow-xl"
+            style={{
+              right: 'max(1rem, calc((100vw - 80rem) / 2 - 4rem))',
+              top: '50vh',
+              transform: 'translateY(-50%)',
+            }}
             aria-label="Next vehicle"
           >
             <ChevronRight className="w-8 h-8" />

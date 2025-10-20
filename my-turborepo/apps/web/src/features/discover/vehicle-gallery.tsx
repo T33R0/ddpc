@@ -88,7 +88,21 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
             className="group transition-all duration-300" 
             onClick={() => handleOpenModal(summary, index)}
           >
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-lime-500 transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(132,204,22,0.6)] cursor-pointer">
+            <div 
+              className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 cursor-pointer"
+              style={{
+                border: '1px solid rgb(132, 204, 22)',
+                transition: 'all 0.3s ease-out',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
               <div className="flex items-center text-xs text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>
