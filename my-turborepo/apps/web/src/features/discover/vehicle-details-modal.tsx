@@ -104,6 +104,8 @@ const VehicleDetailsModal = ({
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
   const [isAddedToGarage, setIsAddedToGarage] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
@@ -119,6 +121,32 @@ const VehicleDetailsModal = ({
 
   const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTrimId(event.target.value);
+  };
+
+  // Touch handlers for swipe navigation
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0]?.clientX ?? null);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0]?.clientX ?? null);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && canNavigateNext && onNavigate) {
+      onNavigate('next');
+    } else if (isRightSwipe && canNavigatePrev && onNavigate) {
+      onNavigate('prev');
+    }
   };
 
   const handleAddToGarage = async () => {
@@ -184,30 +212,15 @@ const VehicleDetailsModal = ({
       onClick={onClose}
     >
       <div 
-        className="bg-gray-900 text-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-800"
+        className="relative bg-gray-900 text-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-800"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
-        {/* Header with Navigation */}
+        {/* Header */}
         <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => onNavigate?.('prev')}
-              disabled={!canNavigatePrev}
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Previous vehicle"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h2 className="text-2xl font-bold">{summary.year} {summary.make} {summary.model}</h2>
-            <button
-              onClick={() => onNavigate?.('next')}
-              disabled={!canNavigateNext}
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Next vehicle"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          <h2 className="text-2xl font-bold">{summary.year} {summary.make} {summary.model}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-800 rounded-full transition-colors"
@@ -215,6 +228,27 @@ const VehicleDetailsModal = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Side Navigation Arrows */}
+        {canNavigatePrev && (
+          <button
+            onClick={() => onNavigate?.('prev')}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-gray-800/90 hover:bg-gray-700 rounded-full transition-colors"
+            aria-label="Previous vehicle"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+        )}
+        
+        {canNavigateNext && (
+          <button
+            onClick={() => onNavigate?.('next')}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-gray-800/90 hover:bg-gray-700 rounded-full transition-colors"
+            aria-label="Next vehicle"
+          >
+            <ChevronRight className="w-8 h-8" />
+          </button>
+        )}
 
         {/* Content */}
         <div className="p-6">
