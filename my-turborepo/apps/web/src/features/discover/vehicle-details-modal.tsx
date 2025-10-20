@@ -362,7 +362,7 @@ const VehicleDetailsModal = ({ summary, initialTrimId, onClose }: VehicleDetails
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 pt-6 border-t border-gray-800">
+          <div className="mt-6 pt-8 border-t border-gray-800 pb-2">
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleAddToGarage}
