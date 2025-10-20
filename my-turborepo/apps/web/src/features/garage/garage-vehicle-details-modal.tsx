@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import toast from 'react-hot-toast';
 import type { Vehicle } from '@repo/types';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '@repo/ui/auth-context';
 import { BuildThread } from '../build-thread/build-thread';
 import { getVehicleImageSources } from '../../lib/vehicle-images';
+import { ImageWithFallback } from '../../components/image-with-fallback';
 
 interface UserVehicle extends Vehicle {
   id: string;
@@ -28,7 +27,6 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
   const [vehicleStatus, setVehicleStatus] = useState(vehicle.current_status);
   const [vehicleNickname, setVehicleNickname] = useState(vehicle.nickname || '');
   const [isUpdating, setIsUpdating] = useState(false);
-  const { session } = useAuth();
 
   const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTrim(event.target.value);
@@ -38,10 +36,17 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
     setIsUpdating(true);
 
     try {
+      // Get current session for authorization
+      const session = await supabase.auth.getSession();
+      if (!session.data.session?.access_token) {
+        throw new Error('No access token available');
+      }
+
       const response = await fetch('/api/garage/update-vehicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.data.session.access_token}`,
         },
         body: JSON.stringify({
           vehicleId: vehicle.id,
@@ -157,12 +162,13 @@ const GarageVehicleDetailsModal = ({ vehicle, onClose }: GarageVehicleDetailsMod
         <div className="flex flex-col md:flex-row">
           {/* Left side - Image and basic info */}
           <div className="md:w-1/2 p-6 bg-black/50">
-            <Image
-              src={getVehicleImageSources(vehicle.image_url, vehicle.make, vehicle.model, vehicle.year)[0] || '/branding/fallback-logo.png'}
+            <ImageWithFallback
+              src={getVehicleImageSources(vehicle.image_url, vehicle.make, vehicle.model, vehicle.year)}
+              fallbackSrc="/branding/fallback-logo.png"
               alt={`${vehicle.make} ${vehicle.model}`}
-              className="w-full h-48 object-cover rounded-lg mb-4"
               width={400}
               height={225}
+              className="w-full h-48 object-cover rounded-lg mb-4"
             />
             <h2 className="text-2xl font-bold text-white mb-2">
               {vehicle.year} {vehicle.make} {vehicle.model}

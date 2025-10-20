@@ -52,21 +52,9 @@ export function getVehicleImageSources(
     return 0;
   });
 
-  // Create proxy URLs for external images to bypass Next.js optimization issues
-  const proxiedUrls = sortedUrls.map(url => {
-    if (url.includes('edmunds.com') || url.includes('edmunds-media.com')) {
-      return `/api/images/proxy?url=${encodeURIComponent(url)}`;
-    }
-    return url;
-  });
-
-  // If we have proxied URLs, return them
-  if (proxiedUrls.length > 0) {
-    return proxiedUrls;
-  }
-
-  // Fallback: Generate placeholder images based on vehicle info
-  return [];
+  // For Next.js Image component, we need to return the original URLs
+  // The proxy will be handled by the ImageWithFallback component
+  return sortedUrls;
 }
 
 /**
