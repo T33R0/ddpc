@@ -4,6 +4,7 @@ import { HeaderWithAuth } from '../components/HeaderWithAuth';
 import { Toaster } from 'react-hot-toast';
 import { Footer } from '@repo/ui/footer';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '../lib/auth';
 import { ScrutineerButton } from '../components/ScrutineerButton';
 import { LogoutModal } from '../components/LogoutModal';
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ScrutineerButton />
         </AuthProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
