@@ -2,15 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Vehicles API called')
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false }
-    })
 
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -21,8 +17,8 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
     console.log('Token extracted, length:', token.length)
 
-    // Create authenticated Supabase client
-    const authenticatedSupabase = createClient(supabaseUrl, supabaseServiceKey, {
+    // Create authenticated Supabase client with user's token
+    const authenticatedSupabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false },
       global: {
         headers: {
