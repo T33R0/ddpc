@@ -80,7 +80,23 @@ export function VehicleGallery({ vehicles, filters }: VehicleGalleryProps) {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
         {vehicles.map((vehicle) => (
           <div key={vehicle.id} className="group transition-all duration-300" onClick={() => handleOpenModal(vehicle)}>
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 border border-transparent transition-all duration-300 group-hover:scale-105 group-hover:border-lime-400/50 group-hover:shadow-lg group-hover:shadow-lime-500/20 cursor-pointer">
+            <div
+              className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 cursor-pointer"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                transition: 'all 0.3s ease-out',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
               <div className="flex items-center justify-between text-xs text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span>

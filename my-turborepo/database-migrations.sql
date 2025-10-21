@@ -49,13 +49,21 @@ BEGIN
     vd.make,
     vd.model,
     vd.year,
-    (array_agg(vd.image_url))[1] as hero_image,  -- Take first image as hero
+    COALESCE((
+      SELECT vpi.url FROM vehicle_primary_image vpi
+      WHERE vpi.vehicle_id = vd.id
+      LIMIT 1
+    ), '') as hero_image,
     jsonb_agg(
       jsonb_build_object(
         'id', vd.id,
         'trim', vd."trim",
         'trim_description', vd.trim_description,
-        'image_url', vd.image_url,
+        'image_url', COALESCE((
+          SELECT vpi2.url FROM vehicle_primary_image vpi2
+          WHERE vpi2.vehicle_id = vd.id
+          LIMIT 1
+        ), ''),
         'body_type', vd.body_type,
         'fuel_type', vd.fuel_type,
         'transmission', vd.transmission,

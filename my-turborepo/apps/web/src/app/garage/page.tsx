@@ -122,10 +122,7 @@ function GarageContent() {
       </div>
       <div className="relative container px-4 md:px-6 pt-24">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">My Collection</h1>
-          <p className="text-neutral-400">
-            {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} in your collection
-          </p>
+          <h1 className="text-4xl font-bold text-white mb-2">My Garage</h1>
         </div>
 
         <GarageStats vehicles={vehicles} />
