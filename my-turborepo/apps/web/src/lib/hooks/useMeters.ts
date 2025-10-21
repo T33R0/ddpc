@@ -12,6 +12,9 @@ export function useMeters() {
         setIsLoading(true);
         const response = await fetch('/api/usage');
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required');
+          }
           throw new Error('Failed to fetch usage meters');
         }
         const result = await response.json();

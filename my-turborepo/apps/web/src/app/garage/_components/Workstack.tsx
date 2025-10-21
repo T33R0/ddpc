@@ -25,8 +25,16 @@ export function Workstack() {
     return (
       <Card className="p-6 bg-gray-900 border-gray-800">
         <h2 className="text-xl font-semibold text-white mb-4">Do Next</h2>
-        <div className="text-center text-red-400 py-4">
-          Failed to load workstack
+        <div className="text-center py-4">
+          {error.message === 'Authentication required' ? (
+            <div className="text-yellow-400">
+              <p>Please sign in to view your tasks. Use the sign in button in the header above.</p>
+            </div>
+          ) : (
+            <div className="text-red-400">
+              Failed to load workstack
+            </div>
+          )}
         </div>
       </Card>
     );

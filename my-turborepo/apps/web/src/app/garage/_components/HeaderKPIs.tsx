@@ -11,8 +11,16 @@ export function HeaderKPIs() {
   if (error) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="col-span-full text-center text-red-400 py-4">
-          Failed to load KPIs
+        <div className="col-span-full text-center py-4">
+          {error.message === 'Authentication required' ? (
+            <div className="text-yellow-400">
+              <p>Please sign in to view your garage dashboard. Use the sign in button in the header above.</p>
+            </div>
+          ) : (
+            <div className="text-red-400">
+              Failed to load KPIs
+            </div>
+          )}
         </div>
       </div>
     );

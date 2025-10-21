@@ -3,16 +3,42 @@
 import React, { useState } from 'react';
 import { Card } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-// Using native select - Select component not available
-
-// TODO: Replace with actual vehicle data from API
-const mockVehicles = [
-  { id: '1', name: '2020 Honda Civic', mileage: 45000 },
-  { id: '2', name: '2018 Toyota Camry', mileage: 78000 },
-];
+import { useVehicles } from '@/lib/hooks/useVehicles';
 
 export function VehicleSwitcher() {
+  const { data: vehicles, isLoading, error } = useVehicles();
   const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+
+  if (error) {
+    return (
+      <Card className="p-6 bg-gray-900 border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-4">Active Vehicle</h2>
+        <div className="text-center py-4">
+          {error.message === 'Authentication required' ? (
+            <div className="text-yellow-400">
+              <p>Please sign in to view your vehicles. Use the sign in button in the header above.</p>
+            </div>
+          ) : (
+            <div className="text-red-400">
+              Failed to load vehicles
+            </div>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
+  if (isLoading || !vehicles) {
+    return (
+      <Card className="p-6 bg-gray-900 border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-4">Active Vehicle</h2>
+        <div className="space-y-4">
+          <div className="h-10 bg-gray-800 rounded animate-pulse"></div>
+          <div className="h-8 bg-gray-800 rounded animate-pulse"></div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 bg-gray-900 border-gray-800">
@@ -25,7 +51,7 @@ export function VehicleSwitcher() {
           className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-500"
         >
           <option value="" disabled>Select a vehicle</option>
-          {mockVehicles.map((vehicle) => (
+          {vehicles.map((vehicle) => (
             <option key={vehicle.id} value={vehicle.id}>
               {vehicle.name} - {vehicle.mileage.toLocaleString()} miles
             </option>
@@ -34,7 +60,7 @@ export function VehicleSwitcher() {
 
         {selectedVehicle && (
           <div className="text-sm text-gray-400">
-            <div>Current mileage: {mockVehicles.find(v => v.id === selectedVehicle)?.mileage.toLocaleString()} miles</div>
+            <div>Current mileage: {vehicles.find(v => v.id === selectedVehicle)?.mileage.toLocaleString()} miles</div>
           </div>
         )}
 

@@ -12,6 +12,9 @@ export function useActivity() {
         setIsLoading(true);
         const response = await fetch('/api/garage/activity');
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required');
+          }
           throw new Error('Failed to fetch activity');
         }
         const result = await response.json();

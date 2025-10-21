@@ -12,6 +12,9 @@ export function useKPIs() {
         setIsLoading(true);
         const response = await fetch('/api/garage/kpis');
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required');
+          }
           throw new Error('Failed to fetch KPIs');
         }
         const result = await response.json();

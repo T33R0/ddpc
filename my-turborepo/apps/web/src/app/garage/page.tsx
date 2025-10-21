@@ -1,8 +1,6 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { supabase } from "../../lib/supabase";
-import { AuthProvider } from "@repo/ui/auth-context";
 import { HeaderKPIs } from './_components/HeaderKPIs';
 import { Workstack } from './_components/Workstack';
 import { RecentActivity } from './_components/RecentActivity';
@@ -150,9 +148,5 @@ function UpgradeSkeleton() {
 }
 
 export default function Garage() {
-  return (
-    <AuthProvider supabase={supabase}>
-      <GarageDashboard />
-    </AuthProvider>
-  );
+  return <GarageDashboard />;
 }

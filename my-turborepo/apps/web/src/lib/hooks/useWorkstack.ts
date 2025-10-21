@@ -12,6 +12,9 @@ export function useWorkstack() {
         setIsLoading(true);
         const response = await fetch('/api/garage/workstack');
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required');
+          }
           throw new Error('Failed to fetch workstack');
         }
         const result = await response.json();
