@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser, requireFeature } from '@repo/services/planUtils';
+import { getPlanForUser, requireFeature } from '@/lib/plan-utils';
 import { z } from 'zod';
 import type { UpgradeRequiredError } from '@repo/types';
 
@@ -11,7 +11,7 @@ const updateOdometerSchema = z.object({
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

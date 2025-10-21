@@ -5,7 +5,7 @@ import { Card } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { useTier } from '@/lib/hooks/useTier';
-import { validateIntent } from '@repo/services/planUtils';
+import { validateIntent } from '@/lib/plan-utils';
 
 export function TierAssistant() {
   const { data: tier } = useTier();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPlanForUser } from '@repo/services/planUtils';
+import { getPlanForUser } from '../plan-utils';
 import { useAuth } from '@/lib/auth';
 import type { Tier } from '@repo/types';
 

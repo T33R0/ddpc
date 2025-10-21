@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser, requireFeature, checkLimit } from '@repo/services/planUtils';
+import { getPlanForUser, requireFeature, checkLimit } from '@/lib/plan-utils';
 import { z } from 'zod';
 import type { EventData, UpgradeRequiredError } from '@repo/types';
 
@@ -20,7 +20,7 @@ const markDoneSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

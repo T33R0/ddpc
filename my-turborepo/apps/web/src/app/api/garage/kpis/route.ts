@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser, mapPlanToTier } from '@repo/services/planUtils';
+import { getPlanForUser, mapPlanToTier } from '@/lib/plan-utils';
 import type { KPI, Tier } from '@repo/types';
 
 function getKPIsForTier(tier: Tier, userId: string): KPI[] {
@@ -43,7 +43,7 @@ function getKPIsForTier(tier: Tier, userId: string): KPI[] {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

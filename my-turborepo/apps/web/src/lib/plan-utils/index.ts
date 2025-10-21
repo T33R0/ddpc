@@ -1,4 +1,4 @@
-import type { User } from '@repo/types';
+import type { User } from "@repo/types";
 
 // Tier mapping from existing plan system
 export type Tier = 'T0' | 'T1' | 'T2' | 'T3';
