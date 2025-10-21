@@ -1,13 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { useVehicles } from '@/lib/hooks/useVehicles';
 
-export function VehicleSwitcher() {
+interface VehicleSwitcherProps {
+  selectedVehicleId: string | null;
+  onVehicleSelect: (vehicleId: string | null) => void;
+}
+
+export function VehicleSwitcher({ selectedVehicleId, onVehicleSelect }: VehicleSwitcherProps) {
   const { data: vehicles, isLoading, error } = useVehicles();
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
 
   if (error) {
     return (
@@ -46,8 +50,8 @@ export function VehicleSwitcher() {
 
       <div className="space-y-4">
         <select
-          value={selectedVehicle}
-          onChange={(e) => setSelectedVehicle(e.target.value)}
+          value={selectedVehicleId || ''}
+          onChange={(e) => onVehicleSelect(e.target.value || null)}
           className="w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-500"
         >
           <option value="" disabled>Select a vehicle</option>
@@ -58,9 +62,9 @@ export function VehicleSwitcher() {
           ))}
         </select>
 
-        {selectedVehicle && (
+        {selectedVehicleId && (
           <div className="text-sm text-gray-400">
-            <div>Current mileage: {vehicles.find(v => v.id === selectedVehicle)?.mileage.toLocaleString()} miles</div>
+            <div>Current mileage: {vehicles.find(v => v.id === selectedVehicleId)?.mileage.toLocaleString()} miles</div>
           </div>
         )}
 

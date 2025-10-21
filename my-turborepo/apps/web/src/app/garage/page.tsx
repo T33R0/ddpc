@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { HeaderKPIs } from './_components/HeaderKPIs';
 import { Workstack } from './_components/Workstack';
 import { RecentActivity } from './_components/RecentActivity';
@@ -8,8 +8,11 @@ import { VehicleSwitcher } from './_components/VehicleSwitcher';
 import { Meters } from './_components/Meters';
 import { TierAssistant } from './_components/TierAssistant';
 import { UpgradeHooks } from './_components/UpgradeHooks';
+import { UpcomingNeedsCard } from './_components/UpcomingNeedsCard';
 
 function GarageDashboard() {
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+
   return (
     <section className="relative py-12 bg-black min-h-screen">
       <div
@@ -30,6 +33,11 @@ function GarageDashboard() {
           <HeaderKPIs />
         </Suspense>
 
+        {/* Upcoming Needs Card */}
+        <Suspense fallback={<UpcomingNeedsSkeleton />}>
+          <UpcomingNeedsCard vehicleId={selectedVehicleId} />
+        </Suspense>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
           {/* Left Column: Workstack + Recent Activity */}
@@ -46,7 +54,10 @@ function GarageDashboard() {
           {/* Right Column: Context Panel */}
           <div className="space-y-6">
             <Suspense fallback={<SwitcherSkeleton />}>
-              <VehicleSwitcher />
+              <VehicleSwitcher
+                selectedVehicleId={selectedVehicleId}
+                onVehicleSelect={setSelectedVehicleId}
+              />
             </Suspense>
 
             <Suspense fallback={<MetersSkeleton />}>
@@ -143,6 +154,19 @@ function UpgradeSkeleton() {
     <div className="bg-gray-900 rounded-lg p-6">
       <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
       <div className="h-24 bg-gray-800 rounded animate-pulse"></div>
+    </div>
+  );
+}
+
+function UpcomingNeedsSkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="space-y-4">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="h-16 bg-gray-800 rounded animate-pulse"></div>
+        ))}
+      </div>
     </div>
   );
 }

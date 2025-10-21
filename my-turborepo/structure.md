@@ -173,30 +173,355 @@ Each MFE is responsible for its own state management. If you need to share state
 
 ## Database Schema
 
-The application uses Supabase with the following key tables:
+The application uses Supabase with the following database schema:
 
-### Core Data Tables
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+### Core Tables
+
+```sql
+CREATE TABLE public.ai_embeddings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  namespace text NOT NULL,
+  ref_id text NOT NULL,
+  title text,
+  text text NOT NULL,
+  embedding USER-DEFINED NOT NULL,
+  CONSTRAINT ai_embeddings_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.ai_memory_kv (
+  user_id uuid NOT NULL,
+  scope text NOT NULL,
+  key text NOT NULL,
+  value jsonb,
+  CONSTRAINT ai_memory_kv_pkey PRIMARY KEY (user_id, scope, key),
+  CONSTRAINT ai_memory_kv_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.ai_prompts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  version text NOT NULL,
+  text text NOT NULL,
+  is_active boolean DEFAULT true,
+  CONSTRAINT ai_prompts_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.ai_session (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  started_at timestamp with time zone DEFAULT now(),
+  last_used_at timestamp with time zone DEFAULT now(),
+  skill_hint text,
+  token_spend numeric DEFAULT 0,
+  CONSTRAINT ai_session_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_session_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.ai_turn (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL,
+  role text CHECK (role = ANY (ARRAY['user'::text, 'assistant'::text, 'tool'::text])),
+  text text,
+  tool_calls jsonb,
+  model_name text,
+  prompt_version text,
+  cost_cents numeric DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_turn_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_turn_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.ai_session(id)
+);
+
+CREATE TABLE public.maintenance_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_vehicle_id uuid NOT NULL,
+  service_interval_id uuid,
+  description text NOT NULL,
+  cost numeric DEFAULT 0.00,
+  odometer integer,
+  event_date timestamp with time zone NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT maintenance_log_pkey PRIMARY KEY (id),
+  CONSTRAINT maintenance_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id),
+  CONSTRAINT maintenance_log_service_interval_id_fkey FOREIGN KEY (service_interval_id) REFERENCES public.service_intervals(id)
+);
+
+CREATE TABLE public.maintenance_parts (
+  maintenance_log_id uuid NOT NULL,
+  part_id uuid NOT NULL,
+  quantity_used integer NOT NULL DEFAULT 1,
+  CONSTRAINT maintenance_parts_pkey PRIMARY KEY (maintenance_log_id, part_id),
+  CONSTRAINT maintenance_parts_maintenance_log_id_fkey FOREIGN KEY (maintenance_log_id) REFERENCES public.maintenance_log(id),
+  CONSTRAINT maintenance_parts_part_id_fkey FOREIGN KEY (part_id) REFERENCES public.part_inventory(id)
+);
+
+CREATE TABLE public.mod_parts (
+  mod_id uuid NOT NULL,
+  part_id uuid NOT NULL,
+  quantity_used integer NOT NULL DEFAULT 1,
+  CONSTRAINT mod_parts_pkey PRIMARY KEY (mod_id, part_id),
+  CONSTRAINT mod_parts_mod_id_fkey FOREIGN KEY (mod_id) REFERENCES public.mods(id),
+  CONSTRAINT mod_parts_part_id_fkey FOREIGN KEY (part_id) REFERENCES public.part_inventory(id)
+);
+
+CREATE TABLE public.mods (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_vehicle_id uuid NOT NULL,
+  title text NOT NULL,
+  description text,
+  status text NOT NULL DEFAULT 'planned'::text CHECK (status = ANY (ARRAY['planned'::text, 'ordered'::text, 'installed'::text, 'tuned'::text])),
+  cost numeric DEFAULT 0.00,
+  event_date timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT mods_pkey PRIMARY KEY (id),
+  CONSTRAINT mods_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
+);
+
+CREATE TABLE public.part_inventory (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  part_number text,
+  name text NOT NULL,
+  cost numeric,
+  vendor_name text,
+  vendor_link text,
+  physical_location text,
+  quantity integer NOT NULL DEFAULT 1,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT part_inventory_pkey PRIMARY KEY (id),
+  CONSTRAINT part_inventory_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.service_intervals (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  name text NOT NULL,
+  interval_months integer,
+  interval_miles integer,
+  description text,
+  CONSTRAINT service_intervals_pkey PRIMARY KEY (id),
+  CONSTRAINT service_intervals_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.user_profile (
+  user_id uuid NOT NULL,
+  username text NOT NULL UNIQUE,
+  display_name text,
+  location text,
+  website text,
+  bio text,
+  avatar_url text,
+  is_public boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  role USER-DEFINED NOT NULL DEFAULT 'user'::user_role CHECK (role = ANY (ARRAY['user'::user_role, 'helper'::user_role, 'admin'::user_role])),
+  plan text NOT NULL DEFAULT 'free'::text CHECK (plan = ANY (ARRAY['free'::text, 'builder'::text, 'pro'::text])),
+  banned boolean NOT NULL DEFAULT false,
+  CONSTRAINT user_profile_pkey PRIMARY KEY (user_id),
+  CONSTRAINT user_profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.user_vehicle (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  vin text,
+  year integer,
+  make text NOT NULL,
+  model text NOT NULL,
+  trim text,
+  nickname text,
+  privacy text NOT NULL DEFAULT 'PRIVATE'::text CHECK (privacy = ANY (ARRAY['PUBLIC'::text, 'PRIVATE'::text])),
+  photo_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  last_event_at timestamp with time zone,
+  stock_data_id text,
+  title text,
+  spec_snapshot jsonb,
+  current_status text DEFAULT 'daily_driver'::text CHECK (current_status = ANY (ARRAY['daily_driver'::text, 'parked'::text, 'listed'::text, 'sold'::text, 'retired'::text])),
+  owner_id uuid NOT NULL,
+  odometer integer,
+  CONSTRAINT user_vehicle_pkey PRIMARY KEY (id),
+  CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id),
+  CONSTRAINT user_vehicle_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.vehicle_data (
+  id text NOT NULL,
+  make text,
+  model text,
+  year text,
+  trim text,
+  trim_description text,
+  base_msrp text,
+  base_invoice text,
+  colors_exterior text,
+  colors_interior text,
+  body_type text,
+  doors text,
+  total_seating text,
+  length_in text,
+  width_in text,
+  height_in text,
+  wheelbase_in text,
+  front_track_in text,
+  rear_track_in text,
+  ground_clearance_in text,
+  angle_of_approach_deg text,
+  angle_of_departure_deg text,
+  turning_circle_ft text,
+  drag_coefficient_cd text,
+  epa_interior_volume_cuft text,
+  cargo_capacity_cuft text,
+  max_cargo_capacity_cuft text,
+  curb_weight_lbs text,
+  gross_weight_lbs text,
+  max_payload_lbs text,
+  max_towing_capacity_lbs text,
+  cylinders text,
+  engine_size_l text,
+  horsepower_hp integer,
+  horsepower_rpm integer CHECK (horsepower_rpm IS NULL OR horsepower_rpm >= 0 AND horsepower_rpm <= 14000),
+  torque_ft_lbs integer,
+  torque_rpm integer,
+  valves integer,
+  valve_timing text,
+  cam_type text,
+  drive_type text,
+  transmission text,
+  engine_type text,
+  fuel_type text,
+  fuel_tank_capacity_gal text,
+  epa_combined_mpg text,
+  epa_city_highway_mpg text,
+  range_miles_city_hwy text,
+  epa_combined_mpge text,
+  epa_city_highway_mpge text,
+  epa_electric_range_mi text,
+  epa_kwh_per_100mi text,
+  epa_charge_time_240v_hr text,
+  battery_capacity_kwh text,
+  front_head_room_in text,
+  front_hip_room_in text,
+  front_leg_room_in text,
+  front_shoulder_room_in text,
+  rear_head_room_in text,
+  rear_hip_room_in text,
+  rear_leg_room_in text,
+  rear_shoulder_room_in text,
+  warranty_basic text,
+  warranty_drivetrain text,
+  warranty_roadside text,
+  warranty_rust text,
+  source_json text,
+  source_url text,
+  review text,
+  pros text,
+  cons text,
+  whats_new text,
+  nhtsa_overall_rating text,
+  new_price_range text,
+  used_price_range text,
+  scorecard_overall text,
+  scorecard_driving text,
+  scorecard_confort text,
+  scorecard_interior text,
+  scorecard_utility text,
+  scorecard_technology text,
+  expert_verdict text,
+  expert_performance text,
+  expert_comfort text,
+  expert_interior text,
+  expert_technology text,
+  expert_storage text,
+  expert_fuel_economy text,
+  expert_value text,
+  expert_wildcard text,
+  old_trim text,
+  old_description text,
+  images_url text,
+  suspension text,
+  front_seats text,
+  rear_seats text,
+  power_features text,
+  instrumentation text,
+  convenience text,
+  comfort text,
+  memorized_settings text,
+  in_car_entertainment text,
+  roof_and_glass text,
+  body text,
+  truck_features text,
+  tires_and_wheels text,
+  doors_features text,
+  towing_and_hauling text,
+  safety_features text,
+  packages text,
+  exterior_options text,
+  interior_options text,
+  mechanical_options text,
+  country_of_origin text,
+  car_classification text,
+  platform_code_generation text,
+  date_added text,
+  new_make text,
+  new_model text,
+  new_year text,
+  CONSTRAINT vehicle_data_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.vehicle_image_archive (
+  vehicle_id text NOT NULL,
+  url text NOT NULL,
+  source text DEFAULT 'import'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_image_archive_pkey PRIMARY KEY (vehicle_id, url),
+  CONSTRAINT vehicle_image_archive_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicle_data(id)
+);
+
+CREATE TABLE public.vehicle_primary_image (
+  vehicle_id text NOT NULL,
+  url text,
+  storage_path text,
+  checksum text,
+  width_px integer,
+  height_px integer,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicle_primary_image_pkey PRIMARY KEY (vehicle_id),
+  CONSTRAINT vehicle_primary_image_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicle_data(id)
+);
+
+CREATE TABLE public.vehicle_url_queue (
+  id text NOT NULL,
+  CONSTRAINT vehicle_url_queue_pkey PRIMARY KEY (id)
+);
+```
+
+### Table Overview
+
+#### Core Data Tables
 - **`vehicle_data`**: Master catalog of vehicle specifications and details
 - **`vehicle_primary_image`**: Primary image URLs for vehicles (linked to vehicle_data)
 - **`vehicle_image_archive`**: Archive of additional vehicle images
 - **`user_vehicle`**: User's personal vehicle collection
 - **`user_profile`**: Extended user profile information
 
-### AI & Chat Features
+#### AI & Chat Features
 - **`ai_session`**: AI conversation sessions
 - **`ai_turn`**: Individual messages in AI conversations
 - **`ai_prompts`**: Stored AI prompts and templates
 - **`ai_memory_kv`**: Key-value storage for AI memory
 - **`ai_embeddings`**: Vector embeddings for AI search
 
-### Maintenance & Parts
+#### Maintenance & Parts
 - **`service_intervals`**: Maintenance service intervals
 - **`maintenance_log`**: User's maintenance history
 - **`part_inventory`**: User's parts inventory
 - **`mods`**: Vehicle modifications tracking
 - **`maintenance_parts`** & **`mod_parts`**: Junction tables for parts usage
 
-### System Tables
+#### System Tables
 - **`vehicle_url_queue`**: Queue for processing vehicle URLs
 
 ## Frontend Structure
