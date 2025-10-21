@@ -167,3 +167,68 @@ export interface WorkItem {
   status: 'todo' | 'in-progress' | 'done';
   date: string; // ISO 8601 format
 }
+
+// Garage Dashboard Types
+export type Tier = 'T0' | 'T1' | 'T2' | 'T3';
+
+export interface KPI {
+  key: 'lastEvent' | 'vehicles' | 'nextDue' | 'overdue' | 'stageName' | 'stageETA' | 'budgetUsed' | 'compatFlags' | 'activeBuilds' | 'spendVsPlan' | 'onTimePct' | 'downtime30d';
+  label: string;
+  value: string;
+}
+
+export interface DashboardWorkItem {
+  id: string;
+  kind: 'historical' | 'maintenance' | 'build' | 'fleet';
+  title: string;
+  subtitle?: string;
+  due?: string;
+  vehicleId?: string;
+  actions: Array<{
+    label: string;
+    op: 'markDone' | 'open' | 'convert' | 'assign';
+  }>;
+}
+
+export interface ActivityItem {
+  id: string;
+  type: 'event_logged' | 'maintenance_completed' | 'build_updated' | 'ai_query';
+  title: string;
+  description: string;
+  timestamp: string;
+  vehicleId?: string;
+}
+
+export interface UsageStats {
+  vehiclesUsed: number;
+  storageUsedGB: number;
+  aiTokensUsed: number;
+}
+
+export interface EventData {
+  id?: string;
+  vehicleId: string;
+  type: 'maintenance' | 'historical';
+  title: string;
+  description?: string;
+  date: string; // ISO 8601
+  odometer?: number;
+  photos?: string[];
+}
+
+export interface BotMessage {
+  intent: 'maintenance_advice' | 'parts_crossref' | 'vehicle_suggestions' | 'performance_advice' | 'compatibility' | 'ops_bulk';
+  prompt: string;
+  vehicleId?: string;
+}
+
+export interface BotResponse {
+  response: string;
+  tokensUsed: number;
+}
+
+export interface UpgradeRequiredError {
+  code: 'UPGRADE_REQUIRED';
+  targetTier: Tier;
+  message: string;
+}

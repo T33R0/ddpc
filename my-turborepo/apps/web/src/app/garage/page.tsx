@@ -1,116 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { VehicleGallery } from "../../features/garage/garage-vehicle-gallery";
-import { GarageStats } from "../../features/garage/garage-stats";
+import React, { Suspense } from 'react';
 import { supabase } from "../../lib/supabase";
 import { AuthProvider } from "@repo/ui/auth-context";
-import { useAuth } from "@repo/ui/auth-context";
-import type { Vehicle } from "@repo/types";
+import { HeaderKPIs } from './_components/HeaderKPIs';
+import { Workstack } from './_components/Workstack';
+import { RecentActivity } from './_components/RecentActivity';
+import { VehicleSwitcher } from './_components/VehicleSwitcher';
+import { Meters } from './_components/Meters';
+import { TierAssistant } from './_components/TierAssistant';
+import { UpgradeHooks } from './_components/UpgradeHooks';
 
-interface UserVehicle extends Vehicle {
-  id: string;
-  owner_id: string;
-  nickname?: string;
-  current_status: string;
-  privacy: string;
-  title?: string;
-}
-
-function GarageContent() {
-  const [vehicles, setVehicles] = useState<UserVehicle[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { user, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    // 1. Wait for authentication to resolve.
-    if (authLoading) {
-      return; // Do nothing until auth is complete.
-    }
-
-    // 2. If no user, set vehicles to an empty array to stop loading.
-    if (!user) {
-      setVehicles([]);
-      return;
-    }
-
-    let isMounted = true;
-
-    async function fetchCollectionData() {
-      try {
-        setError(null);
-        const session = await supabase.auth.getSession();
-        if (!session.data.session?.access_token) {
-          throw new Error('No access token available');
-        }
-
-        const response = await fetch('/api/garage/vehicles', {
-          headers: {
-            'Authorization': `Bearer ${session.data.session.access_token}`,
-          },
-        });
-
-        if (!isMounted) return;
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch vehicles');
-        }
-
-        const data = await response.json();
-        if (isMounted) {
-          setVehicles(data.vehicles || []);
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.error('Failed to fetch collection data:', err);
-          setError(err instanceof Error ? err.message : 'Failed to load collection');
-        }
-      }
-    }
-
-    fetchCollectionData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user, authLoading]); // Effect runs when auth state changes.
-
-  // --- Render Logic ---
-
-  // Show loading indicator if auth is in progress OR if the vehicle fetch hasn't started/finished.
-  if (authLoading || vehicles === null) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-white text-lg">Loading your collection...</div>
-        </div>
-      </section>
-    );
-  }
-
-  // After loading, if there's no user, prompt to sign in.
-  if (!user) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-red-400 text-lg">Please sign in to view your collection</div>
-        </div>
-      </section>
-    );
-  }
-
-  // If there was an error during fetch.
-  if (error) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="text-red-400 text-lg">{error}</div>
-        </div>
-      </section>
-    );
-  }
-
+function GarageDashboard() {
   return (
     <section className="relative py-12 bg-black min-h-screen">
       <div
@@ -120,38 +21,138 @@ function GarageContent() {
         <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
         <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
       </div>
+
       <div className="relative container px-4 md:px-6 pt-24">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">My Garage</h1>
         </div>
 
-        <GarageStats vehicles={vehicles} />
+        {/* Header KPIs Row */}
+        <Suspense fallback={<KPISkeleton />}>
+          <HeaderKPIs />
+        </Suspense>
 
-        {vehicles.length > 0 ? (
-          <VehicleGallery vehicles={vehicles} filters={{}} />
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-neutral-400 text-lg mb-4">
-              Your collection is empty. Start by discovering and adding vehicles!
-            </div>
-            <a
-              href="/discover"
-              className="inline-block bg-lime-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-lime-400 transition-colors"
-            >
-              Discover Vehicles
-            </a>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+          {/* Left Column: Workstack + Recent Activity */}
+          <div className="lg:col-span-2 space-y-6">
+            <Suspense fallback={<WorkstackSkeleton />}>
+              <Workstack />
+            </Suspense>
+
+            <Suspense fallback={<ActivitySkeleton />}>
+              <RecentActivity />
+            </Suspense>
           </div>
-        )}
 
+          {/* Right Column: Context Panel */}
+          <div className="space-y-6">
+            <Suspense fallback={<SwitcherSkeleton />}>
+              <VehicleSwitcher />
+            </Suspense>
+
+            <Suspense fallback={<MetersSkeleton />}>
+              <Meters />
+            </Suspense>
+
+            <Suspense fallback={<AssistantSkeleton />}>
+              <TierAssistant />
+            </Suspense>
+
+            <Suspense fallback={<UpgradeSkeleton />}>
+              <UpgradeHooks />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+// Skeleton components for loading states
+function KPISkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="bg-gray-800 rounded-lg p-4 animate-pulse">
+          <div className="h-4 bg-gray-700 rounded mb-2"></div>
+          <div className="h-6 bg-gray-700 rounded"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WorkstackSkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-16 bg-gray-800 rounded animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ActivitySkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-12 bg-gray-800 rounded animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SwitcherSkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="h-20 bg-gray-800 rounded animate-pulse"></div>
+    </div>
+  );
+}
+
+function MetersSkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-12 bg-gray-800 rounded animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AssistantSkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="h-32 bg-gray-800 rounded animate-pulse"></div>
+    </div>
+  );
+}
+
+function UpgradeSkeleton() {
+  return (
+    <div className="bg-gray-900 rounded-lg p-6">
+      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
+      <div className="h-24 bg-gray-800 rounded animate-pulse"></div>
+    </div>
   );
 }
 
 export default function Garage() {
   return (
     <AuthProvider supabase={supabase}>
-      <GarageContent />
+      <GarageDashboard />
     </AuthProvider>
   );
 }
