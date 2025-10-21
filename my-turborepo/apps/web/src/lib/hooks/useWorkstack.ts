@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { DashboardWorkItem } from '@repo/types';
+import { supabase } from '@/lib/supabase';
 
 export function useWorkstack() {
   const [data, setData] = useState<{ items: DashboardWorkItem[] } | null>(null);
@@ -10,7 +11,21 @@ export function useWorkstack() {
     const fetchWorkstack = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/garage/workstack');
+
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          throw new Error('Authentication required');
+        }
+
+        const response = await fetch('/api/garage/workstack', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error('Authentication required');

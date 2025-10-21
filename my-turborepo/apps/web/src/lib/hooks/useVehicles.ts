@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Vehicle {
   id: string;
@@ -15,8 +16,22 @@ export function useVehicles() {
     const fetchVehicles = async () => {
       try {
         setIsLoading(true);
+
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          throw new Error('Authentication required');
+        }
+
         // This should call the existing /api/garage/vehicles endpoint
-        const response = await fetch('/api/garage/vehicles');
+        const response = await fetch('/api/garage/vehicles', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error('Authentication required');

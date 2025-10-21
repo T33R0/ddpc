@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { UsageStats } from '@repo/types';
+import { supabase } from '@/lib/supabase';
 
 export function useMeters() {
   const [data, setData] = useState<UsageStats | null>(null);
@@ -10,7 +11,21 @@ export function useMeters() {
     const fetchMeters = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/usage');
+
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          throw new Error('Authentication required');
+        }
+
+        const response = await fetch('/api/usage', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error('Authentication required');

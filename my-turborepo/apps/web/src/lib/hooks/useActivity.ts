@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ActivityItem } from '@repo/types';
+import { supabase } from '@/lib/supabase';
 
 export function useActivity() {
   const [data, setData] = useState<{ activities: ActivityItem[] } | null>(null);
@@ -10,7 +11,21 @@ export function useActivity() {
     const fetchActivity = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/garage/activity');
+
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          throw new Error('Authentication required');
+        }
+
+        const response = await fetch('/api/garage/activity', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error('Authentication required');
