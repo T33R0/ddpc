@@ -26,8 +26,14 @@ export function UpcomingNeedsCard({ vehicleId }: UpcomingNeedsCardProps) {
         predictionCount: predictions.length,
         tier
       });
+    } else if (predictions && predictions.length === 0 && !isLoading && !error) {
+      // Track when nudge is shown
+      track('prediction.nudge_shown', {
+        vehicleId,
+        tier
+      });
     }
-  }, [predictions, vehicleId, tier, track]);
+  }, [predictions, vehicleId, tier, track, isLoading, error]);
 
   const handlePredictionClick = (prediction: any) => {
     track('prediction.click', {
@@ -68,7 +74,14 @@ export function UpcomingNeedsCard({ vehicleId }: UpcomingNeedsCardProps) {
   }
 
   if (error || !predictions || predictions.length === 0) {
-    return null; // Don't show card if no predictions
+    // Show nudge when no predictions are available
+    return (
+      <div className="text-center py-6 px-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg border border-gray-700">
+        <div className="text-gray-400 text-sm">
+          Log your first install and odometer to unlock predictions.
+        </div>
+      </div>
+    );
   }
 
   const getRiskColor = (risk: number) => {

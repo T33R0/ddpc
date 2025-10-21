@@ -43,6 +43,7 @@ export function usePredictions(vehicleId: string | null) {
         );
 
         if (response.status === 204) {
+          // No predictions available (user needs to log installs/odometer)
           setData([]);
         } else if (!response.ok) {
           throw new Error('Failed to fetch predictions');
