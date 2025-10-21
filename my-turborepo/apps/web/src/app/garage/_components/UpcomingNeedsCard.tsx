@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui/card';
-import { Button } from '@repo/ui/button';
-import { Badge } from '@repo/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { usePredictions } from '@/lib/hooks/usePredictions';
 import { useTier } from '@/lib/hooks/useTier';
 import { useTelemetry } from '@/lib/hooks/useTelemetry';
