@@ -49,6 +49,13 @@ export async function POST(request: NextRequest) {
       .eq('id', vehicleDataId)
       .single()
 
+    // Get the primary image
+    const { data: primaryImage } = await authenticatedSupabase
+      .from('vehicle_primary_image')
+      .select('url')
+      .eq('vehicle_id', vehicleDataId)
+      .single()
+
     if (vehicleError || !vehicleData) {
       return NextResponse.json(
         { error: 'Vehicle not found', details: vehicleError?.message },
@@ -70,7 +77,7 @@ export async function POST(request: NextRequest) {
         trim: vehicleData.trim,
         nickname: vehicleData.trim,
         privacy: 'PRIVATE',
-        photo_url: vehicleData.image_url,
+        photo_url: primaryImage?.url || '',
         stock_data_id: vehicleDataId,
         title: vehicleData.trim_description || vehicleData.trim,
         spec_snapshot: fullSpec,

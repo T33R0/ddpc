@@ -165,10 +165,39 @@ Each MFE is responsible for its own state management. If you need to share state
 -   **`/api/garage/add-vehicle`**: Adds a vehicle to a user's collection by cloning it from the `vehicle_data` catalog.
 -   **`/api/garage/add-vehicle-by-vin`**: Adds a vehicle to a user's collection by decoding a VIN via an external API.
 -   **`/api/garage/update-vehicle`**: Updates details (e.g., nickname, status) for a vehicle in a user's collection.
+-   **`/api/scrutineer/message`**: AI-powered assistant for vehicle discovery, maintenance planning, and performance suggestions.
 
 ### Supabase Edge Functions
 
 -   **`check-maintenance-due`**: A function (designed to be run on a schedule) that checks all user vehicles against their service intervals and triggers reminders for overdue maintenance.
+
+## Database Schema
+
+The application uses Supabase with the following key tables:
+
+### Core Data Tables
+- **`vehicle_data`**: Master catalog of vehicle specifications and details
+- **`vehicle_primary_image`**: Primary image URLs for vehicles (linked to vehicle_data)
+- **`vehicle_image_archive`**: Archive of additional vehicle images
+- **`user_vehicle`**: User's personal vehicle collection
+- **`user_profile`**: Extended user profile information
+
+### AI & Chat Features
+- **`ai_session`**: AI conversation sessions
+- **`ai_turn`**: Individual messages in AI conversations
+- **`ai_prompts`**: Stored AI prompts and templates
+- **`ai_memory_kv`**: Key-value storage for AI memory
+- **`ai_embeddings`**: Vector embeddings for AI search
+
+### Maintenance & Parts
+- **`service_intervals`**: Maintenance service intervals
+- **`maintenance_log`**: User's maintenance history
+- **`part_inventory`**: User's parts inventory
+- **`mods`**: Vehicle modifications tracking
+- **`maintenance_parts`** & **`mod_parts`**: Junction tables for parts usage
+
+### System Tables
+- **`vehicle_url_queue`**: Queue for processing vehicle URLs
 
 ## Frontend Structure
 
