@@ -1,45 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser, mapPlanToTier } from '@/lib/plan-utils';
-import type { KPI, Tier } from '@repo/types';
-
-function getKPIsForTier(tier: Tier, userId: string): KPI[] {
-  const baseKPIs: KPI[] = [];
-
-  switch (tier) {
-    case 'T0':
-      return [
-        { key: 'lastEvent', label: 'Last Event', value: 'Never' },
-        { key: 'vehicles', label: 'Vehicles Active', value: '0/2' },
-      ];
-
-    case 'T1':
-      return [
-        { key: 'nextDue', label: 'Next Due', value: 'No schedules' },
-        { key: 'overdue', label: 'Overdue', value: '0' },
-        { key: 'vehicles', label: 'Vehicles', value: '0/3' },
-      ];
-
-    case 'T2':
-      return [
-        { key: 'stageName', label: 'Current Stage', value: 'Planning' },
-        { key: 'stageETA', label: 'Stage ETA', value: 'No builds' },
-        { key: 'budgetUsed', label: 'Budget Used', value: '$0' },
-        { key: 'compatFlags', label: 'Compatibility Flags', value: '0' },
-      ];
-
-    case 'T3':
-      return [
-        { key: 'activeBuilds', label: 'Active Builds', value: '0' },
-        { key: 'spendVsPlan', label: 'Spend vs Plan', value: '$0/$0' },
-        { key: 'onTimePct', label: 'On-Time %', value: '100%' },
-        { key: 'downtime30d', label: 'Downtime (30d)', value: '0h' },
-      ];
-
-    default:
-      return baseKPIs;
-  }
-}
+import { getPlanForUser } from '@/lib/plan-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,14 +12,78 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user tier
-    const tier = await getPlanForUser(user.id);
+    // Get vehicle ID from query params
+    const { searchParams } = new URL(request.url);
+    const vehicleId = searchParams.get('vehicleId');
 
-    // Get KPIs based on tier
-    const tiles = getKPIsForTier(tier, user.id);
+    if (!vehicleId) {
+      return NextResponse.json({ error: 'Vehicle ID is required' }, { status: 400 });
+    }
 
-    // TODO: In a real implementation, fetch actual data from database
-    // For now, return mock data
+    // Verify user owns this vehicle
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from('user_vehicle')
+      .select('owner_id')
+      .eq('id', vehicleId)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (vehicleError || !vehicle) {
+      return NextResponse.json({ error: 'Vehicle not found or access denied' }, { status: 404 });
+    }
+
+    // Get count of user's vehicles
+    const { count: vehicleCount, error: countError } = await supabase
+      .from('user_vehicle')
+      .select('*', { count: 'exact', head: true })
+      .eq('owner_id', user.id);
+
+    // Get last event date from mods and maintenance_log for this vehicle
+    const { data: modEvents, error: modError } = await supabase
+      .from('mods')
+      .select('event_date')
+      .eq('user_vehicle_id', vehicleId)
+      .not('event_date', 'is', null)
+      .order('event_date', { ascending: false })
+      .limit(1);
+
+    const { data: maintenanceEvents, error: maintenanceError } = await supabase
+      .from('maintenance_log')
+      .select('event_date')
+      .eq('user_vehicle_id', vehicleId)
+      .order('event_date', { ascending: false })
+      .limit(1);
+
+    // Find the most recent event date
+    const modDate = modEvents?.[0]?.event_date;
+    const maintenanceDate = maintenanceEvents?.[0]?.event_date;
+    const lastEventDate = modDate && maintenanceDate
+      ? (new Date(modDate) > new Date(maintenanceDate) ? modDate : maintenanceDate)
+      : (modDate || maintenanceDate);
+
+    // Get user plan to determine vehicle limit
+    const plan = await getPlanForUser(user.id);
+    const vehicleLimits = { free: 2, builder: 3, pro: 10 };
+    const limit = vehicleLimits[plan as keyof typeof vehicleLimits] || 2;
+
+    // Format last event date
+    const lastEventValue = lastEventDate
+      ? new Date(lastEventDate).toLocaleDateString()
+      : 'Never';
+
+    // Create KPIs
+    const tiles = [
+      {
+        key: 'lastEvent',
+        label: 'Last Event',
+        value: lastEventValue
+      },
+      {
+        key: 'vehicles',
+        label: 'Vehicles Active',
+        value: `${vehicleCount || 0}/${limit}`
+      }
+    ];
 
     return NextResponse.json({ tiles });
   } catch (error) {

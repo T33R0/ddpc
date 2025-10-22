@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser, requireFeature, checkLimit } from '@/lib/plan-utils';
 import { z } from 'zod';
-import type { EventData, UpgradeRequiredError } from '@repo/types';
 
 const createEventSchema = z.object({
   vehicleId: z.string(),
-  type: z.enum(['maintenance', 'historical']),
+  kind: z.enum(['MOD_INSTALL']),
   title: z.string(),
-  description: z.string().optional(),
-  date: z.string(),
-  odometer: z.number().optional(),
-  photos: z.array(z.string()).optional(),
-});
-
-const markDoneSchema = z.object({
-  eventId: z.string(),
+  occurredAt: z.string(),
+  odometer: z.number(),
+  partId: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,9 +21,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user tier
-    const tier = await getPlanForUser(user.id);
-
     // Parse request body
     const body = await request.json();
     const validation = createEventSchema.safeParse(body);
@@ -38,63 +28,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const eventData: EventData = validation.data;
+    const { vehicleId, kind, title, occurredAt, odometer, partId } = validation.data;
 
-    // T0 cannot create future-dated events
-    if (tier === 'T0' && new Date(eventData.date) > new Date()) {
-      const error: UpgradeRequiredError = {
-        code: 'UPGRADE_REQUIRED',
-        targetTier: 'T1',
-        message: 'Future-dated events require a paid plan'
-      };
-      return NextResponse.json(error, { status: 403 });
+    // Verify user owns this vehicle
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from('user_vehicle')
+      .select('id')
+      .eq('id', vehicleId)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (vehicleError || !vehicle) {
+      return NextResponse.json({ error: 'Vehicle not found or access denied' }, { status: 404 });
     }
 
-    // Check maintenance scheduling feature for T1+
-    if (eventData.type === 'maintenance' && !requireFeature(tier, 'maintenance_scheduling')) {
-      const error: UpgradeRequiredError = {
-        code: 'UPGRADE_REQUIRED',
-        targetTier: 'T1',
-        message: 'Maintenance scheduling requires a paid plan'
-      };
-      return NextResponse.json(error, { status: 403 });
+    // For MOD_INSTALL, save to mods table
+    if (kind === 'MOD_INSTALL') {
+      const { data: modData, error: modError } = await supabase
+        .from('mods')
+        .insert({
+          user_vehicle_id: vehicleId,
+          title,
+          status: 'installed',
+          event_date: occurredAt,
+          odometer,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+
+      if (modError) {
+        console.error('Error creating mod:', modError);
+        return NextResponse.json({ error: 'Failed to create mod event' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, eventId: modData.id }, { status: 201 });
     }
 
-    // TODO: In a real implementation, save event to database
-    // For now, return success
+    // For other kinds, return not implemented for now
+    return NextResponse.json({ error: 'Event kind not implemented' }, { status: 400 });
 
-    return NextResponse.json({ success: true, eventId: 'mock-id' });
   } catch (error) {
     console.error('Error creating event:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Parse request body
-    const body = await request.json();
-    const validation = markDoneSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
-    const { eventId } = validation.data;
-
-    // TODO: In a real implementation, mark event as done in database
-    // For now, return success
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error marking event done:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}

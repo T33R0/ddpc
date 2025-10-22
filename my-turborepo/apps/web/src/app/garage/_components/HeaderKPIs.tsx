@@ -5,8 +5,12 @@ import { Card } from '@repo/ui/card';
 import { Badge } from '@repo/ui/badge';
 import { useKPIs } from '@/lib/hooks/useKPIs';
 
-export function HeaderKPIs() {
-  const { data, isLoading, error } = useKPIs();
+interface HeaderKPIsProps {
+  vehicleId: string | null;
+}
+
+export function HeaderKPIs({ vehicleId }: HeaderKPIsProps) {
+  const { data, isLoading, error } = useKPIs(vehicleId);
 
   if (error) {
     return (

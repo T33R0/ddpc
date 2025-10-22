@@ -16,6 +16,10 @@ CREATE POLICY up_insert_self ON public.user_profile
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+-- Add preferred_vehicle_id column to user_profile table
+ALTER TABLE public.user_profile
+ADD COLUMN IF NOT EXISTS preferred_vehicle_id UUID REFERENCES public.user_vehicle(id);
+
 -- Vehicle aggregation functions for DDPC discover page
 -- These functions need to be created in Supabase SQL editor
 

@@ -11,10 +11,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch user's vehicles directly
+    // Fetch user's vehicles and preferred vehicle ID
     const { data: userVehicles, error: vehiclesError } = await supabase
       .from('user_vehicle')
-      .select('*')
+      .select('id, nickname, year, make, model, trim, odometer, title')
       .eq('owner_id', user.id)
 
     if (vehiclesError) {
@@ -25,20 +25,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Transform the data to match expected format
+    // Fetch user's preferred vehicle ID
+    const { data: userProfile, error: profileError } = await supabase
+      .from('user_profile')
+      .select('preferred_vehicle_id')
+      .eq('user_id', user.id)
+      .single()
+
+    // Transform vehicles to match expected format
     const vehicles = (userVehicles || []).map((uv: any) => ({
-      ...uv.spec_snapshot,
       id: uv.id,
-      owner_id: uv.owner_id,
-      nickname: uv.nickname,
-      current_status: uv.current_status,
-      privacy: uv.privacy,
-      title: uv.title,
+      name: uv.nickname || uv.title || `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim() || 'Unnamed Vehicle',
+      ymmt: `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim(),
+      odometer: uv.odometer
     }))
 
     return NextResponse.json({
       vehicles,
-      total: vehicles.length
+      preferredVehicleId: userProfile?.preferred_vehicle_id || null
     })
 
   } catch (error) {

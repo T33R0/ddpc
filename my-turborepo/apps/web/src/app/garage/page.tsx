@@ -1,17 +1,26 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useCallback } from 'react';
 import { HeaderKPIs } from './_components/HeaderKPIs';
-import { Workstack } from './_components/Workstack';
+import { DoNext } from './_components/DoNext';
 import { RecentActivity } from './_components/RecentActivity';
-import { VehicleSwitcher } from './_components/VehicleSwitcher';
+import { ActiveVehicle } from './_components/ActiveVehicle';
 import { Meters } from './_components/Meters';
-import { TierAssistant } from './_components/TierAssistant';
-import { UpgradeHooks } from './_components/UpgradeHooks';
 import { UpcomingNeedsCard } from './_components/UpcomingNeedsCard';
+import { usePredictions } from '@/lib/hooks/usePredictions';
 
 function GarageDashboard() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const { data: predictions } = usePredictions(selectedVehicleId);
+
+  const handleVehicleSelect = useCallback((vehicleId: string | null) => {
+    setSelectedVehicleId(vehicleId);
+  }, []);
+
+  const handleEventLogged = useCallback(() => {
+    // This will trigger refetches in child components via their hooks
+    // The hooks will refetch when vehicleId changes or when explicitly called
+  }, []);
 
   return (
     <section className="relative py-12 bg-black min-h-screen">
@@ -30,7 +39,7 @@ function GarageDashboard() {
 
         {/* Header KPIs Row */}
         <Suspense fallback={<KPISkeleton />}>
-          <HeaderKPIs />
+          <HeaderKPIs vehicleId={selectedVehicleId} />
         </Suspense>
 
         {/* Upcoming Needs Card */}
@@ -40,36 +49,32 @@ function GarageDashboard() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-          {/* Left Column: Workstack + Recent Activity */}
+          {/* Left Column: DoNext + Recent Activity */}
           <div className="lg:col-span-2 space-y-6">
-            <Suspense fallback={<WorkstackSkeleton />}>
-              <Workstack />
+            <Suspense fallback={<DoNextSkeleton />}>
+              <DoNext
+                vehicleId={selectedVehicleId}
+                hasPredictions={Boolean(predictions && predictions.length > 0)}
+                onEventLogged={handleEventLogged}
+              />
             </Suspense>
 
             <Suspense fallback={<ActivitySkeleton />}>
-              <RecentActivity />
+              <RecentActivity vehicleId={selectedVehicleId} />
             </Suspense>
           </div>
 
           {/* Right Column: Context Panel */}
           <div className="space-y-6">
             <Suspense fallback={<SwitcherSkeleton />}>
-              <VehicleSwitcher
+              <ActiveVehicle
                 selectedVehicleId={selectedVehicleId}
-                onVehicleSelect={setSelectedVehicleId}
+                onVehicleSelect={handleVehicleSelect}
               />
             </Suspense>
 
             <Suspense fallback={<MetersSkeleton />}>
               <Meters />
-            </Suspense>
-
-            <Suspense fallback={<AssistantSkeleton />}>
-              <TierAssistant />
-            </Suspense>
-
-            <Suspense fallback={<UpgradeSkeleton />}>
-              <UpgradeHooks />
             </Suspense>
           </div>
         </div>
@@ -92,14 +97,15 @@ function KPISkeleton() {
   );
 }
 
-function WorkstackSkeleton() {
+function DoNextSkeleton() {
   return (
     <div className="bg-gray-900 rounded-lg p-6">
       <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-16 bg-gray-800 rounded animate-pulse"></div>
-        ))}
+      <div className="space-y-4">
+        <div className="h-10 bg-gray-800 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-800 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-800 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-800 rounded animate-pulse"></div>
       </div>
     </div>
   );
@@ -136,24 +142,6 @@ function MetersSkeleton() {
           <div key={i} className="h-12 bg-gray-800 rounded animate-pulse"></div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function AssistantSkeleton() {
-  return (
-    <div className="bg-gray-900 rounded-lg p-6">
-      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
-      <div className="h-32 bg-gray-800 rounded animate-pulse"></div>
-    </div>
-  );
-}
-
-function UpgradeSkeleton() {
-  return (
-    <div className="bg-gray-900 rounded-lg p-6">
-      <div className="h-6 bg-gray-700 rounded mb-4 animate-pulse"></div>
-      <div className="h-24 bg-gray-800 rounded animate-pulse"></div>
     </div>
   );
 }

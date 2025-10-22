@@ -33,13 +33,7 @@ export function usePredictions(vehicleId: string | null) {
         }
 
         const response = await fetch(
-          `/api/garage/predictions?vehicleId=${encodeURIComponent(vehicleId)}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json',
-            },
-          }
+          `/api/garage/predictions?vehicleId=${encodeURIComponent(vehicleId)}`
         );
 
         if (response.status === 204) {
