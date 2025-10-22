@@ -48,6 +48,11 @@
 | public     | vehicle_primary_image | vpi_select_public                        | PERMISSIVE | SELECT | true                                                                                                                                                                                                                | null                                                                                                                                                                                                                |
 | public     | vehicle_primary_image | vpi_update_service_only                  | PERMISSIVE | UPDATE | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | vehicle_url_queue     | vuq_service_only_all                     | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
+| public     | mods                  | mods_owner_all                           | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = mods.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                                  | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = mods.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                                  |
 
 ## Notes
 - **AI TABLES**: Service role only access for security
