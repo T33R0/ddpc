@@ -9,6 +9,18 @@
 | public     | ai_prompts            | ai_prompts_service_only_all              | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | ai_session            | ai_session_service_only_all              | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | ai_turn               | ai_turn_service_only_all                 | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
+| public     | mod_outcome           | mod_outcome_owner_all                    | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM (mods m
+     JOIN user_vehicle uv ON ((uv.id = m.user_vehicle_id)))
+  WHERE ((m.id = mod_outcome.mod_id) AND (uv.owner_id = auth.uid()))))                                               | (EXISTS ( SELECT 1
+   FROM (mods m
+     JOIN user_vehicle uv ON ((uv.id = m.user_vehicle_id)))
+  WHERE ((m.id = mod_outcome.mod_id) AND (uv.owner_id = auth.uid()))))                                               |
+| public     | odometer_log          | odolog_owner_all                         | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = odometer_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                        | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = odometer_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                        |
 | public     | user_profile          | up_insert_self                           | PERMISSIVE | INSERT | null                                                                                                                                                                                                                | (auth.uid() = user_id)                                                                                                                                                                                              |
 | public     | user_profile          | up_read_public                           | PERMISSIVE | SELECT | (is_public = true)                                                                                                                                                                                                  | null                                                                                                                                                                                                                |
 | public     | user_profile          | up_read_self                             | PERMISSIVE | SELECT | (auth.uid() = user_id)                                                                                                                                                                                              | null                                                                                                                                                                                                                |
@@ -39,6 +51,8 @@
 
 ## Notes
 - **AI TABLES**: Service role only access for security
+- **MOD_OUTCOME**: Users can only access outcomes for mods on vehicles they own
+- **ODOMETER_LOG**: Users can only access odometer logs for vehicles they own
 - **USER VEHICLES**: Direct ownership-based access (owner_id = auth.uid())
 - **PUBLIC ACCESS**: Vehicles with privacy='public' can be viewed by anyone
 - **SERVICE OPERATIONS**: Service role has full access to system tables

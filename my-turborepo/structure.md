@@ -190,7 +190,6 @@ CREATE TABLE public.ai_embeddings (
   embedding USER-DEFINED NOT NULL,
   CONSTRAINT ai_embeddings_pkey PRIMARY KEY (id)
 );
-
 CREATE TABLE public.ai_memory_kv (
   user_id uuid NOT NULL,
   scope text NOT NULL,
@@ -199,7 +198,6 @@ CREATE TABLE public.ai_memory_kv (
   CONSTRAINT ai_memory_kv_pkey PRIMARY KEY (user_id, scope, key),
   CONSTRAINT ai_memory_kv_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-
 CREATE TABLE public.ai_prompts (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -208,7 +206,6 @@ CREATE TABLE public.ai_prompts (
   is_active boolean DEFAULT true,
   CONSTRAINT ai_prompts_pkey PRIMARY KEY (id)
 );
-
 CREATE TABLE public.ai_session (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -219,7 +216,6 @@ CREATE TABLE public.ai_session (
   CONSTRAINT ai_session_pkey PRIMARY KEY (id),
   CONSTRAINT ai_session_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-
 CREATE TABLE public.ai_turn (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL,
@@ -233,7 +229,6 @@ CREATE TABLE public.ai_turn (
   CONSTRAINT ai_turn_pkey PRIMARY KEY (id),
   CONSTRAINT ai_turn_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.ai_session(id)
 );
-
 CREATE TABLE public.maintenance_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_vehicle_id uuid NOT NULL,
@@ -247,7 +242,6 @@ CREATE TABLE public.maintenance_log (
   CONSTRAINT maintenance_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id),
   CONSTRAINT maintenance_log_service_interval_id_fkey FOREIGN KEY (service_interval_id) REFERENCES public.service_intervals(id)
 );
-
 CREATE TABLE public.maintenance_parts (
   maintenance_log_id uuid NOT NULL,
   part_id uuid NOT NULL,
@@ -256,7 +250,17 @@ CREATE TABLE public.maintenance_parts (
   CONSTRAINT maintenance_parts_maintenance_log_id_fkey FOREIGN KEY (maintenance_log_id) REFERENCES public.maintenance_log(id),
   CONSTRAINT maintenance_parts_part_id_fkey FOREIGN KEY (part_id) REFERENCES public.part_inventory(id)
 );
-
+CREATE TABLE public.mod_outcome (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  mod_id uuid NOT NULL UNIQUE,
+  outcome_type USER-DEFINED NOT NULL,
+  event_date timestamp with time zone NOT NULL DEFAULT now(),
+  odometer integer,
+  failure_mode USER-DEFINED,
+  notes text,
+  CONSTRAINT mod_outcome_pkey PRIMARY KEY (id),
+  CONSTRAINT mod_outcome_mod_id_fkey FOREIGN KEY (mod_id) REFERENCES public.mods(id)
+);
 CREATE TABLE public.mod_parts (
   mod_id uuid NOT NULL,
   part_id uuid NOT NULL,
@@ -265,7 +269,6 @@ CREATE TABLE public.mod_parts (
   CONSTRAINT mod_parts_mod_id_fkey FOREIGN KEY (mod_id) REFERENCES public.mods(id),
   CONSTRAINT mod_parts_part_id_fkey FOREIGN KEY (part_id) REFERENCES public.part_inventory(id)
 );
-
 CREATE TABLE public.mods (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_vehicle_id uuid NOT NULL,
@@ -276,10 +279,18 @@ CREATE TABLE public.mods (
   event_date timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  odometer integer,
   CONSTRAINT mods_pkey PRIMARY KEY (id),
   CONSTRAINT mods_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
-
+CREATE TABLE public.odometer_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_vehicle_id uuid NOT NULL,
+  reading_mi integer NOT NULL CHECK (reading_mi >= 0),
+  recorded_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT odometer_log_pkey PRIMARY KEY (id),
+  CONSTRAINT odometer_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
+);
 CREATE TABLE public.part_inventory (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -291,10 +302,10 @@ CREATE TABLE public.part_inventory (
   physical_location text,
   quantity integer NOT NULL DEFAULT 1,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  category text,
   CONSTRAINT part_inventory_pkey PRIMARY KEY (id),
   CONSTRAINT part_inventory_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-
 CREATE TABLE public.service_intervals (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid,
@@ -305,7 +316,6 @@ CREATE TABLE public.service_intervals (
   CONSTRAINT service_intervals_pkey PRIMARY KEY (id),
   CONSTRAINT service_intervals_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-
 CREATE TABLE public.user_profile (
   user_id uuid NOT NULL,
   username text NOT NULL UNIQUE,
@@ -320,10 +330,11 @@ CREATE TABLE public.user_profile (
   role USER-DEFINED NOT NULL DEFAULT 'user'::user_role CHECK (role = ANY (ARRAY['user'::user_role, 'helper'::user_role, 'admin'::user_role])),
   plan text NOT NULL DEFAULT 'free'::text CHECK (plan = ANY (ARRAY['free'::text, 'builder'::text, 'pro'::text])),
   banned boolean NOT NULL DEFAULT false,
+  preferred_vehicle_id uuid,
   CONSTRAINT user_profile_pkey PRIMARY KEY (user_id),
-  CONSTRAINT user_profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT user_profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT user_profile_preferred_vehicle_id_fkey FOREIGN KEY (preferred_vehicle_id) REFERENCES public.user_vehicle(id)
 );
-
 CREATE TABLE public.user_vehicle (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   vin text,
@@ -505,7 +516,7 @@ CREATE TABLE public.vehicle_url_queue (
 - **`vehicle_primary_image`**: Primary image URLs for vehicles (linked to vehicle_data)
 - **`vehicle_image_archive`**: Archive of additional vehicle images
 - **`user_vehicle`**: User's personal vehicle collection
-- **`user_profile`**: Extended user profile information
+- **`user_profile`**: Extended user profile information with preferred_vehicle_id
 
 #### AI & Chat Features
 - **`ai_session`**: AI conversation sessions
@@ -518,8 +529,12 @@ CREATE TABLE public.vehicle_url_queue (
 - **`service_intervals`**: Maintenance service intervals
 - **`maintenance_log`**: User's maintenance history
 - **`part_inventory`**: User's parts inventory
-- **`mods`**: Vehicle modifications tracking
+- **`mods`**: Vehicle modifications tracking with odometer
+- **`mod_outcome`**: Modification outcome tracking (success/failure)
 - **`maintenance_parts`** & **`mod_parts`**: Junction tables for parts usage
+
+#### Tracking & Monitoring
+- **`odometer_log`**: Historical odometer readings for vehicles
 
 #### System Tables
 - **`vehicle_url_queue`**: Queue for processing vehicle URLs

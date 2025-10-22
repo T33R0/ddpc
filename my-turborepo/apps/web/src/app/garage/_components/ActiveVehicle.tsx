@@ -20,12 +20,10 @@ interface ActiveVehicleProps {
 export function ActiveVehicle({ selectedVehicleId, onVehicleSelect }: ActiveVehicleProps) {
   const { data: vehiclesData, isLoading, error } = useVehicles();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [preferredVehicleId, setPreferredVehicleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (vehiclesData) {
       setVehicles(vehiclesData.vehicles || []);
-      setPreferredVehicleId(vehiclesData.preferredVehicleId ?? null);
 
       // If no vehicle is selected, default to preferred or first vehicle
       if (!selectedVehicleId) {

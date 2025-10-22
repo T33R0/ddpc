@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface Activity {
   occurredAt: string;
@@ -12,7 +12,7 @@ export function useActivity(vehicleId: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchActivity = async () => {
+  const fetchActivity = useCallback(async () => {
     if (!vehicleId) {
       setData(null);
       setIsLoading(false);
@@ -38,11 +38,11 @@ export function useActivity(vehicleId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [vehicleId]);
 
   useEffect(() => {
     fetchActivity();
-  }, [vehicleId]);
+  }, [fetchActivity]);
 
   return { data, isLoading, error, refetch: fetchActivity };
 }

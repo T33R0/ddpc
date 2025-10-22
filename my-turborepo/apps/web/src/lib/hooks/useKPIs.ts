@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface KPI {
   key: string;
@@ -11,7 +11,7 @@ export function useKPIs(vehicleId: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchKPIs = async () => {
+  const fetchKPIs = useCallback(async () => {
     if (!vehicleId) {
       setData(null);
       setIsLoading(false);
@@ -37,11 +37,11 @@ export function useKPIs(vehicleId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [vehicleId]);
 
   useEffect(() => {
     fetchKPIs();
-  }, [vehicleId]);
+  }, [fetchKPIs]);
 
   return { data, isLoading, error, refetch: fetchKPIs };
 }
