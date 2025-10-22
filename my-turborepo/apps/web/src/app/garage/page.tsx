@@ -8,19 +8,25 @@ import { ActiveVehicle } from './_components/ActiveVehicle';
 import { Meters } from './_components/Meters';
 import { UpcomingNeedsCard } from './_components/UpcomingNeedsCard';
 import { usePredictions } from '@/lib/hooks/usePredictions';
+import { useKPIs } from '@/lib/hooks/useKPIs';
+import { useActivity } from '@/lib/hooks/useActivity';
 
 function GarageDashboard() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const { data: predictions } = usePredictions(selectedVehicleId);
+  const { data: predictions, refetch: refetchPredictions } = usePredictions(selectedVehicleId);
+  const { refetch: refetchKPIs } = useKPIs(selectedVehicleId);
+  const { refetch: refetchActivity } = useActivity(selectedVehicleId);
 
   const handleVehicleSelect = useCallback((vehicleId: string | null) => {
     setSelectedVehicleId(vehicleId);
   }, []);
 
   const handleEventLogged = useCallback(() => {
-    // This will trigger refetches in child components via their hooks
-    // The hooks will refetch when vehicleId changes or when explicitly called
-  }, []);
+    // Refetch all data after logging an event
+    refetchKPIs();
+    refetchActivity();
+    refetchPredictions();
+  }, [refetchKPIs, refetchActivity, refetchPredictions]);
 
   return (
     <section className="relative py-12 bg-black min-h-screen">

@@ -19,6 +19,18 @@ export function DoNext({ vehicleId, hasPredictions, onEventLogged }: DoNextProps
   const [odometer, setOdometer] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Show empty state when no vehicle is selected
+  if (!vehicleId) {
+    return (
+      <Card className="p-6 bg-gray-900 border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-4">Log Past Event</h2>
+        <div className="text-center py-8">
+          <div className="text-gray-400">Select a vehicle to log events</div>
+        </div>
+      </Card>
+    );
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

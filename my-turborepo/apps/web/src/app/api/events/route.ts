@@ -44,26 +44,37 @@ export async function POST(request: NextRequest) {
 
     // For MOD_INSTALL, save to mods table
     if (kind === 'MOD_INSTALL') {
-      const { data: modData, error: modError } = await supabase
-        .from('mods')
-        .insert({
-          user_vehicle_id: vehicleId,
-          title,
-          status: 'installed',
-          event_date: occurredAt,
-          odometer,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select('id')
-        .single();
+      try {
+        const { data: modData, error: modError } = await supabase
+          .from('mods')
+          .insert({
+            user_vehicle_id: vehicleId,
+            title,
+            status: 'installed',
+            event_date: occurredAt,
+            odometer,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select('id')
+          .single();
 
-      if (modError) {
-        console.error('Error creating mod:', modError);
-        return NextResponse.json({ error: 'Failed to create mod event' }, { status: 500 });
+        if (modError) {
+          console.error('Error creating mod:', modError);
+          // If it's an RLS error, provide a more helpful message
+          if (modError.message.includes('violates row level security policy')) {
+            return NextResponse.json({
+              error: 'Permission denied. Please ensure you own this vehicle and the database is properly configured.'
+            }, { status: 403 });
+          }
+          return NextResponse.json({ error: `Failed to create mod event: ${modError.message}` }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, eventId: modData.id }, { status: 201 });
+      } catch (insertError) {
+        console.error('Exception creating mod:', insertError);
+        return NextResponse.json({ error: 'Failed to create mod event due to server error' }, { status: 500 });
       }
-
-      return NextResponse.json({ success: true, eventId: modData.id }, { status: 201 });
     }
 
     // For other kinds, return not implemented for now

@@ -132,14 +132,11 @@ BEGIN
 END;
 $$;
 
--- Add preferred_vehicle_id column to user_profile table
-ALTER TABLE public.user_profile
-ADD COLUMN IF NOT EXISTS preferred_vehicle_id UUID REFERENCES public.user_vehicle(id);
-
--- Enable RLS on mods table
+-- Enable RLS on mods table first (if not already enabled)
 ALTER TABLE public.mods ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policy for mods table
+DROP POLICY IF EXISTS mods_owner_all ON public.mods;
 CREATE POLICY mods_owner_all ON public.mods
   FOR ALL USING (
     EXISTS (
@@ -155,3 +152,7 @@ CREATE POLICY mods_owner_all ON public.mods
       AND uv.owner_id = auth.uid()
     )
   );
+
+-- Add preferred_vehicle_id column to user_profile table
+ALTER TABLE public.user_profile
+ADD COLUMN IF NOT EXISTS preferred_vehicle_id UUID REFERENCES public.user_vehicle(id);

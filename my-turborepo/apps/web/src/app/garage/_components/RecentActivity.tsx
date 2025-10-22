@@ -12,6 +12,18 @@ interface RecentActivityProps {
 export function RecentActivity({ vehicleId }: RecentActivityProps) {
   const { data, isLoading, error } = useActivity(vehicleId);
 
+  // Show empty state when no vehicle is selected yet
+  if (!vehicleId) {
+    return (
+      <Card className="p-6 bg-gray-900 border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
+        <div className="text-center py-8">
+          <div className="text-gray-400">Select a vehicle to view activity</div>
+        </div>
+      </Card>
+    );
+  }
+
   if (error) {
     return (
       <Card className="p-6 bg-gray-900 border-gray-800">

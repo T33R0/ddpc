@@ -38,14 +38,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's preferred vehicle
-    const { error: updateError } = await supabase
-      .from('user_profile')
-      .update({ preferred_vehicle_id: vehicleId })
-      .eq('user_id', user.id)
+    // First check if the column exists, if not, we'll skip the update but not fail
+    try {
+      const { error: updateError } = await supabase
+        .from('user_profile')
+        .update({ preferred_vehicle_id: vehicleId })
+        .eq('user_id', user.id)
 
-    if (updateError) {
-      console.error('Error updating preferred vehicle:', updateError)
-      return NextResponse.json({ error: 'Failed to update preferred vehicle' }, { status: 500 })
+      if (updateError) {
+        console.error('Error updating preferred vehicle:', updateError)
+        // If it's a column doesn't exist error, log it but don't fail
+        if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+          console.warn('preferred_vehicle_id column does not exist yet, skipping update')
+        } else {
+          return NextResponse.json({ error: 'Failed to update preferred vehicle' }, { status: 500 })
+        }
+      }
+    } catch (updateError) {
+      console.error('Exception updating preferred vehicle:', updateError)
+      // Continue anyway - the column might not exist yet
     }
 
     return new NextResponse(null, { status: 204 })

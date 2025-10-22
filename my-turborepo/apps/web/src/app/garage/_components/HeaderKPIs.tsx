@@ -12,6 +12,20 @@ interface HeaderKPIsProps {
 export function HeaderKPIs({ vehicleId }: HeaderKPIsProps) {
   const { data, isLoading, error } = useKPIs(vehicleId);
 
+  // Show loading state when no vehicle is selected yet
+  if (!vehicleId) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="p-4 bg-gray-900 border-gray-800">
+            <div className="h-4 bg-gray-700 rounded mb-2 animate-pulse"></div>
+            <div className="h-6 bg-gray-700 rounded animate-pulse"></div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

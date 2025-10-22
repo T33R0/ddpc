@@ -38,12 +38,27 @@ export async function GET(request: NextRequest) {
       // Don't fail the request if odometer logs fail, just continue without them
     }
 
-    // Fetch user's preferred vehicle ID
-    const { data: userProfile, error: profileError } = await supabase
-      .from('user_profile')
-      .select('preferred_vehicle_id')
-      .eq('user_id', user.id)
-      .single()
+    // Fetch user's preferred vehicle ID (handle case where column doesn't exist)
+    let preferredVehicleId = null;
+    try {
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profile')
+        .select('preferred_vehicle_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileError) {
+        preferredVehicleId = userProfile?.preferred_vehicle_id || null;
+      } else if (profileError.message.includes('column') && profileError.message.includes('does not exist')) {
+        console.warn('preferred_vehicle_id column does not exist yet');
+        preferredVehicleId = null;
+      } else {
+        console.error('Error fetching user profile:', profileError);
+      }
+    } catch (profileError) {
+      console.error('Exception fetching user profile:', profileError);
+      // Continue without preferred vehicle ID
+    }
 
     // Create a map of latest odometer readings by vehicle ID
     const latestMileageMap = new Map<string, number>()
@@ -74,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       vehicles,
-      preferredVehicleId: userProfile?.preferred_vehicle_id || null
+      preferredVehicleId
     })
 
   } catch (error) {

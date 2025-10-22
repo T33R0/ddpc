@@ -36,6 +36,9 @@ export function ActiveVehicle({ selectedVehicleId, onVehicleSelect }: ActiveVehi
   }, [vehiclesData, selectedVehicleId, onVehicleSelect]);
 
   const handleVehicleChange = async (vehicleId: string) => {
+    // Always update the selected vehicle, even if saving preference fails
+    onVehicleSelect(vehicleId);
+
     try {
       const response = await fetch('/api/garage/set-active-vehicle', {
         method: 'POST',
@@ -46,13 +49,10 @@ export function ActiveVehicle({ selectedVehicleId, onVehicleSelect }: ActiveVehi
       });
 
       if (!response.ok) {
-        console.error('Failed to set active vehicle');
-        return;
+        console.warn('Failed to save vehicle preference, but selection updated locally');
       }
-
-      onVehicleSelect(vehicleId);
     } catch (error) {
-      console.error('Error setting active vehicle:', error);
+      console.warn('Error setting active vehicle preference:', error);
     }
   };
 
