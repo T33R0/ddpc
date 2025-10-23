@@ -9,6 +9,7 @@ import { Input } from '@repo/ui/input';
 import { Badge } from '@repo/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Search, Plus, AlertTriangle, Calendar, FileText, BarChart, Receipt, Download, Car, Activity, Wrench, Fuel, Settings } from 'lucide-react';
+import { LogServiceModal } from '../../components/LogServiceModal';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
@@ -16,6 +17,7 @@ export default function ConsolePage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const [logServiceModalOpen, setLogServiceModalOpen] = useState(false);
 
   if (authLoading) {
     return (
@@ -80,7 +82,10 @@ export default function ConsolePage() {
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
           <h1 className="text-4xl font-bold text-white">Vehicle Console</h1>
-          <Button className="bg-red-600 hover:bg-red-700 text-white">
+          <Button
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => setLogServiceModalOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Log New Entry
           </Button>
@@ -310,6 +315,12 @@ export default function ConsolePage() {
           </div>
         </div>
       </div>
+
+      {/* Log Service Modal */}
+      <LogServiceModal
+        open={logServiceModalOpen}
+        onOpenChange={setLogServiceModalOpen}
+      />
     </section>
   );
 }
