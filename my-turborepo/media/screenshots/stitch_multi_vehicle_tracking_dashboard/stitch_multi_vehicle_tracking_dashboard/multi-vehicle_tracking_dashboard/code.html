@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FleetTrack Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#3182CE",
+              "background-light": "#F7FAFC",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200">
+<div class="flex flex-col min-h-screen">
+<header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A202C] px-4 sm:px-6 py-3">
+<div class="flex items-center gap-4">
+<div class="size-6 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">FleetTrack</h2>
+</div>
+<div class="flex flex-1 justify-end gap-2 sm:gap-3 items-center">
+<button class="flex items-center justify-center gap-2 min-w-[84px] cursor-pointer rounded-lg h-10 px-4 bg-primary text-white text-sm font-semibold leading-normal">
+<span class="material-symbols-outlined">add</span>
+<span class="truncate hidden sm:inline">Log New Entry</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 min-w-10 px-2.5">
+<span class="material-symbols-outlined">group</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 min-w-10 px-2.5">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD3frccFlDXQc5ZpEZdoSHhhrWcjIAoDH2bqmeRU0om8fc_im4O-_Tui5OcsGb9gJV70ST8F1l4Y8gHL_MMalgDJFKKmpF4OXpu3PX2MstNqafkBgB4ObFziJxlfNWsIZxV_b5i-j_tTxrYgEl9XwVElzI7pK8Vpfo4O283H84AVW8QdwcXVPhezc2HQjVT7eLqcvS7JCRrRQpB-arpn5Ok0WDF-HJY1E6_ZBjBLCRwBgs3rn69_mkdcGH5wKOPVuGqPvUJ6MP0HYFK");'></div>
+</div>
+</header>
+<main class="flex-grow p-4 sm:p-6 lg:p-8">
+<div class="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
+<div class="lg:col-span-2 space-y-6">
+<div class="flex flex-wrap justify-between items-center gap-4">
+<h1 class="text-3xl md:text-4xl font-black tracking-tighter text-gray-900 dark:text-white">Vehicle Monitor</h1>
+</div>
+<div class="space-y-4">
+<label class="flex flex-col h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-white dark:bg-[#1A202C]">
+<div class="text-gray-400 dark:text-gray-500 flex items-center justify-center pl-4">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-gray-800 dark:text-gray-200 focus:outline-0 focus:ring-0 border-none bg-transparent h-full placeholder:text-gray-400 dark:placeholder:text-gray-500 pl-2 text-base" placeholder="Search vehicles by nickname, make, VIN..." value=""/>
+</div>
+</label>
+<div class="flex gap-2 sm:gap-3 flex-wrap">
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary text-white px-4"><p class="text-sm font-semibold leading-normal">All</p></button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 px-4"><p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-normal">Active</p></button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 px-4"><p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-normal">Needs Attention</p></button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 px-4"><p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-normal">Service Due</p></button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 px-4"><p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-normal">Inactive</p></button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-white dark:bg-[#1A202C] p-5 shadow-sm border border-transparent hover:border-primary/50 transition-colors duration-300">
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="flex flex-col"><p class="text-lg font-bold text-gray-900 dark:text-white">Workhorse One</p><p class="text-sm text-gray-500 dark:text-gray-400">2021 Ford Transit</p></div>
+<div class="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full"><span class="size-2 rounded-full bg-green-500"></span><span>Active</span></div>
+</div>
+<div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-3 text-sm">
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Odometer</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">45,123 mi</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Fuel Level</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">78%</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Avg. MPG</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">18.5</p></div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">history</span> History</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">build</span> Service</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">local_gas_station</span> Fuel</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">construction</span> Mods</button>
+</div>
+</div>
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-white dark:bg-[#1A202C] p-5 shadow-sm border border-transparent hover:border-primary/50 transition-colors duration-300">
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="flex flex-col"><p class="text-lg font-bold text-gray-900 dark:text-white">Sprinter Van</p><p class="text-sm text-gray-500 dark:text-gray-400">2022 Mercedes-Benz Sprinter</p></div>
+<div class="flex items-center gap-2 text-sm font-medium text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 px-2.5 py-1 rounded-full"><span class="size-2 rounded-full bg-yellow-500"></span><span>Needs Attention</span></div>
+</div>
+<div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-3 text-sm">
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Odometer</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">12,750 mi</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">DEF Level</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">Low</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Avg. MPG</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">22.1</p></div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">history</span> History</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">build</span> Service</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">local_gas_station</span> Fuel</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">construction</span> Mods</button>
+</div>
+</div>
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-white dark:bg-[#1A202C] p-5 shadow-sm border border-transparent hover:border-primary/50 transition-colors duration-300">
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="flex flex-col"><p class="text-lg font-bold text-gray-900 dark:text-white">City Runner</p><p class="text-sm text-gray-500 dark:text-gray-400">2023 Toyota Sienna</p></div>
+<div class="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full"><span class="size-2 rounded-full bg-red-500"></span><span>Service Due</span></div>
+</div>
+<div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-3 text-sm">
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Odometer</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">8,991 mi</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Tire Pressure</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">OK</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Avg. MPG</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">35.4</p></div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">history</span> History</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">build</span> Service</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">local_gas_station</span> Fuel</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">construction</span> Mods</button>
+</div>
+</div>
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-white dark:bg-[#1A202C] p-5 shadow-sm border border-transparent hover:border-primary/50 transition-colors duration-300">
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="flex flex-col"><p class="text-lg font-bold text-gray-900 dark:text-white">Hauler Pro</p><p class="text-sm text-gray-500 dark:text-gray-400">2020 RAM 1500</p></div>
+<div class="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full"><span class="size-2 rounded-full bg-green-500"></span><span>Active</span></div>
+</div>
+<div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-3 text-sm">
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Odometer</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">62,401 mi</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Oil Life</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">65%</p></div>
+<div class="text-center"><p class="text-gray-500 dark:text-gray-400">Avg. MPG</p><p class="font-semibold text-base text-gray-800 dark:text-gray-200">16.2</p></div>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">history</span> History</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">build</span> Service</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">local_gas_station</span> Fuel</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium"><span class="material-symbols-outlined">construction</span> Mods</button>
+</div>
+</div>
+</div>
+</div>
+<aside class="lg:col-span-1 space-y-8 mt-8 lg:mt-0">
+<section class="space-y-4">
+<h3 class="text-xl font-bold text-gray-900 dark:text-white">Priority Alerts &amp; Reminders</h3>
+<div class="space-y-4 p-4 rounded-xl bg-white dark:bg-[#1A202C]">
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 size-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500"><span class="material-symbols-outlined">error</span></div>
+<div class="flex-grow"><p class="font-semibold text-gray-800 dark:text-gray-200">Service Overdue</p><p class="text-sm text-gray-500 dark:text-gray-400">Sprinter Van is 250mi overdue for oil change.</p></div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 size-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500"><span class="material-symbols-outlined">calendar_month</span></div>
+<div class="flex-grow"><p class="font-semibold text-gray-800 dark:text-gray-200">Registration Expiring</p><p class="text-sm text-gray-500 dark:text-gray-400">Workhorse One registration expires in 12 days.</p></div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 size-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500"><span class="material-symbols-outlined">description</span></div>
+<div class="flex-grow"><p class="font-semibold text-gray-800 dark:text-gray-200">Document Pending</p><p class="text-sm text-gray-500 dark:text-gray-400">Awaiting insurance card for City Runner.</p></div>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<button class="flex w-full items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium text-sm">View All</button>
+<button class="flex w-full items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium text-sm">Upload Doc</button>
+<button class="flex w-full items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white dark:bg-[#1A202C] hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium text-sm">Schedule</button>
+</div>
+</section>
+<section class="space-y-4">
+<h3 class="text-xl font-bold text-gray-900 dark:text-white">Financial Snapshot</h3>
+<div class="grid grid-cols-3 gap-4">
+<div class="bg-white dark:bg-[#1A202C] p-4 rounded-xl text-center"><p class="text-2xl font-bold text-gray-900 dark:text-white">$125k</p><p class="text-sm text-gray-500 dark:text-gray-400">Total Spend</p></div>
+<div class="bg-white dark:bg-[#1A202C] p-4 rounded-xl text-center"><p class="text-2xl font-bold text-gray-900 dark:text-white">$5.2k</p><p class="text-sm text-gray-500 dark:text-gray-400">Avg Monthly</p></div>
+<div class="bg-white dark:bg-[#1A202C] p-4 rounded-xl text-center"><p class="text-2xl font-bold text-gray-900 dark:text-white">1,872</p><p class="text-sm text-gray-500 dark:text-gray-400">Total Logs</p></div>
+</div>
+<div class="flex flex-col space-y-2 p-2 bg-white dark:bg-[#1A202C] rounded-xl">
+<button class="flex items-center justify-start gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium text-sm"><span class="material-symbols-outlined">bar_chart</span> View Reports</button>
+<button class="flex items-center justify-start gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium text-sm"><span class="material-symbols-outlined">receipt_long</span> Manage Receipts</button>
+<button class="flex items-center justify-start gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium text-sm"><span class="material-symbols-outlined">download</span> Export Data</button>
+</div>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</body></html>

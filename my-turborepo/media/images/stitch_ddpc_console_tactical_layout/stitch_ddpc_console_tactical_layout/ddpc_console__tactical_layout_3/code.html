@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DDPC Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#068cf9",
+            "background-light": "#f5f7f8",
+            "background-dark": "#0f1a23",
+          },
+          fontFamily: {
+            "display": ["Space Grotesk", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+        },
+      },
+    }
+  </script>
+<style>
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse-red {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7);
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% {
+        box-shadow: 0 0 40px 20px rgba(220, 20, 60, 0);
+        transform: translate(-50%, -50%) scale(1.05);
+      }
+    }
+    .animate-spin-slow { animation: rotate 90s linear infinite; }
+    .animate-spin-medium { animation: rotate 60s linear infinite reverse; }
+    .animate-spin-fast { animation: rotate 40s linear infinite; }
+    .animate-pulse-red { animation: pulse-red 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+    .orbit-container:hover .orbit-animation { animation-play-state: paused; }
+    .orbit-container .status-text { opacity: 0; transition: opacity 0.3s ease-in-out; }
+    .orbit-container:hover .status-text { opacity: 1; }
+  </style>
+</head>
+<body class="font-display bg-background-dark text-white antialiased overflow-hidden">
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center p-4">
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-6">
+<div class="flex items-center gap-4 text-white">
+<svg class="size-6 text-[#00FFFF]" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+</svg>
+<h2 class="text-white text-xl font-bold tracking-[-0.015em]">DDPC Console</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/5 text-white transition-colors hover:bg-white/10">
+<span class="material-symbols-outlined text-2xl">settings</span>
+</button>
+<div class="h-10 w-10 rounded-full bg-cover bg-center bg-no-repeat" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBxMTGyo4PoiIR6S-Ef6o2lVPWdQQqnFBkaokqnYIqdJcgMJD_6cyYth5HCGSH3_CQ2yXX2TKnADgM5IGEvgDGAZT2wogrt7jhJZj4LtTHaGNsYxXcnYRD5WiylHl4pUv5HJ1VpjXW_NIBiZbzlTgQvl8_90zskrdHiiCx4WaoLYG9vjhPpG4U3Ytblx9GvIWxlfgWsjSQiZIpo9dWx0t9oNUcF1Jc27NdpR74KamJ8gWm6vU6bnftVTyN6EaBqrDFgg9sfd5cetug");'></div>
+</div>
+</header>
+<main class="relative flex h-[90vh] w-[90vh] max-h-[900px] max-w-[900px] items-center justify-center">
+<div class="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/10">
+<div class="orbit-container absolute inset-0">
+<div class="orbit-animation absolute inset-0 animate-spin-slow">
+<div class="absolute top-1/2 left-0 -translate-y-1/2">
+<div class="group relative flex items-center">
+<div class="h-1.5 w-8 rounded-full bg-[#00FF00]"></div>
+<div class="status-text absolute left-10 -translate-y-1/2 rounded bg-background-dark/80 px-2 py-1 text-sm text-white/90 backdrop-blur-sm whitespace-nowrap">Active Fleet: <span class="font-bold text-[#00FF00]">2</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="orbit-container absolute inset-0">
+<div class="orbit-animation absolute inset-0 animate-spin-medium">
+<div class="absolute top-1/2 left-0 -translate-y-1/2" style="transform: translateY(-50%) rotate(-120deg);">
+<div class="group relative flex items-center" style="transform: rotate(120deg);">
+<div class="h-1.5 w-8 rounded-full bg-[#00FFFF]"></div>
+<div class="status-text absolute left-10 -translate-y-1/2 rounded bg-background-dark/80 px-2 py-1 text-sm text-white/90 backdrop-blur-sm whitespace-nowrap">Discovery Vector: <span class="font-bold text-[#00FFFF]">78%</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="orbit-container absolute inset-0">
+<div class="orbit-animation absolute inset-0 animate-spin-fast">
+<div class="absolute top-1/2 left-0 -translate-y-1/2" style="transform: translateY(-50%) rotate(-240deg);">
+<div class="group relative flex items-center" style="transform: rotate(240deg);">
+<div class="h-1.5 w-8 rounded-full bg-[#FFA500]"></div>
+<div class="status-text absolute left-10 -translate-y-1/2 rounded bg-background-dark/80 px-2 py-1 text-sm text-white/90 backdrop-blur-sm whitespace-nowrap">Comm Feed: <span class="font-bold text-[#FFA500]">12 New</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute top-1/2 left-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2">
+<div class="absolute top-0 left-1/2 w-72 origin-center -translate-x-1/2 -translate-y-full">
+<div class="flex flex-col gap-2 rounded-xl border border-white/10 bg-background-dark/80 p-4 backdrop-blur-sm">
+<p class="text-lg font-bold tracking-[-0.015em] text-white">PURE BUILD (Z3)</p>
+<p class="text-sm text-white/60">Status: <span class="font-semibold text-[#00FFFF]">GARAGED</span>. Key project metrics available.</p>
+<p class="text-sm text-white/60">Next: Engine Assembly</p>
+<button class="mt-2 flex h-8 w-full items-center justify-center gap-2 rounded-lg bg-[#00FFFF]/10 text-sm font-medium text-[#00FFFF] transition-colors hover:bg-[#00FFFF]/20">
+<span class="material-symbols-outlined text-base">history_edu</span>
+<span>View Build Log</span>
+</button>
+</div>
+</div>
+<div class="absolute top-full left-[15%] w-72 origin-center -translate-x-1/2 translate-y-4" style="transform: translateX(-50%) translateY(1rem) rotate(-30deg);">
+<div class="flex flex-col gap-2 rounded-xl border border-white/10 bg-background-dark/80 p-4 backdrop-blur-sm" style="transform: rotate(30deg);">
+<p class="text-lg font-bold tracking-[-0.015em] text-white">PERFORMANCE/DAILY (M235i)</p>
+<p class="text-sm text-white/60">Status: <span class="font-semibold text-[#00FF00]">ACTIVE</span>. Real-time fuel, location, and systems.</p>
+<p class="text-sm text-white/60">Location: Downtown Sector 4</p>
+<button class="mt-2 flex h-8 w-full items-center justify-center gap-2 rounded-lg bg-[#00FF00]/10 text-sm font-medium text-[#00FF00] transition-colors hover:bg-[#00FF00]/20">
+<span class="material-symbols-outlined text-base">diagnosis</span>
+<span>Run Diagnostics</span>
+</button>
+</div>
+</div>
+<div class="absolute top-full right-[15%] w-72 origin-center translate-x-1/2 translate-y-4" style="transform: translateX(50%) translateY(1rem) rotate(30deg);">
+<div class="flex flex-col gap-2 rounded-xl border border-white/10 bg-background-dark/80 p-4 backdrop-blur-sm" style="transform: rotate(-30deg);">
+<p class="text-lg font-bold tracking-[-0.015em] text-white">FAMILY FLEET (Sienna)</p>
+<p class="text-sm text-white/60">Status: <span class="font-semibold text-[#00FF00]">ACTIVE</span>. Trip data and maintenance schedule.</p>
+<p class="text-sm text-white/60">Next Service: 24 days</p>
+<button class="mt-2 flex h-8 w-full items-center justify-center gap-2 rounded-lg bg-primary/10 text-sm font-medium text-primary transition-colors hover:bg-primary/20">
+<span class="material-symbols-outlined text-base">route</span>
+<span>Plan Route</span>
+</button>
+</div>
+</div>
+</div>
+<div class="absolute top-1/2 left-1/2 flex h-[38%] w-[38%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-4 rounded-full border-2 border-[#DC143C] bg-background-dark p-6 text-center animate-pulse-red">
+<div class="flex flex-col">
+<p class="text-sm font-bold uppercase tracking-widest text-[#DC143C]">Level 1 Priority Alert</p>
+<p class="text-lg text-white">M235i LOW OIL PRESSURE</p>
+</div>
+<button class="flex h-16 w-16 items-center justify-center rounded-full bg-[#DC143C] text-lg font-bold text-white shadow-lg shadow-[#DC143C]/20 transition-transform hover:scale-105">
+<span class="material-symbols-outlined text-4xl">play_arrow</span>
+</button>
+<p class="text-sm font-bold uppercase tracking-widest text-white/80">Execute Log</p>
+</div>
+</main>
+</div>
+
+</body></html>

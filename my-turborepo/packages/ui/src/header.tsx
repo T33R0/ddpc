@@ -45,9 +45,14 @@ export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmail
               Community
             </Link>
             {user ? (
-              <Link href="/garage" className="text-white hover:text-gray-300 transition-colors">
-                Garage
-              </Link>
+              <>
+                <Link href="/console" className="text-white hover:text-gray-300 transition-colors">
+                  Console
+                </Link>
+                <Link href="/garage" className="text-white hover:text-gray-300 transition-colors">
+                  Garage
+                </Link>
+              </>
             ) : (
               <Link href="/pricing" className="text-white hover:text-gray-300 transition-colors">
                 Pricing
