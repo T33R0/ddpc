@@ -12,7 +12,6 @@ import {
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
-import { Textarea } from '@repo/ui/textarea';
 import { useVehicles } from '../lib/hooks/useVehicles';
 import toast from 'react-hot-toast';
 
@@ -30,8 +29,6 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
     serviceType: '',
     odometer: '',
     cost: '',
-    serviceProvider: 'Shop',
-    notes: '',
   });
 
   const vehicles = vehiclesData?.vehicles || [];
@@ -70,7 +67,7 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
         throw new Error(errorData.error || 'Failed to log service');
       }
 
-      const result = await response.json();
+      await response.json();
       toast.success('Service logged successfully!');
       onOpenChange(false);
       resetForm();
@@ -89,8 +86,6 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
       serviceType: '',
       odometer: '',
       cost: '',
-      serviceProvider: 'Shop',
-      notes: '',
     });
   };
 
@@ -113,17 +108,17 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               {/* Vehicle Selection */}
               <div className="md:col-span-2">
-                <Label htmlFor="vehicle-select">Vehicle *</Label>
+                <Label htmlFor="vehicle-select" className="text-white">Vehicle *</Label>
                 <select
                   id="vehicle-select"
                   value={formData.vehicleId}
                   onChange={(e) => handleInputChange('vehicleId', e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full h-9 rounded-md border border-slate-700 bg-transparent px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
-                  <option value="">Select a vehicle</option>
+                  <option value="" className="bg-gray-900 text-white">Select a vehicle</option>
                   {vehicles.map((vehicle) => (
-                    <option key={vehicle.id} value={vehicle.id}>
+                    <option key={vehicle.id} value={vehicle.id} className="bg-gray-900 text-white">
                       {vehicle.name} ({vehicle.ymmt})
                     </option>
                   ))}
@@ -132,30 +127,30 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
 
               {/* Service Date */}
               <div>
-                <Label htmlFor="service-date">Date of Service *</Label>
+                <Label htmlFor="service-date" className="text-white">Date of Service *</Label>
                 <Input
                   id="service-date"
                   type="date"
                   value={formData.serviceDate}
                   onChange={(e) => handleInputChange('serviceDate', e.target.value)}
-                  className="bg-transparent border-slate-700"
+                  className="bg-transparent border-slate-700 text-white"
                   required
                 />
               </div>
 
               {/* Service Type */}
               <div>
-                <Label htmlFor="service-type">Type of Service *</Label>
+                <Label htmlFor="service-type" className="text-white">Type of Service *</Label>
                 <select
                   id="service-type"
                   value={formData.serviceType}
                   onChange={(e) => handleInputChange('serviceType', e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full h-9 rounded-md border border-slate-700 bg-transparent px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
-                  <option value="">Select service type</option>
+                  <option value="" className="bg-gray-900 text-white">Select service type</option>
                   {serviceTypes.map((type) => (
-                    <option key={type} value={type}>
+                    <option key={type} value={type} className="bg-gray-900 text-white">
                       {type}
                     </option>
                   ))}
@@ -164,23 +159,23 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
 
               {/* Odometer Reading */}
               <div>
-                <Label htmlFor="odometer">Odometer Reading</Label>
+                <Label htmlFor="odometer" className="text-white">Odometer Reading</Label>
                 <Input
                   id="odometer"
                   type="number"
                   placeholder="e.g., 45123"
                   value={formData.odometer}
                   onChange={(e) => handleInputChange('odometer', e.target.value)}
-                  className="bg-transparent border-slate-700"
+                  className="bg-transparent border-slate-700 text-white placeholder-gray-400"
                 />
               </div>
 
               {/* Cost */}
               <div>
-                <Label htmlFor="cost">Cost</Label>
+                <Label htmlFor="cost" className="text-white">Cost</Label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="text-sm text-muted-foreground">$</span>
+                    <span className="text-sm text-gray-400">$</span>
                   </div>
                   <Input
                     id="cost"
@@ -189,36 +184,9 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
                     placeholder="0.00"
                     value={formData.cost}
                     onChange={(e) => handleInputChange('cost', e.target.value)}
-                    className="pl-7 bg-transparent border-slate-700"
+                    className="pl-7 bg-transparent border-slate-700 text-white placeholder-gray-400"
                   />
                 </div>
-              </div>
-
-              {/* Service Provider */}
-              <div className="md:col-span-2">
-                <Label htmlFor="service-provider">Service Provider</Label>
-                <select
-                  id="service-provider"
-                  value={formData.serviceProvider}
-                  onChange={(e) => handleInputChange('serviceProvider', e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="Shop">Shop</option>
-                  <option value="DIY">DIY</option>
-                </select>
-              </div>
-
-              {/* Notes */}
-              <div className="md:col-span-2">
-                <Label htmlFor="notes">Notes / Description</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Add any relevant details about the service..."
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  className="bg-transparent border-slate-700 min-h-[80px]"
-                  rows={3}
-                />
               </div>
             </div>
 

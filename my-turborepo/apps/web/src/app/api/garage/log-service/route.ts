@@ -8,8 +8,6 @@ const logServiceSchema = z.object({
   serviceType: z.string(),
   odometer: z.string().optional(),
   cost: z.string().optional(),
-  serviceProvider: z.enum(['Shop', 'DIY']),
-  notes: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body', details: validation.error.issues }, { status: 400 });
     }
 
-    const { vehicleId, serviceDate, serviceType, odometer, cost, serviceProvider, notes } = validation.data;
+    const { vehicleId, serviceDate, serviceType, odometer, cost } = validation.data;
 
     // Verify user owns this vehicle
     const { data: vehicle, error: vehicleError } = await supabase
@@ -64,10 +62,6 @@ export async function POST(request: NextRequest) {
         event_date: serviceDate,
         odometer: odometerValue,
         cost: costValue,
-        service_provider: serviceProvider,
-        notes: notes || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
       })
       .select('id')
       .single();
