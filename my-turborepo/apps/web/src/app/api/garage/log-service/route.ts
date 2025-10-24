@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { validateAndRecordOdometerReading } from '@/lib/odometer-service';
 import { z } from 'zod';
 
 const logServiceSchema = z.object({
@@ -51,6 +52,26 @@ export async function POST(request: NextRequest) {
 
     if (cost && (isNaN(costValue!) || costValue! < 0)) {
       return NextResponse.json({ error: 'Invalid cost value' }, { status: 400 });
+    }
+
+    // If odometer value is provided, validate it through the centralized odometer service
+    let odometerEntryId = null;
+    if (odometerValue !== null) {
+      const odometerValidation = await validateAndRecordOdometerReading(
+        supabase,
+        vehicleId,
+        odometerValue,
+        serviceDate
+      );
+
+      if (!odometerValidation.success) {
+        return NextResponse.json({
+          error: odometerValidation.error,
+          code: odometerValidation.code
+        }, { status: 400 });
+      }
+
+      odometerEntryId = odometerValidation.odometerEntryId;
     }
 
     // Insert service log entry
