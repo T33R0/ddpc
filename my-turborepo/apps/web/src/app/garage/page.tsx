@@ -13,12 +13,51 @@ interface Vehicle {
   name: string;
   ymmt: string;
   odometer: number | null;
+  current_status: string;
 }
 
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   // Extract year from ymmt for display
   const year = vehicle.ymmt.split(' ')[0];
   const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
+
+  // Determine badge text and styling based on status
+  const getStatusBadge = () => {
+    switch (vehicle.current_status) {
+      case 'daily_driver':
+        return {
+          text: 'Active',
+          className: 'bg-green-500/10 text-green-400 border-green-500/20'
+        };
+      case 'parked':
+        return {
+          text: 'Parked',
+          className: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+        };
+      case 'listed':
+        return {
+          text: 'Listed',
+          className: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+        };
+      case 'sold':
+        return {
+          text: 'Sold',
+          className: 'bg-red-500/10 text-red-400 border-red-500/20'
+        };
+      case 'retired':
+        return {
+          text: 'Retired',
+          className: 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+        };
+      default:
+        return {
+          text: vehicle.current_status,
+          className: 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+        };
+    }
+  };
+
+  const badge = getStatusBadge();
 
   return (
     <Card className="bg-gray-900 border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
@@ -35,8 +74,8 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             <p className="text-sm font-medium text-gray-400">{year} Performance Car</p>
             <h2 className="text-xl font-bold text-white mt-1">{vehicle.name}</h2>
           </div>
-          <Badge variant="secondary" className="bg-red-500/10 text-red-400 border-red-500/20">
-            Performance
+          <Badge variant="secondary" className={badge.className}>
+            {badge.text}
           </Badge>
         </div>
         <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between items-center text-sm text-gray-400">
@@ -88,11 +127,44 @@ function AddVehicleModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
   );
 }
 
+function VehicleGallery({ title, vehicles, showAddCard, onAddClick }: {
+  title: string;
+  vehicles: Vehicle[];
+  showAddCard?: boolean;
+  onAddClick?: () => void;
+}) {
+  if (vehicles.length === 0 && !showAddCard) {
+    return null;
+  }
+
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {vehicles.map((vehicle) => (
+          <VehicleCard key={vehicle.id} vehicle={vehicle} />
+        ))}
+
+        {showAddCard && (
+          <AddVehicleCard onClick={onAddClick || (() => {})} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Garage() {
   const { data: vehiclesData, isLoading } = useVehicles();
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false);
 
   const vehicles = vehiclesData?.vehicles || [];
+
+  // Separate vehicles into active and stored
+  const activeVehicles = vehicles.filter(vehicle => vehicle.current_status === 'daily_driver');
+  const storedVehicles = vehicles.filter(vehicle => vehicle.current_status !== 'daily_driver');
+
+  // Show add vehicle card only if total vehicles < 3
+  const canAddVehicle = vehicles.length < 3;
 
   if (isLoading) {
     return (
@@ -124,13 +196,19 @@ export default function Garage() {
             <p className="text-lg text-gray-400">Here's your garage</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {vehicles.map((vehicle) => (
-              <VehicleCard key={vehicle.id} vehicle={vehicle} />
-            ))}
+          {/* Active Vehicles Section */}
+          <VehicleGallery
+            title="Active Vehicles"
+            vehicles={activeVehicles}
+            showAddCard={canAddVehicle}
+            onAddClick={() => setAddVehicleModalOpen(true)}
+          />
 
-            <AddVehicleCard onClick={() => setAddVehicleModalOpen(true)} />
-          </div>
+          {/* Stored Vehicles Section */}
+          <VehicleGallery
+            title="Stored Vehicles"
+            vehicles={storedVehicles}
+          />
         </div>
       </section>
 

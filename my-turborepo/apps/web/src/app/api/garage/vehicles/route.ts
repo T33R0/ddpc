@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Fetch user's vehicles
     const { data: userVehicles, error: vehiclesError } = await supabase
       .from('user_vehicle')
-      .select('id, nickname, year, make, model, trim, odometer, title')
+      .select('id, nickname, year, make, model, trim, odometer, title, current_status')
       .eq('owner_id', user.id)
 
     if (vehiclesError) {

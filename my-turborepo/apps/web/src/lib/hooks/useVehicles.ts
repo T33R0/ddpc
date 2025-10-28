@@ -5,6 +5,7 @@ export interface Vehicle {
   name: string;
   ymmt: string;
   odometer: number | null;
+  current_status: string;
 }
 
 export interface VehiclesData {
