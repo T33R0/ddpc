@@ -11,11 +11,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch user's vehicles
-    const { data: userVehicles, error: vehiclesError } = await supabase
+    // Get pagination parameters
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '24');
+    const offset = (page - 1) * limit;
+
+    // Check if this is a request for stored vehicles only
+    const storedOnly = url.searchParams.get('stored_only') === 'true';
+
+    // Fetch user's vehicles with pagination
+    let query = supabase
       .from('user_vehicle')
       .select('id, nickname, year, make, model, trim, odometer, title, current_status')
-      .eq('owner_id', user.id)
+      .eq('owner_id', user.id);
+
+    // Filter for stored vehicles if requested
+    if (storedOnly) {
+      query = query.in('current_status', ['parked', 'listed', 'sold', 'retired']);
+    }
+
+    const { data: userVehicles, error: vehiclesError } = await query
+      .range(offset, offset + limit - 1);
 
     if (vehiclesError) {
       console.error('Error fetching vehicles:', vehiclesError)
@@ -83,9 +100,20 @@ export async function GET(request: NextRequest) {
         id: uv.id,
         name: uv.nickname || uv.title || `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim() || 'Unnamed Vehicle',
         ymmt: `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim(),
-        odometer: latestMileage
+        odometer: latestMileage,
+        current_status: uv.current_status || 'parked'
       }
     })
+
+    // If this is a paginated request, return pagination info
+    if (storedOnly) {
+      return NextResponse.json({
+        vehicles,
+        hasMore: vehicles.length === limit,
+        page,
+        limit
+      })
+    }
 
     return NextResponse.json({
       vehicles,

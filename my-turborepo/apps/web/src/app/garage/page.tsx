@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useVehicles } from '@/lib/hooks/useVehicles';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useVehicles, useStoredVehicles } from '@/lib/hooks/useVehicles';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { Badge } from '@repo/ui/badge';
@@ -21,43 +21,23 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const year = vehicle.ymmt.split(' ')[0];
   const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
 
-  // Determine badge text and styling based on status
-  const getStatusBadge = () => {
-    switch (vehicle.current_status) {
+  // Format status for display
+  const formatStatus = (status: string) => {
+    switch (status) {
       case 'daily_driver':
-        return {
-          text: 'Active',
-          className: 'bg-green-500/10 text-green-400 border-green-500/20'
-        };
+        return 'Active';
       case 'parked':
-        return {
-          text: 'Parked',
-          className: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-        };
+        return 'Parked';
       case 'listed':
-        return {
-          text: 'Listed',
-          className: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-        };
+        return 'Listed';
       case 'sold':
-        return {
-          text: 'Sold',
-          className: 'bg-red-500/10 text-red-400 border-red-500/20'
-        };
+        return 'Sold';
       case 'retired':
-        return {
-          text: 'Retired',
-          className: 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-        };
+        return 'Retired';
       default:
-        return {
-          text: vehicle.current_status,
-          className: 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-        };
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
-
-  const badge = getStatusBadge();
 
   return (
     <Card className="bg-gray-900 border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
@@ -74,17 +54,20 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             <p className="text-sm font-medium text-gray-400">{year} Performance Car</p>
             <h2 className="text-xl font-bold text-white mt-1">{vehicle.name}</h2>
           </div>
-          <Badge variant="secondary" className={badge.className}>
-            {badge.text}
-          </Badge>
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between items-center text-sm text-gray-400">
-          <span>Nickname</span>
-          <span className="font-medium text-white">{vehicle.name}</span>
-        </div>
-        <div className="mt-2 flex justify-between items-center text-sm text-gray-400">
-          <span>Mileage</span>
-          <span className="font-medium text-white">{vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'N/A'}</span>
+        <div className="mt-4 pt-4 border-t border-gray-800">
+          <div className="flex justify-between items-center text-sm text-gray-400">
+            <span>Nickname</span>
+            <span className="font-medium text-white">{vehicle.name}</span>
+          </div>
+          <div className="mt-2 flex justify-between items-center text-sm text-gray-400">
+            <span>Mileage</span>
+            <span className="font-medium text-white">{vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'N/A'}</span>
+          </div>
+          <div className="mt-2 flex justify-between items-center text-sm text-gray-400">
+            <span>Status</span>
+            <span className="font-medium text-white">{formatStatus(vehicle.current_status)}</span>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -127,12 +110,36 @@ function AddVehicleModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
   );
 }
 
-function VehicleGallery({ title, vehicles, showAddCard, onAddClick }: {
+function VehicleGallery({ title, vehicles, showAddCard, onAddClick, onLoadMore, loadingMore, hasMore }: {
   title: string;
   vehicles: Vehicle[];
   showAddCard?: boolean;
   onAddClick?: () => void;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  hasMore?: boolean;
 }) {
+  // Infinite scroll logic
+  const handleScroll = useCallback(() => {
+    if (!onLoadMore || loadingMore || !hasMore) return;
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    // Load more when user is within 300px of the bottom
+    if (scrollTop + windowHeight >= documentHeight - 300) {
+      onLoadMore();
+    }
+  }, [onLoadMore, loadingMore, hasMore]);
+
+  useEffect(() => {
+    if (onLoadMore) {
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll, onLoadMore]);
+
   if (vehicles.length === 0 && !showAddCard) {
     return null;
   }
@@ -149,24 +156,28 @@ function VehicleGallery({ title, vehicles, showAddCard, onAddClick }: {
           <AddVehicleCard onClick={onAddClick || (() => {})} />
         )}
       </div>
+
+      {loadingMore && (
+        <div className="flex justify-center mt-8">
+          <div className="text-gray-400">Loading more vehicles...</div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function Garage() {
-  const { data: vehiclesData, isLoading } = useVehicles();
+  const { data: vehiclesData, isLoading: activeLoading } = useVehicles();
+  const { vehicles: storedVehicles, isLoading: storedLoading, loadingMore, hasMore, loadMore } = useStoredVehicles();
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false);
 
-  const vehicles = vehiclesData?.vehicles || [];
-
-  // Separate vehicles into active and stored
-  const activeVehicles = vehicles.filter(vehicle => vehicle.current_status === 'daily_driver');
-  const storedVehicles = vehicles.filter(vehicle => vehicle.current_status !== 'daily_driver');
+  const allVehicles = vehiclesData?.vehicles || [];
+  const activeVehicles = allVehicles.filter(vehicle => vehicle.current_status === 'daily_driver');
 
   // Show add vehicle card only if total vehicles < 3
-  const canAddVehicle = vehicles.length < 3;
+  const canAddVehicle = allVehicles.length < 3;
 
-  if (isLoading) {
+  if (activeLoading) {
     return (
       <section className="relative py-12 bg-black min-h-screen">
         <div className="relative container px-4 md:px-6 pt-24">
@@ -208,7 +219,16 @@ export default function Garage() {
           <VehicleGallery
             title="Stored Vehicles"
             vehicles={storedVehicles}
+            onLoadMore={loadMore}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
           />
+
+          {storedLoading && storedVehicles.length === 0 && (
+            <div className="flex justify-center mt-8">
+              <div className="text-gray-400">Loading stored vehicles...</div>
+            </div>
+          )}
         </div>
       </section>
 
