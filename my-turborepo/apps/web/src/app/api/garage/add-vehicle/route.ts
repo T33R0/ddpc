@@ -81,7 +81,21 @@ export async function POST(request: NextRequest) {
         stock_data_id: vehicleDataId,
         title: vehicleData.trim_description || vehicleData.trim,
         spec_snapshot: fullSpec,
-        current_status: 'daily_driver'
+        current_status: 'daily_driver',
+        // Copy over the additional fields from vehicle_data
+        horsepower_hp: vehicleData.horsepower_hp ? parseInt(vehicleData.horsepower_hp) : null,
+        torque_ft_lbs: vehicleData.torque_ft_lbs ? parseInt(vehicleData.torque_ft_lbs) : null,
+        engine_size_l: vehicleData.engine_size_l ? parseFloat(vehicleData.engine_size_l) : null,
+        cylinders: vehicleData.cylinders,
+        fuel_type: vehicleData.fuel_type,
+        drive_type: vehicleData.drive_type,
+        transmission: vehicleData.transmission,
+        length_in: vehicleData.length_in ? parseFloat(vehicleData.length_in) : null,
+        width_in: vehicleData.width_in ? parseFloat(vehicleData.width_in) : null,
+        height_in: vehicleData.height_in ? parseFloat(vehicleData.height_in) : null,
+        body_type: vehicleData.body_type,
+        colors_exterior: vehicleData.colors_exterior,
+        epa_combined_mpg: vehicleData.epa_combined_mpg ? parseFloat(vehicleData.epa_combined_mpg) : null
       })
       .select('id')
       .single()

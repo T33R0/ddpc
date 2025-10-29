@@ -45,7 +45,8 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
 
   const handleClick = () => {
     // Use nickname for URL if available, otherwise fall back to id
-    const urlSlug = vehicle.nickname ? encodeURIComponent(vehicle.nickname) : vehicle.id;
+    // Next.js handles URL encoding automatically, so don't encodeURIComponent here
+    const urlSlug = vehicle.nickname || vehicle.id;
     router.push(`/vehicle/${urlSlug}`);
   };
 

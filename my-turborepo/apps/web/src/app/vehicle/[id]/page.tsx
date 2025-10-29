@@ -53,10 +53,22 @@ export default function VehicleDetailPage() {
 
   const vehicleSlug = params.id as string;
 
+  // Always start with a placeholder vehicle to ensure the UI renders
+  useEffect(() => {
+    // Immediately set a placeholder vehicle so the UI renders
+    setVehicle({
+      id: 'placeholder',
+      name: decodeURIComponent(vehicleSlug),
+      ymmt: 'Loading...',
+      odometer: null,
+      current_status: 'unknown',
+      // All other fields will be undefined, triggering safeExtract fallbacks
+    });
+  }, [vehicleSlug]);
+
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        setLoading(true);
         const response = await fetch(`/api/garage/vehicles/${encodeURIComponent(vehicleSlug)}`);
         if (!response.ok) {
           throw new Error('Failed to fetch vehicle data');
@@ -66,15 +78,12 @@ export default function VehicleDetailPage() {
         setError(null); // Clear any previous errors
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
-        // Set a placeholder vehicle so the UI still renders
-        setVehicle({
-          id: 'placeholder',
-          name: vehicleSlug,
-          ymmt: 'Unknown Vehicle',
-          odometer: null,
-          current_status: 'unknown',
-          // All other fields will be undefined, triggering safeExtract fallbacks
-        });
+        // Keep the placeholder vehicle but update the name
+        setVehicle(prev => prev ? {
+          ...prev,
+          name: decodeURIComponent(vehicleSlug),
+          ymmt: 'Vehicle Not Found'
+        } : null);
       } finally {
         setLoading(false);
       }
@@ -102,26 +111,14 @@ export default function VehicleDetailPage() {
     }
   };
 
-  if (loading) {
+  // Always render the page - never show loading or error states that hide the content
+  if (!vehicle) {
     return (
       <section className="relative py-12 bg-black min-h-screen">
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-2">Vehicle Details</h1>
-            <p className="text-xl text-gray-300">Loading vehicle information...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (error || !vehicle) {
-    return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">Vehicle Details</h1>
-            <p className="text-xl text-red-400">{error || 'Vehicle not found'}</p>
+            <p className="text-xl text-red-400">No vehicle data available</p>
             <Button
               onClick={() => router.back()}
               className="mt-4 bg-red-600 hover:bg-red-700"
@@ -192,6 +189,15 @@ export default function VehicleDetailPage() {
             </Button>
             <h1 className="text-4xl font-bold text-white mb-2">Vehicle Details</h1>
             <p className="text-lg text-gray-400">Detailed information about your {vehicle.name}</p>
+            {error && (
+              <div className="mt-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+                <p className="text-red-300 text-sm">
+                  ⚠️ Failed to load complete vehicle data: {error}
+                  <br />
+                  Showing placeholder information below.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-[auto_auto_auto] gap-4">
