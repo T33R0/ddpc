@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -14,11 +14,11 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { slug: vehicleSlug } = await params
+    const { id: vehicleSlug } = await params
 
     // First try to find vehicle by nickname (URL decoded)
     const decodedSlug = decodeURIComponent(vehicleSlug)
-    let vehicleQuery = supabase
+    const vehicleQuery = supabase
       .from('user_vehicle')
       .select(`
         id,
@@ -172,13 +172,13 @@ export async function GET(
       vehicleError = vehicleErrorById
     }
 
-    if (vehicleError) {
+    if (vehicleError || !userVehicle) {
       console.error('Error fetching vehicle:', vehicleError)
-      if (vehicleError.code === 'PGRST116') {
+      if (vehicleError?.code === 'PGRST116') {
         return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 })
       }
       return NextResponse.json(
-        { error: 'Failed to fetch vehicle', details: vehicleError.message },
+        { error: 'Failed to fetch vehicle', details: vehicleError?.message },
         { status: 500 }
       )
     }
