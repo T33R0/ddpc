@@ -53,7 +53,6 @@ export default function VehicleDetailPage() {
 
   const vehicleSlug = params.id as string;
 
-  // Always start with a placeholder vehicle to ensure the UI renders
   useEffect(() => {
     // Immediately set a placeholder vehicle so the UI renders
     setVehicle({
@@ -64,14 +63,14 @@ export default function VehicleDetailPage() {
       current_status: 'unknown',
       // All other fields will be undefined, triggering safeExtract fallbacks
     });
-  }, [vehicleSlug]);
+    setError(null);
+    setLoading(true);
 
-  useEffect(() => {
     const fetchVehicle = async () => {
       try {
         const response = await fetch(`/api/garage/vehicles/${encodeURIComponent(vehicleSlug)}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch vehicle data');
+          throw new Error(`Failed to fetch vehicle data (${response.status})`);
         }
         const data = await response.json();
         setVehicle(data.vehicle);
@@ -79,11 +78,13 @@ export default function VehicleDetailPage() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
         // Keep the placeholder vehicle but update the name
-        setVehicle(prev => prev ? {
-          ...prev,
+        setVehicle({
+          id: 'placeholder',
           name: decodeURIComponent(vehicleSlug),
-          ymmt: 'Vehicle Not Found'
-        } : null);
+          ymmt: 'Vehicle Not Found',
+          odometer: null,
+          current_status: 'unknown',
+        });
       } finally {
         setLoading(false);
       }
