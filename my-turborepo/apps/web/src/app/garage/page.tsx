@@ -174,8 +174,8 @@ export default function Garage() {
   const allVehicles = vehiclesData?.vehicles || [];
   const activeVehicles = allVehicles.filter(vehicle => vehicle.current_status === 'daily_driver');
 
-  // Show add vehicle card only if total vehicles < 3
-  const canAddVehicle = allVehicles.length < 3;
+  // Show add vehicle card only if active vehicles < 3
+  const canAddVehicle = activeVehicles.length < 3;
 
   if (activeLoading) {
     return (
