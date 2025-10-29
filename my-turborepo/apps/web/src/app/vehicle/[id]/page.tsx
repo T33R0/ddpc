@@ -56,14 +56,25 @@ export default function VehicleDetailPage() {
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
+        setLoading(true);
         const response = await fetch(`/api/garage/vehicles/${encodeURIComponent(vehicleSlug)}`);
         if (!response.ok) {
           throw new Error('Failed to fetch vehicle data');
         }
         const data = await response.json();
         setVehicle(data.vehicle);
+        setError(null); // Clear any previous errors
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
+        // Set a placeholder vehicle so the UI still renders
+        setVehicle({
+          id: 'placeholder',
+          name: vehicleSlug,
+          ymmt: 'Unknown Vehicle',
+          odometer: null,
+          current_status: 'unknown',
+          // All other fields will be undefined, triggering safeExtract fallbacks
+        });
       } finally {
         setLoading(false);
       }
@@ -145,19 +156,19 @@ export default function VehicleDetailPage() {
     }
   };
 
-  const horsepower = safeExtract(vehicle.horsepower_hp, 'horsepower');
-  const torque = safeExtract(vehicle.torque_ft_lbs, 'torque');
-  const cylinders = safeExtract(vehicle.cylinders, 'cylinders');
-  const engineSize = safeExtract(vehicle.engine_size_l, 'engineSize', 'N/A', (val) => `${val}L`);
-  const fuelType = safeExtract(vehicle.fuel_type, 'fuelType');
-  const fuelEconomy = safeExtract(vehicle.epa_combined_mpg, 'fuelEconomy', 'N/A', (val) => `${val} MPG`);
-  const driveType = safeExtract(vehicle.drive_type, 'driveType');
-  const transmission = safeExtract(vehicle.transmission, 'transmission');
-  const colors = safeExtract(vehicle.colors_exterior, 'colors');
-  const length = safeExtract(vehicle.length_in, 'length', 'N/A', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const width = safeExtract(vehicle.width_in, 'width', 'N/A', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const height = safeExtract(vehicle.height_in, 'height', 'N/A', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const bodyType = vehicle.body_type || 'Coupe';
+  const horsepower = safeExtract(vehicle.horsepower_hp, 'horsepower', 'UNK');
+  const torque = safeExtract(vehicle.torque_ft_lbs, 'torque', 'UNK');
+  const cylinders = safeExtract(vehicle.cylinders, 'cylinders', 'UNK');
+  const engineSize = safeExtract(vehicle.engine_size_l, 'engineSize', 'UNK', (val) => `${val}L`);
+  const fuelType = safeExtract(vehicle.fuel_type, 'fuelType', 'UNK');
+  const fuelEconomy = safeExtract(vehicle.epa_combined_mpg, 'fuelEconomy', 'UNK', (val) => `${val} MPG`);
+  const driveType = safeExtract(vehicle.drive_type, 'driveType', 'UNK');
+  const transmission = safeExtract(vehicle.transmission, 'transmission', 'UNK');
+  const colors = safeExtract(vehicle.colors_exterior, 'colors', 'UNK');
+  const length = safeExtract(vehicle.length_in, 'length', 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const width = safeExtract(vehicle.width_in, 'width', 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const height = safeExtract(vehicle.height_in, 'height', 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const bodyType = vehicle.body_type || 'UNK';
 
   return (
     <>
@@ -192,12 +203,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">speed</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Horsepower</p>
                   </div>
-                  <p className={`text-5xl font-bold ${fieldErrors.horsepower ? 'text-red-400' : 'text-white'}`}>
-                    {fieldErrors.horsepower ? 'Error' : horsepower}
-                  </p>
-                  {fieldErrors.horsepower && (
-                    <p className="text-xs text-red-300 mt-1">{fieldErrors.horsepower}</p>
-                  )}
+                  <p className="text-5xl font-bold text-white">{horsepower}</p>
                 </CardContent>
               </Card>
 
@@ -207,7 +213,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">shutter_speed</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Max Speed</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">N/A</p>
+                  <p className="text-5xl font-bold text-white">UNK</p>
                 </CardContent>
               </Card>
 
@@ -217,12 +223,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">rotate_right</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Torque</p>
                   </div>
-                  <p className={`text-5xl font-bold ${fieldErrors.torque ? 'text-red-400' : 'text-white'}`}>
-                    {fieldErrors.torque ? 'Error' : torque}
-                  </p>
-                  {fieldErrors.torque && (
-                    <p className="text-xs text-red-300 mt-1">{fieldErrors.torque}</p>
-                  )}
+                  <p className="text-5xl font-bold text-white">{torque}</p>
                 </CardContent>
               </Card>
 
@@ -232,7 +233,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">timer</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">0-100km/h</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">N/A</p>
+                  <p className="text-5xl font-bold text-white">UNK</p>
                 </CardContent>
               </Card>
             </div>
@@ -290,12 +291,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">water_drop</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Engine Size</p>
                   </div>
-                  <p className={`text-5xl font-bold ${fieldErrors.engineSize ? 'text-red-400' : 'text-white'}`}>
-                    {fieldErrors.engineSize ? 'Error' : engineSize}
-                  </p>
-                  {fieldErrors.engineSize && (
-                    <p className="text-xs text-red-300 mt-1">{fieldErrors.engineSize}</p>
-                  )}
+                  <p className="text-5xl font-bold text-white">{engineSize}</p>
                 </CardContent>
               </Card>
 
@@ -343,31 +339,16 @@ export default function VehicleDetailPage() {
                 <CardContent className="p-4">
                   <div className="flex h-full items-center justify-around">
                     <div className="text-center">
-                      <p className={`text-3xl font-bold ${fieldErrors.length ? 'text-red-400' : 'text-white'}`}>
-                        {fieldErrors.length ? 'Error' : length}
-                      </p>
+                      <p className="text-3xl font-bold text-white">{length}</p>
                       <p className="text-base font-normal text-gray-400">Length</p>
-                      {fieldErrors.length && (
-                        <p className="text-xs text-red-300 mt-1">{fieldErrors.length}</p>
-                      )}
                     </div>
                     <div className="text-center">
-                      <p className={`text-3xl font-bold ${fieldErrors.width ? 'text-red-400' : 'text-white'}`}>
-                        {fieldErrors.width ? 'Error' : width}
-                      </p>
+                      <p className="text-3xl font-bold text-white">{width}</p>
                       <p className="text-base font-normal text-gray-400">Width</p>
-                      {fieldErrors.width && (
-                        <p className="text-xs text-red-300 mt-1">{fieldErrors.width}</p>
-                      )}
                     </div>
                     <div className="text-center">
-                      <p className={`text-3xl font-bold ${fieldErrors.height ? 'text-red-400' : 'text-white'}`}>
-                        {fieldErrors.height ? 'Error' : height}
-                      </p>
+                      <p className="text-3xl font-bold text-white">{height}</p>
                       <p className="text-base font-normal text-gray-400">Height</p>
-                      {fieldErrors.height && (
-                        <p className="text-xs text-red-300 mt-1">{fieldErrors.height}</p>
-                      )}
                     </div>
                   </div>
                 </CardContent>
