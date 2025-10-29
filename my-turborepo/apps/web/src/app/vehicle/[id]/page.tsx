@@ -144,7 +144,32 @@ export default function VehicleDetailPage() {
   const fuelEconomy = safeValue(vehicle.epa_combined_mpg, 'UNK', (val) => `${val} MPG`);
   const driveType = safeValue(vehicle.drive_type, 'UNK');
   const transmission = safeValue(vehicle.transmission, 'UNK');
-  const colors = safeValue(vehicle.colors_exterior, 'UNK');
+  // Parse colors to show only first color with RGB block
+  const parseColors = (colorsString: any) => {
+    if (!colorsString || colorsString === 'UNK') return 'UNK';
+
+    try {
+      // Split by comma and take first color
+      const firstColor = String(colorsString).split(',')[0]?.trim();
+
+      if (!firstColor) return 'UNK';
+
+      // Extract color name and RGB
+      const rgbMatch = firstColor.match(/(.+?)\s*\(([^)]+)\)/);
+      if (rgbMatch) {
+        const colorName = rgbMatch[1]?.trim();
+        const rgbValue = rgbMatch[2]?.trim();
+        return { name: colorName || firstColor, rgb: rgbValue || null };
+      }
+
+      // If no RGB found, just return the color name
+      return { name: firstColor, rgb: null };
+    } catch (err) {
+      return 'UNK';
+    }
+  };
+
+  const colorInfo = parseColors(vehicle.colors_exterior);
   const length = safeValue(vehicle.length_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
   const width = safeValue(vehicle.width_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
   const height = safeValue(vehicle.height_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
@@ -192,7 +217,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">speed</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Horsepower</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">{horsepower}</p>
+                  <p className="text-3xl font-bold text-white">{horsepower}</p>
                 </CardContent>
               </Card>
 
@@ -202,7 +227,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">shutter_speed</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Max Speed</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">UNK</p>
+                  <p className="text-3xl font-bold text-white">UNK</p>
                 </CardContent>
               </Card>
 
@@ -212,7 +237,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">rotate_right</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Torque</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">{torque}</p>
+                  <p className="text-3xl font-bold text-white">{torque}</p>
                 </CardContent>
               </Card>
 
@@ -222,7 +247,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">timer</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">0-100km/h</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">UNK</p>
+                  <p className="text-3xl font-bold text-white">UNK</p>
                 </CardContent>
               </Card>
             </div>
@@ -266,7 +291,20 @@ export default function VehicleDetailPage() {
                   <CardContent className="p-4 text-center">
                     <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Colors</p>
                     <span className="material-symbols-outlined text-4xl text-blue-400">palette</span>
-                    <p className="text-sm text-white mt-2">{colors}</p>
+                    {colorInfo !== 'UNK' && typeof colorInfo === 'object' ? (
+                      <div className="mt-2 flex flex-col items-center gap-1">
+                        {colorInfo.rgb && (
+                          <div
+                            className="w-6 h-6 rounded border border-gray-600"
+                            style={{ backgroundColor: `rgb(${colorInfo.rgb})` }}
+                            title={`RGB(${colorInfo.rgb})`}
+                          />
+                        )}
+                        <p className="text-sm text-white">{colorInfo.name}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-white mt-2">{colorInfo}</p>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -280,7 +318,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">water_drop</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Engine Size</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">{engineSize}</p>
+                  <p className="text-3xl font-bold text-white">{engineSize}</p>
                 </CardContent>
               </Card>
 
@@ -290,7 +328,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">schema</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Cylinders</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">{cylinders}</p>
+                  <p className="text-3xl font-bold text-white">{cylinders}</p>
                 </CardContent>
               </Card>
 
@@ -300,7 +338,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">local_gas_station</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Fuel Economy</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">{fuelEconomy} MPG</p>
+                  <p className="text-3xl font-bold text-white">{fuelEconomy} MPG</p>
                 </CardContent>
               </Card>
 
@@ -310,7 +348,7 @@ export default function VehicleDetailPage() {
                     <span className="material-symbols-outlined text-xl text-blue-400">engineering</span>
                     <p className="text-xs uppercase tracking-wider text-gray-400">Fuel Type</p>
                   </div>
-                  <p className="text-5xl font-bold text-white">{fuelType}</p>
+                  <p className="text-3xl font-bold text-white">{fuelType}</p>
                 </CardContent>
               </Card>
             </div>

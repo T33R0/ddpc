@@ -102,7 +102,8 @@ export async function GET(request: NextRequest) {
         nickname: uv.nickname,
         ymmt: `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim(),
         odometer: latestMileage,
-        current_status: uv.current_status || 'parked'
+        current_status: uv.current_status || 'parked',
+        image_url: uv.photo_url
       }
     })
 

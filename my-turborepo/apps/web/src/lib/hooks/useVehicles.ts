@@ -7,6 +7,7 @@ export interface Vehicle {
   ymmt: string;
   odometer: number | null;
   current_status: string;
+  image_url?: string;
 }
 
 export interface VehiclesData {

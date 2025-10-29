@@ -16,6 +16,7 @@ interface Vehicle {
   ymmt: string;
   odometer: number | null;
   current_status: string;
+  image_url?: string;
 }
 
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
@@ -59,7 +60,7 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
         <img
           alt={`${vehicle.name} vehicle`}
           className="w-full h-full object-cover"
-          src={`https://images.unsplash.com/photo-1494905998402-395d579af36f?w=400&h=225&fit=crop&crop=center`}
+          src={vehicle.image_url || `https://images.unsplash.com/photo-1494905998402-395d579af36f?w=400&h=225&fit=crop&crop=center`}
         />
       </div>
       <CardContent className="p-6">
