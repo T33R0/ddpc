@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 export interface Vehicle {
   id: string;
   name: string;
+  nickname?: string;
   ymmt: string;
   odometer: number | null;
   current_status: string;

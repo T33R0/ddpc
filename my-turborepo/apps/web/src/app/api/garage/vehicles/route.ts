@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
       return {
         id: uv.id,
         name: uv.nickname || uv.title || `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim() || 'Unnamed Vehicle',
+        nickname: uv.nickname,
         ymmt: `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim(),
         odometer: latestMileage,
         current_status: uv.current_status || 'parked'

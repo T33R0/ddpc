@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -14,10 +14,11 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id: vehicleId } = await params
+    const { slug: vehicleSlug } = await params
 
-    // Fetch the specific user vehicle with full vehicle details
-    const { data: userVehicle, error: vehicleError } = await supabase
+    // First try to find vehicle by nickname (URL decoded)
+    const decodedSlug = decodeURIComponent(vehicleSlug)
+    let vehicleQuery = supabase
       .from('user_vehicle')
       .select(`
         id,
@@ -30,7 +31,7 @@ export async function GET(
         title,
         current_status,
         vehicle_id,
-        vehicles (
+        vehicle_data (
           id,
           make,
           model,
@@ -154,9 +155,22 @@ export async function GET(
           new_year
         )
       `)
-      .eq('id', vehicleId)
       .eq('owner_id', user.id)
+
+    // Try to find by nickname first
+    let { data: userVehicle, error: vehicleError } = await vehicleQuery
+      .eq('nickname', decodedSlug)
       .single()
+
+    // If not found by nickname, try by ID (for backward compatibility)
+    if (vehicleError && vehicleError.code === 'PGRST116') {
+      const { data: userVehicleById, error: vehicleErrorById } = await vehicleQuery
+        .eq('id', vehicleSlug)
+        .single()
+
+      userVehicle = userVehicleById
+      vehicleError = vehicleErrorById
+    }
 
     if (vehicleError) {
       console.error('Error fetching vehicle:', vehicleError)
@@ -170,7 +184,7 @@ export async function GET(
     }
 
     // Transform the data to match the expected format
-    const vehicleData = userVehicle.vehicles
+    const vehicleData = userVehicle.vehicle_data
     const transformedVehicle = {
       id: userVehicle.id,
       name: userVehicle.nickname || userVehicle.title || `${userVehicle.year || ''} ${userVehicle.make || ''} ${userVehicle.model || ''} ${userVehicle.trim || ''}`.trim() || 'Unnamed Vehicle',

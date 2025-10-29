@@ -12,6 +12,7 @@ import { Plus, Car } from 'lucide-react';
 interface Vehicle {
   id: string;
   name: string;
+  nickname?: string;
   ymmt: string;
   odometer: number | null;
   current_status: string;
@@ -43,7 +44,9 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   };
 
   const handleClick = () => {
-    router.push(`/vehicle/${vehicle.id}`);
+    // Use nickname for URL if available, otherwise fall back to id
+    const urlSlug = vehicle.nickname ? encodeURIComponent(vehicle.nickname) : vehicle.id;
+    router.push(`/vehicle/${urlSlug}`);
   };
 
   return (
