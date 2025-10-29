@@ -18,44 +18,19 @@ export async function GET(
 
     // First try to find vehicle by nickname (URL decoded)
     const decodedSlug = decodeURIComponent(vehicleSlug)
-    const vehicleQuery = supabase
+    // First check if vehicle exists with basic info
+    const basicQuery = supabase
       .from('user_vehicle')
-      .select(`
-        id,
-        nickname,
-        year,
-        make,
-        model,
-        trim,
-        odometer,
-        title,
-        current_status,
-        vehicle_id,
-        horsepower_hp,
-        torque_ft_lbs,
-        engine_size_l,
-        cylinders,
-        fuel_type,
-        drive_type,
-        transmission,
-        length_in,
-        width_in,
-        height_in,
-        body_type,
-        colors_exterior,
-        epa_combined_mpg,
-        photo_url
-      `)
+      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url')
       .eq('owner_id', user.id)
 
-    // Try to find by nickname first
-    let { data: userVehicle, error: vehicleError } = await vehicleQuery
+    let { data: userVehicle, error: vehicleError } = await basicQuery
       .eq('nickname', decodedSlug)
       .single()
 
-    // If not found by nickname, try by ID (for backward compatibility)
+    // If not found by nickname, try by ID
     if (vehicleError && vehicleError.code === 'PGRST116') {
-      const { data: userVehicleById, error: vehicleErrorById } = await vehicleQuery
+      const { data: userVehicleById, error: vehicleErrorById } = await basicQuery
         .eq('id', vehicleSlug)
         .single()
 
@@ -74,6 +49,29 @@ export async function GET(
       )
     }
 
+    // Now get the additional fields if they exist
+    const extendedQuery = supabase
+      .from('user_vehicle')
+      .select(`
+        horsepower_hp,
+        torque_ft_lbs,
+        engine_size_l,
+        cylinders,
+        fuel_type,
+        drive_type,
+        transmission,
+        length_in,
+        width_in,
+        height_in,
+        body_type,
+        colors_exterior,
+        epa_combined_mpg
+      `)
+      .eq('id', userVehicle.id)
+      .single()
+
+    const { data: extendedData, error: extendedError } = await extendedQuery
+
     // Transform the data to match the expected format
     const transformedVehicle = {
       id: userVehicle.id,
@@ -81,20 +79,20 @@ export async function GET(
       ymmt: `${userVehicle.year || ''} ${userVehicle.make || ''} ${userVehicle.model || ''} ${userVehicle.trim || ''}`.trim(),
       odometer: userVehicle.odometer,
       current_status: userVehicle.current_status || 'parked',
-      // Include all vehicle specification fields from user_vehicle
-      horsepower_hp: userVehicle.horsepower_hp,
-      torque_ft_lbs: userVehicle.torque_ft_lbs,
-      engine_size_l: userVehicle.engine_size_l,
-      cylinders: userVehicle.cylinders,
-      fuel_type: userVehicle.fuel_type,
-      drive_type: userVehicle.drive_type,
-      transmission: userVehicle.transmission,
-      length_in: userVehicle.length_in,
-      width_in: userVehicle.width_in,
-      height_in: userVehicle.height_in,
-      body_type: userVehicle.body_type,
-      colors_exterior: userVehicle.colors_exterior,
-      epa_combined_mpg: userVehicle.epa_combined_mpg,
+      // Include all vehicle specification fields from extended data (if available)
+      horsepower_hp: extendedData?.horsepower_hp || null,
+      torque_ft_lbs: extendedData?.torque_ft_lbs || null,
+      engine_size_l: extendedData?.engine_size_l || null,
+      cylinders: extendedData?.cylinders || null,
+      fuel_type: extendedData?.fuel_type || null,
+      drive_type: extendedData?.drive_type || null,
+      transmission: extendedData?.transmission || null,
+      length_in: extendedData?.length_in || null,
+      width_in: extendedData?.width_in || null,
+      height_in: extendedData?.height_in || null,
+      body_type: extendedData?.body_type || null,
+      colors_exterior: extendedData?.colors_exterior || null,
+      epa_combined_mpg: extendedData?.epa_combined_mpg || null,
       image_url: userVehicle.photo_url
     }
 

@@ -12,35 +12,20 @@ interface Vehicle {
   ymmt: string;
   odometer: number | null;
   current_status: string;
-  horsepower_hp?: string;
-  torque_ft_lbs?: string;
-  cylinders?: string;
-  engine_size_l?: string;
-  fuel_type?: string;
-  epa_combined_mpg?: string;
-  drive_type?: string;
-  transmission?: string;
-  colors_exterior?: string;
-  length_in?: string;
-  width_in?: string;
-  height_in?: string;
-  body_type?: string;
+  horsepower_hp?: any;
+  torque_ft_lbs?: any;
+  cylinders?: any;
+  engine_size_l?: any;
+  fuel_type?: any;
+  epa_combined_mpg?: any;
+  drive_type?: any;
+  transmission?: any;
+  colors_exterior?: any;
+  length_in?: any;
+  width_in?: any;
+  height_in?: any;
+  body_type?: any;
   image_url?: string;
-}
-
-interface FieldError {
-  horsepower?: string;
-  torque?: string;
-  cylinders?: string;
-  engineSize?: string;
-  fuelType?: string;
-  fuelEconomy?: string;
-  driveType?: string;
-  transmission?: string;
-  colors?: string;
-  length?: string;
-  width?: string;
-  height?: string;
 }
 
 export default function VehicleDetailPage() {
@@ -49,7 +34,6 @@ export default function VehicleDetailPage() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<FieldError>({});
 
   const vehicleSlug = params.id as string;
 
@@ -133,15 +117,14 @@ export default function VehicleDetailPage() {
     );
   }
 
-  // Extract vehicle details with error handling
-  const year = vehicle.ymmt.split(' ')[0];
-  const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
+  // Extract vehicle details with safe fallbacks
+  const year = vehicle.ymmt?.split(' ')[0] || 'UNK';
+  const makeModel = vehicle.ymmt?.split(' ').slice(1).join(' ') || 'UNK';
 
-  // Helper function to safely extract values with error handling
-  const safeExtract = (value: any, fieldName: keyof FieldError, fallback = 'N/A', transformer?: (val: any) => string) => {
+  // Safe extraction functions - no state updates during render
+  const safeValue = (value: any, fallback = 'UNK', transformer?: (val: any) => string) => {
     try {
       if (value === null || value === undefined || value === '') {
-        setFieldErrors(prev => ({ ...prev, [fieldName]: 'Data not available' }));
         return fallback;
       }
       if (transformer) {
@@ -149,24 +132,23 @@ export default function VehicleDetailPage() {
       }
       return String(value);
     } catch (err) {
-      setFieldErrors(prev => ({ ...prev, [fieldName]: 'Error processing data' }));
       return fallback;
     }
   };
 
-  const horsepower = safeExtract(vehicle.horsepower_hp, 'horsepower', 'UNK');
-  const torque = safeExtract(vehicle.torque_ft_lbs, 'torque', 'UNK');
-  const cylinders = safeExtract(vehicle.cylinders, 'cylinders', 'UNK');
-  const engineSize = safeExtract(vehicle.engine_size_l, 'engineSize', 'UNK', (val) => `${val}L`);
-  const fuelType = safeExtract(vehicle.fuel_type, 'fuelType', 'UNK');
-  const fuelEconomy = safeExtract(vehicle.epa_combined_mpg, 'fuelEconomy', 'UNK', (val) => `${val} MPG`);
-  const driveType = safeExtract(vehicle.drive_type, 'driveType', 'UNK');
-  const transmission = safeExtract(vehicle.transmission, 'transmission', 'UNK');
-  const colors = safeExtract(vehicle.colors_exterior, 'colors', 'UNK');
-  const length = safeExtract(vehicle.length_in, 'length', 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const width = safeExtract(vehicle.width_in, 'width', 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const height = safeExtract(vehicle.height_in, 'height', 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const bodyType = vehicle.body_type || 'UNK';
+  const horsepower = safeValue(vehicle.horsepower_hp, 'UNK');
+  const torque = safeValue(vehicle.torque_ft_lbs, 'UNK');
+  const cylinders = safeValue(vehicle.cylinders, 'UNK');
+  const engineSize = safeValue(vehicle.engine_size_l, 'UNK', (val) => `${val}L`);
+  const fuelType = safeValue(vehicle.fuel_type, 'UNK');
+  const fuelEconomy = safeValue(vehicle.epa_combined_mpg, 'UNK', (val) => `${val} MPG`);
+  const driveType = safeValue(vehicle.drive_type, 'UNK');
+  const transmission = safeValue(vehicle.transmission, 'UNK');
+  const colors = safeValue(vehicle.colors_exterior, 'UNK');
+  const length = safeValue(vehicle.length_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const width = safeValue(vehicle.width_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const height = safeValue(vehicle.height_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const bodyType = safeValue(vehicle.body_type, 'UNK');
 
   return (
     <>
