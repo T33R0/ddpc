@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useVehicles, useStoredVehicles } from '@/lib/hooks/useVehicles';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
@@ -17,6 +18,8 @@ interface Vehicle {
 }
 
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+  const router = useRouter();
+
   // Extract year from ymmt for display
   const year = vehicle.ymmt.split(' ')[0];
   const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
@@ -39,8 +42,15 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
     }
   };
 
+  const handleClick = () => {
+    router.push(`/vehicle/${vehicle.id}`);
+  };
+
   return (
-    <Card className="bg-gray-900 border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+    <Card
+      className="bg-gray-900 border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+      onClick={handleClick}
+    >
       <div className="aspect-w-16 aspect-h-9">
         <img
           alt={`${vehicle.name} vehicle`}
