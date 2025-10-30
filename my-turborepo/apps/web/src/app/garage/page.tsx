@@ -11,6 +11,8 @@ import { Plus, Car } from 'lucide-react';
 import AddVehicleModal from '../../features/garage/add-vehicle-modal';
 import { ImageWithFallback } from '../../components/image-with-fallback';
 import { getVehicleImageSources } from '../../lib/vehicle-images';
+import { AuthProvider } from '@repo/ui/auth-context';
+import { supabase } from '../../lib/supabase';
 
 type ImageWithTimeoutFallbackProps = {
   src: string | string[];
@@ -233,7 +235,7 @@ function VehicleGallery({ title, vehicles, showAddCard, onAddClick, onLoadMore, 
   );
 }
 
-export default function Garage() {
+function GarageContent() {
   const { data: vehiclesData, isLoading: activeLoading } = useVehicles();
   const { vehicles: storedVehicles, isLoading: storedLoading, loadingMore, hasMore, loadMore } = useStoredVehicles();
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false);
@@ -301,5 +303,13 @@ export default function Garage() {
 
       <AddVehicleModal open={addVehicleModalOpen} onOpenChange={setAddVehicleModalOpen} />
     </>
+  );
+}
+
+export default function Garage() {
+  return (
+    <AuthProvider supabase={supabase}>
+      <GarageContent />
+    </AuthProvider>
   );
 }

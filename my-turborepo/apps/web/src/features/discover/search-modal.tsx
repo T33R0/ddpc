@@ -56,8 +56,9 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
   };
 
   const handleFocus = () => {
+    // Keep placeholders visible when focused but empty
     if (searchQuery === '') {
-      setShowPlaceholder(false);
+      setShowPlaceholder(true);
     }
   };
 
@@ -69,7 +70,7 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-2xl w-2/3">
         <DialogHeader>
           <DialogTitle>Search Vehicles</DialogTitle>
         </DialogHeader>
