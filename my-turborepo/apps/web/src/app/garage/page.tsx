@@ -10,16 +10,13 @@ import { Modal, ModalContent, ModalHeader, ModalTitle, ModalBody, ModalFooter } 
 import { Plus, Car } from 'lucide-react';
 import AddVehicleModal from '../../features/garage/add-vehicle-modal';
 import { ImageWithFallback } from '../../components/image-with-fallback';
-import { getVehicleImageSources } from '../../lib/vehicle-images';
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 
 type ImageWithTimeoutFallbackProps = {
-  src: string | string[];
+  src: string;
   fallbackSrc: string;
   alt: string;
-  width: number;
-  height: number;
   className?: string;
   timeout?: number; // in milliseconds
 };
@@ -28,41 +25,39 @@ function ImageWithTimeoutFallback({
   src,
   fallbackSrc,
   alt,
-  width,
-  height,
   className,
   timeout = 3000
 }: ImageWithTimeoutFallbackProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setShowFallback(true);
+      if (!imageLoaded) {
+        setShowFallback(true);
+      }
     }, timeout);
 
     return () => clearTimeout(timer);
-  }, [timeout]);
+  }, [timeout, imageLoaded]);
 
   if (showFallback) {
     return (
       <img
         src={fallbackSrc}
         alt={alt}
-        width={width}
-        height={height}
         className={className}
       />
     );
   }
 
   return (
-    <ImageWithFallback
+    <img
       src={src}
-      fallbackSrc={fallbackSrc}
       alt={alt}
-      width={width}
-      height={height}
       className={className}
+      onLoad={() => setImageLoaded(true)}
+      onError={() => setShowFallback(true)}
     />
   );
 }
@@ -83,12 +78,6 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   // Extract year from ymmt for display
   const year = vehicle.ymmt.split(' ')[0];
   const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
-
-  // Extract year, make, and model for image sources
-  const ymmtParts = vehicle.ymmt.split(' ');
-  const vehicleYear = ymmtParts[0];
-  const vehicleMake = ymmtParts[1] || '';
-  const vehicleModel = ymmtParts.slice(2, -1).join(' ') || ''; // Everything except year, make, and last part (trim)
 
   // Format status for display
   const formatStatus = (status: string) => {
@@ -122,16 +111,9 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
     >
       <div className="aspect-w-16 aspect-h-9">
         <ImageWithTimeoutFallback
-          src={getVehicleImageSources(
-            vehicle.image_url,
-            vehicleMake,
-            vehicleModel,
-            vehicleYear
-          )}
+          src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=400&h=225&fit=crop&crop=center"}
           fallbackSrc="/branding/fallback-logo.png"
           alt={`${vehicle.name} vehicle`}
-          width={400}
-          height={225}
           className="w-full h-full object-cover"
           timeout={3000}
         />

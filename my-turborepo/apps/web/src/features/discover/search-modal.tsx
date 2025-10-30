@@ -70,7 +70,7 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-2/3">
+      <DialogContent className="max-w-4xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3">
         <DialogHeader>
           <DialogTitle>Search Vehicles</DialogTitle>
         </DialogHeader>
@@ -84,7 +84,7 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
                 onChange={handleInputChange}
                 onFocus={handleFocus}
                 placeholder={showPlaceholder ? placeholders[currentPlaceholder] : ""}
-                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
                 autoFocus
               />
             </div>
