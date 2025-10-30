@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from '@repo/ui/dialog';
 
@@ -12,6 +12,54 @@ type SearchModalProps = {
 
 export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
+
+  const placeholders = [
+    "search by engine type...",
+    "search by horsepower...",
+    "search by drive type...",
+    "search by body type...",
+    "search by cylinders...",
+    "search by country of origin...",
+    "search by classification...",
+    "search by platform...",
+    "search by pros...",
+    "search by cons...",
+    "search by year...",
+    "search by make...",
+    "search by model...",
+    "search by trim...",
+    "search by doors..."
+  ];
+
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('');
+      setShowPlaceholder(true);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (showPlaceholder) {
+        setCurrentPlaceholder(prev => (prev + 1) % placeholders.length);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [open, showPlaceholder, placeholders.length]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setShowPlaceholder(value === '');
+  };
+
+  const handleFocus = () => {
+    if (searchQuery === '') {
+      setShowPlaceholder(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +80,9 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by make, model, year..."
+                onChange={handleInputChange}
+                onFocus={handleFocus}
+                placeholder={showPlaceholder ? placeholders[currentPlaceholder] : ""}
                 className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
                 autoFocus
               />

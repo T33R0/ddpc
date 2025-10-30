@@ -81,8 +81,16 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
 
   return (
     <>
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {vehicles.map((summary, index) => (
+      {vehicles.length === 0 ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <div className="text-gray-400 text-lg mb-2">No vehicles found</div>
+            <div className="text-gray-500 text-sm">Try adjusting your search terms or filters</div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {vehicles.map((summary, index) => (
           <div 
             key={summary.id} 
             className="group transition-all duration-300" 
@@ -138,7 +146,8 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Loading more indicator */}
       {loadingMore && (

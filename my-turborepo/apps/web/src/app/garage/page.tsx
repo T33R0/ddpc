@@ -8,6 +8,62 @@ import { Button } from '@repo/ui/button';
 import { Badge } from '@repo/ui/badge';
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@repo/ui/modal';
 import { Plus, Car } from 'lucide-react';
+import AddVehicleModal from '../../features/garage/add-vehicle-modal';
+import { ImageWithFallback } from '../../components/image-with-fallback';
+import { getVehicleImageSources } from '../../lib/vehicle-images';
+
+type ImageWithTimeoutFallbackProps = {
+  src: string | string[];
+  fallbackSrc: string;
+  alt: string;
+  width: number;
+  height: number;
+  className?: string;
+  timeout?: number; // in milliseconds
+};
+
+function ImageWithTimeoutFallback({
+  src,
+  fallbackSrc,
+  alt,
+  width,
+  height,
+  className,
+  timeout = 3000
+}: ImageWithTimeoutFallbackProps) {
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowFallback(true);
+    }, timeout);
+
+    return () => clearTimeout(timer);
+  }, [timeout]);
+
+  if (showFallback) {
+    return (
+      <img
+        src={fallbackSrc}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <ImageWithFallback
+      src={src}
+      fallbackSrc={fallbackSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+    />
+  );
+}
 
 interface Vehicle {
   id: string;
@@ -25,6 +81,12 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   // Extract year from ymmt for display
   const year = vehicle.ymmt.split(' ')[0];
   const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
+
+  // Extract year, make, and model for image sources
+  const ymmtParts = vehicle.ymmt.split(' ');
+  const vehicleYear = ymmtParts[0];
+  const vehicleMake = ymmtParts[1] || '';
+  const vehicleModel = ymmtParts.slice(2, -1).join(' ') || ''; // Everything except year, make, and last part (trim)
 
   // Format status for display
   const formatStatus = (status: string) => {
@@ -57,10 +119,19 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
       onClick={handleClick}
     >
       <div className="aspect-w-16 aspect-h-9">
-        <img
+        <ImageWithTimeoutFallback
+          src={getVehicleImageSources(
+            vehicle.image_url,
+            vehicleMake,
+            vehicleModel,
+            vehicleYear
+          )}
+          fallbackSrc="/branding/fallback-logo.png"
           alt={`${vehicle.name} vehicle`}
+          width={400}
+          height={225}
           className="w-full h-full object-cover"
-          src={vehicle.image_url || `https://images.unsplash.com/photo-1494905998402-395d579af36f?w=400&h=225&fit=crop&crop=center`}
+          timeout={3000}
         />
       </div>
       <CardContent className="p-6">
@@ -105,25 +176,6 @@ function AddVehicleCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function AddVehicleModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  return (
-    <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent className="bg-gray-900 border-gray-800">
-        <ModalHeader>
-          <ModalTitle className="text-white">Add a Vehicle</ModalTitle>
-        </ModalHeader>
-        <ModalBody>
-          <p className="text-gray-300">Here is where you'll add a vehicle</p>
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={() => onOpenChange(false)} className="bg-red-600 hover:bg-red-700">
-            Okay
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
 
 function VehicleGallery({ title, vehicles, showAddCard, onAddClick, onLoadMore, loadingMore, hasMore }: {
   title: string;

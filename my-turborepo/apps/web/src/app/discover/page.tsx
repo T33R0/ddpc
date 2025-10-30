@@ -132,12 +132,39 @@ function DiscoverContent() {
     }
 
     const searchLower = query.toLowerCase();
-    const filtered = allVehicles.filter(vehicle => 
-      vehicle.year.toString().includes(searchLower) ||
-      vehicle.make.toLowerCase().includes(searchLower) ||
-      vehicle.model.toLowerCase().includes(searchLower) ||
-      vehicle.trims.some(trim => trim.trim.toLowerCase().includes(searchLower))
-    );
+    const searchTerms = searchLower.split(/\s+/); // Split by whitespace for multi-word search
+
+    const filtered = allVehicles.filter(vehicle => {
+      // Search in vehicle summary fields
+      const summaryMatch = searchTerms.every(term =>
+        vehicle.year.toString().includes(term) ||
+        vehicle.make.toLowerCase().includes(term) ||
+        vehicle.model.toLowerCase().includes(term)
+      );
+
+      // Search in trim-specific fields
+      const trimMatch = vehicle.trims.some(trim =>
+        searchTerms.every(term =>
+          trim.trim?.toLowerCase().includes(term) ||
+          trim.trim_description?.toLowerCase().includes(term) ||
+          trim.body_type?.toLowerCase().includes(term) ||
+          trim.doors?.toLowerCase().includes(term) ||
+          trim.cylinders?.toLowerCase().includes(term) ||
+          trim.engine_size_l?.toLowerCase().includes(term) ||
+          trim.horsepower_hp?.toLowerCase().includes(term) ||
+          trim.drive_type?.toLowerCase().includes(term) ||
+          trim.engine_type?.toLowerCase().includes(term) ||
+          trim.pros?.toLowerCase().includes(term) ||
+          trim.cons?.toLowerCase().includes(term) ||
+          trim.country_of_origin?.toLowerCase().includes(term) ||
+          trim.car_classification?.toLowerCase().includes(term) ||
+          trim.platform_code_generation?.toLowerCase().includes(term)
+        )
+      );
+
+      return summaryMatch || trimMatch;
+    });
+
     setVehicles(filtered);
   }, [allVehicles]);
 

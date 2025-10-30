@@ -9,13 +9,14 @@ import { UserAccountDropdown } from './user-account-dropdown';
 
 interface HeaderProps {
   user?: any;
+  activeVehiclesCount?: number;
   onSignOut?: () => void;
   onGoogleSignIn?: () => void;
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
 }
 
-export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmailSignIn }: HeaderProps) {
+export function Header({ user, activeVehiclesCount, onSignOut, onGoogleSignIn, onEmailSignUp, onEmailSignIn }: HeaderProps) {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
 
 
@@ -61,7 +62,13 @@ export function Header({ user, onSignOut, onGoogleSignIn, onEmailSignUp, onEmail
           </nav>
 
           <div className="flex items-center gap-4">
-            
+            {user && activeVehiclesCount !== undefined && (
+              <div className="text-xs text-gray-300 flex items-center gap-1">
+                <span>Active</span>
+                <span className="font-medium">{activeVehiclesCount}/3</span>
+              </div>
+            )}
+
             {user ? (
               <UserAccountDropdown user={user} onSignOut={onSignOut} />
             ) : (
