@@ -135,30 +135,36 @@ function DiscoverContent() {
     const searchTerms = searchLower.split(/\s+/); // Split by whitespace for multi-word search
 
     const filtered = allVehicles.filter(vehicle => {
+      // Helper function to safely check if a field contains search term
+      const fieldContains = (field: any, term: string) => {
+        if (field == null) return false;
+        return String(field).toLowerCase().includes(term);
+      };
+
       // Search in vehicle summary fields
       const summaryMatch = searchTerms.every(term =>
-        vehicle.year.toString().includes(term) ||
-        vehicle.make.toLowerCase().includes(term) ||
-        vehicle.model.toLowerCase().includes(term)
+        fieldContains(vehicle.year, term) ||
+        fieldContains(vehicle.make, term) ||
+        fieldContains(vehicle.model, term)
       );
 
       // Search in trim-specific fields
       const trimMatch = vehicle.trims.some(trim =>
         searchTerms.every(term =>
-          trim.trim?.toLowerCase().includes(term) ||
-          trim.trim_description?.toLowerCase().includes(term) ||
-          trim.body_type?.toLowerCase().includes(term) ||
-          trim.doors?.toLowerCase().includes(term) ||
-          trim.cylinders?.toLowerCase().includes(term) ||
-          trim.engine_size_l?.toLowerCase().includes(term) ||
-          trim.horsepower_hp?.toLowerCase().includes(term) ||
-          trim.drive_type?.toLowerCase().includes(term) ||
-          trim.engine_type?.toLowerCase().includes(term) ||
-          trim.pros?.toLowerCase().includes(term) ||
-          trim.cons?.toLowerCase().includes(term) ||
-          trim.country_of_origin?.toLowerCase().includes(term) ||
-          trim.car_classification?.toLowerCase().includes(term) ||
-          trim.platform_code_generation?.toLowerCase().includes(term)
+          fieldContains(trim.trim, term) ||
+          fieldContains(trim.trim_description, term) ||
+          fieldContains(trim.body_type, term) ||
+          fieldContains(trim.doors, term) ||
+          fieldContains(trim.cylinders, term) ||
+          fieldContains(trim.engine_size_l, term) ||
+          fieldContains(trim.horsepower_hp, term) ||
+          fieldContains(trim.drive_type, term) ||
+          fieldContains(trim.engine_type, term) ||
+          fieldContains(trim.pros, term) ||
+          fieldContains(trim.cons, term) ||
+          fieldContains(trim.country_of_origin, term) ||
+          fieldContains(trim.car_classification, term) ||
+          fieldContains(trim.platform_code_generation, term)
         )
       );
 
