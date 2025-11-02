@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Activity, Wrench, Fuel, Settings } from 'lucide-react';
 import { LogServiceModal } from '../../../components/LogServiceModal';
 
 interface Vehicle {
@@ -63,10 +63,16 @@ export default function VehicleDetailPage() {
         // Combine model + trim for the display name
         const vehicleData = data.vehicle;
         if (vehicleData.ymmt) {
-          const ymmtParts = vehicleData.ymmt.split(' ');
+          const trim = decodeURIComponent(vehicleSlug);
+          // Remove the trim from the end of ymmt to get the model
+          let ymmtWithoutTrim = vehicleData.ymmt;
+          if (ymmtWithoutTrim.endsWith(' ' + trim)) {
+            ymmtWithoutTrim = ymmtWithoutTrim.slice(0, -(trim.length + 1));
+          }
+          // Extract model (everything after year and make)
+          const ymmtParts = ymmtWithoutTrim.split(' ');
           if (ymmtParts.length >= 3) {
-            const model = ymmtParts[2];
-            const trim = decodeURIComponent(vehicleSlug);
+            const model = ymmtParts.slice(2).join(' ');
             vehicleData.name = `${model} ${trim}`;
           }
         }
@@ -232,7 +238,7 @@ export default function VehicleDetailPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Model:</span>
-                    <span className="text-white">{vehicle.ymmt?.split(' ')[2] || 'UNK'}</span>
+                    <span className="text-white">{vehicle.ymmt?.split(' ').slice(2, -1).join(' ') || 'UNK'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Trim:</span>
@@ -329,43 +335,47 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Row 3 */}
-            {/* Slot 9: Fuel */}
+            {/* Slot 9: History */}
             <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                   }}>
               <CardContent className="p-0 text-center">
+                <Activity className="w-8 h-8 mb-2 text-blue-400" />
+                <p className="text-lg font-semibold text-white">History</p>
+              </CardContent>
+            </Card>
+
+            {/* Slot 10: Service */}
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0 text-center">
+                <Wrench className="w-8 h-8 mb-2 text-blue-400" />
+                <p className="text-lg font-semibold text-white">Service</p>
+              </CardContent>
+            </Card>
+
+            {/* Slot 11: Fuel */}
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0 text-center">
+                <Fuel className="w-8 h-8 mb-2 text-blue-400" />
                 <p className="text-lg font-semibold text-white">Fuel</p>
               </CardContent>
             </Card>
 
-            {/* Slot 10: Maintenance */}
+            {/* Slot 12: Mods */}
             <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                   }}>
               <CardContent className="p-0 text-center">
-                <p className="text-lg font-semibold text-white">Maintenance</p>
-              </CardContent>
-            </Card>
-
-            {/* Slot 11: Repair */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
-                  style={{
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-              <CardContent className="p-0 text-center">
-                <p className="text-lg font-semibold text-white">Repair</p>
-              </CardContent>
-            </Card>
-
-            {/* Slot 12: Performance */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
-                  style={{
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-              <CardContent className="p-0 text-center">
-                <p className="text-lg font-semibold text-white">Performance</p>
+                <Settings className="w-8 h-8 mb-2 text-blue-400" />
+                <p className="text-lg font-semibold text-white">Mods</p>
               </CardContent>
             </Card>
           </div>

@@ -144,10 +144,14 @@ export default function ConsolePage() {
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 {filteredVehicles.map((vehicle) => {
                   const status = getVehicleStatus(vehicle) || 'Active';
+                  // Extract trim from ymmt (last part) for the URL
+                  const trim = vehicle.ymmt?.split(' ').pop() || vehicle.name;
+
                   return (
                     <div
                       key={vehicle.id}
-                      className="group transition-all duration-300"
+                      className="group transition-all duration-300 cursor-pointer"
+                      onClick={() => router.push(`/vehicle/${encodeURIComponent(trim)}`)}
                     >
                       <div
                         className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-4"
@@ -194,19 +198,39 @@ export default function ConsolePage() {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            onClick={() => router.push(`/vehicle/${trim}/history`)}
+                          >
                             <Activity className="w-3 h-3 mr-1" />
                             History
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            onClick={() => router.push(`/vehicle/${trim}/service`)}
+                          >
                             <Wrench className="w-3 h-3 mr-1" />
                             Service
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            onClick={() => router.push(`/vehicle/${trim}/fuel`)}
+                          >
                             <Fuel className="w-3 h-3 mr-1" />
                             Fuel
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            onClick={() => router.push(`/vehicle/${trim}/mods`)}
+                          >
                             <Settings className="w-3 h-3 mr-1" />
                             Mods
                           </Button>
