@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../lib/auth';
 import { useVehicles } from '../../lib/hooks/useVehicles';
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Badge } from '@repo/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Search, Plus, AlertTriangle, Calendar, FileText, BarChart, Receipt, Download, Car, Activity, Wrench, Fuel, Settings } from 'lucide-react';
 import { LogServiceModal } from '../../components/LogServiceModal';
+import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleton';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
@@ -68,7 +68,7 @@ export default function ConsolePage() {
   };
 
   return (
-    <section className="relative py-12 bg-black min-h-screen">
+    <section className="relative py-12 min-h-screen">
       {/* Background gradient effects */}
       <div
         aria-hidden="true"
@@ -79,16 +79,21 @@ export default function ConsolePage() {
       </div>
 
       <div className="relative container px-4 md:px-6 pt-24">
-        {/* Header */}
-        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-          <h1 className="text-4xl font-bold text-white">Vehicle Console</h1>
-          <Button
-            className="bg-red-600 hover:bg-red-700 text-white"
-            onClick={() => setLogServiceModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Log New Entry
-          </Button>
+        {/* Page Header */}
+        <h1 className="text-4xl font-bold text-white mb-8">Vehicle Console</h1>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-white text-lg font-medium">Manage your vehicles:</span>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => setLogServiceModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Log New Entry
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -103,16 +108,16 @@ export default function ConsolePage() {
             />
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-3 flex-wrap">
             {['All', 'Active', 'Needs Attention', 'Service Due', 'Inactive'].map((filter) => (
               <Button
                 key={filter}
-                variant={selectedFilter === filter ? "default" : "outline"}
+                variant="outline"
                 size="sm"
                 onClick={() => setSelectedFilter(filter)}
                 className={selectedFilter === filter
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800"
+                  ? "bg-red-600 hover:bg-red-700 text-white border-red-600"
+                  : "flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white"
                 }
               >
                 {filter}
@@ -126,53 +131,42 @@ export default function ConsolePage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {vehiclesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="bg-gray-900 border-gray-800">
-                    <CardContent className="p-6">
-                      <div className="animate-pulse space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2">
-                            <div className="h-6 bg-gray-700 rounded w-32"></div>
-                            <div className="h-4 bg-gray-700 rounded w-24"></div>
-                          </div>
-                          <div className="h-6 bg-gray-700 rounded w-20"></div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center space-y-2">
-                            <div className="h-4 bg-gray-700 rounded"></div>
-                            <div className="h-6 bg-gray-700 rounded"></div>
-                          </div>
-                          <div className="text-center space-y-2">
-                            <div className="h-4 bg-gray-700 rounded"></div>
-                            <div className="h-6 bg-gray-700 rounded"></div>
-                          </div>
-                          <div className="text-center space-y-2">
-                            <div className="h-4 bg-gray-700 rounded"></div>
-                            <div className="h-6 bg-gray-700 rounded"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <GalleryLoadingSkeleton />
             ) : filteredVehicles.length === 0 ? (
-              <Card className="bg-gray-900 border-gray-800">
-                <CardContent className="p-12 text-center">
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
                   <Car className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No vehicles found</h3>
-                  <p className="text-gray-400">Add your first vehicle to get started.</p>
-                </CardContent>
-              </Card>
+                  <div className="text-gray-400 text-lg mb-2">No vehicles found</div>
+                  <div className="text-gray-500 text-sm">Add your first vehicle to get started</div>
+                </div>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 {filteredVehicles.map((vehicle) => {
                   const status = getVehicleStatus(vehicle) || 'Active';
                   return (
-                    <Card key={vehicle.id} className="bg-gray-900 border-gray-800 hover:border-red-500/50 transition-colors">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
+                    <div
+                      key={vehicle.id}
+                      className="group transition-all duration-300"
+                    >
+                      <div
+                        className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-4"
+                        style={{
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          transition: 'all 0.3s ease-out',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                          e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+                          e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
                           <div>
                             <h3 className="text-lg font-semibold text-white">{vehicle.name}</h3>
                             <p className="text-sm text-gray-400">{vehicle.ymmt}</p>
@@ -182,7 +176,7 @@ export default function ConsolePage() {
                           </Badge>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-3 gap-4">
                           <div className="text-center">
                             <p className="text-xs text-gray-400">Odometer</p>
                             <p className="text-sm font-medium text-white">
@@ -200,25 +194,25 @@ export default function ConsolePage() {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                             <Activity className="w-3 h-3 mr-1" />
                             History
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                             <Wrench className="w-3 h-3 mr-1" />
                             Service
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                             <Fuel className="w-3 h-3 mr-1" />
                             Fuel
                           </Button>
-                          <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                          <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                             <Settings className="w-3 h-3 mr-1" />
                             Mods
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -228,11 +222,14 @@ export default function ConsolePage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Priority Alerts */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white">Priority Alerts &amp; Reminders</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div
+              className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">Priority Alerts &amp; Reminders</h3>
+              <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500">
                     <AlertTriangle className="w-4 h-4" />
@@ -262,25 +259,28 @@ export default function ConsolePage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 pt-4">
-                  <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                  <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                     View All
                   </Button>
-                  <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                  <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                     Upload
                   </Button>
-                  <Button size="sm" variant="outline" className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300">
+                  <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
                     Schedule
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Financial Snapshot */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white">Financial Snapshot</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div
+              className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">Financial Snapshot</h3>
+              <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-white">$0</p>
@@ -310,8 +310,8 @@ export default function ConsolePage() {
                     Export Data
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
