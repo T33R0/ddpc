@@ -41,13 +41,10 @@ export default function VehicleDetailPage() {
 
   useEffect(() => {
     // Immediately set a placeholder vehicle so the UI renders
-    // Parse the URL slug to extract model for default name
-    const slugParts = decodeURIComponent(vehicleSlug).split(' ');
-    const defaultName = slugParts.length >= 3 && slugParts[2] ? slugParts[2] : decodeURIComponent(vehicleSlug);
-
+    // The URL slug contains the trim, we'll combine it with model from data later
     setVehicle({
       id: 'placeholder',
-      name: defaultName,
+      name: decodeURIComponent(vehicleSlug), // Use the full slug (trim) as initial name
       ymmt: 'Loading...',
       odometer: null,
       current_status: 'unknown',
@@ -63,7 +60,17 @@ export default function VehicleDetailPage() {
           throw new Error(`Failed to fetch vehicle data (${response.status})`);
         }
         const data = await response.json();
-        setVehicle(data.vehicle);
+        // Combine model + trim for the display name
+        const vehicleData = data.vehicle;
+        if (vehicleData.ymmt) {
+          const ymmtParts = vehicleData.ymmt.split(' ');
+          if (ymmtParts.length >= 3) {
+            const model = ymmtParts[2];
+            const trim = decodeURIComponent(vehicleSlug);
+            vehicleData.name = `${model} ${trim}`;
+          }
+        }
+        setVehicle(vehicleData);
         setError(null); // Clear any previous errors
         } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -208,14 +215,38 @@ export default function VehicleDetailPage() {
           <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 h-[600px]">
             {/* Row 1 */}
             {/* Slot 1: Build Specs */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
-              <CardContent className="p-4 text-center">
-                <p className="text-lg font-semibold text-white">Build Specs</p>
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0">
+                <p className="text-sm font-semibold text-gray-400 mb-2">Build Specs</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Year:</span>
+                    <span className="text-white">{year}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Make:</span>
+                    <span className="text-white">{vehicle.ymmt?.split(' ')[1] || 'UNK'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Model:</span>
+                    <span className="text-white">{vehicle.ymmt?.split(' ')[2] || 'UNK'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Trim:</span>
+                    <span className="text-white">{decodeURIComponent(vehicleSlug)}</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
-            <Card className="col-span-2 row-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
+            <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
               <img
                 alt={`${vehicle.name} vehicle`}
                 className="w-full h-full object-cover"
@@ -224,17 +255,20 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Slot 4: Engine Specs */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-              <CardContent className="p-4">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0">
                 <p className="text-sm font-semibold text-gray-400 mb-2">Engine Specs</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">HP:</span>
-                    <span className="text-white">{horsepower}</span>
+                    <span className="text-gray-400">Power:</span>
+                    <span className="text-white">{horsepower} hp</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Torque:</span>
-                    <span className="text-white">{torque}</span>
+                    <span className="text-white">{torque} ft-lbs</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Size:</span>
@@ -250,8 +284,11 @@ export default function VehicleDetailPage() {
 
             {/* Row 2 */}
             {/* Slot 5: Dimensions */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-              <CardContent className="p-4">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0">
                 <p className="text-sm font-semibold text-gray-400 mb-2">Dimensions</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -272,8 +309,11 @@ export default function VehicleDetailPage() {
 
 
             {/* Slot 8: Drivetrain */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-              <CardContent className="p-4">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0">
                 <p className="text-sm font-semibold text-gray-400 mb-2">Drivetrain</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -282,7 +322,7 @@ export default function VehicleDetailPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Transmission:</span>
-                    <span className="text-white">{transmission}</span>
+                    <span className="text-white text-right flex-1">{transmission}</span>
                   </div>
                 </div>
               </CardContent>
@@ -290,29 +330,41 @@ export default function VehicleDetailPage() {
 
             {/* Row 3 */}
             {/* Slot 9: Fuel */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0 text-center">
                 <p className="text-lg font-semibold text-white">Fuel</p>
               </CardContent>
             </Card>
 
             {/* Slot 10: Maintenance */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0 text-center">
                 <p className="text-lg font-semibold text-white">Maintenance</p>
               </CardContent>
             </Card>
 
             {/* Slot 11: Repair */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0 text-center">
                 <p className="text-lg font-semibold text-white">Repair</p>
               </CardContent>
             </Card>
 
             {/* Slot 12: Performance */}
-            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}>
+              <CardContent className="p-0 text-center">
                 <p className="text-lg font-semibold text-white">Performance</p>
               </CardContent>
             </Card>
