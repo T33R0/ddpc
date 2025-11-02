@@ -9,6 +9,11 @@
 | public     | ai_prompts            | ai_prompts_service_only_all              | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | ai_session            | ai_session_service_only_all              | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | ai_turn               | ai_turn_service_only_all                 | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
+| public     | maintenance_log       | maintenance_log_owner_all                | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = maintenance_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                     | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = maintenance_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                     |
 | public     | mod_outcome           | mod_outcome_owner_all                    | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
    FROM (mods m
      JOIN user_vehicle uv ON ((uv.id = m.user_vehicle_id)))
@@ -16,6 +21,11 @@
    FROM (mods m
      JOIN user_vehicle uv ON ((uv.id = m.user_vehicle_id)))
   WHERE ((m.id = mod_outcome.mod_id) AND (uv.owner_id = auth.uid()))))                                               |
+| public     | mods                  | mods_owner_all                           | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = mods.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                                | (EXISTS ( SELECT 1
+   FROM user_vehicle uv
+  WHERE ((uv.id = mods.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                                |
 | public     | odometer_log          | odolog_owner_all                         | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
    FROM user_vehicle uv
   WHERE ((uv.id = odometer_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                        | (EXISTS ( SELECT 1
@@ -48,16 +58,6 @@
 | public     | vehicle_primary_image | vpi_select_public                        | PERMISSIVE | SELECT | true                                                                                                                                                                                                                | null                                                                                                                                                                                                                |
 | public     | vehicle_primary_image | vpi_update_service_only                  | PERMISSIVE | UPDATE | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | vehicle_url_queue     | vuq_service_only_all                     | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
-| public     | maintenance_log       | maintenance_log_owner_all                | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
-   FROM user_vehicle uv
-  WHERE ((uv.id = maintenance_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                        | (EXISTS ( SELECT 1
-   FROM user_vehicle uv
-  WHERE ((uv.id = maintenance_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                        |
-| public     | mods                  | mods_owner_all                           | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
-   FROM user_vehicle uv
-  WHERE ((uv.id = mods.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                                  | (EXISTS ( SELECT 1
-   FROM user_vehicle uv
-  WHERE ((uv.id = mods.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                                  |
 
 ## Notes
 - **AI TABLES**: Service role only access for security

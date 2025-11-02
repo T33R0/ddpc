@@ -110,7 +110,6 @@ export default function VehicleDetailPage() {
               onClick={() => router.back()}
               className="mt-4 bg-red-600 hover:bg-red-700"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
               Go Back
             </Button>
           </div>
