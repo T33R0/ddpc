@@ -41,9 +41,13 @@ export default function VehicleDetailPage() {
 
   useEffect(() => {
     // Immediately set a placeholder vehicle so the UI renders
+    // Parse the URL slug to extract model for default name
+    const slugParts = decodeURIComponent(vehicleSlug).split(' ');
+    const defaultName = slugParts.length >= 3 && slugParts[2] ? slugParts[2] : decodeURIComponent(vehicleSlug);
+
     setVehicle({
       id: 'placeholder',
-      name: decodeURIComponent(vehicleSlug),
+      name: defaultName,
       ymmt: 'Loading...',
       odometer: null,
       current_status: 'unknown',
@@ -61,12 +65,14 @@ export default function VehicleDetailPage() {
         const data = await response.json();
         setVehicle(data.vehicle);
         setError(null); // Clear any previous errors
-      } catch (err) {
+        } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
         // Keep the placeholder vehicle but update the name
+        const slugParts = decodeURIComponent(vehicleSlug).split(' ');
+        const defaultName = slugParts.length >= 3 && slugParts[2] ? slugParts[2] : decodeURIComponent(vehicleSlug);
         setVehicle({
           id: 'placeholder',
-          name: decodeURIComponent(vehicleSlug),
+          name: defaultName,
           ymmt: 'Vehicle Not Found',
           odometer: null,
           current_status: 'unknown',
@@ -208,8 +214,8 @@ export default function VehicleDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Slots 2-3: Vehicle Image (spanning 2 columns) */}
-            <Card className="col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
+            {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
+            <Card className="col-span-2 row-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
               <img
                 alt={`${vehicle.name} vehicle`}
                 className="w-full h-full object-cover"
@@ -264,14 +270,6 @@ export default function VehicleDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Slots 6-7: Vehicle Image (spanning 2 columns) */}
-            <Card className="col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
-              <img
-                alt={`${vehicle.name} vehicle`}
-                className="w-full h-full object-cover"
-                src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
-              />
-            </Card>
 
             {/* Slot 8: Drivetrain */}
             <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
