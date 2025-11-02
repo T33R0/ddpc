@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { Plus } from 'lucide-react';
-import { LogServiceModal } from '../../components/LogServiceModal';
+import { LogServiceModal } from '../../../components/LogServiceModal';
 
 interface Vehicle {
   id: string;
