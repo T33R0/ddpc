@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { LogServiceModal } from '../../components/LogServiceModal';
 
 interface Vehicle {
   id: string;
@@ -34,6 +35,7 @@ export default function VehicleDetailPage() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logServiceModalOpen, setLogServiceModalOpen] = useState(false);
 
   const vehicleSlug = params.id as string;
 
@@ -187,203 +189,145 @@ export default function VehicleDetailPage() {
         </div>
 
         <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-8">
+          <div className="mb-8 flex justify-between items-center">
+            <h1 className="text-4xl font-bold text-white">{vehicle.name}</h1>
             <Button
-              onClick={() => router.back()}
-              className="mb-4 bg-gray-800 hover:bg-gray-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => setLogServiceModalOpen(true)}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Garage
+              <Plus className="w-4 h-4 mr-2" />
+              Log Event
             </Button>
-            <h1 className="text-4xl font-bold text-white mb-2">Vehicle Details</h1>
-            <p className="text-lg text-gray-400">Detailed information about your {vehicle.name}</p>
-            {error && (
-              <div className="mt-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
-                <p className="text-red-300 text-sm">
-                  ⚠️ Failed to load complete vehicle data: {error}
-                  <br />
-                  Showing placeholder information below.
-                </p>
-              </div>
-            )}
           </div>
 
-          <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-[auto_auto_auto] gap-4">
-            {/* Left Column - Performance Stats */}
-            <div className="col-span-1 flex flex-col gap-4">
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">speed</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Horsepower</p>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{horsepower}</p>
-                </CardContent>
-              </Card>
+          <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 h-[600px]">
+            {/* Row 1 */}
+            {/* Slot 1: Build Specs */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
+              <CardContent className="p-4 text-center">
+                <p className="text-lg font-semibold text-white">Build Specs</p>
+              </CardContent>
+            </Card>
 
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">shutter_speed</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Max Speed</p>
-                  </div>
-                  <p className="text-3xl font-bold text-white">UNK</p>
-                </CardContent>
-              </Card>
+            {/* Slots 2-3: Vehicle Image (spanning 2 columns) */}
+            <Card className="col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
+              <img
+                alt={`${vehicle.name} vehicle`}
+                className="w-full h-full object-cover"
+                src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+              />
+            </Card>
 
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">rotate_right</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Torque</p>
+            {/* Slot 4: Engine Specs */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
+              <CardContent className="p-4">
+                <p className="text-sm font-semibold text-gray-400 mb-2">Engine Specs</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">HP:</span>
+                    <span className="text-white">{horsepower}</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">{torque}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">timer</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">0-100km/h</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Torque:</span>
+                    <span className="text-white">{torque}</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">UNK</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Center Column - Hero Image */}
-            <div className="col-span-2 row-span-2 flex flex-col gap-4">
-              <Card className="relative flex h-full items-center justify-center bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
-                <img
-                  alt={`${vehicle.name} vehicle`}
-                  className="absolute inset-0 h-full w-full object-cover opacity-70"
-                  src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/20"></div>
-                <div className="relative z-10 flex h-full w-full flex-col justify-start items-center p-8 pt-12">
-                  <p className="text-lg uppercase tracking-[0.2em] text-blue-300">{bodyType}</p>
-                  <h1 className="text-6xl font-bold text-white tracking-wider">{vehicle.name}</h1>
-                  <p className="text-lg text-gray-300 mt-2">{year} {makeModel}</p>
-                  <p className="text-sm text-gray-400 mt-1">Status: {formatStatus(vehicle.current_status)}</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Size:</span>
+                    <span className="text-white">{engineSize}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Cylinders:</span>
+                    <span className="text-white">{cylinders}</span>
+                  </div>
                 </div>
-              </Card>
+              </CardContent>
+            </Card>
 
-              {/* Bottom row of center column */}
-              <div className="grid grid-cols-3 gap-4">
-                <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Drivetrain</p>
-                    <span className="material-symbols-outlined text-4xl text-blue-400">settings_input_component</span>
-                    <p className="text-sm text-white mt-2">{driveType}</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Transmission</p>
-                    <span className="material-symbols-outlined text-4xl text-blue-400">settings</span>
-                    <p className="text-sm text-white mt-2">{transmission}</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Colors</p>
-                    <span className="material-symbols-outlined text-4xl text-blue-400">palette</span>
-                    {colorInfo !== 'UNK' && typeof colorInfo === 'object' ? (
-                      <div className="mt-2 flex flex-col items-center gap-1">
-                        {colorInfo.rgb && (
-                          <div
-                            className="w-6 h-6 rounded border border-gray-600"
-                            style={{ backgroundColor: `rgb(${colorInfo.rgb})` }}
-                            title={`RGB(${colorInfo.rgb})`}
-                          />
-                        )}
-                        <p className="text-sm text-white">{colorInfo.name}</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-white mt-2">{colorInfo}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Right Column - Engine Stats */}
-            <div className="col-span-1 flex flex-col gap-4">
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">water_drop</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Engine Size</p>
+            {/* Row 2 */}
+            {/* Slot 5: Dimensions */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
+              <CardContent className="p-4">
+                <p className="text-sm font-semibold text-gray-400 mb-2">Dimensions</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Length:</span>
+                    <span className="text-white">{length}</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">{engineSize}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">schema</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Cylinders</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Width:</span>
+                    <span className="text-white">{width}</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">{cylinders}</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">local_gas_station</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Fuel Economy</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Height:</span>
+                    <span className="text-white">{height}</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">{fuelEconomy} MPG</p>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="material-symbols-outlined text-xl text-blue-400">engineering</span>
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Fuel Type</p>
+            {/* Slots 6-7: Vehicle Image (spanning 2 columns) */}
+            <Card className="col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl overflow-hidden">
+              <img
+                alt={`${vehicle.name} vehicle`}
+                className="w-full h-full object-cover"
+                src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+              />
+            </Card>
+
+            {/* Slot 8: Drivetrain */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
+              <CardContent className="p-4">
+                <p className="text-sm font-semibold text-gray-400 mb-2">Drivetrain</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Type:</span>
+                    <span className="text-white">{driveType}</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">{fuelType}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Bottom Row - Dimensions */}
-            <div className="col-span-4 grid grid-cols-4 gap-4">
-              <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4 text-center">
-                  <span className="material-symbols-outlined text-4xl text-blue-400 mb-1">straighten</span>
-                  <p className="text-xs uppercase tracking-wider text-gray-400">Dimensions</p>
-                </CardContent>
-              </Card>
-
-              <Card className="col-span-3 bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex h-full items-center justify-around">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-white">{length}</p>
-                      <p className="text-base font-normal text-gray-400">Length</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-white">{width}</p>
-                      <p className="text-base font-normal text-gray-400">Width</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-white">{height}</p>
-                      <p className="text-base font-normal text-gray-400">Height</p>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Transmission:</span>
+                    <span className="text-white">{transmission}</span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Row 3 */}
+            {/* Slot 9: Fuel */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
+              <CardContent className="p-4 text-center">
+                <p className="text-lg font-semibold text-white">Fuel</p>
+              </CardContent>
+            </Card>
+
+            {/* Slot 10: Maintenance */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
+              <CardContent className="p-4 text-center">
+                <p className="text-lg font-semibold text-white">Maintenance</p>
+              </CardContent>
+            </Card>
+
+            {/* Slot 11: Repair */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
+              <CardContent className="p-4 text-center">
+                <p className="text-lg font-semibold text-white">Repair</p>
+              </CardContent>
+            </Card>
+
+            {/* Slot 12: Performance */}
+            <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 shadow-xl flex items-center justify-center">
+              <CardContent className="p-4 text-center">
+                <p className="text-lg font-semibold text-white">Performance</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
+
+      {/* Log Service Modal */}
+      <LogServiceModal
+        open={logServiceModalOpen}
+        onOpenChange={setLogServiceModalOpen}
+      />
     </>
   );
 }
