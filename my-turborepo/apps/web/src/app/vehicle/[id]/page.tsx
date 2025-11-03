@@ -336,11 +336,22 @@ export default function VehicleDetailPage() {
 
             {/* Row 3 */}
             {/* Slot 9: History */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.3s ease-out',
                   }}
-                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/history`)}>
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/history`)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}>
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-2">
                   <Activity className="w-5 h-5 text-blue-400" />
@@ -360,11 +371,22 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Slot 10: Service */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.3s ease-out',
                   }}
-                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/service`)}>
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/service`)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}>
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-2">
                   <Wrench className="w-5 h-5 text-blue-400" />
@@ -384,11 +406,22 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Slot 11: Fuel */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.3s ease-out',
                   }}
-                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/fuel`)}>
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/fuel`)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}>
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-2">
                   <Fuel className="w-5 h-5 text-blue-400" />
@@ -408,11 +441,22 @@ export default function VehicleDetailPage() {
             </Card>
 
             {/* Slot 12: Mods */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.3s ease-out',
                   }}
-                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/mods`)}>
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/mods`)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}>
               <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-2">
                   <Settings className="w-5 h-5 text-blue-400" />
