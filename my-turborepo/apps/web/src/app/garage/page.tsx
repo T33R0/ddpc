@@ -7,6 +7,7 @@ import { Card, CardContent } from '@repo/ui/card';
 import AddVehicleModal from '../../features/garage/add-vehicle-modal';
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
+import { Plus } from 'lucide-react';
 
 type ImageWithTimeoutFallbackProps = {
   src: string;
@@ -92,7 +93,7 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const handleClick = () => {
     // Use nickname for URL
     // Next.js handles URL encoding automatically
-    const urlSlug = vehicle.nickname;
+    const urlSlug = vehicle.nickname || vehicle.id;
     router.push(`/vehicle/${urlSlug}`);
   };
 
