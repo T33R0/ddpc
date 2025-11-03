@@ -32,11 +32,7 @@ interface Vehicle {
   image_url?: string;
 }
 
-interface VehicleDetailPageProps {
-  onVehicleUpdated?: () => void;
-}
-
-export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPageProps) {
+export default function VehicleDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -114,41 +110,12 @@ export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPag
     }
   }, [vehicleSlug]);
 
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case 'daily_driver':
-        return 'Active';
-      case 'parked':
-        return 'Parked';
-      case 'listed':
-        return 'Listed';
-      case 'sold':
-        return 'Sold';
-      case 'retired':
-        return 'Retired';
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    }
-  };
 
   const handleSaveVehicle = async () => {
     if (!vehicle) return;
 
     setIsUpdating(true);
     try {
-      // First, handle image upload if there's a new image
-      let imageUrl = vehicle.image_url;
-      if (editImageFile) {
-        // For now, we'll use a simple approach - upload to a generic image hosting service
-        // In a real app, you'd want to upload to your own storage service
-        const formData = new FormData();
-        formData.append('file', editImageFile);
-
-        // This is a placeholder - you'd need to implement actual image upload
-        // For now, we'll just log that image upload would happen
-        console.log('Image upload would happen here:', editImageFile.name);
-        // imageUrl = await uploadImage(editImageFile);
-      }
 
       // Update vehicle data via API
       const response = await fetch('/api/garage/update-vehicle', {
@@ -169,8 +136,6 @@ export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPag
         throw new Error('Failed to update vehicle');
       }
 
-      const result = await response.json();
-
       // Update local vehicle state
       setVehicle(prev => prev ? {
         ...prev,
@@ -187,11 +152,6 @@ export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPag
 
       // Close modal and show success
       setEditModalOpen(false);
-
-      // Trigger refresh callback if provided
-      if (onVehicleUpdated) {
-        onVehicleUpdated();
-      }
 
       // You might want to add a toast notification here
 
@@ -219,6 +179,34 @@ export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPag
     }
   };
 
+  // Extract vehicle details with safe fallbacks
+  const year = vehicle?.ymmt?.split(' ')[0] || 'UNK';
+
+  // Safe extraction functions - no state updates during render
+  const safeValue = (value: any, fallback = 'UNK', transformer?: (val: any) => string) => {
+    try {
+      if (value === null || value === undefined || value === '') {
+        return fallback;
+      }
+      if (transformer) {
+        return transformer(value);
+      }
+      return String(value);
+    } catch (err) {
+      return fallback;
+    }
+  };
+
+  const horsepower = safeValue(vehicle?.horsepower_hp, 'UNK');
+  const torque = safeValue(vehicle?.torque_ft_lbs, 'UNK');
+  const cylinders = safeValue(vehicle?.cylinders, 'UNK');
+  const engineSize = safeValue(vehicle?.engine_size_l, 'UNK', (val) => `${val}L`);
+  const driveType = safeValue(vehicle?.drive_type, 'UNK');
+  const transmission = safeValue(vehicle?.transmission, 'UNK');
+  const length = safeValue(vehicle?.length_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const width = safeValue(vehicle?.width_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+  const height = safeValue(vehicle?.height_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
+
   // Always render the page - never show loading or error states that hide the content
   if (!vehicle) {
     return (
@@ -239,63 +227,6 @@ export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPag
     );
   }
 
-  // Extract vehicle details with safe fallbacks
-  const year = vehicle.ymmt?.split(' ')[0] || 'UNK';
-  const makeModel = vehicle.ymmt?.split(' ').slice(1).join(' ') || 'UNK';
-
-  // Safe extraction functions - no state updates during render
-  const safeValue = (value: any, fallback = 'UNK', transformer?: (val: any) => string) => {
-    try {
-      if (value === null || value === undefined || value === '') {
-        return fallback;
-      }
-      if (transformer) {
-        return transformer(value);
-      }
-      return String(value);
-    } catch (err) {
-      return fallback;
-    }
-  };
-
-  const horsepower = safeValue(vehicle.horsepower_hp, 'UNK');
-  const torque = safeValue(vehicle.torque_ft_lbs, 'UNK');
-  const cylinders = safeValue(vehicle.cylinders, 'UNK');
-  const engineSize = safeValue(vehicle.engine_size_l, 'UNK', (val) => `${val}L`);
-  const fuelType = safeValue(vehicle.fuel_type, 'UNK');
-  const fuelEconomy = safeValue(vehicle.epa_combined_mpg, 'UNK', (val) => `${val} MPG`);
-  const driveType = safeValue(vehicle.drive_type, 'UNK');
-  const transmission = safeValue(vehicle.transmission, 'UNK');
-  // Parse colors to show only first color with RGB block
-  const parseColors = (colorsString: any) => {
-    if (!colorsString || colorsString === 'UNK') return 'UNK';
-
-    try {
-      // Split by comma and take first color
-      const firstColor = String(colorsString).split(',')[0]?.trim();
-
-      if (!firstColor) return 'UNK';
-
-      // Extract color name and RGB
-      const rgbMatch = firstColor.match(/(.+?)\s*\(([^)]+)\)/);
-      if (rgbMatch) {
-        const colorName = rgbMatch[1]?.trim();
-        const rgbValue = rgbMatch[2]?.trim();
-        return { name: colorName || firstColor, rgb: rgbValue || null };
-      }
-
-      // If no RGB found, just return the color name
-      return { name: firstColor, rgb: null };
-    } catch (err) {
-      return 'UNK';
-    }
-  };
-
-  const colorInfo = parseColors(vehicle.colors_exterior);
-  const length = safeValue(vehicle.length_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const width = safeValue(vehicle.width_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const height = safeValue(vehicle.height_in, 'UNK', (val) => `${(parseFloat(val) * 25.4).toFixed(0)} mm`);
-  const bodyType = safeValue(vehicle.body_type, 'UNK');
 
   return (
     <>

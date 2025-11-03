@@ -4,11 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVehicles, useStoredVehicles } from '@/lib/hooks/useVehicles';
 import { Card, CardContent } from '@repo/ui/card';
-import { Button } from '@repo/ui/button';
-import { Modal, ModalContent, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@repo/ui/modal';
-import { Plus, Car } from 'lucide-react';
 import AddVehicleModal from '../../features/garage/add-vehicle-modal';
-import { ImageWithFallback } from '../../components/image-with-fallback';
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 
@@ -74,9 +70,6 @@ interface Vehicle {
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const router = useRouter();
 
-  // Extract year from ymmt for display
-  const year = vehicle.ymmt.split(' ')[0];
-  const makeModel = vehicle.ymmt.split(' ').slice(1).join(' ');
 
   // Format status for display
   const formatStatus = (status: string) => {
