@@ -336,46 +336,98 @@ export default function VehicleDetailPage() {
 
             {/* Row 3 */}
             {/* Slot 9: History */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-              <CardContent className="p-0 text-center">
-                <Activity className="w-8 h-8 mb-2 text-blue-400" />
-                <p className="text-lg font-semibold text-white">History</p>
+                  }}
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/history`)}>
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Activity className="w-5 h-5 text-blue-400" />
+                  <p className="text-sm font-semibold text-gray-400">History</p>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Last Service:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Records:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Slot 10: Service */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-              <CardContent className="p-0 text-center">
-                <Wrench className="w-8 h-8 mb-2 text-blue-400" />
-                <p className="text-lg font-semibold text-white">Service</p>
+                  }}
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/service`)}>
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wrench className="w-5 h-5 text-blue-400" />
+                  <p className="text-sm font-semibold text-gray-400">Service</p>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Next Service:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Service Count:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Slot 11: Fuel */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-              <CardContent className="p-0 text-center">
-                <Fuel className="w-8 h-8 mb-2 text-blue-400" />
-                <p className="text-lg font-semibold text-white">Fuel</p>
+                  }}
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/fuel`)}>
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Fuel className="w-5 h-5 text-blue-400" />
+                  <p className="text-sm font-semibold text-gray-400">Fuel</p>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Avg MPG:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Cost:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Slot 12: Mods */}
-            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex items-center justify-center"
+            <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer hover:bg-black/60 transition-colors"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}>
-              <CardContent className="p-0 text-center">
-                <Settings className="w-8 h-8 mb-2 text-blue-400" />
-                <p className="text-lg font-semibold text-white">Mods</p>
+                  }}
+                  onClick={() => router.push(`/vehicle/${encodeURIComponent((params.id as string) || '')}/mods`)}>
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Settings className="w-5 h-5 text-blue-400" />
+                  <p className="text-sm font-semibold text-gray-400">Mods</p>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Mods:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Cost:</span>
+                    <span className="text-white">---</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
