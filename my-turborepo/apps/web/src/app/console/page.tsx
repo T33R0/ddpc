@@ -202,7 +202,10 @@ export default function ConsolePage() {
                             size="sm"
                             variant="outline"
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
-                            onClick={() => router.push(`/vehicle/${encodeURIComponent(nickname)}/history`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/vehicle/${encodeURIComponent(nickname)}/history`);
+                            }}
                           >
                             <Activity className="w-3 h-3 mr-1" />
                             History
@@ -211,7 +214,10 @@ export default function ConsolePage() {
                             size="sm"
                             variant="outline"
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
-                            onClick={() => router.push(`/vehicle/${encodeURIComponent(nickname)}/service`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/vehicle/${encodeURIComponent(nickname)}/service`);
+                            }}
                           >
                             <Wrench className="w-3 h-3 mr-1" />
                             Service
@@ -220,7 +226,10 @@ export default function ConsolePage() {
                             size="sm"
                             variant="outline"
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
-                            onClick={() => router.push(`/vehicle/${encodeURIComponent(nickname)}/fuel`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/vehicle/${encodeURIComponent(nickname)}/fuel`);
+                            }}
                           >
                             <Fuel className="w-3 h-3 mr-1" />
                             Fuel
@@ -229,7 +238,10 @@ export default function ConsolePage() {
                             size="sm"
                             variant="outline"
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
-                            onClick={() => router.push(`/vehicle/${encodeURIComponent(nickname)}/mods`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/vehicle/${encodeURIComponent(nickname)}/mods`);
+                            }}
                           >
                             <Settings className="w-3 h-3 mr-1" />
                             Mods
