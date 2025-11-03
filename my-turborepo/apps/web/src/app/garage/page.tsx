@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useVehicles, useStoredVehicles } from '@/lib/hooks/useVehicles';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-import { Badge } from '@repo/ui/badge';
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@repo/ui/modal';
 import { Plus, Car } from 'lucide-react';
 import AddVehicleModal from '../../features/garage/add-vehicle-modal';
@@ -98,49 +97,61 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   };
 
   const handleClick = () => {
-    // Use nickname for URL if available, otherwise fall back to id
-    // Next.js handles URL encoding automatically, so don't encodeURIComponent here
-    const urlSlug = vehicle.nickname || vehicle.id;
+    // Use nickname for URL
+    // Next.js handles URL encoding automatically
+    const urlSlug = vehicle.nickname;
     router.push(`/vehicle/${urlSlug}`);
   };
 
   return (
-    <Card
-      className="bg-gray-900 border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+    <div
+      className="group transition-all duration-300 cursor-pointer"
       onClick={handleClick}
     >
-      <div className="aspect-w-16 aspect-h-9">
-        <ImageWithTimeoutFallback
-          src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=400&h=225&fit=crop&crop=center"}
-          fallbackSrc="/branding/fallback-logo.png"
-          alt={`${vehicle.name} vehicle`}
-          className="w-full h-full object-cover"
-          timeout={3000}
-        />
-      </div>
-      <CardContent className="p-6">
+      <div
+        className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          transition: 'all 0.3s ease-out',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
+          e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+      >
+        <div className="flex items-center text-xs text-neutral-400">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            <span>Owned</span>
+          </div>
+        </div>
+        <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
+          <ImageWithTimeoutFallback
+            src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=400&h=225&fit=crop&crop=center"}
+            fallbackSrc="/branding/fallback-logo.png"
+            alt={`${vehicle.name} vehicle`}
+            className="w-full h-full object-cover"
+          />
+        </div>
         <div className="flex justify-between items-start">
-          <div>
-            <p className="text-sm font-medium text-gray-400">{year} Performance Car</p>
-            <h2 className="text-xl font-bold text-white mt-1">{vehicle.name}</h2>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg">{vehicle.name}</h3>
+          </div>
+          <div className="text-right text-sm text-gray-400">
+            {vehicle.ymmt}
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-800">
-          <div className="flex justify-between items-center text-sm text-gray-400">
-            <span>Nickname</span>
-            <span className="font-medium text-white">{vehicle.name}</span>
-          </div>
-          <div className="mt-2 flex justify-between items-center text-sm text-gray-400">
-            <span>Mileage</span>
-            <span className="font-medium text-white">{vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'N/A'}</span>
-          </div>
-          <div className="mt-2 flex justify-between items-center text-sm text-gray-400">
-            <span>Status</span>
-            <span className="font-medium text-white">{formatStatus(vehicle.current_status)}</span>
-          </div>
+        <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg">
+          {formatStatus(vehicle.current_status)} · {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -218,7 +229,7 @@ function VehicleGallery({ title, vehicles, showAddCard, onAddClick, onLoadMore, 
 }
 
 function GarageContent() {
-  const { data: vehiclesData, isLoading: activeLoading } = useVehicles();
+  const { data: vehiclesData, isLoading: activeLoading, refetch: refetchVehicles } = useVehicles();
   const { vehicles: storedVehicles, isLoading: storedLoading, loadingMore, hasMore, loadMore } = useStoredVehicles();
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false);
 
@@ -227,6 +238,12 @@ function GarageContent() {
 
   // Show add vehicle card only if active vehicles < 3
   const canAddVehicle = activeVehicles.length < 3;
+
+  // Function to refresh garage data when vehicles are added or updated
+  const handleVehicleAdded = () => {
+    refetchVehicles();
+    // Stored vehicles will be refetched when the section is scrolled/loaded
+  };
 
   if (activeLoading) {
     return (
@@ -283,7 +300,7 @@ function GarageContent() {
         </div>
       </section>
 
-      <AddVehicleModal open={addVehicleModalOpen} onOpenChange={setAddVehicleModalOpen} />
+      <AddVehicleModal {...({ open: addVehicleModalOpen, onOpenChange: setAddVehicleModalOpen, onVehicleAdded: handleVehicleAdded } as any)} />
     </>
   );
 }

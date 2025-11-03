@@ -111,12 +111,17 @@ export function useStoredVehicles() {
     fetchStoredVehicles(1, false);
   }, []);
 
+  const refetch = () => {
+    fetchStoredVehicles(1, false);
+  };
+
   return {
     vehicles,
     isLoading,
     loadingMore,
     error,
     hasMore,
-    loadMore
+    loadMore,
+    refetch
   };
 }

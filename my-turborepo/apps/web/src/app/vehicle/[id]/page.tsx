@@ -32,7 +32,11 @@ interface Vehicle {
   image_url?: string;
 }
 
-export default function VehicleDetailPage() {
+interface VehicleDetailPageProps {
+  onVehicleUpdated?: () => void;
+}
+
+export default function VehicleDetailPage({ onVehicleUpdated }: VehicleDetailPageProps) {
   const params = useParams();
   const router = useRouter();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -183,6 +187,12 @@ export default function VehicleDetailPage() {
 
       // Close modal and show success
       setEditModalOpen(false);
+
+      // Trigger refresh callback if provided
+      if (onVehicleUpdated) {
+        onVehicleUpdated();
+      }
+
       // You might want to add a toast notification here
 
     } catch (error) {

@@ -158,7 +158,7 @@ export default function ConsolePage() {
                 {filteredVehicles.map((vehicle) => {
                   const status = getVehicleStatus(vehicle) || 'Active';
                   // Use nickname for URL consistency with garage page
-                  const nickname = vehicle.nickname || vehicle.ymmt?.split(' ').pop() || vehicle.name;
+                  const nickname = vehicle.nickname;
 
                   return (
                     <div

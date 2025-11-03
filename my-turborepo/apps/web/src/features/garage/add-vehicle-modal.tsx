@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 type AddVehicleModalProps = {
   open?: boolean;
   onOpenChange: (open: boolean) => void;
+  onVehicleAdded?: () => void;
 };
 
 // Helper function to format specs with proper units
@@ -103,7 +104,7 @@ interface FilterOptions {
   bodyTypes: string[];
 }
 
-const AddVehicleModal = ({ open = false, onOpenChange }: AddVehicleModalProps) => {
+const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehicleModalProps) => {
   const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('vin');
@@ -324,6 +325,11 @@ const AddVehicleModal = ({ open = false, onOpenChange }: AddVehicleModalProps) =
 
       setIsAddedToGarage(true);
       toast.success('Vehicle successfully added to your garage!');
+
+      // Trigger refresh of garage data
+      if (onVehicleAdded) {
+        onVehicleAdded();
+      }
 
       setTimeout(() => {
         onOpenChange(false);
