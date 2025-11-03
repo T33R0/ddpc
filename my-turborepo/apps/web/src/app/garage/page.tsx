@@ -90,6 +90,50 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
     }
   };
 
+  // Get status color for the indicator dot
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'daily_driver':
+        return 'bg-green-500'; // Active - green
+      case 'parked':
+      case 'listed':
+        return 'bg-yellow-500'; // Parked/Listed - yellow
+      case 'sold':
+      case 'retired':
+        return 'bg-red-500'; // Sold/Retired - red
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  // Format YMMT to fit in 2 lines with max 30 chars per line
+  const formatYmmt = (ymmt: string) => {
+    if (!ymmt || ymmt.length <= 30) {
+      return { line1: ymmt, line2: '' };
+    }
+
+    // Try to split at word boundaries within 30 chars
+    const words = ymmt.split(' ');
+    let line1 = '';
+    let line2 = '';
+
+    for (const word of words) {
+      if (line1.length + word.length + 1 <= 30) {
+        line1 += (line1 ? ' ' : '') + word;
+      } else if (!line2) {
+        line2 = word;
+      } else if (line2.length + word.length + 1 <= 30) {
+        line2 += ' ' + word;
+      } else {
+        // If second line would exceed 30 chars, truncate with ellipsis
+        line2 = line2.substring(0, 27) + '...';
+        break;
+      }
+    }
+
+    return { line1, line2 };
+  };
+
   const handleClick = () => {
     // Use nickname for URL
     // Next.js handles URL encoding automatically
@@ -119,11 +163,8 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           e.currentTarget.style.boxShadow = 'none';
         }}
       >
-        <div className="flex items-center text-xs text-neutral-400">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            <span>Owned</span>
-          </div>
+        <div className="absolute top-2 left-2 z-10">
+          <span className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.current_status)}`}></span>
         </div>
         <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
           <ImageWithTimeoutFallback
@@ -137,12 +178,20 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           <div className="flex-1">
             <h3 className="font-bold text-lg">{vehicle.name}</h3>
           </div>
-          <div className="text-right text-sm text-gray-400">
-            {vehicle.ymmt}
+          <div className="text-right text-xs text-gray-400 leading-tight">
+            {(() => {
+              const { line1, line2 } = formatYmmt(vehicle.ymmt);
+              return (
+                <>
+                  <div>{line1}</div>
+                  {line2 && <div>{line2}</div>}
+                </>
+              );
+            })()}
           </div>
         </div>
-        <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg">
-          {formatStatus(vehicle.current_status)} · {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
+        <div className="text-xs text-gray-400">
+          {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
         </div>
       </div>
     </div>
