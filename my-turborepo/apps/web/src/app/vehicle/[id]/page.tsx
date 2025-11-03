@@ -13,7 +13,9 @@ import { LogServiceModal } from '../../../components/LogServiceModal';
 interface Vehicle {
   id: string;
   name: string;
+  nickname?: string;
   ymmt: string;
+  trim?: string;
   odometer: number | null;
   current_status: string;
   horsepower_hp?: any;
@@ -77,12 +79,7 @@ export default function VehicleDetailPage() {
           if (ymmtWithoutTrim.endsWith(' ' + trim)) {
             ymmtWithoutTrim = ymmtWithoutTrim.slice(0, -(trim.length + 1));
           }
-          // Extract model (everything after year and make)
-          const ymmtParts = ymmtWithoutTrim.split(' ');
-          if (ymmtParts.length >= 3) {
-            const model = ymmtParts.slice(2).join(' ');
-            vehicleData.name = `${model} ${trim}`;
-          }
+          // Note: vehicleData.name is already set to nickname by the API
         }
         setVehicle(vehicleData);
         setEditNickname(vehicleData.name || '');
@@ -285,7 +282,7 @@ export default function VehicleDetailPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Trim:</span>
-                    <span className="text-white">{decodeURIComponent(vehicleSlug)}</span>
+                    <span className="text-white">{vehicle?.trim || 'UNK'}</span>
                   </div>
                 </div>
               </CardContent>

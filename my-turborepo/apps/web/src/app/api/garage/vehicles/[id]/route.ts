@@ -78,6 +78,7 @@ export async function GET(
       name: userVehicle.nickname || userVehicle.title || `${userVehicle.year || ''} ${userVehicle.make || ''} ${userVehicle.model || ''} ${userVehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
       nickname: userVehicle.nickname,
       ymmt: `${userVehicle.year || ''} ${userVehicle.make || ''} ${userVehicle.model || ''} ${userVehicle.trim || ''}`.trim(),
+      trim: userVehicle.trim,
       odometer: userVehicle.odometer,
       current_status: userVehicle.current_status || 'parked',
       // Include all vehicle specification fields from extended data (if available)
