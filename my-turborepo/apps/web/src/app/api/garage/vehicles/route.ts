@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Fetch user's vehicles with pagination
     let query = supabase
       .from('user_vehicle')
-      .select('id, nickname, year, make, model, trim, odometer, title, current_status')
+      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url')
       .eq('owner_id', user.id);
 
     // Filter for stored vehicles if requested
