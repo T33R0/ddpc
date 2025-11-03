@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
-    const { vehicleId, nickname, status } = body;
+    const { vehicleId, nickname, status, photo_url } = body;
 
     if (!vehicleId) {
       console.log('❌ Missing vehicleId');
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
     const updateData: any = {};
     if (nickname !== undefined) updateData.nickname = nickname;
     if (status !== undefined) updateData.current_status = status;
+    if (photo_url !== undefined) updateData.photo_url = photo_url;
 
     console.log('📝 Update data prepared:', updateData);
 

@@ -52,17 +52,30 @@ export default function ConsolePage() {
   });
 
   const getVehicleStatus = (vehicle: any) => {
-    // Mock status logic - in real app this would come from data
-    const statuses = ['Active', 'Needs Attention', 'Service Due', 'Inactive'];
-    return statuses[Math.floor(Math.random() * statuses.length)];
+    // Format status for display based on current_status
+    switch (vehicle.current_status) {
+      case 'daily_driver':
+        return 'Active';
+      case 'parked':
+        return 'Parked';
+      case 'listed':
+        return 'Listed';
+      case 'sold':
+        return 'Sold';
+      case 'retired':
+        return 'Retired';
+      default:
+        return 'Active';
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'Needs Attention': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      case 'Service Due': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      case 'Inactive': return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      case 'Parked': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'Listed': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      case 'Sold': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'Retired': return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
       default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
     }
   };

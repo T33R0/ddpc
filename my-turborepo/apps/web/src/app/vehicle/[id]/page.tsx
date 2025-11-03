@@ -4,7 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-import { Plus, Activity, Wrench, Fuel, Settings } from 'lucide-react';
+import { Input } from '@repo/ui/input';
+import { Label } from '@repo/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog';
+import { Plus, Activity, Wrench, Fuel, Settings, Edit } from 'lucide-react';
 import { LogServiceModal } from '../../../components/LogServiceModal';
 
 interface Vehicle {
@@ -36,6 +39,11 @@ export default function VehicleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [logServiceModalOpen, setLogServiceModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editNickname, setEditNickname] = useState('');
+  const [editStatus, setEditStatus] = useState('');
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const vehicleSlug = params.id as string;
 
@@ -77,6 +85,8 @@ export default function VehicleDetailPage() {
           }
         }
         setVehicle(vehicleData);
+        setEditNickname(vehicleData.name || '');
+        setEditStatus(vehicleData.current_status || 'parked');
         setError(null); // Clear any previous errors
         } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -114,6 +124,88 @@ export default function VehicleDetailPage() {
         return 'Retired';
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  const handleSaveVehicle = async () => {
+    if (!vehicle) return;
+
+    setIsUpdating(true);
+    try {
+      // First, handle image upload if there's a new image
+      let imageUrl = vehicle.image_url;
+      if (editImageFile) {
+        // For now, we'll use a simple approach - upload to a generic image hosting service
+        // In a real app, you'd want to upload to your own storage service
+        const formData = new FormData();
+        formData.append('file', editImageFile);
+
+        // This is a placeholder - you'd need to implement actual image upload
+        // For now, we'll just log that image upload would happen
+        console.log('Image upload would happen here:', editImageFile.name);
+        // imageUrl = await uploadImage(editImageFile);
+      }
+
+      // Update vehicle data via API
+      const response = await fetch('/api/garage/update-vehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAuthToken()}`
+        },
+        body: JSON.stringify({
+          vehicleId: vehicle.id,
+          nickname: editNickname,
+          status: editStatus,
+          // photo_url: imageUrl // TODO: Implement image upload and uncomment
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update vehicle');
+      }
+
+      const result = await response.json();
+
+      // Update local vehicle state
+      setVehicle(prev => prev ? {
+        ...prev,
+        name: editNickname,
+        current_status: editStatus,
+        // image_url: imageUrl
+      } : null);
+
+      // If nickname changed, update the URL
+      if (editNickname !== vehicle.name) {
+        const newSlug = editNickname || vehicle.id;
+        router.replace(`/vehicle/${encodeURIComponent(newSlug)}`, { scroll: false });
+      }
+
+      // Close modal and show success
+      setEditModalOpen(false);
+      // You might want to add a toast notification here
+
+    } catch (error) {
+      console.error('Error updating vehicle:', error);
+      // You might want to show an error message to the user
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const getAuthToken = async () => {
+    // This is a simple way to get the auth token
+    // In a real app, you'd use your auth context
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || '';
+    } catch {
+      return '';
     }
   };
 
@@ -208,7 +300,17 @@ export default function VehicleDetailPage() {
 
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="mb-8 flex justify-between items-center">
-            <h1 className="text-4xl font-bold text-white">{vehicle.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-bold text-white">{vehicle.name}</h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                onClick={() => setEditModalOpen(true)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            </div>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={() => setLogServiceModalOpen(true)}
@@ -483,6 +585,83 @@ export default function VehicleDetailPage() {
         open={logServiceModalOpen}
         onOpenChange={setLogServiceModalOpen}
       />
+
+      {/* Edit Vehicle Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Edit Vehicle</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Nickname Input */}
+            <div>
+              <Label htmlFor="nickname" className="text-sm font-medium text-gray-300">
+                Vehicle Nickname
+              </Label>
+              <Input
+                id="nickname"
+                type="text"
+                value={editNickname}
+                onChange={(e) => setEditNickname(e.target.value)}
+                className="mt-1 bg-gray-800 border-gray-600 text-white"
+                placeholder="Enter vehicle nickname"
+              />
+            </div>
+
+            {/* Status Dropdown */}
+            <div>
+              <Label htmlFor="status" className="text-sm font-medium text-gray-300">
+                Vehicle Status
+              </Label>
+              <select
+                id="status"
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value)}
+                className="mt-1 w-full bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              >
+                <option value="daily_driver">Daily Driver</option>
+                <option value="parked">Parked</option>
+                <option value="listed">Listed</option>
+                <option value="sold">Sold</option>
+                <option value="retired">Retired</option>
+              </select>
+            </div>
+
+            {/* Image Upload - TODO: Implement image upload functionality */}
+            <div>
+              <Label htmlFor="image" className="text-sm font-medium text-gray-300">
+                Vehicle Image
+              </Label>
+              <div className="mt-1 p-4 border-2 border-dashed border-gray-600 rounded-md text-center">
+                <p className="text-sm text-gray-400">
+                  Image upload coming soon...
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  For now, you can update nickname and status
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditModalOpen(false)}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveVehicle}
+              disabled={isUpdating}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isUpdating ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
