@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@repo/ui/button';
 import { Plus } from 'lucide-react';
 import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable';
@@ -10,10 +11,12 @@ import { VehicleServiceData } from '@/features/service/lib/getVehicleServiceData
 
 interface VehicleServicePageClientProps {
   serviceData: VehicleServiceData;
+  refreshParam?: string;
 }
 
-export function VehicleServicePageClient({ serviceData }: VehicleServicePageClientProps) {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+export function VehicleServicePageClient({ serviceData, refreshParam }: VehicleServicePageClientProps) {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const router = useRouter()
 
   return (
     <>
@@ -53,6 +56,7 @@ export function VehicleServicePageClient({ serviceData }: VehicleServicePageClie
       <AddServiceDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
+        onSuccess={() => router.refresh()}
       />
     </>
   );

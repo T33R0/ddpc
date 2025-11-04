@@ -3,15 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { validateAndRecordOdometerReading } from '@/lib/odometer-service';
 import { z } from 'zod';
 
-const logServiceSchema = z.object({
+const addModSchema = z.object({
   vehicleId: z.string(),
-  description: z.string().min(1, 'Service description is required'),
-  event_date: z.string().min(1, 'Service date is required'),
-  service_provider: z.string().optional(),
-  odometer: z.string().optional(),
+  title: z.string().min(1, 'Modification title is required'),
+  description: z.string().optional(),
+  status: z.enum(['planned', 'ordered', 'installed', 'tuned']),
   cost: z.string().optional(),
-  notes: z.string().optional(),
-  service_interval_id: z.string().optional(),
+  odometer: z.string().optional(),
+  event_date: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,12 +25,12 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const validation = logServiceSchema.safeParse(body);
+    const validation = addModSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json({ error: 'Invalid request body', details: validation.error.issues }, { status: 400 });
     }
 
-    const { vehicleId, description, event_date, service_provider, odometer, cost, notes, service_interval_id } = validation.data;
+    const { vehicleId, title, description, status, cost, odometer, event_date } = validation.data;
 
     // Verify user owns this vehicle
     const { data: vehicle, error: vehicleError } = await supabase
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert and validate numeric fields
-    const odometerValue = odometer ? parseFloat(odometer) : null;
+    const odometerValue = odometer ? parseInt(odometer) : null;
     const costValue = cost ? parseFloat(cost) : null;
 
     if (odometer && (isNaN(odometerValue!) || odometerValue! < 0)) {
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // If odometer value is provided, validate it through the centralized odometer service
     let odometerEntryId = null;
-    if (odometerValue !== null) {
+    if (odometerValue !== null && event_date) {
       const odometerValidation = await validateAndRecordOdometerReading(
         supabase,
         vehicleId,
@@ -77,41 +76,44 @@ export async function POST(request: NextRequest) {
       odometerEntryId = odometerValidation.odometerEntryId;
     }
 
-    // Insert service log entry
-    const { data: serviceEntry, error: insertError } = await supabase
-      .from('maintenance_log')
-      .insert({
-        user_vehicle_id: vehicleId,
-        description,
-        event_date,
-        service_provider: service_provider || null,
-        odometer: odometerValue,
-        cost: costValue,
-        notes: notes || null,
-        service_interval_id: service_interval_id || null,
-      })
+    // Insert modification entry
+    const modData: any = {
+      user_vehicle_id: vehicleId,
+      title: title.trim(),
+      status,
+    };
+
+    // Add optional fields
+    if (description) modData.description = description;
+    if (costValue !== null) modData.cost = costValue;
+    if (odometerValue !== null) modData.odometer = odometerValue;
+    if (event_date) modData.event_date = event_date;
+
+    const { data: modEntry, error: insertError } = await supabase
+      .from('mods')
+      .insert(modData)
       .select('id')
       .single();
 
     if (insertError) {
-      console.error('Error logging service:', insertError);
+      console.error('Error adding modification:', insertError);
       // If it's an RLS error, provide a more helpful message
       if (insertError.message.includes('violates row level security policy')) {
         return NextResponse.json({
           error: 'Permission denied. Please ensure you own this vehicle and the database is properly configured.'
         }, { status: 403 });
       }
-      return NextResponse.json({ error: `Failed to log service: ${insertError.message}` }, { status: 500 });
+      return NextResponse.json({ error: `Failed to add modification: ${insertError.message}` }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      serviceEntryId: serviceEntry.id,
-      message: 'Service logged successfully'
+      modEntryId: modEntry.id,
+      message: 'Modification added successfully'
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error in log-service API:', error);
+    console.error('Error in add-mod API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

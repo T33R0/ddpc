@@ -7,27 +7,99 @@ import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Textarea } from '@repo/ui/textarea'
 import { Plus, Wrench } from 'lucide-react'
+import { useParams } from 'next/navigation'
 
 interface AddServiceDialogProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
+interface FormData {
+  description: string
+  service_provider: string
+  cost: string
+  odometer: string
+  event_date: string
+  notes: string
+}
+
+export function AddServiceDialog({ isOpen, onClose, onSuccess }: AddServiceDialogProps) {
+  const params = useParams()
+  const vehicleId = params.id as string
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState<FormData>({
+    description: '',
+    service_provider: '',
+    cost: '',
+    odometer: '',
+    event_date: '',
+    notes: ''
+  })
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (error) setError(null) // Clear error when user starts typing
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
-    // TODO: Implement service logging logic
-    // This is a placeholder that will be implemented later
+    try {
+      // Validate required fields
+      if (!formData.description.trim()) {
+        throw new Error('Service description is required')
+      }
+      if (!formData.event_date) {
+        throw new Error('Service date is required')
+      }
 
-    setTimeout(() => {
-      setIsSubmitting(false)
+      // Prepare the request data
+      const requestData = {
+        vehicleId,
+        description: formData.description.trim(),
+        event_date: formData.event_date,
+        odometer: formData.odometer || undefined,
+        cost: formData.cost || undefined,
+        service_provider: formData.service_provider || undefined,
+        notes: formData.notes || undefined,
+      }
+
+      const response = await fetch('/api/garage/log-service', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to log service')
+      }
+
+      // Success - reset form and close dialog
+      setFormData({
+        description: '',
+        service_provider: '',
+        cost: '',
+        odometer: '',
+        event_date: '',
+        notes: ''
+      })
+
       onClose()
-      // TODO: Refresh the service data after successful submission
-    }, 1000)
+      onSuccess?.() // Notify parent component to refresh data
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -41,12 +113,20 @@ export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="description" className="text-gray-300">
               Service Description *
             </Label>
             <Input
               id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="e.g., Oil change, brake pads replacement"
               className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
               required
@@ -59,6 +139,8 @@ export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
             </Label>
             <Input
               id="service_provider"
+              value={formData.service_provider}
+              onChange={(e) => handleInputChange('service_provider', e.target.value)}
               placeholder="e.g., Dealership, Local Shop"
               className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
             />
@@ -73,6 +155,8 @@ export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
                 id="cost"
                 type="number"
                 step="0.01"
+                value={formData.cost}
+                onChange={(e) => handleInputChange('cost', e.target.value)}
                 placeholder="0.00"
                 className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
               />
@@ -84,6 +168,8 @@ export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
               <Input
                 id="odometer"
                 type="number"
+                value={formData.odometer}
+                onChange={(e) => handleInputChange('odometer', e.target.value)}
                 placeholder="Current mileage"
                 className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
               />
@@ -97,6 +183,8 @@ export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
             <Input
               id="event_date"
               type="date"
+              value={formData.event_date}
+              onChange={(e) => handleInputChange('event_date', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
               required
             />
@@ -108,6 +196,8 @@ export function AddServiceDialog({ isOpen, onClose }: AddServiceDialogProps) {
             </Label>
             <Textarea
               id="notes"
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Additional details about the service..."
               className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 min-h-[80px]"
             />

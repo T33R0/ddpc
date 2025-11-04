@@ -16,7 +16,10 @@ function FinancialsPageContent() {
         <div className="blur-[106px] h-32 bg-gradient-to-r from-green-400 to-sky-300" />
       </div>
       <div className="relative container px-4 md:px-6 pt-24">
-        <h1 className="text-4xl font-bold text-white mb-8">Financials</h1>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white">Financials</h1>
+          <p className="text-lg text-gray-400 mt-2">Track your vehicle ownership costs and expenses</p>
+        </div>
         <FinancialsDashboard />
       </div>
     </section>

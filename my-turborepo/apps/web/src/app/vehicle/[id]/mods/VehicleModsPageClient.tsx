@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
 import { Card, CardContent } from '@repo/ui/card'
 import { Badge } from '@repo/ui/badge'
@@ -16,6 +17,7 @@ interface VehicleModsPageClientProps {
 
 export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const router = useRouter()
 
   const { vehicle, mods, summary } = modsData
 
@@ -129,6 +131,7 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
       <AddModDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
+        onSuccess={() => router.refresh()}
       />
     </>
   )

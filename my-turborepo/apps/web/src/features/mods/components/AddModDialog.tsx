@@ -119,16 +119,6 @@ export function AddModDialog({ isOpen, onClose }: AddModDialogProps) {
             />
           </div>
 
-          <div>
-            <Label htmlFor="parts" className="text-gray-300">
-              Parts Used
-            </Label>
-            <Textarea
-              id="parts"
-              placeholder="List parts, vendors, and costs..."
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 min-h-[80px]"
-            />
-          </div>
 
           <DialogFooter className="gap-2">
             <Button

@@ -5,10 +5,12 @@ import { VehicleServicePageClient } from './VehicleServicePageClient'
 
 interface VehicleServicePageProps {
   params: Promise<{ id: string }>
+  searchParams?: Promise<{ refresh?: string }>
 }
 
-export default async function VehicleServicePage({ params }: VehicleServicePageProps) {
+export default async function VehicleServicePage({ params, searchParams }: VehicleServicePageProps) {
   const { id: vehicleId } = await params
+  const search = await searchParams
 
   if (!vehicleId) {
     notFound()
@@ -28,5 +30,5 @@ export default async function VehicleServicePage({ params }: VehicleServicePageP
     }
   }
 
-  return <VehicleServicePageClient serviceData={serviceData} />
+  return <VehicleServicePageClient serviceData={serviceData} refreshParam={search?.refresh} />
 }
