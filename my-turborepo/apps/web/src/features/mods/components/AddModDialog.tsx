@@ -11,9 +11,10 @@ import { Plus, Wrench } from 'lucide-react'
 interface AddModDialogProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export function AddModDialog({ isOpen, onClose }: AddModDialogProps) {
+export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +27,7 @@ export function AddModDialog({ isOpen, onClose }: AddModDialogProps) {
     setTimeout(() => {
       setIsSubmitting(false)
       onClose()
-      // TODO: Refresh the mods data after successful submission
+      onSuccess?.()
     }, 1000)
   }
 

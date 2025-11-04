@@ -111,8 +111,10 @@ export function FinancialsDashboard() {
     const averageCostPerMile = financials.length > 0
       ? financials.reduce((sum, v) => sum + v.cost_per_mile, 0) / financials.length
       : 0;
-    const highestCostVehicle = financials.reduce((max, v) =>
-      v.total_spend > (max?.total_spend || 0) ? v : max, null);
+    const highestCostVehicle = financials.length > 0
+      ? financials.reduce((max, v) =>
+          v.total_spend > max.total_spend ? v : max)
+      : null;
 
     return {
       totalVehicles,
