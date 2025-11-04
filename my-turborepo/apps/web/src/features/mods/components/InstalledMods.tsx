@@ -46,3 +46,4 @@ export function InstalledMods({ mods }: InstalledModsProps) {
     </Card>
   )
 }
+

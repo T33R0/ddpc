@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Button } from '@repo/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
+import { Card, CardContent } from '@repo/ui/card'
 import { Badge } from '@repo/ui/badge'
 import { Plus, Wrench, DollarSign, Activity } from 'lucide-react'
 import { VehicleModsData } from '@/features/mods/lib/getVehicleModsData'
@@ -111,7 +111,7 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
                 <Wrench className="h-16 w-16 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">No Modifications Yet</h3>
                 <p className="text-gray-400 mb-6">
-                  Start tracking your vehicle's modifications and upgrades.
+                  Start tracking your vehicle&apos;s modifications and upgrades.
                 </p>
                 <Button
                   onClick={() => setIsAddDialogOpen(true)}
@@ -133,3 +133,4 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
     </>
   )
 }
+

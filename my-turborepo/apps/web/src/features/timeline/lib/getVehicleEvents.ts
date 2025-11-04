@@ -137,3 +137,4 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
 
   return events
 }
+

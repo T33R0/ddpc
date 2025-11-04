@@ -6,7 +6,6 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Textarea } from '@repo/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select'
 import { Plus, Wrench } from 'lucide-react'
 
 interface AddModDialogProps {
@@ -69,17 +68,17 @@ export function AddModDialog({ isOpen, onClose }: AddModDialogProps) {
             <Label htmlFor="status" className="text-gray-300">
               Status *
             </Label>
-            <Select required>
-              <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
-                <SelectItem value="planned" className="text-white hover:bg-gray-700">Planned</SelectItem>
-                <SelectItem value="ordered" className="text-white hover:bg-gray-700">Ordered</SelectItem>
-                <SelectItem value="installed" className="text-white hover:bg-gray-700">Installed</SelectItem>
-                <SelectItem value="tuned" className="text-white hover:bg-gray-700">Tuned</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              id="status"
+              className="w-full bg-gray-800 border border-gray-600 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="" className="bg-gray-800 text-gray-400">Select status</option>
+              <option value="planned" className="bg-gray-800 text-white">Planned</option>
+              <option value="ordered" className="bg-gray-800 text-white">Ordered</option>
+              <option value="installed" className="bg-gray-800 text-white">Installed</option>
+              <option value="tuned" className="bg-gray-800 text-white">Tuned</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -160,3 +159,4 @@ export function AddModDialog({ isOpen, onClose }: AddModDialogProps) {
     </Dialog>
   )
 }
+

@@ -164,3 +164,4 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     upcomingServices,
   }
 }
+
