@@ -72,7 +72,7 @@ export async function getVehicleFuelData(vehicleId: string): Promise<VehicleFuel
   // In a real implementation, there might be a separate fuel_log table
   // For now, let's assume fuel entries are stored as maintenance logs with fuel keywords
 
-  let fuelEntries: FuelEntry[] = []
+  const fuelEntries: FuelEntry[] = []
   let totalGallons = 0
   let totalCost = 0
 
@@ -108,8 +108,8 @@ export async function getVehicleFuelData(vehicleId: string): Promise<VehicleFuel
       }
 
       // Calculate MPG if we have previous entry
-      if (index > 0 && sortedLogs[index - 1].odometer && log.odometer) {
-        const milesDriven = log.odometer - sortedLogs[index - 1].odometer
+      if (index > 0 && sortedLogs[index - 1]!.odometer && log.odometer) {
+        const milesDriven = log.odometer - sortedLogs[index - 1]!.odometer
         if (milesDriven > 0) {
           fuelEntry.mpg = milesDriven / gallons
         }

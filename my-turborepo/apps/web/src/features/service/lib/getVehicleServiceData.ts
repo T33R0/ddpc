@@ -117,7 +117,7 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
 
       if (lastServiceOdometer && interval.interval_miles) {
         nextDueMiles = lastServiceOdometer + interval.interval_miles
-        isOverdue = isOverdue || (vehicle.odometer && nextDueMiles <= vehicle.odometer)
+        isOverdue = isOverdue || (vehicle.odometer && nextDueMiles !== null && nextDueMiles <= vehicle.odometer)
       }
 
       // If no last service exists, calculate from vehicle creation or assume now

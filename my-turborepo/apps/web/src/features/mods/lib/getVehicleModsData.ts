@@ -109,11 +109,11 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
     cost: mod.cost || undefined,
     odometer: mod.odometer || undefined,
     event_date: new Date(mod.event_date),
-    parts: mod.mod_parts?.map((mp: { id: string; quantity: number; part_inventory?: { id: string; name: string; vendor?: string; cost?: number } }) => ({
-      id: mp.part_inventory?.id || mp.id,
-      name: mp.part_inventory?.name || 'Unknown Part',
-      vendor: mp.part_inventory?.vendor || undefined,
-      cost: mp.part_inventory?.cost || undefined,
+    parts: mod.mod_parts?.map((mp: { id: string; quantity: number; part_inventory: { id: string; name: string; vendor?: string; cost?: number }[] }) => ({
+      id: mp.part_inventory[0]?.id || mp.id,
+      name: mp.part_inventory[0]?.name || 'Unknown Part',
+      vendor: mp.part_inventory[0]?.vendor || undefined,
+      cost: mp.part_inventory[0]?.cost || undefined,
       quantity: mp.quantity || 1
     })) || [],
     outcome: mod.mod_outcome?.[0] ? {
