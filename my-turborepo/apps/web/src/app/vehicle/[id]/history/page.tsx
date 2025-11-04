@@ -1,11 +1,27 @@
-'use client';
+import React from 'react'
+import { notFound } from 'next/navigation'
+import { TimelineFeed } from '@/features/timeline/components/TimelineFeed'
+import { getVehicleEvents, VehicleEvent } from '@/features/timeline/lib/getVehicleEvents'
 
-import React from 'react';
-import { useParams } from 'next/navigation';
+interface VehicleHistoryPageProps {
+  params: Promise<{ id: string }>
+}
 
-export default function VehicleHistoryPage() {
-  const params = useParams();
-  const vehicleSlug = params.id as string;
+export default async function VehicleHistoryPage({ params }: VehicleHistoryPageProps) {
+  const { id: vehicleId } = await params
+
+  if (!vehicleId) {
+    notFound()
+  }
+
+  let events: VehicleEvent[] = []
+  try {
+    events = await getVehicleEvents(vehicleId)
+  } catch (error) {
+    console.error('Error fetching vehicle events:', error)
+    // For now, we'll show an empty state if there's an error
+    // TODO: Add proper error handling UI
+  }
 
   return (
     <>
@@ -24,12 +40,9 @@ export default function VehicleHistoryPage() {
             <p className="text-lg text-gray-400 mt-2">Complete maintenance and ownership history</p>
           </div>
 
-          {/* Placeholder content */}
-          <div className="text-center py-16">
-            <p className="text-gray-400 text-lg">History page content coming soon...</p>
-          </div>
+          <TimelineFeed events={events} />
         </div>
       </section>
     </>
-  );
+  )
 }

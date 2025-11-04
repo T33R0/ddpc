@@ -1,35 +1,37 @@
-'use client';
+import React from 'react'
+import { notFound } from 'next/navigation'
+import { getVehicleModsData } from '@/features/mods/lib/getVehicleModsData'
+import { VehicleModsPageClient } from './VehicleModsPageClient'
 
-import React from 'react';
-import { useParams } from 'next/navigation';
+interface VehicleModsPageProps {
+  params: Promise<{ id: string }>
+}
 
-export default function VehicleModsPage() {
-  const params = useParams();
-  const vehicleSlug = params.id as string;
+export default async function VehicleModsPage({ params }: VehicleModsPageProps) {
+  const { id: vehicleId } = await params
 
-  return (
-    <>
-      <section className="relative py-12 bg-black min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
+  if (!vehicleId) {
+    notFound()
+  }
 
-        <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white">Vehicle Mods</h1>
-            <p className="text-lg text-gray-400 mt-2">Modifications and upgrades tracking</p>
-          </div>
+  let modsData
+  try {
+    modsData = await getVehicleModsData(vehicleId)
+  } catch (error) {
+    console.error('Error fetching vehicle mods data:', error)
+    // For now, show empty state if there's an error
+    // TODO: Add proper error handling UI
+    modsData = {
+      vehicle: { id: vehicleId, name: 'Unknown Vehicle', ymmt: '', odometer: undefined },
+      mods: [],
+      summary: {
+        totalMods: 0,
+        totalCost: 0,
+        inProgressCount: 0,
+        completedCount: 0
+      }
+    }
+  }
 
-          {/* Placeholder content */}
-          <div className="text-center py-16">
-            <p className="text-gray-400 text-lg">Mods page content coming soon...</p>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+  return <VehicleModsPageClient modsData={modsData} />
 }

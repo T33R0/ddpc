@@ -1,0 +1,139 @@
+import { createClient } from '@/lib/supabase/server'
+
+export interface VehicleEvent {
+  id: string
+  date: Date
+  title: string
+  description: string
+  type: 'maintenance' | 'modification' | 'mileage'
+  cost?: number
+  odometer?: number
+  status?: string
+  event_date?: Date // For mods table
+}
+
+export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[]> {
+  const supabase = await createClient()
+
+  // Get authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Verify the vehicle belongs to the user
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from('user_vehicle')
+    .select('id')
+    .eq('id', vehicleId)
+    .eq('owner_id', user.id)
+    .single()
+
+  if (vehicleError || !vehicle) {
+    throw new Error('Vehicle not found or access denied')
+  }
+
+  // Fetch maintenance logs
+  const { data: maintenanceLogs, error: maintenanceError } = await supabase
+    .from('maintenance_log')
+    .select('id, description, cost, odometer, event_date, notes, service_provider')
+    .eq('user_vehicle_id', vehicleId)
+    .order('event_date', { ascending: false })
+
+  if (maintenanceError) {
+    console.error('Error fetching maintenance logs:', maintenanceError)
+    throw new Error('Failed to fetch maintenance data')
+  }
+
+  // Fetch mods
+  const { data: mods, error: modsError } = await supabase
+    .from('mods')
+    .select('id, title, description, cost, odometer, event_date, status, created_at')
+    .eq('user_vehicle_id', vehicleId)
+    .order('event_date', { ascending: false })
+
+  if (modsError) {
+    console.error('Error fetching mods:', modsError)
+    throw new Error('Failed to fetch modifications data')
+  }
+
+  // Fetch odometer logs
+  const { data: odometerLogs, error: odometerError } = await supabase
+    .from('odometer_log')
+    .select('id, reading_mi, recorded_at, event_date')
+    .eq('user_vehicle_id', vehicleId)
+    .order('recorded_at', { ascending: false })
+
+  if (odometerError) {
+    console.error('Error fetching odometer logs:', odometerError)
+    throw new Error('Failed to fetch mileage data')
+  }
+
+  // Transform and merge events
+  const events: VehicleEvent[] = []
+
+  // Add maintenance events
+  if (maintenanceLogs) {
+    maintenanceLogs.forEach(log => {
+      events.push({
+        id: `maintenance-${log.id}`,
+        date: new Date(log.event_date),
+        title: log.description || 'Maintenance Service',
+        description: log.notes || log.service_provider || '',
+        type: 'maintenance',
+        cost: log.cost || undefined,
+        odometer: log.odometer || undefined,
+      })
+    })
+  }
+
+  // Add modification events
+  if (mods) {
+    mods.forEach(mod => {
+      const eventDate = mod.event_date ? new Date(mod.event_date) : new Date(mod.created_at)
+      events.push({
+        id: `mod-${mod.id}`,
+        date: eventDate,
+        title: mod.title || 'Vehicle Modification',
+        description: mod.description || '',
+        type: 'modification',
+        cost: mod.cost || undefined,
+        odometer: mod.odometer || undefined,
+        status: mod.status,
+        event_date: mod.event_date ? new Date(mod.event_date) : undefined,
+      })
+    })
+  }
+
+  // Add odometer/mileage events (limit to significant changes to avoid spam)
+  if (odometerLogs && odometerLogs.length > 1) {
+    // Sort by date and filter to show only significant mileage updates
+    const sortedLogs = odometerLogs.sort((a, b) =>
+      new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
+    )
+
+    let lastMileage = 0
+    sortedLogs.forEach((log, index) => {
+      const currentMileage = log.reading_mi
+      const mileageDiff = currentMileage - lastMileage
+
+      // Only include if it's a significant change (> 100 miles) or the first/last reading
+      if (index === 0 || index === sortedLogs.length - 1 || mileageDiff > 100) {
+        events.push({
+          id: `mileage-${log.id}`,
+          date: new Date(log.recorded_at),
+          title: `Mileage Update: ${currentMileage.toLocaleString()} miles`,
+          description: index === 0 ? 'Initial mileage reading' : `Added ${mileageDiff.toLocaleString()} miles`,
+          type: 'mileage',
+          odometer: currentMileage,
+        })
+        lastMileage = currentMileage
+      }
+    })
+  }
+
+  // Sort all events by date (descending - most recent first)
+  events.sort((a, b) => b.date.getTime() - a.date.getTime())
+
+  return events
+}
