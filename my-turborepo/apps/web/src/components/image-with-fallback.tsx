@@ -47,27 +47,15 @@ export function ImageWithFallback({
     }
   };
 
-  // Check if this is an external URL that needs to be proxied
+  // Proxy all external URLs to avoid CORS and domain restrictions
   const isExternalUrl = currentSrc.startsWith('http://') || currentSrc.startsWith('https://');
-  const needsProxy = isExternalUrl && (currentSrc.includes('edmunds.com') || currentSrc.includes('edmunds-media.com'));
-
-  // For external URLs that need proxying, just use fallback immediately to avoid repeated failed requests
-  if (needsProxy) {
-    return (
-      <img
-        {...rest}
-        alt={alt}
-        src={fallbackSrc}
-        style={{ width: rest.width, height: rest.height }}
-      />
-    );
-  }
+  const srcToUse = isExternalUrl ? `/api/images/proxy?url=${encodeURIComponent(currentSrc)}` : currentSrc;
 
   return (
     <Image
       {...rest}
       alt={alt}
-      src={currentSrc}
+      src={srcToUse}
       onError={handleError}
     />
   );

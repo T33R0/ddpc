@@ -42,6 +42,55 @@ const config = {
         protocol: 'https',
         hostname: 'picsum.photos',
       },
+      // Common image hosting domains
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgbb.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ibb.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'postimg.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagebam.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imageshack.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'photobucket.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'flickr.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'staticflickr.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pinterest.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pinimg.com',
+      },
       // Allow localhost for development
       {
         protocol: 'http',

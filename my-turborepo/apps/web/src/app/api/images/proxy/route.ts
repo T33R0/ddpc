@@ -22,6 +22,19 @@ export async function GET(request: NextRequest) {
       'images.unsplash.com',
       'via.placeholder.com',
       'picsum.photos',
+      // Common image hosting domains
+      'i.imgur.com',
+      'imgur.com',
+      'imgbb.com',
+      'ibb.co',
+      'postimg.cc',
+      'imagebam.com',
+      'imageshack.com',
+      'photobucket.com',
+      'flickr.com',
+      'staticflickr.com',
+      'pinterest.com',
+      'pinimg.com',
     ];
 
     if (!allowedDomains.some(domain => parsedUrl.hostname.includes(domain))) {

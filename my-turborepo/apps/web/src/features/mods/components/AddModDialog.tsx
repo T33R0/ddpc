@@ -13,13 +13,14 @@ interface AddModDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
+  vehicleId?: string
 }
 
-export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) {
+export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicleId }: AddModDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const params = useParams()
-  const vehicleId = params.id as string
+  const vehicleId = propVehicleId || (params.id as string)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -38,7 +39,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
     }
 
     try {
-      const response = await fetch('/api/garage/log-mod', {
+      const response = await fetch('/api/garage/add-mod', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
