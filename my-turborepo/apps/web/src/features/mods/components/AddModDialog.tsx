@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog'
+import { useParams } from 'next/navigation'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@repo/ui/dialog'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
@@ -16,19 +17,50 @@ interface AddModDialogProps {
 
 export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const params = useParams()
+  const vehicleId = params.id as string
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError('')
 
-    // TODO: Implement modification logging logic
-    // This is a placeholder that will be implemented later
+    const formData = new FormData(e.currentTarget)
+    const data = {
+      vehicleId,
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      status: formData.get('status') as string,
+      cost: formData.get('cost') as string,
+      odometer: formData.get('odometer') as string,
+      event_date: formData.get('event_date') as string,
+    }
 
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      const response = await fetch('/api/garage/log-mod', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to add modification')
+      }
+
+      // Success
       onClose()
       onSuccess?.()
-    }, 1000)
+    } catch (error) {
+      console.error('Error adding modification:', error)
+      setError(error instanceof Error ? error.message : 'An error occurred')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -39,14 +71,24 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
             <Wrench className="h-5 w-5" />
             Add Modification
           </DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Track a new modification or upgrade for your vehicle.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-900/50 border border-red-500 rounded p-3 text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <Label htmlFor="title" className="text-gray-300">
               Modification Title *
             </Label>
             <Input
+              name="title"
               id="title"
               placeholder="e.g., Turbo Upgrade, Exhaust System"
               className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
@@ -59,6 +101,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
               Description
             </Label>
             <Textarea
+              name="description"
               id="description"
               placeholder="Brief description of the modification..."
               className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 min-h-[60px]"
@@ -70,6 +113,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
               Status *
             </Label>
             <select
+              name="status"
               id="status"
               className="w-full bg-gray-800 border border-gray-600 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -88,6 +132,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
                 Cost ($)
               </Label>
               <Input
+                name="cost"
                 id="cost"
                 type="number"
                 step="0.01"
@@ -100,6 +145,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
                 Odometer (miles)
               </Label>
               <Input
+                name="odometer"
                 id="odometer"
                 type="number"
                 placeholder="Current mileage"
@@ -113,6 +159,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess }: AddModDialogProps) 
               Date *
             </Label>
             <Input
+              name="event_date"
               id="event_date"
               type="date"
               className="bg-gray-800 border-gray-600 text-white"

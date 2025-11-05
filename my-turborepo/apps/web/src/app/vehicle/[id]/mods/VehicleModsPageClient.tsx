@@ -3,9 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
-import { Card, CardContent } from '@repo/ui/card'
-import { Badge } from '@repo/ui/badge'
-import { Plus, Wrench, DollarSign, Activity } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { VehicleModsData } from '@/features/mods/lib/getVehicleModsData'
 import { ModsPlanner } from '@/features/mods/components/ModsPlanner'
 import { InstalledMods } from '@/features/mods/components/InstalledMods'
@@ -19,7 +17,7 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const router = useRouter()
 
-  const { vehicle, mods, summary } = modsData
+  const { vehicle, mods } = modsData
 
   return (
     <>
@@ -49,82 +47,10 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
             </Button>
           </div>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-gray-900 border-gray-700">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Wrench className="h-8 w-8 text-blue-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{summary.totalMods}</p>
-                    <p className="text-sm text-gray-400">Total Mods</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-900 border-gray-700">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <DollarSign className="h-8 w-8 text-green-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">${summary.totalCost.toLocaleString()}</p>
-                    <p className="text-sm text-gray-400">Total Cost</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-900 border-gray-700">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Activity className="h-8 w-8 text-yellow-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{summary.inProgressCount}</p>
-                    <p className="text-sm text-gray-400">In Progress</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-900 border-gray-700">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Badge className="h-8 w-8 bg-green-600" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{summary.completedCount}</p>
-                    <p className="text-sm text-gray-400">Completed</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Mods Sections */}
           <div className="space-y-8">
             <ModsPlanner mods={mods} />
             <InstalledMods mods={mods} />
           </div>
-
-          {/* Empty State */}
-          {mods.length === 0 && (
-            <Card className="bg-gray-900 border-gray-700">
-              <CardContent className="text-center py-16">
-                <Wrench className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No Modifications Yet</h3>
-                <p className="text-gray-400 mb-6">
-                  Start tracking your vehicle&apos;s modifications and upgrades.
-                </p>
-                <Button
-                  onClick={() => setIsAddDialogOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Mod
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </section>
 
