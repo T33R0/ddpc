@@ -1,10 +1,57 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ImageWithFallback } from '../../components/image-with-fallback';
-import { getVehicleImageSources } from '../../lib/vehicle-images';
 import type { VehicleSummary } from '@repo/types';
 import VehicleDetailsModal from './vehicle-details-modal';
+
+type ImageWithTimeoutFallbackProps = {
+  src: string;
+  fallbackSrc: string;
+  alt: string;
+  className?: string;
+  timeout?: number; // in milliseconds
+};
+
+function ImageWithTimeoutFallback({
+  src,
+  fallbackSrc,
+  alt,
+  className,
+  timeout = 3000
+}: ImageWithTimeoutFallbackProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!imageLoaded) {
+        setShowFallback(true);
+      }
+    }, timeout);
+
+    return () => clearTimeout(timer);
+  }, [timeout, imageLoaded]);
+
+  if (showFallback) {
+    return (
+      <img
+        src={fallbackSrc}
+        alt={alt}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onLoad={() => setImageLoaded(true)}
+      onError={() => setShowFallback(true)}
+    />
+  );
+}
 
 type VehicleGalleryProps = {
   vehicles: VehicleSummary[];
@@ -120,17 +167,10 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                 </div>
               </div>
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
-                <ImageWithFallback
-                  src={getVehicleImageSources(
-                    summary.heroImage || summary.trims[0]?.image_url,
-                    summary.make,
-                    summary.model,
-                    summary.year
-                  )}
+                <ImageWithTimeoutFallback
+                  src={summary.heroImage || summary.trims[0]?.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
-                  width={400}
-                  height={225}
                   className="w-full h-full object-cover"
                 />
               </div>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getBestVehicleImage } from '../../../../lib/vehicle-images';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -59,7 +58,7 @@ export async function GET(request: NextRequest) {
   const summaries: VehicleSummary[] = (data as any[] | null)?.map((vehicle) => {
     const trims: TrimVariant[] = vehicle.trims.map((trimData: any) => ({
       ...trimData,
-      primaryImage: getBestVehicleImage(trimData.image_url, vehicle.make, vehicle.model, vehicle.year),
+      primaryImage: trimData.image_url || undefined,
     }));
 
     return {
@@ -67,7 +66,7 @@ export async function GET(request: NextRequest) {
       year: vehicle.year,
       make: vehicle.make,
       model: vehicle.model,
-      heroImage: getBestVehicleImage(vehicle.hero_image, vehicle.make, vehicle.model, vehicle.year),
+      heroImage: vehicle.hero_image || undefined,
       trims,
     };
   }) ?? [];
