@@ -116,11 +116,11 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
       cost: mp.part_inventory[0]?.cost || undefined,
       quantity: mp.quantity || 1
     })) || [],
-    outcome: mod.mod_outcome ? {
-      id: mod.mod_outcome.id,
-      success: mod.mod_outcome.success,
-      notes: mod.mod_outcome.notes || undefined,
-      event_date: new Date(mod.mod_outcome.event_date)
+    outcome: mod.mod_outcome?.[0] ? {
+      id: mod.mod_outcome[0].id,
+      success: mod.mod_outcome[0].success,
+      notes: mod.mod_outcome[0].notes || undefined,
+      event_date: new Date(mod.mod_outcome[0].event_date)
     } : undefined
   })) || []
 
