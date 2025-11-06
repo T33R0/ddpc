@@ -3,7 +3,16 @@
 import { createPlannedItem } from '../wishlist/actions'
 import { useState } from 'react'
 
-export function CulInputForm() {
+type Car = {
+  id: string
+  name: string
+}
+
+type CulInputFormProps = {
+  cars: Car[]
+}
+
+export function CulInputForm({ cars }: CulInputFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(formData: FormData) {
@@ -21,10 +30,38 @@ export function CulInputForm() {
     }
   }
 
+  if (cars.length === 0) {
+    return (
+      <div className="border border-yellow-300 bg-yellow-50 rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-2">No Cars Found</h2>
+        <p className="text-gray-700">
+          You need to add a car to the <code className="bg-gray-200 px-1 rounded">cul_cars</code> table before you can add wishlist items.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="border border-gray-300 rounded-lg p-6 bg-white">
       <h2 className="text-xl font-bold mb-4">Add to Wishlist</h2>
       <form id="cul-input-form" action={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="car_id" className="block text-sm font-medium text-gray-700 mb-1">
+            Car
+          </label>
+          <select
+            id="car_id"
+            name="car_id"
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {cars.map((car) => (
+              <option key={car.id} value={car.id}>
+                {car.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             Description

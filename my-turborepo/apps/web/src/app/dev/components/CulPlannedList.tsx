@@ -5,14 +5,34 @@ type PlannedItem = {
   id: string
   description: string
   cost_planned: number
+  car_name: string
 }
 
 export async function CulPlannedList() {
   const supabase = await createClient()
 
+  // Get authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return (
+      <div className="border border-gray-300 rounded-lg p-6 bg-white">
+        <h2 className="text-xl font-bold mb-4">Wishlist (Planned)</h2>
+        <p className="text-red-600">Please log in to view wishlist</p>
+      </div>
+    )
+  }
+
   const { data: items, error } = await supabase
     .from('cul_build_items')
-    .select('id, description, cost_planned')
+    .select(`
+      id,
+      description,
+      cost_planned,
+      cul_cars!inner (
+        name
+      )
+    `)
+    .eq('user_id', user.id)
     .eq('status', 'planned')
     .order('created_at', { ascending: false })
 
@@ -26,7 +46,13 @@ export async function CulPlannedList() {
     )
   }
 
-  const plannedItems = items as PlannedItem[]
+  // Transform the data to flatten the car name
+  const plannedItems = (items || []).map((item: any) => ({
+    id: item.id,
+    description: item.description,
+    cost_planned: item.cost_planned,
+    car_name: item.cul_cars?.name || 'Unknown Car',
+  }))
 
   return (
     <div className="border border-gray-300 rounded-lg p-6 bg-white">
@@ -43,7 +69,7 @@ export async function CulPlannedList() {
               <div>
                 <p className="font-medium text-gray-900">{item.description}</p>
                 <p className="text-sm text-gray-600">
-                  Planned Cost: ${item.cost_planned.toFixed(2)}
+                  Car: {item.car_name} • Planned Cost: ${item.cost_planned.toFixed(2)}
                 </p>
               </div>
               <CulCompleteModal itemId={item.id} />

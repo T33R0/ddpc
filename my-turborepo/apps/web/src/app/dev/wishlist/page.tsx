@@ -1,8 +1,11 @@
 import { CulInputForm } from '../components/CulInputForm'
 import { CulPlannedList } from '../components/CulPlannedList'
 import { CulCompletedList } from '../components/CulCompletedList'
+import { getUserCars } from './data'
 
-export default function WishlistPage() {
+export default async function WishlistPage() {
+  const cars = await getUserCars()
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -17,7 +20,7 @@ export default function WishlistPage() {
 
         <div className="space-y-6">
           {/* Input Form */}
-          <CulInputForm />
+          <CulInputForm cars={cars} />
 
           {/* Planned Items */}
           <CulPlannedList />

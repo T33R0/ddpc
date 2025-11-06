@@ -80,11 +80,22 @@ apps/web/src/app/dev/
 
 ## 🗄️ Database Schema
 
+**Table:** `cul_cars`
+
+| Column          | Type      | Constraints           |
+|-----------------|-----------|-----------------------|
+| id              | uuid      | PRIMARY KEY           |
+| user_id         | uuid      | FK to auth.users      |
+| name            | text      | NOT NULL              |
+| created_at      | timestamp | DEFAULT now()         |
+
 **Table:** `cul_build_items`
 
 | Column          | Type      | Constraints           |
 |-----------------|-----------|-----------------------|
 | id              | uuid      | PRIMARY KEY           |
+| user_id         | uuid      | FK to auth.users      |
+| car_id          | uuid      | FK to cul_cars        |
 | description     | text      | NOT NULL              |
 | status          | text      | CHECK ('planned', 'completed') |
 | cost_planned    | numeric   | NOT NULL              |

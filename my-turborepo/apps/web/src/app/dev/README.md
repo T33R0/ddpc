@@ -29,11 +29,28 @@ A sterile implementation of a "Plan-to-Log" workflow where users can:
 
 ## Database Setup Required
 
-Before using the wishlist feature, create the following table in Supabase:
+The feature expects two tables:
+
+1. **`cul_cars`** - Your cars
+2. **`cul_build_items`** - Wishlist items linked to cars
+
+### Required Schema
 
 ```sql
+-- Cars table
+CREATE TABLE public.cul_cars (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id),
+  name text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT cul_cars_pkey PRIMARY KEY (id)
+);
+
+-- Build items table
 CREATE TABLE public.cul_build_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id),
+  car_id uuid NOT NULL REFERENCES cul_cars(id),
   description text NOT NULL,
   status text NOT NULL CHECK (status IN ('planned', 'completed')),
   cost_planned numeric NOT NULL,
@@ -43,14 +60,20 @@ CREATE TABLE public.cul_build_items (
   CONSTRAINT cul_build_items_pkey PRIMARY KEY (id)
 );
 
--- Optional: Add RLS policies if needed
+-- Enable RLS
+ALTER TABLE public.cul_cars ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cul_build_items ENABLE ROW LEVEL SECURITY;
 
--- Example policy for authenticated users (adjust as needed)
+-- RLS Policies
+CREATE POLICY "Users can manage their own cars" ON public.cul_cars
+  FOR ALL
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
 CREATE POLICY "Users can manage their own items" ON public.cul_build_items
   FOR ALL
-  USING (true)
-  WITH CHECK (true);
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
 ```
 
 ## Files Created
@@ -69,12 +92,17 @@ CREATE POLICY "Users can manage their own items" ON public.cul_build_items
 
 ## Testing the Feature
 
-1. Create the database table (SQL above)
-2. Navigate to: `http://localhost:3000/dev/wishlist`
-3. Add a planned item with description and cost
-4. Click "Mark Complete" on any item
-5. Fill in actual cost and completion date
-6. Verify item moves to "Build Log (Completed)"
+1. Create the database tables (SQL above)
+2. Add at least one car to `cul_cars` table:
+   ```sql
+   INSERT INTO cul_cars (user_id, name) 
+   VALUES ('your-user-id', 'My Project Car');
+   ```
+3. Navigate to: `http://localhost:3000/dev/wishlist`
+4. Select a car and add a planned item with description and cost
+5. Click "Mark Complete" on any item
+6. Fill in actual cost and completion date
+7. Verify item moves to "Build Log (Completed)"
 
 ## Design Philosophy
 

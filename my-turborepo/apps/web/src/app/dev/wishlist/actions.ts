@@ -6,12 +6,22 @@ import { revalidatePath } from 'next/cache'
 export async function createPlannedItem(formData: FormData) {
   const description = formData.get('description') as string
   const costPlanned = formData.get('cost_planned') as string
+  const carId = formData.get('car_id') as string
 
   const supabase = await createClient()
+
+  // Get authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    console.error('Auth error:', authError)
+    throw new Error('Unauthorized')
+  }
 
   const { error } = await supabase
     .from('cul_build_items')
     .insert({
+      user_id: user.id,
+      car_id: carId,
       description,
       cost_planned: parseFloat(costPlanned),
       status: 'planned',

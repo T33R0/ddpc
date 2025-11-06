@@ -4,14 +4,15 @@
 
 A fully isolated "Plan-to-Log" wishlist at `/dev/wishlist`
 
-## ⚡ 3-Step Setup
+## ⚡ 4-Step Setup
 
-### 1. Create the Database Table
-Open Supabase SQL Editor and run:
+### 1. Ensure Database Tables Exist
+You should already have `cul_cars` and `cul_build_items` tables.
 
-```bash
-# File location:
-apps/web/src/app/dev/wishlist/setup.sql
+If you need to add a test car:
+```sql
+INSERT INTO cul_cars (user_id, name) 
+VALUES ('your-user-id', 'My Test Car');
 ```
 
 ### 2. Start the Server
@@ -25,12 +26,13 @@ npm run dev
 http://localhost:3000/dev/wishlist
 ```
 
-## 🧪 Test the Loop
+### 4. Test the Loop
 
-1. **Add Item**: "Cold Air Intake" - $250
-2. **Click**: "Mark Complete"
-3. **Enter**: $275, today's date
-4. **Verify**: Item moves to "Build Log"
+1. **Select Car** from dropdown
+2. **Add Item**: "Cold Air Intake" - $250
+3. **Click**: "Mark Complete"
+4. **Enter**: $275, today's date
+5. **Verify**: Item moves to "Build Log"
 
 ## 📦 What Was Built
 
@@ -38,7 +40,8 @@ http://localhost:3000/dev/wishlist
 |------|---------|
 | `wishlist/page.tsx` | Main page (route) |
 | `wishlist/actions.ts` | Server actions |
-| `components/CulInputForm.tsx` | Add items form |
+| `wishlist/data.ts` | Data fetching |
+| `components/CulInputForm.tsx` | Add items form with car selector |
 | `components/CulPlannedList.tsx` | Wishlist display |
 | `components/CulCompletedList.tsx` | Build log display |
 | `components/CulCompleteModal.tsx` | Completion modal |
