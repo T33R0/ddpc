@@ -75,6 +75,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // --- 3. Transform Data ---
   const vehicleWithData: Vehicle = {
     id: vehicle.id,
+    name: vehicle.nickname || vehicle.title || vehicleSlug || `${vehicle.vehicle_data?.year || vehicle.year || ''} ${vehicle.vehicle_data?.make || vehicle.make || ''} ${vehicle.vehicle_data?.model || vehicle.model || ''} ${vehicle.vehicle_data?.trim || vehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
     make: vehicle.vehicle_data?.make || vehicle.make || '',
     model: vehicle.vehicle_data?.model || vehicle.model || '',
     year: vehicle.vehicle_data?.year || vehicle.year || '',

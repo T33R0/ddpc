@@ -269,12 +269,13 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
           <VehicleHeader vehicle={vehicle} />
 
           <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 h-[600px]">
-            {/* Row 1 */}
-            {/* Slot 1: Build Specs */}
-            <BuildSpecsCard vehicle={vehicle} />
+            {/* Build Specs - Position 1,1 */}
+            <div className="col-start-1 row-start-1">
+              <BuildSpecsCard vehicle={vehicle} />
+            </div>
 
-            {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
-            <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden"
+            {/* Vehicle Image - Spans positions 2-3, 1-2 */}
+            <Card className="col-span-2 row-span-2 col-start-2 row-start-1 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                   }}>
@@ -286,60 +287,72 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
               />
             </Card>
 
-            {/* Slot 4: Engine Specs */}
-            <EngineSpecsCard vehicle={vehicle} />
+            {/* Engine Specs - Position 4,1 */}
+            <div className="col-start-4 row-start-1">
+              <EngineSpecsCard vehicle={vehicle} />
+            </div>
 
-            {/* Row 2 */}
-            {/* Slot 5: Dimensions */}
-            <DimensionsCard vehicle={vehicle} />
+            {/* Dimensions - Position 1,2 */}
+            <div className="col-start-1 row-start-2">
+              <DimensionsCard vehicle={vehicle} />
+            </div>
 
-            {/* Slot 8: Drivetrain */}
-            <DrivetrainCard vehicle={vehicle} />
+            {/* Drivetrain - Position 4,2 */}
+            <div className="col-start-4 row-start-2">
+              <DrivetrainCard vehicle={vehicle} />
+            </div>
 
-            {/* Row 3 */}
-            {/* Slot 9: History */}
-            <NavigationCard
-              icon={Activity}
-              title="History"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/history`)}
-              stats={[
-                { label: 'Last Service', value: '---' },
-                { label: 'Total Records', value: '---' }
-              ]}
-            />
+            {/* History - Position 1,3 */}
+            <div className="col-start-1 row-start-3">
+              <NavigationCard
+                icon={Activity}
+                title="History"
+                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/history`)}
+                stats={[
+                  { label: 'Last Service', value: '---' },
+                  { label: 'Total Records', value: '---' }
+                ]}
+              />
+            </div>
 
-            {/* Slot 10: Service */}
-            <NavigationCard
-              icon={Wrench}
-              title="Service"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/service`)}
-              stats={[
-                { label: 'Next Service', value: '---' },
-                { label: 'Service Count', value: '---' }
-              ]}
-            />
+            {/* Service - Position 2,3 */}
+            <div className="col-start-2 row-start-3">
+              <NavigationCard
+                icon={Wrench}
+                title="Service"
+                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/service`)}
+                stats={[
+                  { label: 'Next Service', value: '---' },
+                  { label: 'Service Count', value: '---' }
+                ]}
+              />
+            </div>
 
-            {/* Slot 11: Fuel */}
-            <NavigationCard
-              icon={Fuel}
-              title="Fuel"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/fuel`)}
-              stats={[
-                { label: 'Avg MPG', value: '---' },
-                { label: 'Total Cost', value: '---' }
-              ]}
-            />
+            {/* Fuel - Position 3,3 */}
+            <div className="col-start-3 row-start-3">
+              <NavigationCard
+                icon={Fuel}
+                title="Fuel"
+                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/fuel`)}
+                stats={[
+                  { label: 'Avg MPG', value: '---' },
+                  { label: 'Total Cost', value: '---' }
+                ]}
+              />
+            </div>
 
-            {/* Slot 12: Mods */}
-            <NavigationCard
-              icon={Settings}
-              title="Mods"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/mods`)}
-              stats={[
-                { label: 'Total Mods', value: '---' },
-                { label: 'Total Cost', value: '---' }
-              ]}
-            />
+            {/* Mods - Position 4,3 */}
+            <div className="col-start-4 row-start-3">
+              <NavigationCard
+                icon={Settings}
+                title="Mods"
+                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/mods`)}
+                stats={[
+                  { label: 'Total Mods', value: '---' },
+                  { label: 'Total Cost', value: '---' }
+                ]}
+              />
+            </div>
           </div>
         </div>
       </section>
