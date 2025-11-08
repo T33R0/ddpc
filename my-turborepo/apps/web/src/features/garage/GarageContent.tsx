@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { VehicleWithOdometer } from '@repo/types'
+import { useStoredVehicles } from '@/lib/hooks/useVehicles'
 import { Card, CardContent } from '@repo/ui/card'
 import AddVehicleModal from './add-vehicle-modal'
+import { AuthProvider } from '@repo/ui/auth-context'
+import { supabase } from '@/lib/supabase'
 import { Plus } from 'lucide-react'
+import { VehicleWithOdometer } from '@repo/types'
 
 type ImageWithTimeoutFallbackProps = {
   src: string
@@ -265,36 +268,36 @@ function VehicleGallery({
   )
 }
 
-type GarageClientPageProps = {
+type GarageContentProps = {
   initialVehicles: VehicleWithOdometer[]
   preferredVehicleId: string | null
 }
 
-export function GarageClientPage({
+export function GarageContent({
   initialVehicles,
   preferredVehicleId,
-}: GarageClientPageProps) {
-  // The `useVehicles` hook is GONE.
-  // We use standard React state, initialized by the server props.
-  const [vehicles, setVehicles] = useState(initialVehicles)
-  const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false)
+}: GarageContentProps) {
+  // Use server-fetched data as initial state
+  const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(
+    initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
+  )
 
-  // Separate active and stored vehicles based on current_status
-  const activeVehicles = vehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
-  const storedVehicles = vehicles.filter(vehicle => vehicle.current_status !== 'daily_driver')
+  // For stored vehicles, we still need the hook since they load progressively
+  const { vehicles: storedVehicles, isLoading: storedLoading, loadingMore, hasMore, loadMore } = useStoredVehicles()
+  const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false)
 
   // Show add vehicle card only if active vehicles < 3
   const canAddVehicle = activeVehicles.length < 3
 
   // Function to refresh garage data when vehicles are added or updated
   const handleVehicleAdded = () => {
-    // For now, just refresh the page to re-run the Server Component
+    // For now, refresh the page to re-run the Server Component
     // In a more sophisticated implementation, you could refetch data via API
     window.location.reload()
   }
 
   return (
-    <>
+    <AuthProvider supabase={supabase}>
       <section className="relative py-12 bg-black min-h-screen">
         <div
           aria-hidden="true"
@@ -310,7 +313,7 @@ export function GarageClientPage({
             <p className="text-lg text-gray-400">Here's your garage</p>
           </div>
 
-          {/* Active Vehicles Section */}
+          {/* Active Vehicles Section - uses server-fetched data */}
           <VehicleGallery
             title="Active Vehicles"
             vehicles={activeVehicles}
@@ -318,19 +321,24 @@ export function GarageClientPage({
             onAddClick={() => setAddVehicleModalOpen(true)}
           />
 
-          {/* Stored Vehicles Section */}
+          {/* Stored Vehicles Section - uses progressive loading */}
           <VehicleGallery
             title="Stored Vehicles"
             vehicles={storedVehicles}
-            // For now, no infinite loading - all vehicles are loaded server-side
-            // onLoadMore={loadMore}
-            // loadingMore={loadingMore}
-            // hasMore={hasMore}
+            onLoadMore={loadMore}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
           />
+
+          {storedLoading && storedVehicles.length === 0 && (
+            <div className="flex justify-center mt-8">
+              <div className="text-gray-400">Loading stored vehicles...</div>
+            </div>
+          )}
         </div>
       </section>
 
       <AddVehicleModal {...({ open: addVehicleModalOpen, onOpenChange: setAddVehicleModalOpen, onVehicleAdded: handleVehicleAdded } as any)} />
-    </>
+    </AuthProvider>
   )
 }
