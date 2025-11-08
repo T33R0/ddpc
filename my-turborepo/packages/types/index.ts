@@ -17,10 +17,13 @@ export interface User {
 
 export interface Vehicle {
   id: string;
+  name?: string; // User-defined name/nickname
   make: string;
   model: string;
   year: string;
   trim: string;
+  odometer?: number | null; // Current odometer reading
+  current_status?: string; // Vehicle status
   trim_description?: string;
   base_msrp?: string;
   base_invoice?: string;
