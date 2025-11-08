@@ -16,7 +16,7 @@ type VehiclePageProps = {
 export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   const supabase = await createClient()
   const resolvedParams = await params
-  const vehicleSlug = resolvedParams.id
+  const vehicleSlug = decodeURIComponent(resolvedParams.id)
 
   const {
     data: { user },
@@ -31,6 +31,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // This is the critical pattern from your audit (log-service route)
   // We fetch the vehicle AND check ownership in one query.
 
+  console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', user.id)
+
   // First, try to find the vehicle by nickname
   let { data: vehicle, error: vehicleError } = await supabase
     .from('user_vehicle')
@@ -42,8 +44,11 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     .eq('nickname', vehicleSlug)
     .single()
 
+  console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
+
   // If not found by nickname, try by ID
   if (!vehicle && !vehicleError) {
+    console.log('VehicleDetailPage: Trying ID search for:', vehicleSlug)
     const { data: vehicleById, error: idError } = await supabase
       .from('user_vehicle')
       .select(`
@@ -56,12 +61,20 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
 
     vehicle = vehicleById
     vehicleError = idError
+    console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
   }
 
   if (vehicleError || !vehicle) {
-    console.error('Error fetching vehicle or vehicle not found:', vehicleError)
+    console.error('VehicleDetailPage: Error fetching vehicle or vehicle not found:', {
+      vehicleSlug,
+      userId: user.id,
+      vehicleError,
+      hasVehicle: !!vehicle
+    })
     notFound() // Triggers 404 page
   }
+
+  console.log('VehicleDetailPage: Found vehicle:', vehicle.id, vehicle.nickname, vehicle.current_status)
 
   // --- 2. Fetch Latest Odometer Reading ---
   const { data: latestOdometer } = await supabase
