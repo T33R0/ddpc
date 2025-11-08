@@ -92,13 +92,13 @@ function VehicleHeader({ vehicle }: { vehicle: Vehicle }) {
 
 function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0 h-full flex flex-col">
+      <CardContent className="p-0">
         <p className="text-sm font-semibold text-gray-400 mb-2">Build Specs</p>
-        <div className="space-y-1 text-sm flex-1">
+        <div className="space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Year:</span>
             <span className="text-white">{vehicle.year || 'UNK'}</span>
@@ -123,13 +123,13 @@ function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0 h-full flex flex-col">
+      <CardContent className="p-0">
         <p className="text-sm font-semibold text-gray-400 mb-2">Engine Specs</p>
-        <div className="space-y-2 text-sm flex-1">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Power:</span>
             <span className="text-white">{vehicle.horsepower_hp ? `${vehicle.horsepower_hp} hp` : 'UNK'}</span>
@@ -154,13 +154,13 @@ function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0 h-full flex flex-col">
+      <CardContent className="p-0">
         <p className="text-sm font-semibold text-gray-400 mb-2">Dimensions</p>
-        <div className="space-y-2 text-sm flex-1">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Length:</span>
             <span className="text-white">{vehicle.length_in ? `${(parseFloat(vehicle.length_in.toString()) * 25.4).toFixed(0)} mm` : 'UNK'}</span>
@@ -181,13 +181,13 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0 h-full flex flex-col">
+      <CardContent className="p-0">
         <p className="text-sm font-semibold text-gray-400 mb-2">Drivetrain</p>
-        <div className="space-y-2 text-sm flex-1">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Type:</span>
             <span className="text-white">{vehicle.drive_type || 'UNK'}</span>
@@ -215,7 +215,7 @@ function NavigationCard({
 }) {
   return (
     <Card
-      className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300 h-full"
+      className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300"
       style={{
         border: '1px solid rgba(255, 255, 255, 0.3)',
         transition: 'all 0.3s ease-out',
@@ -232,12 +232,12 @@ function NavigationCard({
         e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      <CardContent className="p-0 h-full flex flex-col">
+      <CardContent className="p-0">
         <div className="flex items-center gap-2 mb-2">
           <Icon className="w-5 h-5 text-blue-400" />
           <p className="text-sm font-semibold text-gray-400">{title}</p>
         </div>
-        <div className="space-y-1 text-sm flex-1">
+        <div className="space-y-1 text-sm">
           {stats.map((stat, index) => (
             <div key={index} className="flex justify-between">
               <span className="text-gray-400">{stat.label}:</span>
@@ -277,13 +277,12 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
           <VehicleHeader vehicle={vehicle} />
 
           <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 h-[600px]">
-            {/* Build Specs - Position 1,1 */}
-            <div className="col-start-1 row-start-1">
-              <BuildSpecsCard vehicle={vehicle} />
-            </div>
+            {/* Row 1 */}
+            {/* Slot 1: Build Specs */}
+            <BuildSpecsCard vehicle={vehicle} />
 
-            {/* Vehicle Image - Spans positions 2-3, 1-2 */}
-            <Card className="col-span-2 row-span-2 col-start-2 row-start-1 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden"
+            {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
+            <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                   }}>
@@ -295,72 +294,60 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
               />
             </Card>
 
-            {/* Engine Specs - Position 4,1 */}
-            <div className="col-start-4 row-start-1">
-              <EngineSpecsCard vehicle={vehicle} />
-            </div>
+            {/* Slot 4: Engine Specs */}
+            <EngineSpecsCard vehicle={vehicle} />
 
-            {/* Dimensions - Position 1,2 */}
-            <div className="col-start-1 row-start-2">
-              <DimensionsCard vehicle={vehicle} />
-            </div>
+            {/* Row 2 */}
+            {/* Slot 5: Dimensions */}
+            <DimensionsCard vehicle={vehicle} />
 
-            {/* Drivetrain - Position 4,2 */}
-            <div className="col-start-4 row-start-2">
-              <DrivetrainCard vehicle={vehicle} />
-            </div>
+            {/* Slot 8: Drivetrain */}
+            <DrivetrainCard vehicle={vehicle} />
 
-            {/* History - Position 1,3 */}
-            <div className="col-start-1 row-start-3">
-              <NavigationCard
-                icon={Activity}
-                title="History"
-                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/history`)}
-                stats={[
-                  { label: 'Last Service', value: '---' },
-                  { label: 'Total Records', value: '---' }
-                ]}
-              />
-            </div>
+            {/* Row 3 */}
+            {/* Slot 9: History */}
+            <NavigationCard
+              icon={Activity}
+              title="History"
+              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/history`)}
+              stats={[
+                { label: 'Last Service', value: '---' },
+                { label: 'Total Records', value: '---' }
+              ]}
+            />
 
-            {/* Service - Position 2,3 */}
-            <div className="col-start-2 row-start-3">
-              <NavigationCard
-                icon={Wrench}
-                title="Service"
-                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/service`)}
-                stats={[
-                  { label: 'Next Service', value: '---' },
-                  { label: 'Service Count', value: '---' }
-                ]}
-              />
-            </div>
+            {/* Slot 10: Service */}
+            <NavigationCard
+              icon={Wrench}
+              title="Service"
+              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/service`)}
+              stats={[
+                { label: 'Next Service', value: '---' },
+                { label: 'Service Count', value: '---' }
+              ]}
+            />
 
-            {/* Fuel - Position 3,3 */}
-            <div className="col-start-3 row-start-3">
-              <NavigationCard
-                icon={Fuel}
-                title="Fuel"
-                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/fuel`)}
-                stats={[
-                  { label: 'Avg MPG', value: '---' },
-                  { label: 'Total Cost', value: '---' }
-                ]}
-              />
-            </div>
+            {/* Slot 11: Fuel */}
+            <NavigationCard
+              icon={Fuel}
+              title="Fuel"
+              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/fuel`)}
+              stats={[
+                { label: 'Avg MPG', value: '---' },
+                { label: 'Total Cost', value: '---' }
+              ]}
+            />
 
-            {/* Mods - Position 4,3 */}
-            <div className="col-start-4 row-start-3">
-              <NavigationCard
-                icon={Settings}
-                title="Mods"
-                onClick={() => handleNavigation(`/vehicle/${vehicle.id}/mods`)}
-                stats={[
-                  { label: 'Total Mods', value: '---' },
-                  { label: 'Total Cost', value: '---' }
-                ]}
-              />
-            </div>
+            {/* Slot 12: Mods */}
+            <NavigationCard
+              icon={Settings}
+              title="Mods"
+              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/mods`)}
+              stats={[
+                { label: 'Total Mods', value: '---' },
+                { label: 'Total Cost', value: '---' }
+              ]}
+            />
           </div>
         </div>
       </section>
