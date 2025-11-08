@@ -232,3 +232,18 @@ export interface UpgradeRequiredError {
   targetTier: Tier;
   message: string;
 }
+
+// Garage-specific types
+export interface VehicleWithOdometer {
+  id: string;
+  name: string;
+  nickname?: string;
+  ymmt: string;
+  odometer: number | null;
+  current_status: string;
+  image_url?: string;
+  make?: string;
+  model?: string;
+  year?: string;
+  trim?: string;
+}

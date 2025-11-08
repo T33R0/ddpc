@@ -14,92 +14,72 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id: vehicleSlug } = await params
+    const resolvedParams = await params
+    const vehicleSlug = resolvedParams.id
 
-    // First try to find vehicle by nickname (URL decoded)
-    const decodedSlug = decodeURIComponent(vehicleSlug)
-    // First check if vehicle exists with basic info
-    const basicQuery = supabase
+    // First, try to find the vehicle by nickname
+    let { data: vehicle, error: vehicleError } = await supabase
       .from('user_vehicle')
-      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url')
+      .select(`
+        *,
+        vehicle_data ( make, model, year, trim, body_type, fuel_type, drive_type )
+      `)
       .eq('owner_id', user.id)
-
-    let { data: userVehicle, error: vehicleError } = await basicQuery
-      .eq('nickname', decodedSlug)
+      .eq('nickname', vehicleSlug)
       .single()
 
     // If not found by nickname, try by ID
-    if (vehicleError && vehicleError.code === 'PGRST116') {
-      const { data: userVehicleById, error: vehicleErrorById } = await basicQuery
+    if (!vehicle && !vehicleError) {
+      const { data: vehicleById, error: idError } = await supabase
+        .from('user_vehicle')
+        .select(`
+          *,
+          vehicle_data ( make, model, year, trim, body_type, fuel_type, drive_type )
+        `)
+        .eq('owner_id', user.id)
         .eq('id', vehicleSlug)
         .single()
 
-      userVehicle = userVehicleById
-      vehicleError = vehicleErrorById
+      vehicle = vehicleById
+      vehicleError = idError
     }
 
-    if (vehicleError || !userVehicle) {
-      console.error('Error fetching vehicle:', vehicleError)
-      if (vehicleError?.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 })
-      }
-      return NextResponse.json(
-        { error: 'Failed to fetch vehicle', details: vehicleError?.message },
-        { status: 500 }
-      )
+    if (vehicleError || !vehicle) {
+      return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 })
     }
 
-    // Now get the additional fields if they exist
-    const extendedQuery = supabase
-      .from('user_vehicle')
-      .select(`
-        horsepower_hp,
-        torque_ft_lbs,
-        engine_size_l,
-        cylinders,
-        fuel_type,
-        drive_type,
-        transmission,
-        length_in,
-        width_in,
-        height_in,
-        body_type,
-        colors_exterior,
-        epa_combined_mpg
-      `)
-      .eq('id', userVehicle.id)
-      .single()
+    // Get latest odometer reading
+    const { data: odometerLogs } = await supabase
+      .from('odometer_log')
+      .select('reading_mi, recorded_at')
+      .eq('user_vehicle_id', vehicle.id)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
 
-    const { data: extendedData, error: extendedError } = await extendedQuery
+    const latestOdometer = odometerLogs?.[0]?.reading_mi || vehicle.odometer
 
-    // Transform the data to match the expected format
-    const transformedVehicle = {
-      id: userVehicle.id,
-      name: userVehicle.nickname || userVehicle.title || `${userVehicle.year || ''} ${userVehicle.make || ''} ${userVehicle.model || ''} ${userVehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
-      nickname: userVehicle.nickname,
-      ymmt: `${userVehicle.year || ''} ${userVehicle.make || ''} ${userVehicle.model || ''} ${userVehicle.trim || ''}`.trim(),
-      trim: userVehicle.trim,
-      odometer: userVehicle.odometer,
-      current_status: userVehicle.current_status || 'parked',
-      // Include all vehicle specification fields from extended data (if available)
-      horsepower_hp: extendedData?.horsepower_hp || null,
-      torque_ft_lbs: extendedData?.torque_ft_lbs || null,
-      engine_size_l: extendedData?.engine_size_l || null,
-      cylinders: extendedData?.cylinders || null,
-      fuel_type: extendedData?.fuel_type || null,
-      drive_type: extendedData?.drive_type || null,
-      transmission: extendedData?.transmission || null,
-      length_in: extendedData?.length_in || null,
-      width_in: extendedData?.width_in || null,
-      height_in: extendedData?.height_in || null,
-      body_type: extendedData?.body_type || null,
-      colors_exterior: extendedData?.colors_exterior || null,
-      epa_combined_mpg: extendedData?.epa_combined_mpg || null,
-      image_url: userVehicle.photo_url
+    // Transform the data to match expected format
+    const vehicleData = {
+      id: vehicle.id,
+      name: vehicle.nickname || vehicle.title || `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} ${vehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
+      nickname: vehicle.nickname,
+      ymmt: `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} ${vehicle.trim || ''}`.trim(),
+      odometer: latestOdometer,
+      current_status: vehicle.current_status || 'parked',
+      image_url: vehicle.photo_url,
+      // Include all the vehicle data fields
+      ...vehicle,
+      make: vehicle.vehicle_data?.make,
+      model: vehicle.vehicle_data?.model,
+      year: vehicle.vehicle_data?.year,
+      trim: vehicle.vehicle_data?.trim,
+      body_type: vehicle.vehicle_data?.body_type,
+      fuel_type: vehicle.vehicle_data?.fuel_type,
+      drive_type: vehicle.vehicle_data?.drive_type,
     }
 
     return NextResponse.json({
-      vehicle: transformedVehicle
+      vehicle: vehicleData
     })
 
   } catch (error) {
