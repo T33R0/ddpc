@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { GarageClientPage } from '@/features/garage/GarageClientPage'
 import { VehicleWithOdometer } from '@repo/types'
+import { AuthProvider } from '@repo/ui/auth-context'
+import { supabase } from '@/lib/supabase'
 
 //
 // This is now an async Server Component
@@ -102,9 +104,11 @@ export default async function GaragePage() {
 
   // --- 5. Pass Data to Client Component ---
   return (
-    <GarageClientPage
-      initialVehicles={vehiclesWithOdometer}
-      preferredVehicleId={preferredVehicleId}
-    />
+    <AuthProvider supabase={supabase}>
+      <GarageClientPage
+        initialVehicles={vehiclesWithOdometer}
+        preferredVehicleId={preferredVehicleId}
+      />
+    </AuthProvider>
   )
 }
