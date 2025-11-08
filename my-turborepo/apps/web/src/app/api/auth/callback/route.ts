@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/garage' // Default redirect to garage
 
   if (code) {
-    const supabase = createClient()
+    const supabase = await createClient()
     const {
       data: { user },
       error,
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     if (user) {
       // 1. Attempt to create the user profile with the email prefix as username
       const emailPrefix = user.email?.split('@')[0] || createRandomSuffix(8)
-      let username = emailPrefix.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() // Sanitize
+      const username = emailPrefix.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() // Sanitize
 
       const profileData = {
         user_id: user.id,
