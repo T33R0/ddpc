@@ -92,13 +92,13 @@ function VehicleHeader({ vehicle }: { vehicle: Vehicle }) {
 
 function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0">
+      <CardContent className="p-0 h-full flex flex-col">
         <p className="text-sm font-semibold text-gray-400 mb-2">Build Specs</p>
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Year:</span>
             <span className="text-white">{vehicle.year || 'UNK'}</span>
@@ -123,13 +123,13 @@ function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0">
+      <CardContent className="p-0 h-full flex flex-col">
         <p className="text-sm font-semibold text-gray-400 mb-2">Engine Specs</p>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Power:</span>
             <span className="text-white">{vehicle.horsepower_hp ? `${vehicle.horsepower_hp} hp` : 'UNK'}</span>
@@ -154,13 +154,13 @@ function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0">
+      <CardContent className="p-0 h-full flex flex-col">
         <p className="text-sm font-semibold text-gray-400 mb-2">Dimensions</p>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Length:</span>
             <span className="text-white">{vehicle.length_in ? `${(parseFloat(vehicle.length_in.toString()) * 25.4).toFixed(0)} mm` : 'UNK'}</span>
@@ -181,13 +181,13 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
+    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
           style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
-      <CardContent className="p-0">
+      <CardContent className="p-0 h-full flex flex-col">
         <p className="text-sm font-semibold text-gray-400 mb-2">Drivetrain</p>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Type:</span>
             <span className="text-white">{vehicle.drive_type || 'UNK'}</span>
@@ -215,7 +215,7 @@ function NavigationCard({
 }) {
   return (
     <Card
-      className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300"
+      className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300 h-full"
       style={{
         border: '1px solid rgba(255, 255, 255, 0.3)',
         transition: 'all 0.3s ease-out',
@@ -232,12 +232,12 @@ function NavigationCard({
         e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      <CardContent className="p-0">
+      <CardContent className="p-0 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-2">
           <Icon className="w-5 h-5 text-blue-400" />
           <p className="text-sm font-semibold text-gray-400">{title}</p>
         </div>
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-sm flex-1">
           {stats.map((stat, index) => (
             <div key={index} className="flex justify-between">
               <span className="text-gray-400">{stat.label}:</span>
@@ -276,7 +276,7 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
         <div className="relative container px-4 md:px-6 pt-24">
           <VehicleHeader vehicle={vehicle} />
 
-          <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 h-[600px]">
+          <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 min-h-[600px]">
             {/* Row 1 */}
             {/* Slot 1: Build Specs */}
             <BuildSpecsCard vehicle={vehicle} />
