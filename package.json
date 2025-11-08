@@ -2,6 +2,8 @@
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
     "@vercel/analytics": "^1.5.0",
-    "@vercel/speed-insights": "^1.2.0"
+    "@vercel/kv": "^3.0.0",
+    "@vercel/speed-insights": "^1.2.0",
+    "ip-rate-limit": "^1.1.0"
   }
 }
