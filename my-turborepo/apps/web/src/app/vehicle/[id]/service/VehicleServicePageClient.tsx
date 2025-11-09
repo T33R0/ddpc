@@ -7,7 +7,8 @@ import { Plus } from 'lucide-react';
 import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable';
 import { UpcomingServices } from '@/features/service/components/UpcomingServices';
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog';
-import { VehicleServiceData } from '@/features/service/lib/getVehicleServiceData';
+import { VehicleServiceData, UpcomingService } from '@/features/service/lib/getVehicleServiceData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
 
 interface VehicleServicePageClientProps {
   serviceData: VehicleServiceData;
@@ -16,7 +17,18 @@ interface VehicleServicePageClientProps {
 
 export function VehicleServicePageClient({ serviceData, refreshParam }: VehicleServicePageClientProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [selectedService, setSelectedService] = useState<UpcomingService | null>(null)
   const router = useRouter()
+
+  const handleLogService = (service: UpcomingService) => {
+    setSelectedService(service);
+    setIsAddDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsAddDialogOpen(false);
+    setSelectedService(null);
+  }
 
   return (
     <>
@@ -46,17 +58,38 @@ export function VehicleServicePageClient({ serviceData, refreshParam }: VehicleS
             </Button>
           </div>
 
-          <div className="space-y-8">
-            <UpcomingServices upcomingServices={serviceData.upcomingServices} />
-            <ServiceHistoryTable serviceHistory={serviceData.serviceHistory} />
-          </div>
+          <Tabs defaultValue="plan" className="w-full text-white">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="plan">Plan</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="plan">
+              <div className="space-y-8 mt-4">
+                <UpcomingServices 
+                  upcomingServices={serviceData.upcomingServices} 
+                  onLogService={handleLogService}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="history">
+              <div className="space-y-8 mt-4">
+                <ServiceHistoryTable serviceHistory={serviceData.serviceHistory} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
 
       <AddServiceDialog
         isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        onSuccess={() => router.refresh()}
+        onClose={closeDialog}
+        onSuccess={() => {
+          closeDialog();
+          router.refresh();
+        }}
+        initialData={selectedService}
+        serviceIntervals={serviceData.upcomingServices}
+        vehicleId={serviceData.vehicle.id}
       />
     </>
   );

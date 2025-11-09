@@ -8,9 +8,10 @@ import { Clock, AlertTriangle, Calendar, MapPin, CheckCircle } from 'lucide-reac
 
 interface UpcomingServicesProps {
   upcomingServices: UpcomingService[]
+  onLogService: (service: UpcomingService) => void;
 }
 
-export function UpcomingServices({ upcomingServices }: UpcomingServicesProps) {
+export function UpcomingServices({ upcomingServices, onLogService }: UpcomingServicesProps) {
   if (upcomingServices.length === 0) {
     return (
       <Card className="bg-gray-900/50 border-gray-800">
@@ -43,12 +44,10 @@ export function UpcomingServices({ upcomingServices }: UpcomingServicesProps) {
                 : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
             }`}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="text-lg font-medium text-white">
-                    {service.name}
-                  </h4>
+                  <h4 className="text-lg font-medium text-white">{service.name}</h4>
                   {service.is_overdue && (
                     <Badge variant="destructive" className="flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3" />
@@ -58,9 +57,7 @@ export function UpcomingServices({ upcomingServices }: UpcomingServicesProps) {
                 </div>
 
                 {service.description && (
-                  <p className="text-sm text-gray-400 mb-2">
-                    {service.description}
-                  </p>
+                  <p className="text-sm text-gray-400 mb-2">{service.description}</p>
                 )}
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
@@ -77,27 +74,23 @@ export function UpcomingServices({ upcomingServices }: UpcomingServicesProps) {
                     </div>
                   )}
                 </div>
+              </div>
 
-                {service.last_service_date && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    Last service: {format(service.last_service_date, 'MMM dd, yyyy')}
-                    {service.last_service_odometer && ` at ${service.last_service_odometer.toLocaleString()} miles`}
+              <div className="text-right flex-shrink-0 ml-4">
+                {service.due_date && (
+                  <div className={`text-sm font-medium ${service.is_overdue ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {service.is_overdue ? 'Overdue' : 'Due'} {formatDistanceToNow(service.due_date, { addSuffix: true })}
+                  </div>
+                )}
+                {service.due_miles && (
+                  <div className={`text-sm font-medium ${service.is_overdue ? 'text-red-400' : 'text-yellow-400'}`}>
+                    At {service.due_miles.toLocaleString()} miles
                   </div>
                 )}
               </div>
-
-              <div className="text-right">
-                {service.next_due_date && (
-                  <div className={`text-sm font-medium ${service.is_overdue ? 'text-red-400' : 'text-yellow-400'}`}>
-                    {service.is_overdue ? 'Overdue' : 'Due'} {formatDistanceToNow(service.next_due_date, { addSuffix: true })}
-                  </div>
-                )}
-                {service.next_due_miles && (
-                  <div className={`text-sm font-medium ${service.is_overdue ? 'text-red-400' : 'text-yellow-400'}`}>
-                    At {service.next_due_miles.toLocaleString()} miles
-                  </div>
-                )}
-              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button onClick={() => onLogService(service)} size="sm">Log Service</Button>
             </div>
           </div>
         ))}

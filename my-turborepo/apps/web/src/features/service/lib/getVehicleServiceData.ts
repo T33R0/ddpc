@@ -17,10 +17,8 @@ export interface UpcomingService {
   description?: string
   interval_months?: number
   interval_miles?: number
-  last_service_date?: Date
-  last_service_odometer?: number
-  next_due_date?: Date
-  next_due_miles?: number
+  due_date?: Date | null
+  due_miles?: number | null
   is_overdue: boolean
 }
 
@@ -68,11 +66,12 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     throw new Error('Failed to fetch maintenance data')
   }
 
-  // Fetch user's service intervals
+  // Fetch user's service intervals for the specific vehicle
   const { data: serviceIntervals, error: intervalsError } = await supabase
     .from('service_intervals')
-    .select('id, name, interval_months, interval_miles, description')
-    .eq('user_id', user.id)
+    .select('id, name, description, interval_months, interval_miles, due_date, due_miles')
+    .eq('user_vehicle_id', vehicleId)
+    .order('due_date', { ascending: true });
 
   if (intervalsError) {
     console.error('Error fetching service intervals:', intervalsError)
@@ -91,56 +90,27 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     service_interval_id: log.service_interval_id || undefined,
   })) || []
 
-  // Calculate upcoming services
-  const upcomingServices: UpcomingService[] = []
-
-  if (serviceIntervals) {
-    for (const interval of serviceIntervals) {
-      // Find the last maintenance for this interval
-      const lastService = maintenanceLogs
-        ?.filter(log => log.service_interval_id === interval.id)
-        ?.sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime())[0]
-
-      const lastServiceDate = lastService ? new Date(lastService.event_date) : null
-      const lastServiceOdometer = lastService?.odometer || null
-
-      // Calculate next due date and miles
-      let nextDueDate: Date | null = null
-      let nextDueMiles: number | null = null
-      let isOverdue = false
-
-      if (lastServiceDate && interval.interval_months) {
-        nextDueDate = new Date(lastServiceDate)
-        nextDueDate.setMonth(nextDueDate.getMonth() + interval.interval_months)
-        isOverdue = nextDueDate < new Date()
-      }
-
-      if (lastServiceOdometer && interval.interval_miles) {
-        nextDueMiles = lastServiceOdometer + interval.interval_miles
-        isOverdue = isOverdue || (vehicle.odometer && nextDueMiles !== null && nextDueMiles <= vehicle.odometer)
-      }
-
-      // If no last service exists, calculate from vehicle creation or assume now
-      if (!lastService) {
-        // For new intervals with no history, we'll show them as upcoming
-        // This could be enhanced to show "initial service due" logic
-        continue // Skip intervals with no service history for now
-      }
-
-      upcomingServices.push({
-        id: interval.id,
-        name: interval.name,
-        description: interval.description || undefined,
-        interval_months: interval.interval_months || undefined,
-        interval_miles: interval.interval_miles || undefined,
-        last_service_date: lastServiceDate || undefined,
-        last_service_odometer: lastServiceOdometer || undefined,
-        next_due_date: nextDueDate || undefined,
-        next_due_miles: nextDueMiles || undefined,
-        is_overdue: isOverdue,
-      })
+  // Calculate upcoming services from service_intervals
+  const upcomingServices: UpcomingService[] = serviceIntervals?.map(interval => {
+    let isOverdue = false
+    if (interval.due_date) {
+      isOverdue = new Date(interval.due_date) < new Date()
     }
-  }
+    if (vehicle.odometer && interval.due_miles) {
+      isOverdue = isOverdue || interval.due_miles <= vehicle.odometer
+    }
+
+    return {
+      id: interval.id,
+      name: interval.name,
+      description: interval.description || undefined,
+      interval_months: interval.interval_months || undefined,
+      interval_miles: interval.interval_miles || undefined,
+      due_date: interval.due_date ? new Date(interval.due_date) : null,
+      due_miles: interval.due_miles || undefined,
+      is_overdue: isOverdue,
+    }
+  }) || []
 
   // Sort upcoming services by urgency (overdue first, then by next due date)
   upcomingServices.sort((a, b) => {
@@ -148,8 +118,8 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     if (!a.is_overdue && b.is_overdue) return 1
 
     // Both overdue or both not - sort by next due date
-    const aDate = a.next_due_date ? a.next_due_date.getTime() : Infinity
-    const bDate = b.next_due_date ? b.next_due_date.getTime() : Infinity
+    const aDate = a.due_date ? a.due_date.getTime() : Infinity
+    const bDate = b.due_date ? b.due_date.getTime() : Infinity
     return aDate - bDate
   })
 

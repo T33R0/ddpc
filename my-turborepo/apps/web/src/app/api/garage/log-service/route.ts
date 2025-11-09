@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateAndRecordOdometerReading } from '@/lib/odometer-service';
 import { z } from 'zod';
+import { updateServiceInterval } from '@/lib/supabase/maintenance';
 
 const logServiceSchema = z.object({
   vehicleId: z.string(),
@@ -102,6 +103,11 @@ export async function POST(request: NextRequest) {
         }, { status: 403 });
       }
       return NextResponse.json({ error: `Failed to log service: ${insertError.message}` }, { status: 500 });
+    }
+
+    // After successfully logging, update the corresponding service interval for the next cycle
+    if (service_interval_id) {
+      await updateServiceInterval(supabase, service_interval_id, vehicleId, odometerValue, event_date);
     }
 
     return NextResponse.json({

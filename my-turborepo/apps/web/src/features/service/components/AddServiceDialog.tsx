@@ -8,11 +8,15 @@ import { Label } from '@repo/ui/label'
 import { Textarea } from '@repo/ui/textarea'
 import { Plus, Wrench } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { useEffect } from 'react'
+import { UpcomingService } from '@/features/service/lib/getVehicleServiceData'
 
 interface AddServiceDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
+  initialData?: UpcomingService | null
+  vehicleId: string
 }
 
 interface FormData {
@@ -22,11 +26,10 @@ interface FormData {
   odometer: string
   event_date: string
   notes: string
+  service_interval_id?: string | null
 }
 
-export function AddServiceDialog({ isOpen, onClose, onSuccess }: AddServiceDialogProps) {
-  const params = useParams()
-  const vehicleId = params.id as string
+export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehicleId }: AddServiceDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
@@ -34,9 +37,35 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess }: AddServiceDialo
     service_provider: '',
     cost: '',
     odometer: '',
-    event_date: '',
-    notes: ''
+    event_date: new Date().toISOString().split('T')[0], // Default to today
+    notes: '',
+    service_interval_id: null,
   })
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        description: initialData.name || '',
+        service_provider: '',
+        cost: '',
+        odometer: '',
+        event_date: new Date().toISOString().split('T')[0],
+        notes: initialData.description || '',
+        service_interval_id: initialData.id,
+      })
+    } else {
+      // Reset form when there's no initial data (for the generic "Add Service" button)
+      setFormData({
+        description: '',
+        service_provider: '',
+        cost: '',
+        odometer: '',
+        event_date: new Date().toISOString().split('T')[0],
+        notes: '',
+        service_interval_id: null,
+      })
+    }
+  }, [initialData, isOpen]) // Rerun when dialog opens or initialData changes
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -66,6 +95,7 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess }: AddServiceDialo
         cost: formData.cost || undefined,
         service_provider: formData.service_provider || undefined,
         notes: formData.notes || undefined,
+        service_interval_id: formData.service_interval_id || undefined,
       }
 
       const response = await fetch('/api/garage/log-service', {
@@ -89,7 +119,8 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess }: AddServiceDialo
         cost: '',
         odometer: '',
         event_date: '',
-        notes: ''
+        notes: '',
+        service_interval_id: null,
       })
 
       onClose()

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+import { createClient } from '@/lib/supabase/server';
+import { seedMaintenancePlan } from '@/lib/supabase/maintenance';
 
 export async function POST(request: NextRequest) {
   try {
@@ -114,6 +110,11 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       return NextResponse.json({ error: 'Failed to add vehicle', details: insertError.message }, { status: 500 });
+    }
+
+    // If the vehicle was matched to stock data, seed the maintenance plan
+    if (matchFound && newVehicle) {
+      await seedMaintenancePlan(supabase, newVehicle.id, vehicleDataToInsert.stock_data_id);
     }
 
     return NextResponse.json({ 
