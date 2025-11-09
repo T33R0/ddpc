@@ -4,10 +4,7 @@ import { seedMaintenancePlan } from '@/lib/supabase/maintenance';
 
 export async function POST(request: NextRequest) {
   try {
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-    }
-
+    const supabase = await createClient();
     const { vin } = await request.json();
 
     if (!vin) {
@@ -20,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
     const token = authHeader.substring(7);
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -123,7 +120,7 @@ export async function POST(request: NextRequest) {
       matchFound: matchFound 
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
