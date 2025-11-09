@@ -88,7 +88,6 @@ export function VehicleServicePageClient({ serviceData, refreshParam }: VehicleS
           router.refresh();
         }}
         initialData={selectedService}
-        serviceIntervals={serviceData.upcomingServices}
         vehicleId={serviceData.vehicle.id}
       />
     </>
