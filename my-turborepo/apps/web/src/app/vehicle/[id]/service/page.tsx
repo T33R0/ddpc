@@ -3,12 +3,14 @@ import { notFound } from 'next/navigation'
 import { getVehicleServiceData } from '@/features/service/lib/getVehicleServiceData'
 import { VehicleServicePageClient } from './VehicleServicePageClient'
 
+export const revalidate = 0; // Ensure data is always fresh
+
 interface VehicleServicePageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function VehicleServicePage({ params }: VehicleServicePageProps) {
-  const vehicleId = params.id
+  const { id: vehicleId } = await params
 
   if (!vehicleId) {
     notFound()
