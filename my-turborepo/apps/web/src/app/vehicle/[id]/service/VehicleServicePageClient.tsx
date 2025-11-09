@@ -12,10 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
 
 interface VehicleServicePageClientProps {
   serviceData: VehicleServiceData;
-  refreshParam?: string;
 }
 
-export function VehicleServicePageClient({ serviceData, refreshParam }: VehicleServicePageClientProps) {
+export function VehicleServicePageClient({ serviceData }: VehicleServicePageClientProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<UpcomingService | null>(null)
   const router = useRouter()
@@ -46,7 +45,7 @@ export function VehicleServicePageClient({ serviceData, refreshParam }: VehicleS
             <div>
               <h1 className="text-4xl font-bold text-white">Vehicle Service</h1>
               <p className="text-lg text-gray-400 mt-2">
-                Service records and maintenance schedules for {serviceData.vehicle.name}
+                Service records and maintenance schedules for {serviceData.vehicle.displayName}
               </p>
             </div>
             <Button

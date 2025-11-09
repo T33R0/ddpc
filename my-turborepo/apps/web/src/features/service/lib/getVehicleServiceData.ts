@@ -25,8 +25,7 @@ export interface UpcomingService {
 export interface VehicleServiceData {
   vehicle: {
     id: string
-    name: string
-    ymmt: string
+    displayName: string
     odometer?: number
   }
   serviceHistory: ServiceHistoryItem[]
@@ -45,7 +44,7 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
   // Fetch vehicle info
   const { data: vehicle, error: vehicleError } = await supabase
     .from('user_vehicle')
-    .select('id, name, ymmt, odometer')
+    .select('id, nickname, year, make, model, odometer')
     .eq('id', vehicleId)
     .eq('owner_id', user.id)
     .single()
@@ -123,11 +122,12 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     return aDate - bDate
   })
 
+  const displayName = vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+
   return {
     vehicle: {
       id: vehicle.id,
-      name: vehicle.name,
-      ymmt: vehicle.ymmt,
+      displayName: displayName,
       odometer: vehicle.odometer || undefined,
     },
     serviceHistory,
