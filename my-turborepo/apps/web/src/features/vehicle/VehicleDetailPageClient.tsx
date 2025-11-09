@@ -276,15 +276,23 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
         <div className="relative container px-4 md:px-6 pt-24">
           <VehicleHeader vehicle={vehicle} />
 
-          <div className="grid w-full max-w-7xl mx-auto grid-cols-4 grid-rows-3 gap-4 min-h-[600px]">
+          {/* Grid container - 4x3 layout */}
+          <div className="grid w-full max-w-7xl mx-auto gap-4 min-h-[600px]" 
+               style={{ 
+                 display: 'grid',
+                 gridTemplateColumns: 'repeat(4, 1fr)', 
+                 gridTemplateRows: 'repeat(3, 1fr)',
+               }}>
             {/* Row 1 */}
             {/* Slot 1: Build Specs */}
             <BuildSpecsCard vehicle={vehicle} />
 
             {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
-            <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden"
+            <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full"
                   style={{
                     border: '1px solid rgba(255, 255, 255, 0.3)',
+                    gridColumn: 'span 2',
+                    gridRow: 'span 2',
                   }}>
               <ImageWithTimeoutFallback
                 src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
