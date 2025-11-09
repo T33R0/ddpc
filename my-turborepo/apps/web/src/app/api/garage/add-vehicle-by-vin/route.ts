@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { seedMaintenancePlan } from '@/lib/supabase/maintenance';
 
+interface NhtsaVariable {
+  Value: string | null;
+  Variable: string;
+  ErrorCode?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -15,7 +21,6 @@ export async function POST(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const token = authHeader.substring(7);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -30,17 +35,17 @@ export async function POST(request: NextRequest) {
     }
 
     const vinData = await nhtsaResponse.json();
-    const results = vinData.Results;
+    const results: NhtsaVariable[] = vinData.Results;
 
     // Check if the VIN was valid according to NHTSA
-    const hasError = results.some((r: any) => r.ErrorCode && r.ErrorCode !== '0');
+    const hasError = results.some((r: NhtsaVariable) => r.ErrorCode && r.ErrorCode !== '0');
     if (hasError || results.length === 0) {
       return NextResponse.json({ 
         error: "We're unable to match this VIN to a vehicle in the NHTSA database. Please ensure you entered your VIN correctly." 
       }, { status: 404 });
     }
 
-    const getValue = (variable: string) => results.find((r: any) => r.Variable === variable)?.Value || null;
+    const getValue = (variable: string) => results.find((r: NhtsaVariable) => r.Variable === variable)?.Value || null;
 
     const make = getValue('Make');
     const model = getValue('Model');
@@ -79,7 +84,7 @@ export async function POST(request: NextRequest) {
       };
     } else {
       // No match found. Fallback to building the snapshot from NHTSA data.
-      const specSnapshot = results.reduce((acc: any, curr: any) => {
+      const specSnapshot = results.reduce((acc: { [key: string]: string }, curr: NhtsaVariable) => {
         if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
           const key = curr.Variable.replace(/ /g, '_').toLowerCase();
           acc[key] = curr.Value;

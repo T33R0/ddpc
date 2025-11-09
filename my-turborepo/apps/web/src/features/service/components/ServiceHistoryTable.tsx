@@ -1,6 +1,5 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { Badge } from '@repo/ui/badge'
 import { ServiceHistoryItem } from '../lib/getVehicleServiceData'
 import { format } from 'date-fns'
 import { Wrench, DollarSign, MapPin, Calendar, FileText, Building } from 'lucide-react'

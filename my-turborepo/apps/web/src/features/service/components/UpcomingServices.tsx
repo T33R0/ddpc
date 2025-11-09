@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { UpcomingService } from '../lib/getVehicleServiceData'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { Clock, AlertTriangle, Calendar, MapPin, CheckCircle } from 'lucide-react'
 
 interface UpcomingServicesProps {

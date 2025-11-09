@@ -1,14 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Textarea } from '@repo/ui/textarea'
 import { Plus, Wrench } from 'lucide-react'
-import { useParams } from 'next/navigation'
-import { useEffect } from 'react'
 import { UpcomingService } from '@/features/service/lib/getVehicleServiceData'
 
 interface AddServiceDialogProps {
@@ -37,7 +35,7 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
     service_provider: '',
     cost: '',
     odometer: '',
-    event_date: new Date().toISOString().split('T')[0], // Default to today
+    event_date: new Date().toISOString().split('T')[0]!, // Default to today
     notes: '',
     service_interval_id: null,
   })
@@ -49,7 +47,7 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
         service_provider: '',
         cost: '',
         odometer: '',
-        event_date: new Date().toISOString().split('T')[0],
+        event_date: new Date().toISOString().split('T')[0]!,
         notes: initialData.description || '',
         service_interval_id: initialData.id,
       })
@@ -60,7 +58,7 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
         service_provider: '',
         cost: '',
         odometer: '',
-        event_date: new Date().toISOString().split('T')[0],
+        event_date: new Date().toISOString().split('T')[0]!,
         notes: '',
         service_interval_id: null,
       })
