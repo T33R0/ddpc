@@ -49,8 +49,17 @@ export async function POST(request: NextRequest) {
 
     const make = getValue('Make');
     const model = getValue('Model');
-    const year = parseInt(getValue('Model Year'), 10);
+    const yearString = getValue('Model Year');
     const trim = getValue('Trim');
+
+    // Predictive Validation: Ensure critical data is present before proceeding
+    if (!make || !model || !yearString) {
+      return NextResponse.json({
+        error: "The VIN provided is valid, but we couldn't retrieve the minimum required vehicle data (make, model, and year).",
+      }, { status: 404 });
+    }
+
+    const year = parseInt(yearString, 10);
 
     let vehicleDataToInsert;
     let matchFound = false;
