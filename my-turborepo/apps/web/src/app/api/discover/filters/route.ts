@@ -1,13 +1,19 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+
+// Create a public, anonymous Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase URL or anonymous key')
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export const revalidate = 3600 // Revalidate every hour
 
 export async function GET() {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-
   try {
     const { data, error } = await supabase.rpc('get_vehicle_filter_options')
 
