@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export const revalidate = 3600; // Cache for 1 hour
+export const dynamic = 'force-dynamic'; // Enforce dynamic execution
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
