@@ -1,20 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'; // Enforce dynamic execution
+export const revalidate = 3600 // Revalidate every hour
 
-export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  
-  // Use the SQL function to get comprehensive filter options
-  const { data, error } = await supabase.rpc('get_vehicle_filter_options');
+export async function GET() {
+  const cookieStore = cookies()
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 },
-    );
+  try {
+    const { data, error } = await supabase.rpc('get_vehicle_filter_options')
+
+    if (error) {
+      console.error('Error fetching vehicle filter options:', error)
+      return new NextResponse(
+        JSON.stringify({ error: 'Failed to fetch filter options' }),
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(data)
+  } catch (e) {
+    console.error('An unexpected error occurred in filters route:', e)
+    return new NextResponse(
+      JSON.stringify({ error: 'An unexpected internal server error occurred' }),
+      { status: 500 }
+    )
   }
-
-  return NextResponse.json(data);
 }
