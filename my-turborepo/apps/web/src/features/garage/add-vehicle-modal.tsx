@@ -5,7 +5,14 @@ import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
-import { Dialog, DialogContent } from '@repo/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@repo/ui/dialog';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
@@ -370,10 +377,12 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0">
-        {/* Header */}
-        <div className="sticky top-0 bg-black/50 backdrop-blur-lg border-b border-white/30 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-white">Add a Vehicle</h2>
-        </div>
+        <DialogHeader>
+          <DialogTitle>Add a Vehicle to Your Garage</DialogTitle>
+          <DialogDescription>
+            Search our database by VIN or by Year, Make, and Model.
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Tab Navigation */}
         <div className="px-6 pt-4">
