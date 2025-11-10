@@ -1,29 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// Create a public, anonymous Supabase client
+// Note: Using the service_role key to bypass RLS for this public-facing but internal route.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 export const revalidate = 3600 // Revalidate every hour
 
 export async function GET() {
-  console.log('Attempting to fetch vehicle filter options...');
-  console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'MISSING');
-  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'MISSING');
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('CRITICAL: Supabase environment variables are not configured.');
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('CRITICAL: Supabase server environment variables are not configured.');
     return new NextResponse(
       JSON.stringify({ error: 'Server configuration error.' }),
       { status: 500 }
     );
   }
 
-  try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-    console.log('Supabase client created successfully.');
+  // Create a new client for each server-side request
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  try {
     const { data, error } = await supabase.rpc('get_vehicle_filter_options')
 
     if (error) {
@@ -34,7 +30,6 @@ export async function GET() {
       )
     }
 
-    console.log('Successfully fetched filter options.');
     return NextResponse.json(data)
   } catch (e: any) {
     console.error('An unexpected error occurred in filters route:', e);
