@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     const { data: newVehicle, error: insertError } = await supabase
       .from('user_vehicle')
       .insert(vehicleDataToInsert)
-      .select('id') // Only select the ID
+      .select('id, owner_id') // Ensure we get owner_id back for seeding
       .single();
 
     if (insertError) {
@@ -157,13 +157,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       vehicleId: newVehicle.id,
-      matchFound: matchFound 
+      matchFound: matchFound
     });
 
   } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Internal server error:', error.message);
+    } else {
+      console.error('An unknown error occurred');
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
