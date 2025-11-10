@@ -5,31 +5,41 @@ import { NextResponse } from 'next/server'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase URL or anonymous key')
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 export const revalidate = 3600 // Revalidate every hour
 
 export async function GET() {
+  console.log('Attempting to fetch vehicle filter options...');
+  console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'MISSING');
+  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'MISSING');
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('CRITICAL: Supabase environment variables are not configured.');
+    return new NextResponse(
+      JSON.stringify({ error: 'Server configuration error.' }),
+      { status: 500 }
+    );
+  }
+
   try {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    console.log('Supabase client created successfully.');
+
     const { data, error } = await supabase.rpc('get_vehicle_filter_options')
 
     if (error) {
-      console.error('Error fetching vehicle filter options:', error)
+      console.error('Supabase RPC Error:', JSON.stringify(error, null, 2));
       return new NextResponse(
-        JSON.stringify({ error: 'Failed to fetch filter options' }),
+        JSON.stringify({ error: 'Failed to fetch filter options from database.' }),
         { status: 500 }
       )
     }
 
+    console.log('Successfully fetched filter options.');
     return NextResponse.json(data)
-  } catch (e) {
-    console.error('An unexpected error occurred in filters route:', e)
+  } catch (e: any) {
+    console.error('An unexpected error occurred in filters route:', e);
     return new NextResponse(
-      JSON.stringify({ error: 'An unexpected internal server error occurred' }),
+      JSON.stringify({ error: 'An unexpected internal server error occurred', details: e.message }),
       { status: 500 }
     )
   }
