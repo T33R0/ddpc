@@ -1,21 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Supabase environment variables are not configured.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+export const revalidate = 3600; // Cache for 1 hour
 
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+  
   // Use the SQL function to get comprehensive filter options
   const { data, error } = await supabase.rpc('get_vehicle_filter_options');
 
