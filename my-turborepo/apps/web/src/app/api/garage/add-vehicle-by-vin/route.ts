@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { seedMaintenancePlan } from '@/lib/supabase/maintenance';
 
 interface NhtsaVariable {
   Value: string | null;
@@ -125,7 +124,37 @@ export async function POST(request: NextRequest) {
 
     // If the vehicle was matched to stock data, seed the maintenance plan
     if (matchFound && newVehicle) {
-      await seedMaintenancePlan(supabase, newVehicle.id, vehicleDataToInsert.stock_data_id);
+      // Re-implement the seeding logic here, adapted from the main add-vehicle route
+      try {
+        const { data: masterSchedule, error: scheduleError } = await supabase
+          .from('master_service_schedule')
+          .select('*')
+          .eq('vehicle_data_id', vehicleDataToInsert.stock_data_id);
+
+        if (scheduleError) throw scheduleError;
+
+        if (masterSchedule && masterSchedule.length > 0) {
+          const intervalsToSeed = masterSchedule.map((item) => ({
+            user_id: newVehicle.owner_id,
+            user_vehicle_id: newVehicle.id,
+            master_service_schedule_id: item.id,
+            name: item.name,
+            interval_months: item.interval_months,
+            interval_miles: item.interval_miles,
+          }));
+
+          const { error: insertIntervalsError } = await supabase
+            .from('service_intervals')
+            .insert(intervalsToSeed);
+
+          if (insertIntervalsError) throw insertIntervalsError;
+        }
+      } catch (seedingError) {
+        console.error(
+          `[Seeding Pipeline Failed] for user ${user.id} and vehicle ${newVehicle.id}:`,
+          seedingError
+        );
+      }
     }
 
     return NextResponse.json({ 
