@@ -9,6 +9,7 @@ import { UpcomingServices } from '@/features/service/components/UpcomingServices
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
 import { ServiceInterval, MaintenanceLog } from '@repo/types';
+import { UpcomingService } from '@/features/service/lib/getVehicleServiceData';
 
 interface ServicePageClientProps {
   vehicle: {
@@ -27,7 +28,7 @@ export function ServicePageClient({
   vehicle, 
   initialPlan, 
   initialHistory, 
-  initialScheduled 
+  initialScheduled: _initialScheduled 
 }: ServicePageClientProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<ServiceInterval | null>(null)
@@ -36,10 +37,10 @@ export function ServicePageClient({
   const displayName = vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`
 
   // Transform ServiceInterval to UpcomingService format for the UpcomingServices component
-  const upcomingServices = initialPlan.map((interval) => ({
+  const upcomingServices: UpcomingService[] = initialPlan.map((interval) => ({
     id: interval.id,
     name: interval.name,
-    description: interval.description || interval.master_service_schedule?.description,
+    description: interval.description || interval.master_service_schedule?.description || undefined,
     interval_months: interval.interval_months || undefined,
     interval_miles: interval.interval_miles || undefined,
     due_date: interval.due_date ? new Date(interval.due_date) : null,
@@ -47,7 +48,7 @@ export function ServicePageClient({
     is_overdue: false, // For now, all are "Due" as per requirements
   }))
 
-  const handleLogService = (service: typeof upcomingServices[0]) => {
+  const handleLogService = (service: UpcomingService) => {
     // Find the corresponding ServiceInterval
     const interval = initialPlan.find(si => si.id === service.id)
     if (interval) {
