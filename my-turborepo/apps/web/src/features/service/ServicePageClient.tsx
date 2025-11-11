@@ -1,45 +1,52 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@repo/ui/button';
-import { Plus } from 'lucide-react';
-import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable';
-import { UpcomingServices } from '@/features/service/components/UpcomingServices';
-import { AddServiceDialog } from '@/features/service/components/AddServiceDialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
-import { ServiceInterval, MaintenanceLog } from '@repo/types';
-import { UpcomingService } from '@/features/service/lib/getVehicleServiceData';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  ServiceInterval,
+  MaintenanceLog,
+} from '@repo/types'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
+import { Button } from '@repo/ui/button'
+import { Plus } from 'lucide-react'
+import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
+import { UpcomingServices } from '@/features/service/components/UpcomingServices'
+import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable'
+import { UpcomingService } from '@/features/service/lib/getVehicleServiceData'
+import { ServiceHistoryItem } from '@/features/service/lib/getVehicleServiceData'
 
-interface ServicePageClientProps {
+// -----------------
+// PROPS
+// -----------------
+type ServicePageClientProps = {
   vehicle: {
-    id: string;
-    make: string;
-    model: string;
-    year: string;
-    nickname?: string | null;
-  };
-  initialPlan: ServiceInterval[];
-  initialHistory: MaintenanceLog[];
-  initialScheduled: MaintenanceLog[];
+    id: string
+    make: string
+    model: string
+    year: string
+    nickname?: string | null
+  }
+  initialPlan: ServiceInterval[]
+  initialHistory: MaintenanceLog[]
+  initialScheduled: MaintenanceLog[]
 }
 
-export function ServicePageClient({ 
-  vehicle, 
-  initialPlan, 
-  initialHistory, 
-  initialScheduled // eslint-disable-line @typescript-eslint/no-unused-vars
-}: ServicePageClientProps) {
-  // Note: initialScheduled is reserved for future use when displaying scheduled future services
-  // Currently not used but kept for API compatibility
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [selectedService, setSelectedService] = useState<ServiceInterval | null>(null)
-  const router = useRouter()
+// -----------------
+// HELPER COMPONENTS (to keep the main component clean)
+// -----------------
 
-  const displayName = vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-
-  // Transform ServiceInterval to UpcomingService format for the UpcomingServices component
-  const upcomingServices: UpcomingService[] = initialPlan.map((interval) => ({
+// The "Plan" tab's content
+function PlanTabContent({
+  planItems,
+  scheduledItems,
+  onLogService,
+}: {
+  planItems: ServiceInterval[]
+  scheduledItems: MaintenanceLog[]
+  onLogService: (service: UpcomingService) => void
+}) {
+  // Transform ServiceInterval to UpcomingService format
+  const upcomingServices: UpcomingService[] = planItems.map((interval) => ({
     id: interval.id,
     name: interval.name,
     description: interval.description || interval.master_service_schedule?.description || undefined,
@@ -50,22 +57,52 @@ export function ServicePageClient({
     is_overdue: false, // For now, all are "Due" as per requirements
   }))
 
-  const handleLogService = (service: UpcomingService) => {
-    // Find the corresponding ServiceInterval
-    const interval = initialPlan.find(si => si.id === service.id)
-    if (interval) {
-      setSelectedService(interval);
-      setIsAddDialogOpen(true);
-    }
-  };
+  return (
+    <div className="space-y-8 mt-4">
+      {/* Section 1: Scheduled Maintenance (from maintenance_log)
+        These are items you've already scheduled for the future.
+      */}
+      {scheduledItems.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold text-white">Scheduled</h3>
+          <div className="space-y-2">
+            {scheduledItems.map((item) => (
+              <div
+                key={item.id}
+                className="p-4 border rounded-md bg-gray-800/50 border-gray-700 flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium text-white">{item.description}</p>
+                  <p className="text-sm text-gray-400">
+                    Scheduled for: {new Date(item.event_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm">
+                  Edit
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-  const closeDialog = () => {
-    setIsAddDialogOpen(false);
-    setSelectedService(null);
-  }
+      {/* Section 2: Factory Plan (from service_intervals)
+        This is the "Due" list.
+      */}
+      <div>
+        <UpcomingServices 
+          upcomingServices={upcomingServices} 
+          onLogService={onLogService}
+        />
+      </div>
+    </div>
+  )
+}
 
+// The "History" tab's content
+function HistoryTabContent({ historyItems }: { historyItems: MaintenanceLog[] }) {
   // Transform MaintenanceLog to ServiceHistoryItem format
-  const serviceHistory = initialHistory.map((log) => ({
+  const serviceHistory: ServiceHistoryItem[] = historyItems.map((log) => ({
     id: log.id,
     description: log.description,
     cost: log.cost || undefined,
@@ -75,6 +112,51 @@ export function ServicePageClient({
     service_provider: log.service_provider || undefined,
     service_interval_id: log.service_interval_id || undefined,
   }))
+
+  return (
+    <div className="space-y-8 mt-4">
+      <ServiceHistoryTable serviceHistory={serviceHistory} />
+    </div>
+  )
+}
+
+// -----------------
+// MAIN COMPONENT
+// -----------------
+export function ServicePageClient({
+  vehicle,
+  initialPlan,
+  initialHistory,
+  initialScheduled,
+}: ServicePageClientProps) {
+  const router = useRouter()
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // This will be used to pass a selected plan item to the modal
+  const [selectedPlanItem, setSelectedPlanItem] = useState<ServiceInterval | null>(null)
+
+  const openAddServiceModal = () => {
+    setSelectedPlanItem(null) // Clear any selected item
+    setIsModalOpen(true)
+  }
+
+  const handleLogService = (service: UpcomingService) => {
+    // Find the corresponding ServiceInterval
+    const interval = initialPlan.find(si => si.id === service.id)
+    if (interval) {
+      setSelectedPlanItem(interval)
+      setIsModalOpen(true)
+    }
+  }
+
+  const closeDialog = () => {
+    setIsModalOpen(false)
+    setSelectedPlanItem(null)
+  }
+
+  const displayName = vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`
 
   return (
     <>
@@ -88,19 +170,18 @@ export function ServicePageClient({
         </div>
 
         <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-8 flex items-center justify-between">
+          <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-4xl font-bold text-white">Vehicle Service</h1>
               <p className="text-lg text-gray-400 mt-2">
                 Service records and maintenance schedules for {displayName}
               </p>
             </div>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
+            <Button 
+              onClick={openAddServiceModal}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Service
+              <Plus className="mr-2 h-4 w-4" /> Add Service
             </Button>
           </div>
 
@@ -109,43 +190,41 @@ export function ServicePageClient({
               <TabsTrigger value="plan">Plan</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
+
             <TabsContent value="plan">
-              <div className="space-y-8 mt-4">
-                <UpcomingServices 
-                  upcomingServices={upcomingServices} 
-                  onLogService={handleLogService}
-                />
-              </div>
+              <PlanTabContent
+                planItems={initialPlan}
+                scheduledItems={initialScheduled}
+                onLogService={handleLogService}
+              />
             </TabsContent>
+
             <TabsContent value="history">
-              <div className="space-y-8 mt-4">
-                <ServiceHistoryTable serviceHistory={serviceHistory} />
-              </div>
+              <HistoryTabContent historyItems={initialHistory} />
             </TabsContent>
           </Tabs>
         </div>
       </section>
 
       <AddServiceDialog
-        isOpen={isAddDialogOpen}
+        isOpen={isModalOpen}
         onClose={closeDialog}
         onSuccess={() => {
-          closeDialog();
-          router.refresh();
+          closeDialog()
+          router.refresh()
         }}
-        initialData={selectedService ? {
-          id: selectedService.id,
-          name: selectedService.name,
-          description: selectedService.description || selectedService.master_service_schedule?.description || undefined,
-          interval_months: selectedService.interval_months ?? undefined,
-          interval_miles: selectedService.interval_miles ?? undefined,
-          due_date: selectedService.due_date ? new Date(selectedService.due_date) : null,
-          due_miles: selectedService.due_miles ?? undefined,
+        initialData={selectedPlanItem ? {
+          id: selectedPlanItem.id,
+          name: selectedPlanItem.name,
+          description: selectedPlanItem.description || selectedPlanItem.master_service_schedule?.description || undefined,
+          interval_months: selectedPlanItem.interval_months ?? undefined,
+          interval_miles: selectedPlanItem.interval_miles ?? undefined,
+          due_date: selectedPlanItem.due_date ? new Date(selectedPlanItem.due_date) : null,
+          due_miles: selectedPlanItem.due_miles ?? undefined,
           is_overdue: false,
         } : undefined}
         vehicleId={vehicle.id}
       />
     </>
-  );
+  )
 }
-
