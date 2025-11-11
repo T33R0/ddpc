@@ -213,16 +213,7 @@ export function ServicePageClient({
           closeDialog()
           router.refresh()
         }}
-        initialData={selectedPlanItem ? {
-          id: selectedPlanItem.id,
-          name: selectedPlanItem.name,
-          description: selectedPlanItem.description || selectedPlanItem.master_service_schedule?.description || undefined,
-          interval_months: selectedPlanItem.interval_months ?? undefined,
-          interval_miles: selectedPlanItem.interval_miles ?? undefined,
-          due_date: selectedPlanItem.due_date ? new Date(selectedPlanItem.due_date) : null,
-          due_miles: selectedPlanItem.due_miles ?? undefined,
-          is_overdue: false,
-        } : undefined}
+        planItem={selectedPlanItem}
         vehicleId={vehicle.id}
       />
     </>

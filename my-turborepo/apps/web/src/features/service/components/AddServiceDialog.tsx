@@ -7,13 +7,14 @@ import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Textarea } from '@repo/ui/textarea'
 import { Plus, Wrench } from 'lucide-react'
-import { UpcomingService } from '@/features/service/lib/getVehicleServiceData'
+import { ServiceInterval } from '@repo/types'
+import { logPlannedService, logFreeTextService, ServiceLogInputs } from '../actions'
 
 interface AddServiceDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
-  initialData?: UpcomingService | null
+  planItem?: ServiceInterval | null // Changed from initialData to planItem
   vehicleId: string
 }
 
@@ -24,10 +25,10 @@ interface FormData {
   odometer: string
   event_date: string
   notes: string
-  service_interval_id?: string | null
+  plan_item_id?: string | null // Changed from service_interval_id to plan_item_id
 }
 
-export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehicleId }: AddServiceDialogProps) {
+export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicleId }: AddServiceDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
@@ -37,22 +38,23 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
     odometer: '',
     event_date: new Date().toISOString().split('T')[0]!, // Default to today
     notes: '',
-    service_interval_id: null,
+    plan_item_id: null,
   })
 
   useEffect(() => {
-    if (initialData) {
+    if (planItem) {
+      // Pre-populate form for "guided" mode (planned service)
       setFormData({
-        description: initialData.name || '',
+        description: planItem.name || '',
         service_provider: '',
         cost: '',
         odometer: '',
         event_date: new Date().toISOString().split('T')[0]!,
-        notes: initialData.description || '',
-        service_interval_id: initialData.id,
+        notes: planItem.description || planItem.master_service_schedule?.description || '',
+        plan_item_id: planItem.id,
       })
     } else {
-      // Reset form when there's no initial data (for the generic "Add Service" button)
+      // Reset form for "free-text" mode
       setFormData({
         description: '',
         service_provider: '',
@@ -60,10 +62,10 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
         odometer: '',
         event_date: new Date().toISOString().split('T')[0]!,
         notes: '',
-        service_interval_id: null,
+        plan_item_id: null,
       })
     }
-  }, [initialData, isOpen]) // Rerun when dialog opens or initialData changes
+  }, [planItem, isOpen]) // Reset on open or when planItem changes
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -84,30 +86,34 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
         throw new Error('Service date is required')
       }
 
-      // Prepare the request data
-      const requestData = {
-        vehicleId,
+      // Prepare the data matching ServiceLogSchema
+      const serviceLogData: ServiceLogInputs = {
+        user_vehicle_id: vehicleId,
         description: formData.description.trim(),
         event_date: formData.event_date,
-        odometer: formData.odometer || undefined,
-        cost: formData.cost || undefined,
         service_provider: formData.service_provider || undefined,
+        cost: formData.cost ? parseFloat(formData.cost) : undefined,
+        odometer: formData.odometer ? parseFloat(formData.odometer) : undefined,
         notes: formData.notes || undefined,
-        service_interval_id: formData.service_interval_id || undefined,
+        plan_item_id: formData.plan_item_id || undefined,
       }
 
-      const response = await fetch('/api/garage/log-service', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      })
+      // Call the appropriate action based on whether it's a planned service
+      let result
+      if (planItem) {
+        // "Guided" mode - two-write operation
+        result = await logPlannedService(serviceLogData)
+      } else {
+        // "Free-text" mode - single-write operation
+        result = await logFreeTextService(serviceLogData)
+      }
 
-      const result = await response.json()
+      if (result.error) {
+        throw new Error(result.error)
+      }
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to log service')
+      if (!result.success) {
+        throw new Error('Failed to log service')
       }
 
       // Success - reset form and close dialog
@@ -116,9 +122,9 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, initialData, vehi
         service_provider: '',
         cost: '',
         odometer: '',
-        event_date: '',
+        event_date: new Date().toISOString().split('T')[0]!,
         notes: '',
-        service_interval_id: null,
+        plan_item_id: null,
       })
 
       onClose()
