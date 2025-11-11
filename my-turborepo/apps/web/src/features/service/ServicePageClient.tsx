@@ -28,8 +28,10 @@ export function ServicePageClient({
   vehicle, 
   initialPlan, 
   initialHistory, 
-  initialScheduled: _initialScheduled 
+  initialScheduled // eslint-disable-line @typescript-eslint/no-unused-vars
 }: ServicePageClientProps) {
+  // Note: initialScheduled is reserved for future use when displaying scheduled future services
+  // Currently not used but kept for API compatibility
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<ServiceInterval | null>(null)
   const router = useRouter()
@@ -41,10 +43,10 @@ export function ServicePageClient({
     id: interval.id,
     name: interval.name,
     description: interval.description || interval.master_service_schedule?.description || undefined,
-    interval_months: interval.interval_months || undefined,
-    interval_miles: interval.interval_miles || undefined,
+    interval_months: interval.interval_months ?? undefined,
+    interval_miles: interval.interval_miles ?? undefined,
     due_date: interval.due_date ? new Date(interval.due_date) : null,
-    due_miles: interval.due_miles || undefined,
+    due_miles: interval.due_miles ?? undefined,
     is_overdue: false, // For now, all are "Due" as per requirements
   }))
 
@@ -134,11 +136,11 @@ export function ServicePageClient({
         initialData={selectedService ? {
           id: selectedService.id,
           name: selectedService.name,
-          description: selectedService.description,
-          interval_months: selectedService.interval_months,
-          interval_miles: selectedService.interval_miles,
+          description: selectedService.description || selectedService.master_service_schedule?.description || undefined,
+          interval_months: selectedService.interval_months ?? undefined,
+          interval_miles: selectedService.interval_miles ?? undefined,
           due_date: selectedService.due_date ? new Date(selectedService.due_date) : null,
-          due_miles: selectedService.due_miles,
+          due_miles: selectedService.due_miles ?? undefined,
           is_overdue: false,
         } : undefined}
         vehicleId={vehicle.id}
