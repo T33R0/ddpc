@@ -5,21 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { updateServiceInterval } from '@/lib/supabase/maintenance'
 import { validateAndRecordOdometerReading } from '@/lib/odometer-service'
-
-// Zod schema for the form
-export const ServiceLogSchema = z.object({
-  user_vehicle_id: z.string().uuid(),
-  description: z.string().min(3, 'Description is required.'),
-  service_provider: z.string().optional(),
-  cost: z.coerce.number().min(0).optional(),
-  odometer: z.coerce.number().min(0).optional(),
-  event_date: z.string().min(1, 'Date is required.'), // Changed to min(1) for simple validation
-  notes: z.string().optional(),
-  // This is the key. It's the ID of the `service_intervals` item.
-  plan_item_id: z.string().uuid().optional(),
-})
-
-export type ServiceLogInputs = z.infer<typeof ServiceLogSchema>
+import { ServiceLogSchema, ServiceLogInputs } from './schema'
 
 //
 // ACTION 1: The "Two-Write" (Guided)
@@ -33,7 +19,21 @@ export async function logPlannedService(data: ServiceLogInputs) {
     }
     
     // 1. Validate data first (before any async operations)
-    const validatedData = ServiceLogSchema.parse(data)
+    let validatedData
+    try {
+      validatedData = ServiceLogSchema.parse(data)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return { 
+          error: 'Validation failed.', 
+          details: validationError.errors.map(err => ({
+            message: err.message,
+            path: err.path.map(String)
+          }))
+        }
+      }
+      throw validationError
+    }
     
     const supabase = await createClient()
 
@@ -91,19 +91,30 @@ export async function logPlannedService(data: ServiceLogInputs) {
 
     if (logError) {
       console.error('Error logging service:', logError)
-      return { error: 'Failed to create log entry.' }
+      return { error: `Failed to create log entry: ${logError.message || 'Unknown error'}` }
+    }
+
+    if (!logEntry || !logEntry.id) {
+      console.error('No log entry returned after insert')
+      return { error: 'Failed to create log entry: No entry returned' }
     }
 
     // --- WRITE 2: Update the `service_intervals` plan item ---
     if (validatedData.plan_item_id) {
-      // Use the existing updateServiceInterval function
-      await updateServiceInterval(
-        supabase,
-        validatedData.plan_item_id,
-        validatedData.user_vehicle_id,
-        odometerValue,
-        validatedData.event_date
-      )
+      try {
+        // Use the existing updateServiceInterval function
+        await updateServiceInterval(
+          supabase,
+          validatedData.plan_item_id,
+          validatedData.user_vehicle_id,
+          odometerValue,
+          validatedData.event_date
+        )
+      } catch (updateError) {
+        console.error('Error updating service interval:', updateError)
+        // This is a soft failure - the log entry was already created
+        // We don't want to fail the whole request if the update fails
+      }
     }
 
     // --- 3. Revalidate path and return success ---
@@ -146,7 +157,21 @@ export async function logFreeTextService(data: ServiceLogInputs) {
     }
     
     // 1. Validate data first (before any async operations)
-    const validatedData = ServiceLogSchema.parse(data)
+    let validatedData
+    try {
+      validatedData = ServiceLogSchema.parse(data)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return { 
+          error: 'Validation failed.', 
+          details: validationError.errors.map(err => ({
+            message: err.message,
+            path: err.path.map(String)
+          }))
+        }
+      }
+      throw validationError
+    }
     
     const supabase = await createClient()
 
@@ -202,7 +227,12 @@ export async function logFreeTextService(data: ServiceLogInputs) {
 
     if (logError) {
       console.error('Error logging service:', logError)
-      return { error: 'Failed to create log entry.' }
+      return { error: `Failed to create log entry: ${logError.message || 'Unknown error'}` }
+    }
+
+    if (!logEntry || !logEntry.id) {
+      console.error('No log entry returned after insert')
+      return { error: 'Failed to create log entry: No entry returned' }
     }
 
     // --- 2. Revalidate path and return success ---

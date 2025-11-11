@@ -8,7 +8,8 @@ import { Label } from '@repo/ui/label'
 import { Textarea } from '@repo/ui/textarea'
 import { Plus, Wrench } from 'lucide-react'
 import { ServiceInterval } from '@repo/types'
-import { logPlannedService, logFreeTextService, ServiceLogInputs } from '../actions'
+import { logPlannedService, logFreeTextService } from '../actions'
+import { ServiceLogInputs } from '../schema'
 
 interface AddServiceDialogProps {
   isOpen: boolean
@@ -92,10 +93,10 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
         description: formData.description.trim(),
         event_date: formData.event_date,
         ...(formData.service_provider?.trim() && { service_provider: formData.service_provider.trim() }),
-        ...(formData.cost && formData.cost.trim() && { cost: parseFloat(formData.cost) }),
-        ...(formData.odometer && formData.odometer.trim() && { odometer: parseFloat(formData.odometer) }),
+        ...(formData.cost && formData.cost.trim() && !isNaN(parseFloat(formData.cost)) && { cost: parseFloat(formData.cost) }),
+        ...(formData.odometer && formData.odometer.trim() && !isNaN(parseFloat(formData.odometer)) && { odometer: parseFloat(formData.odometer) }),
         ...(formData.notes?.trim() && { notes: formData.notes.trim() }),
-        ...(formData.plan_item_id && { plan_item_id: formData.plan_item_id }),
+        ...(formData.plan_item_id && formData.plan_item_id.trim() && { plan_item_id: formData.plan_item_id }),
       }
 
       // Call the appropriate action based on whether it's a planned service
