@@ -49,7 +49,7 @@ export async function logPlannedService(data: ServiceLogInputs) {
   }
 
   // Validate and record odometer reading if provided
-  let odometerValue: number | null = validatedData.odometer ?? null
+  const odometerValue: number | null = validatedData.odometer ?? null
   if (odometerValue !== null) {
     const odometerValidation = await validateAndRecordOdometerReading(
       supabase,
@@ -133,7 +133,7 @@ export async function logFreeTextService(data: ServiceLogInputs) {
   }
 
   // Validate and record odometer reading if provided
-  let odometerValue: number | null = validatedData.odometer ?? null
+  const odometerValue: number | null = validatedData.odometer ?? null
   if (odometerValue !== null) {
     const odometerValidation = await validateAndRecordOdometerReading(
       supabase,
