@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@repo/ui/dialog'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
@@ -109,6 +109,14 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
       }
 
       if (result.error) {
+        // If there are validation details, show them
+        if (result.details && Array.isArray(result.details)) {
+          const errorMessages = result.details.map((err: { message?: string; path?: string[] }) => {
+            const field = err.path?.join('.') || 'field'
+            return `${field}: ${err.message || 'Invalid value'}`
+          }).join(', ')
+          throw new Error(`${result.error} ${errorMessages}`)
+        }
         throw new Error(result.error)
       }
 
@@ -145,6 +153,9 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
             <Wrench className="h-5 w-5" />
             Add Service Record
           </DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Log a new service item. Fill in the details below.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
