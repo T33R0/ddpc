@@ -111,8 +111,8 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
       if (result.error) {
         // If there are validation details, show them
         if (result.details && Array.isArray(result.details)) {
-          const errorMessages = result.details.map((err: { message?: string; path?: string[] }) => {
-            const field = err.path?.join('.') || 'field'
+          const errorMessages = result.details.map((err: { message?: string; path?: (string | number)[] }) => {
+            const field = err.path?.map(String).join('.') || 'field'
             return `${field}: ${err.message || 'Invalid value'}`
           }).join(', ')
           throw new Error(`${result.error} ${errorMessages}`)
