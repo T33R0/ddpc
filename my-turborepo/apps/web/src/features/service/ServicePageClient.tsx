@@ -39,13 +39,13 @@ type ServicePageClientProps = {
 function PlanTabContent({
   planItems,
   scheduledItems,
-  onLogService,
+  onLogPlanItem,
 }: {
   planItems: ServiceInterval[]
   scheduledItems: MaintenanceLog[]
-  onLogService: (service: UpcomingService) => void
+  onLogPlanItem: (item: ServiceInterval) => void
 }) {
-  // Transform ServiceInterval to UpcomingService format
+  // Transform ServiceInterval to UpcomingService format for the UpcomingServices component
   const upcomingServices: UpcomingService[] = planItems.map((interval) => ({
     id: interval.id,
     name: interval.name,
@@ -56,6 +56,14 @@ function PlanTabContent({
     due_miles: interval.due_miles ?? undefined,
     is_overdue: false, // For now, all are "Due" as per requirements
   }))
+
+  // Handler that converts UpcomingService back to ServiceInterval and calls onLogPlanItem
+  const handleLogService = (service: UpcomingService) => {
+    const interval = planItems.find(si => si.id === service.id)
+    if (interval) {
+      onLogPlanItem(interval)
+    }
+  }
 
   return (
     <div className="space-y-8 mt-4">
@@ -92,7 +100,7 @@ function PlanTabContent({
       <div>
         <UpcomingServices 
           upcomingServices={upcomingServices} 
-          onLogService={onLogService}
+          onLogService={handleLogService}
         />
       </div>
     </div>
@@ -137,18 +145,16 @@ export function ServicePageClient({
   // This will be used to pass a selected plan item to the modal
   const [selectedPlanItem, setSelectedPlanItem] = useState<ServiceInterval | null>(null)
 
+  // Handler for the "+ Add Service" button (free-text)
   const openAddServiceModal = () => {
     setSelectedPlanItem(null) // Clear any selected item
     setIsModalOpen(true)
   }
 
-  const handleLogService = (service: UpcomingService) => {
-    // Find the corresponding ServiceInterval
-    const interval = initialPlan.find(si => si.id === service.id)
-    if (interval) {
-      setSelectedPlanItem(interval)
-      setIsModalOpen(true)
-    }
+  // Handler for the "Log Service" button (guided)
+  const openLogPlanItemModal = (item: ServiceInterval) => {
+    setSelectedPlanItem(item) // Set the selected item
+    setIsModalOpen(true)
   }
 
   const closeDialog = () => {
@@ -195,7 +201,7 @@ export function ServicePageClient({
               <PlanTabContent
                 planItems={initialPlan}
                 scheduledItems={initialScheduled}
-                onLogService={handleLogService}
+                onLogPlanItem={openLogPlanItemModal}
               />
             </TabsContent>
 
