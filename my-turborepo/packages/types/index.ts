@@ -250,3 +250,34 @@ export interface VehicleWithOdometer {
   year?: string;
   trim?: string;
 }
+
+// Service and Maintenance Types
+export interface ServiceInterval {
+  id: string;
+  user_id?: string;
+  user_vehicle_id: string;
+  master_service_schedule_id?: string;
+  name: string;
+  description?: string;
+  interval_months?: number | null;
+  interval_miles?: number | null;
+  due_date?: string | null;
+  due_miles?: number | null;
+  created_at?: string;
+  master_service_schedule?: {
+    description?: string;
+  } | null;
+}
+
+export interface MaintenanceLog {
+  id: string;
+  user_vehicle_id: string;
+  service_interval_id?: string | null;
+  description: string;
+  cost?: number | null;
+  odometer?: number | null;
+  event_date: string;
+  created_at?: string;
+  notes?: string | null;
+  service_provider?: string | null;
+}
