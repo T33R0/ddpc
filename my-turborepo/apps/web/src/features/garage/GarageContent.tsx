@@ -27,8 +27,15 @@ function ImageWithTimeoutFallback({
 }: ImageWithTimeoutFallbackProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showFallback, setShowFallback] = useState(false)
+  const imgRef = React.useRef<HTMLImageElement>(null)
 
   useEffect(() => {
+    // Check if image is already loaded (cached by browser)
+    if (imgRef.current?.complete && imgRef.current?.naturalHeight !== 0) {
+      setImageLoaded(true)
+      return
+    }
+
     const timer = setTimeout(() => {
       if (!imageLoaded) {
         setShowFallback(true)
@@ -36,7 +43,7 @@ function ImageWithTimeoutFallback({
     }, timeout)
 
     return () => clearTimeout(timer)
-  }, [timeout, imageLoaded])
+  }, [timeout, imageLoaded, src])
 
   if (showFallback) {
     return (
@@ -50,6 +57,7 @@ function ImageWithTimeoutFallback({
 
   return (
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
       className={className}
