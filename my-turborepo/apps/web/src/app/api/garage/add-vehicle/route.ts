@@ -49,6 +49,13 @@ export async function POST(request: Request) {
       )
     }
 
+    // Also fetch the primary image for the vehicle
+    const { data: primaryImage } = await supabase
+      .from('vehicle_primary_image')
+      .select('url')
+      .eq('vehicle_id', vehicleDataId)
+      .single()
+
     // --- 2. (EXISTING LOGIC) Create the User's Vehicle ---
     const { data: newVehicle, error: createVehicleError } = await supabase
       .from('user_vehicle')
@@ -61,6 +68,7 @@ export async function POST(request: Request) {
         model: stockData.model,
         trim: stockData.trim,
         nickname: stockData.trim,
+        photo_url: primaryImage?.url || null,
         title: stockData.trim_description || stockData.trim,
         spec_snapshot: stockData, // Copy the entire stock data object
         horsepower_hp: stockData.horsepower_hp ? parseInt(stockData.horsepower_hp) : null,
