@@ -27,10 +27,15 @@ export type ServiceLogInputs = z.infer<typeof ServiceLogSchema>
 //
 export async function logPlannedService(data: ServiceLogInputs) {
   try {
-    const supabase = await createClient()
-
-    // 1. Validate data
+    // 0. Basic input validation
+    if (!data || typeof data !== 'object') {
+      return { error: 'Invalid input data' }
+    }
+    
+    // 1. Validate data first (before any async operations)
     const validatedData = ServiceLogSchema.parse(data)
+    
+    const supabase = await createClient()
 
     const {
       data: { user },
@@ -102,17 +107,30 @@ export async function logPlannedService(data: ServiceLogInputs) {
     }
 
     // --- 3. Revalidate path and return success ---
-    revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)
+    try {
+      revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)
+    } catch (revalidateError) {
+      console.error('Error revalidating path:', revalidateError)
+      // Don't fail the whole request if revalidation fails
+    }
+    
     return { success: true, logId: logEntry.id }
   } catch (e) {
     if (e instanceof z.ZodError) {
       // Handle validation errors
       console.error('Zod validation error:', e.errors)
-      return { error: 'Validation failed.', details: e.errors }
+      return { 
+        error: 'Validation failed.', 
+        details: e.errors.map(err => ({
+          message: err.message,
+          path: err.path.map(String) // Convert to string array for serialization
+        }))
+      }
     }
     // Handle all other errors
     console.error('Unhandled error in logPlannedService:', e)
-    return { error: 'An unexpected error occurred.' }
+    const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.'
+    return { error: errorMessage }
   }
 }
 
@@ -122,10 +140,15 @@ export async function logPlannedService(data: ServiceLogInputs) {
 //
 export async function logFreeTextService(data: ServiceLogInputs) {
   try {
-    const supabase = await createClient()
-
-    // 1. Validate data
+    // 0. Basic input validation
+    if (!data || typeof data !== 'object') {
+      return { error: 'Invalid input data' }
+    }
+    
+    // 1. Validate data first (before any async operations)
     const validatedData = ServiceLogSchema.parse(data)
+    
+    const supabase = await createClient()
 
     const {
       data: { user },
@@ -183,16 +206,29 @@ export async function logFreeTextService(data: ServiceLogInputs) {
     }
 
     // --- 2. Revalidate path and return success ---
-    revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)
+    try {
+      revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)
+    } catch (revalidateError) {
+      console.error('Error revalidating path:', revalidateError)
+      // Don't fail the whole request if revalidation fails
+    }
+    
     return { success: true, logId: logEntry.id }
   } catch (e) {
     if (e instanceof z.ZodError) {
       // Handle validation errors
       console.error('Zod validation error:', e.errors)
-      return { error: 'Validation failed.', details: e.errors }
+      return { 
+        error: 'Validation failed.', 
+        details: e.errors.map(err => ({
+          message: err.message,
+          path: err.path.map(String) // Convert to string array for serialization
+        }))
+      }
     }
     // Handle all other errors
     console.error('Unhandled error in logFreeTextService:', e)
-    return { error: 'An unexpected error occurred.' }
+    const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.'
+    return { error: errorMessage }
   }
 }

@@ -91,11 +91,11 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
         user_vehicle_id: vehicleId,
         description: formData.description.trim(),
         event_date: formData.event_date,
-        service_provider: formData.service_provider || undefined,
-        cost: formData.cost ? parseFloat(formData.cost) : undefined,
-        odometer: formData.odometer ? parseFloat(formData.odometer) : undefined,
-        notes: formData.notes || undefined,
-        plan_item_id: formData.plan_item_id || undefined,
+        ...(formData.service_provider?.trim() && { service_provider: formData.service_provider.trim() }),
+        ...(formData.cost && formData.cost.trim() && { cost: parseFloat(formData.cost) }),
+        ...(formData.odometer && formData.odometer.trim() && { odometer: parseFloat(formData.odometer) }),
+        ...(formData.notes?.trim() && { notes: formData.notes.trim() }),
+        ...(formData.plan_item_id && { plan_item_id: formData.plan_item_id }),
       }
 
       // Call the appropriate action based on whether it's a planned service
