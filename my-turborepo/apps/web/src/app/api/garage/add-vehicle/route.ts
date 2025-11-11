@@ -56,10 +56,26 @@ export async function POST(request: Request) {
         owner_id: user.id,
         stock_data_id: vehicleDataId,
         vin: null, // You'll get this later
-        year: stockData.year,
+        year: stockData.year ? parseInt(stockData.year) : null,
         make: stockData.make,
         model: stockData.model,
-        // ... all other fields you copy from stockData
+        trim: stockData.trim,
+        nickname: stockData.trim,
+        title: stockData.trim_description || stockData.trim,
+        spec_snapshot: stockData, // Copy the entire stock data object
+        horsepower_hp: stockData.horsepower_hp ? parseInt(stockData.horsepower_hp) : null,
+        torque_ft_lbs: stockData.torque_ft_lbs ? parseInt(stockData.torque_ft_lbs) : null,
+        engine_size_l: stockData.engine_size_l ? parseFloat(stockData.engine_size_l) : null,
+        cylinders: stockData.cylinders,
+        fuel_type: stockData.fuel_type,
+        drive_type: stockData.drive_type,
+        transmission: stockData.transmission,
+        length_in: stockData.length_in ? parseFloat(stockData.length_in) : null,
+        width_in: stockData.width_in ? parseFloat(stockData.width_in) : null,
+        height_in: stockData.height_in ? parseFloat(stockData.height_in) : null,
+        body_type: stockData.body_type,
+        colors_exterior: stockData.colors_exterior,
+        epa_combined_mpg: stockData.epa_combined_mpg ? parseFloat(stockData.epa_combined_mpg) : null,
       })
       .select('id, owner_id, stock_data_id') // Get the new vehicle's ID
       .single()
