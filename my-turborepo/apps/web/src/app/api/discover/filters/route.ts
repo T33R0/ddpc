@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export const dynamic = 'force-dynamic';
+// Cache the response for 1 hour (3600 seconds)
+// This prevents the expensive database query from running on every request
+export const revalidate = 3600;
 
 export async function GET(request: NextRequest) {
   // Create an admin client with service role key to bypass RLS
@@ -25,16 +27,29 @@ export async function GET(request: NextRequest) {
     }
   });
   
-  // Use the SQL function to get comprehensive filter options
-  const { data, error } = await supabase.rpc('get_vehicle_filter_options');
+  try {
+    // Use the SQL function to get comprehensive filter options
+    // This query can be slow on large datasets, hence the caching above
+    const { data, error } = await supabase.rpc('get_vehicle_filter_options');
 
-  if (error) {
-    console.error('Error fetching filter options:', error);
+    if (error) {
+      console.error('Error fetching filter options:', error);
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
+  } catch (e: any) {
+    console.error('Unexpected error in filters route:', e);
     return NextResponse.json(
-      { error: error.message },
-      { status: 500 },
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(data);
 }
