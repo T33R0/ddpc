@@ -1,4 +1,6 @@
 'use client'
+// MPG Health Dial Component - Displays average MPG vs factory rating with visual gauge
+// This file must be committed to git for the build to succeed
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'

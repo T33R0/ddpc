@@ -1,4 +1,6 @@
 'use client'
+// Fuel Log Entries Component - Displays list of fuel log entries
+// This file must be committed to git for the build to succeed
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'

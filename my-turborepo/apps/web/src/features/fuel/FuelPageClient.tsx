@@ -1,4 +1,6 @@
 'use client'
+// Fuel Page Client Component - Main client component for fuel tracking page
+// This file must be committed to git for the build to succeed
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
