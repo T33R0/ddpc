@@ -1,3 +1,9 @@
+// ============================================================================
+// Vehicle Fuel Page - Server component for fuel tracking
+// CRITICAL: Ensure FuelPageClient.tsx and all component files are committed
+// File: my-turborepo/apps/web/src/app/vehicle/[id]/fuel/page.tsx
+// ============================================================================
+
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { notFound } from 'next/navigation'

@@ -1,6 +1,10 @@
 'use client'
+// ============================================================================
 // Fuel Page Client Component - Main client component for fuel tracking page
-// This file must be committed to git for the build to succeed
+// CRITICAL: This file MUST be committed to git for Vercel build to succeed
+// File: my-turborepo/apps/web/src/features/fuel/FuelPageClient.tsx
+// Dependencies: MpgHealthDial, FuelLogEntries, FuelHistoryChart, AddFuelDialog
+// ============================================================================
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
