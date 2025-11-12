@@ -34,7 +34,7 @@ export function AddFuelDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
-    event_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    event_date: new Date().toISOString().split('T')[0] || '', // YYYY-MM-DD
     odometer: currentOdometer?.toString() || '',
     gallons: '',
     price_per_gallon: '',
@@ -43,7 +43,7 @@ export function AddFuelDialog({
   // Sync default values when props change (e.g., modal opens)
   useEffect(() => {
     setFormData({
-      event_date: new Date().toISOString().split('T')[0],
+      event_date: new Date().toISOString().split('T')[0] || '',
       odometer: currentOdometer?.toString() || '',
       gallons: '',
       price_per_gallon: '',
@@ -91,7 +91,7 @@ export function AddFuelDialog({
 
       // Success - reset form and close dialog
       setFormData({
-        event_date: new Date().toISOString().split('T')[0],
+        event_date: new Date().toISOString().split('T')[0] || '',
         odometer: currentOdometer?.toString() || '',
         gallons: '',
         price_per_gallon: '',
