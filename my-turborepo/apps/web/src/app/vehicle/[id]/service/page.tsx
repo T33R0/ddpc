@@ -3,18 +3,20 @@ import { redirect } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { ServicePageClient } from '@/features/service/ServicePageClient'
 import { ServiceInterval, MaintenanceLog } from '@repo/types'
+import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
 
 export const revalidate = 0; // Ensure data is always fresh
 
 type ServicePageProps = {
-  params: Promise<{ id: string }> // This is the user_vehicle_id
+  params: Promise<{ id: string }> // This can be nickname or UUID
 }
 
 export default async function VehicleServicePage({ params }: ServicePageProps) {
-  const { id: vehicleId } = await params
+  const resolvedParams = await params
+  const vehicleSlug = decodeURIComponent(resolvedParams.id)
   const supabase = await createClient()
 
-  if (!vehicleId) {
+  if (!vehicleSlug) {
     notFound()
   }
 
@@ -29,11 +31,25 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     )
   }
 
-  // --- 1. Fetch the Vehicle (for context and ownership check) ---
+  // --- 1. Resolve vehicle slug to UUID ---
+  const vehicleInfo = await resolveVehicleSlug(vehicleSlug)
+  if (!vehicleInfo) {
+    notFound() // Triggers 404 page
+  }
+
+  const { vehicleId, nickname } = vehicleInfo
+
+  // Redirect to nickname URL if accessed via UUID and vehicle has nickname
+  const isLikelyUUID = isUUID(vehicleSlug)
+  if (nickname && isLikelyUUID) {
+    redirect(`/vehicle/${encodeURIComponent(nickname)}/service`)
+  }
+
+  // --- 2. Fetch the Vehicle (for context and ownership check) ---
   const { data: vehicle, error: vehicleError } = await supabase
     .from('user_vehicle')
     .select('id, make, model, year, nickname, odometer')
-    .eq('id', vehicleId)
+    .eq('id', vehicleId) // Use resolved UUID
     .eq('owner_id', user.id) // CRITICAL: Ownership check
     .single()
 
@@ -41,7 +57,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     notFound() // Triggers 404 page
   }
 
-  // --- 2. Fetch the "Plan" (from service_intervals) ---
+  // --- 3. Fetch the "Plan" (from service_intervals) ---
   const { data: plan, error: planError } = await supabase
     .from('service_intervals')
     .select(
@@ -52,7 +68,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
       )
     `
     )
-    .eq('user_vehicle_id', vehicle.id)
+    .eq('user_vehicle_id', vehicleId) // Use resolved UUID
     .order('interval_miles', { ascending: true })
 
   if (planError) {
@@ -60,12 +76,12 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     // We can still render the page, just with an empty plan
   }
 
-  // --- 3. Fetch the "History" (from maintenance_log) ---
+  // --- 4. Fetch the "History" (from maintenance_log) ---
   // We'll fix the "future date" bug here.
   const { data: history, error: historyError } = await supabase
     .from('maintenance_log')
     .select('*')
-    .eq('user_vehicle_id', vehicle.id)
+    .eq('user_vehicle_id', vehicleId) // Use resolved UUID
     .lte('event_date', new Date().toISOString()) // Only show items from today or the past
     .order('event_date', { ascending: false })
 
@@ -73,12 +89,12 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     console.error('Error fetching service history:', historyError)
   }
 
-  // --- 4. Fetch "Scheduled" (Future items from maintenance_log) ---
+  // --- 5. Fetch "Scheduled" (Future items from maintenance_log) ---
   // This separates future items and adds them to the "Plan" view
   const { data: scheduled, error: scheduledError } = await supabase
     .from('maintenance_log')
     .select('*')
-    .eq('user_vehicle_id', vehicle.id)
+    .eq('user_vehicle_id', vehicleId) // Use resolved UUID
     .gt('event_date', new Date().toISOString()) // Only show future items
     .order('event_date', { ascending: true })
 
@@ -86,7 +102,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     console.error('Error fetching scheduled services:', scheduledError)
   }
 
-  // --- 5. Pass all data to the Client Component ---
+  // --- 6. Pass all data to the Client Component ---
   return (
     <ServicePageClient
       vehicle={vehicle}

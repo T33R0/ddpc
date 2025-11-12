@@ -1,22 +1,38 @@
 import React from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { TimelineFeed } from '@/features/timeline/components/TimelineFeed'
 import { getVehicleEvents, VehicleEvent } from '@/features/timeline/lib/getVehicleEvents'
+import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
 
 interface VehicleHistoryPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }> // This can be nickname or UUID
 }
 
 export default async function VehicleHistoryPage({ params }: VehicleHistoryPageProps) {
-  const { id: vehicleId } = await params
+  const resolvedParams = await params
+  const vehicleSlug = decodeURIComponent(resolvedParams.id)
 
-  if (!vehicleId) {
+  if (!vehicleSlug) {
     notFound()
+  }
+
+  // Resolve vehicle slug to UUID
+  const vehicleInfo = await resolveVehicleSlug(vehicleSlug)
+  if (!vehicleInfo) {
+    notFound()
+  }
+
+  const { vehicleId, nickname } = vehicleInfo
+
+  // Redirect to nickname URL if accessed via UUID and vehicle has nickname
+  const isLikelyUUID = isUUID(vehicleSlug)
+  if (nickname && isLikelyUUID) {
+    redirect(`/vehicle/${encodeURIComponent(nickname)}/history`)
   }
 
   let events: VehicleEvent[] = []
   try {
-    events = await getVehicleEvents(vehicleId)
+    events = await getVehicleEvents(vehicleId) // Use resolved UUID
   } catch (error) {
     console.error('Error fetching vehicle events:', error)
     // For now, we'll show an empty state if there's an error
