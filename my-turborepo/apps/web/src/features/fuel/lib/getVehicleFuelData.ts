@@ -26,10 +26,17 @@ export interface VehicleFuelData {
     fuelType?: string
     factoryMpg?: number
     odometer?: number | null
+    nickname?: string | null // Actual nickname for URL generation
   }
   fuelEntries: FuelEntry[]
   stats: FuelStats
   hasData: boolean
+}
+
+// Helper function to check if a string is a UUID
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
 }
 
 export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFuelData> {
@@ -41,28 +48,76 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
     throw new Error('Unauthorized')
   }
 
-  // First, try to find the vehicle by nickname
-  let { data: vehicle, error: vehicleError } = await supabase
-    .from('user_vehicle')
-    .select('id, nickname, year, make, model, fuel_type, epa_combined_mpg, odometer')
-    .eq('owner_id', user.id)
-    .eq('nickname', vehicleSlug)
-    .single()
+  // Decode the slug in case it's URL encoded
+  const decodedSlug = decodeURIComponent(vehicleSlug)
+  
+  // Determine if this looks like a UUID or a nickname
+  const isLikelyUUID = isUUID(decodedSlug)
 
-  // If not found by nickname, try by ID
-  if (!vehicle && !vehicleError) {
+  let vehicle
+  let vehicleError
+
+  // If it looks like a UUID, try ID first, otherwise try nickname first
+  if (isLikelyUUID) {
+    // Try by ID first
     const { data: vehicleById, error: idError } = await supabase
       .from('user_vehicle')
       .select('id, nickname, year, make, model, fuel_type, epa_combined_mpg, odometer')
       .eq('owner_id', user.id)
-      .eq('id', vehicleSlug)
+      .eq('id', decodedSlug)
       .single()
 
     vehicle = vehicleById
     vehicleError = idError
+
+    // If not found by ID, try by nickname (in case UUID matches a nickname somehow)
+    if (!vehicle && !vehicleError) {
+      const { data: vehicleByNickname, error: nicknameError } = await supabase
+        .from('user_vehicle')
+        .select('id, nickname, year, make, model, fuel_type, epa_combined_mpg, odometer')
+        .eq('owner_id', user.id)
+        .eq('nickname', decodedSlug)
+        .single()
+
+      vehicle = vehicleByNickname
+      vehicleError = nicknameError
+    }
+  } else {
+    // Try by nickname first (only if slug is not empty)
+    if (decodedSlug && decodedSlug.trim()) {
+      const { data: vehicleByNickname, error: nicknameError } = await supabase
+        .from('user_vehicle')
+        .select('id, nickname, year, make, model, fuel_type, epa_combined_mpg, odometer')
+        .eq('owner_id', user.id)
+        .eq('nickname', decodedSlug)
+        .single()
+
+      vehicle = vehicleByNickname
+      vehicleError = nicknameError
+    }
+
+    // If not found by nickname, try by ID (fallback)
+    if (!vehicle && !vehicleError) {
+      const { data: vehicleById, error: idError } = await supabase
+        .from('user_vehicle')
+        .select('id, nickname, year, make, model, fuel_type, epa_combined_mpg, odometer')
+        .eq('owner_id', user.id)
+        .eq('id', decodedSlug)
+        .single()
+
+      vehicle = vehicleById
+      vehicleError = idError
+    }
   }
 
   if (vehicleError || !vehicle) {
+    console.error('getVehicleFuelData: Vehicle lookup failed', {
+      vehicleSlug: decodedSlug,
+      isLikelyUUID,
+      userId: user.id,
+      vehicleError: vehicleError?.message,
+      hasVehicle: !!vehicle
+    })
     throw new Error('Vehicle not found or access denied')
   }
 
@@ -136,6 +191,7 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
       fuelType: vehicle.fuel_type || undefined,
       factoryMpg: vehicle.epa_combined_mpg || undefined,
       odometer: vehicle.odometer || null,
+      nickname: vehicle.nickname || null, // Store actual nickname for redirects
     },
     fuelEntries,
     stats,

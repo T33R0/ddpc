@@ -252,11 +252,15 @@ function NavigationCard({
 
 type VehicleDetailPageClientProps = {
   vehicle: Vehicle
+  vehicleNickname?: string | null
 }
 
-export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProps) {
+export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDetailPageClientProps) {
   const router = useRouter()
   const [logServiceModalOpen, setLogServiceModalOpen] = useState(false)
+
+  // Use nickname for URLs if available, otherwise fall back to ID
+  const urlSlug = vehicleNickname || vehicle.id
 
   const handleNavigation = (path: string) => {
     router.push(path)
@@ -317,7 +321,7 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
             <NavigationCard
               icon={Activity}
               title="History"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/history`)}
+              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
               stats={[
                 { label: 'Last Service', value: '---' },
                 { label: 'Total Records', value: '---' }
@@ -328,7 +332,7 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
             <NavigationCard
               icon={Wrench}
               title="Service"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/service`)}
+              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
               stats={[
                 { label: 'Next Service', value: '---' },
                 { label: 'Service Count', value: '---' }
@@ -339,7 +343,7 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
             <NavigationCard
               icon={Fuel}
               title="Fuel"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/fuel`)}
+              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
               stats={[
                 { label: 'Avg MPG', value: '---' },
                 { label: 'Total Cost', value: '---' }
@@ -350,7 +354,7 @@ export function VehicleDetailPageClient({ vehicle }: VehicleDetailPageClientProp
             <NavigationCard
               icon={Settings}
               title="Mods"
-              onClick={() => handleNavigation(`/vehicle/${vehicle.id}/mods`)}
+              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
               stats={[
                 { label: 'Total Mods', value: '---' },
                 { label: 'Total Cost', value: '---' }

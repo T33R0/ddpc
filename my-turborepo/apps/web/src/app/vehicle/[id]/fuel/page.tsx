@@ -44,6 +44,13 @@ export default async function VehicleFuelPage({ params }: VehicleFuelPageProps) 
     notFound() // Trigger 404 if vehicle not found
   }
 
+  // Redirect to nickname URL if accessed via UUID and vehicle has nickname
+  const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)
+  const vehicleNickname = fuelData.vehicle.nickname // Actual nickname from database
+  if (vehicleNickname && isLikelyUUID) {
+    redirect(`/vehicle/${encodeURIComponent(vehicleNickname)}/fuel`)
+  }
+
   return (
     <section className="relative py-12 bg-black min-h-screen">
       <div

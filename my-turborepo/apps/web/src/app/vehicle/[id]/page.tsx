@@ -86,6 +86,9 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     .single()
 
   // --- 3. Transform Data ---
+  // Store the actual nickname for URL generation
+  const vehicleNickname = vehicle.nickname || null
+  
   const vehicleWithData: Vehicle = {
     id: vehicle.id,
     name: vehicle.nickname || vehicle.title || vehicleSlug || `${vehicle.vehicle_data?.year || vehicle.year || ''} ${vehicle.vehicle_data?.make || vehicle.make || ''} ${vehicle.vehicle_data?.model || vehicle.model || ''} ${vehicle.vehicle_data?.trim || vehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
@@ -215,10 +218,17 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.odometer = latestOdometer?.reading_mi || vehicle.odometer || null
   vehicleWithData.current_status = vehicle.current_status || 'parked'
 
-  // --- 4. Pass Data to Client Component ---
+  // --- 4. Redirect to nickname URL if accessed via UUID and nickname exists ---
+  const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)
+  if (vehicleNickname && isLikelyUUID) {
+    redirect(`/vehicle/${encodeURIComponent(vehicleNickname)}`)
+  }
+
+  // --- 5. Pass Data to Client Component ---
   return (
     <VehicleDetailPageClient
       vehicle={vehicleWithData}
+      vehicleNickname={vehicleNickname}
     />
   )
 }
