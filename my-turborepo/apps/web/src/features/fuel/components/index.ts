@@ -10,5 +10,5 @@ export { AddFuelEntryDialog } from './AddFuelEntryDialog'
 export { FuelHistoryChart } from './FuelHistoryChart'
 export { FuelLogEntries } from './FuelLogEntries'
 export { FuelStatsCard } from './FuelStatsCard'
-export { MpgHealthDial } from './MpgHealthDial'
+// MpgHealthDial is now inlined in FuelPageClient.tsx to avoid import issues
 
