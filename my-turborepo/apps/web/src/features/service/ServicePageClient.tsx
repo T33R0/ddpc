@@ -8,8 +8,9 @@ import {
 } from '@repo/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
 import { Button } from '@repo/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Fuel } from 'lucide-react'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
+import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
 import { UpcomingServices } from '@/features/service/components/UpcomingServices'
 import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable'
 import { UpcomingService } from '@/features/service/lib/getVehicleServiceData'
@@ -208,26 +209,29 @@ export function ServicePageClient({
 }: ServicePageClientProps) {
   const router = useRouter()
   
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  // Modal state for Service dialog
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false)
 
   // This will be used to pass a selected plan item to the modal
   const [selectedPlanItem, setSelectedPlanItem] = useState<ServiceInterval | null>(null)
 
+  // Modal state for Fuel dialog
+  const [isFuelModalOpen, setIsFuelModalOpen] = useState(false)
+
   // Handler for the "+ Add Service" button (free-text)
   const openAddServiceModal = () => {
     setSelectedPlanItem(null) // Clear any selected item
-    setIsModalOpen(true)
+    setIsServiceModalOpen(true)
   }
 
   // Handler for the "Log Service" button (guided)
   const openLogPlanItemModal = (item: ServiceInterval) => {
     setSelectedPlanItem(item) // Set the selected item
-    setIsModalOpen(true)
+    setIsServiceModalOpen(true)
   }
 
-  const closeDialog = () => {
-    setIsModalOpen(false)
+  const closeServiceDialog = () => {
+    setIsServiceModalOpen(false)
     setSelectedPlanItem(null)
   }
 
@@ -252,12 +256,21 @@ export function ServicePageClient({
                 Service records and maintenance schedules for {displayName}
               </p>
             </div>
-            <Button 
-              onClick={openAddServiceModal}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Service
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setIsFuelModalOpen(true)}
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                <Fuel className="mr-2 h-4 w-4" /> Log Fuel
+              </Button>
+              <Button 
+                onClick={openAddServiceModal}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Service
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="plan" className="w-full text-white">
@@ -283,14 +296,21 @@ export function ServicePageClient({
       </section>
 
       <AddServiceDialog
-        isOpen={isModalOpen}
-        onClose={closeDialog}
+        isOpen={isServiceModalOpen}
+        onClose={closeServiceDialog}
         onSuccess={() => {
-          closeDialog()
+          closeServiceDialog()
           router.refresh()
         }}
         planItem={selectedPlanItem}
         vehicleId={vehicle.id}
+      />
+
+      <AddFuelDialog
+        isOpen={isFuelModalOpen}
+        onClose={() => setIsFuelModalOpen(false)}
+        vehicleId={vehicle.id}
+        currentOdometer={vehicle.odometer ?? null}
       />
     </>
   )
