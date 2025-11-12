@@ -20,6 +20,8 @@ export interface UpcomingService {
   due_date?: Date | null
   due_miles?: number | null
   is_overdue: boolean
+  due_status?: 'overdue' | 'due' | 'ok'
+  due_message?: string
 }
 
 export interface VehicleServiceData {

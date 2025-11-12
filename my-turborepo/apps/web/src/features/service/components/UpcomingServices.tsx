@@ -43,10 +43,29 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h4 className="text-lg font-medium text-white">{service.name}</h4>
-                  <Badge variant="outline" className="text-yellow-400 border-yellow-400/50">
-                    Due
-                  </Badge>
+                  {service.due_status === 'overdue' && (
+                    <Badge variant="destructive">Overdue</Badge>
+                  )}
+                  {service.due_status === 'due' && (
+                    <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600">
+                      Due Soon
+                    </Badge>
+                  )}
+                  {service.due_status === 'ok' && (
+                    <Badge variant="secondary">OK</Badge>
+                  )}
+                  {!service.due_status && (
+                    <Badge variant="outline" className="text-yellow-400 border-yellow-400/50">
+                      Due
+                    </Badge>
+                  )}
                 </div>
+
+                {service.due_message && (
+                  <p className="text-sm text-gray-400 mb-2">
+                    {service.due_message}
+                  </p>
+                )}
 
                 {service.interval_miles && (
                   <div className="flex items-center gap-2 text-sm text-gray-400">

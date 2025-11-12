@@ -25,10 +25,72 @@ type ServicePageClientProps = {
     model: string
     year: string
     nickname?: string | null
+    odometer?: number | null
   }
   initialPlan: ServiceInterval[]
   initialHistory: MaintenanceLog[]
   initialScheduled: MaintenanceLog[]
+}
+
+// -----------------
+// HELPER FUNCTION: Calculate Due Status
+// -----------------
+type DueStatus = {
+  status: 'overdue' | 'due' | 'ok'
+  message: string
+}
+
+function getDueStatus(
+  item: ServiceInterval,
+  currentOdometer: number | null
+): DueStatus {
+  const now = new Date()
+  const currentMiles = currentOdometer || 0
+
+  // Case 1: Item has never been completed (due_miles is null)
+  // This means it's due based on its *base* interval.
+  if (item.due_miles === null) {
+    // If current miles are *over* the base interval, it's overdue
+    if (currentMiles > (item.interval_miles || 0)) {
+      return {
+        status: 'overdue',
+        message: `Overdue (Interval: ${item.interval_miles?.toLocaleString()} mi)`,
+      }
+    }
+    // Otherwise, it's just "Due"
+    return {
+      status: 'due',
+      message: `Due Now (First service)`,
+    }
+  }
+
+  // Case 2: Item *has* been completed, so it has a calculated due_miles/due_date
+  const dueMiles = item.due_miles || 0
+  const dueDate = item.due_date ? new Date(item.due_date) : null
+  const milesRemaining = dueMiles - currentMiles
+
+  // Check Overdue status first (most critical)
+  if (currentMiles >= dueMiles || (dueDate && now > dueDate)) {
+    return {
+      status: 'overdue',
+      message: `Overdue (Due at ${dueMiles.toLocaleString()} mi)`,
+    }
+  }
+
+  // Check Due Soon status
+  const milesWarningThreshold = (item.interval_miles || 10000) * 0.1 // 10% threshold
+  if (milesRemaining <= milesWarningThreshold) {
+    return {
+      status: 'due',
+      message: `Due in ${milesRemaining.toLocaleString()} miles`,
+    }
+  }
+
+  // Otherwise, it's OK
+  return {
+    status: 'ok',
+    message: `Due at ${dueMiles.toLocaleString()} miles`,
+  }
 }
 
 // -----------------
@@ -40,22 +102,29 @@ function PlanTabContent({
   planItems,
   scheduledItems,
   onLogPlanItem,
+  currentOdometer,
 }: {
   planItems: ServiceInterval[]
   scheduledItems: MaintenanceLog[]
   onLogPlanItem: (item: ServiceInterval) => void
+  currentOdometer: number | null
 }) {
   // Transform ServiceInterval to UpcomingService format for the UpcomingServices component
-  const upcomingServices: UpcomingService[] = planItems.map((interval) => ({
-    id: interval.id,
-    name: interval.name,
-    description: interval.description || interval.master_service_schedule?.description || undefined,
-    interval_months: interval.interval_months ?? undefined,
-    interval_miles: interval.interval_miles ?? undefined,
-    due_date: interval.due_date ? new Date(interval.due_date) : null,
-    due_miles: interval.due_miles ?? undefined,
-    is_overdue: false, // For now, all are "Due" as per requirements
-  }))
+  const upcomingServices: UpcomingService[] = planItems.map((interval) => {
+    const dueStatus = getDueStatus(interval, currentOdometer)
+    return {
+      id: interval.id,
+      name: interval.name,
+      description: interval.description || interval.master_service_schedule?.description || undefined,
+      interval_months: interval.interval_months ?? undefined,
+      interval_miles: interval.interval_miles ?? undefined,
+      due_date: interval.due_date ? new Date(interval.due_date) : null,
+      due_miles: interval.due_miles ?? undefined,
+      is_overdue: dueStatus.status === 'overdue',
+      due_status: dueStatus.status,
+      due_message: dueStatus.message,
+    }
+  })
 
   // Handler that converts UpcomingService back to ServiceInterval and calls onLogPlanItem
   const handleLogService = (service: UpcomingService) => {
@@ -202,6 +271,7 @@ export function ServicePageClient({
                 planItems={initialPlan}
                 scheduledItems={initialScheduled}
                 onLogPlanItem={openLogPlanItemModal}
+                currentOdometer={vehicle.odometer ?? null}
               />
             </TabsContent>
 

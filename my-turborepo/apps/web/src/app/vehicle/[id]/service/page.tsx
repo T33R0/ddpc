@@ -32,7 +32,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
   // --- 1. Fetch the Vehicle (for context and ownership check) ---
   const { data: vehicle, error: vehicleError } = await supabase
     .from('user_vehicle')
-    .select('id, make, model, year, nickname')
+    .select('id, make, model, year, nickname, odometer')
     .eq('id', vehicleId)
     .eq('owner_id', user.id) // CRITICAL: Ownership check
     .single()
