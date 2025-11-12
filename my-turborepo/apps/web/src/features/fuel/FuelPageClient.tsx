@@ -10,10 +10,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
 import { Fuel } from 'lucide-react'
-import { AddFuelDialog } from './components/AddFuelDialog'
-import { FuelHistoryChart } from './components/FuelHistoryChart'
-import { MpgHealthDial } from './components/MpgHealthDial'
-import { FuelLogEntries } from './components/FuelLogEntries'
+import { 
+  AddFuelDialog, 
+  FuelHistoryChart, 
+  MpgHealthDial, 
+  FuelLogEntries 
+} from './components'
 import { VehicleFuelData } from './lib/getVehicleFuelData'
 
 interface FuelPageClientProps {
