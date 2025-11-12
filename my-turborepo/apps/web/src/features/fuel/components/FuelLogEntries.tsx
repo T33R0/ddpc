@@ -9,19 +9,7 @@ interface FuelLogEntriesProps {
 }
 
 export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
-  // Sort entries by date descending (most recent first)
-  const sortedEntries = [...fuelEntries].sort((a, b) => 
-    b.date.getTime() - a.date.getTime()
-  )
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value)
-  }
-
-  if (sortedEntries.length === 0) {
+  if (fuelEntries.length === 0) {
     return (
       <Card className="bg-gray-900/50 border-gray-700">
         <CardHeader>
@@ -29,12 +17,21 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-400">
-            <p className="text-sm">No fuel entries yet</p>
-            <p className="text-xs mt-1">Add your first fuel log to get started</p>
+            <p className="text-sm">No fuel entries yet. Log your first fill-up to get started.</p>
           </div>
         </CardContent>
       </Card>
     )
+  }
+
+  // Sort entries by date (newest first)
+  const sortedEntries = [...fuelEntries].sort((a, b) => b.date.getTime() - a.date.getTime())
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value)
   }
 
   return (
@@ -47,26 +44,25 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
           {sortedEntries.map((entry) => (
             <div
               key={entry.id}
-              className="p-4 border rounded-md bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors"
+              className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <p className="text-white font-medium">
+                    <div className="text-sm font-medium text-white">
                       {entry.date.toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',
                       })}
-                    </p>
+                    </div>
                     {entry.mpg && (
-                      <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/30">
+                      <div className="px-2 py-1 bg-green-500/20 rounded text-xs text-green-400 font-medium">
                         {entry.mpg.toFixed(1)} MPG
-                      </span>
+                      </div>
                     )}
                   </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     <div>
                       <p className="text-gray-400">Gallons</p>
                       <p className="text-white font-medium">{entry.gallons.toFixed(2)}</p>
@@ -81,11 +77,11 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
                         <p className="text-white font-medium">{formatCurrency(entry.cost)}</p>
                       </div>
                     )}
-                    {entry.cost && entry.gallons && (
+                    {entry.mpg && (
                       <div>
-                        <p className="text-gray-400">Price/Gallon</p>
+                        <p className="text-gray-400">Price/Gal</p>
                         <p className="text-white font-medium">
-                          {formatCurrency(entry.cost / entry.gallons)}
+                          {entry.cost ? formatCurrency(entry.cost / entry.gallons) : 'N/A'}
                         </p>
                       </div>
                     )}

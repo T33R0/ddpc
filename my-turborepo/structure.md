@@ -238,8 +238,6 @@ CREATE TABLE public.maintenance_log (
   odometer integer,
   event_date timestamp with time zone NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
-  notes text,
-  service_provider text,
   CONSTRAINT maintenance_log_pkey PRIMARY KEY (id),
   CONSTRAINT maintenance_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id),
   CONSTRAINT maintenance_log_service_interval_id_fkey FOREIGN KEY (service_interval_id) REFERENCES public.service_intervals(id)
@@ -290,7 +288,6 @@ CREATE TABLE public.odometer_log (
   user_vehicle_id uuid NOT NULL,
   reading_mi integer NOT NULL CHECK (reading_mi >= 0),
   recorded_at timestamp with time zone NOT NULL DEFAULT now(),
-  event_date timestamp with time zone,
   CONSTRAINT odometer_log_pkey PRIMARY KEY (id),
   CONSTRAINT odometer_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
@@ -356,23 +353,11 @@ CREATE TABLE public.user_vehicle (
   current_status text DEFAULT 'daily_driver'::text CHECK (current_status = ANY (ARRAY['daily_driver'::text, 'parked'::text, 'listed'::text, 'sold'::text, 'retired'::text])),
   owner_id uuid NOT NULL,
   odometer integer,
-  horsepower_hp integer,
-  torque_ft_lbs integer,
-  engine_size_l numeric,
-  cylinders text,
-  fuel_type text,
-  drive_type text,
-  transmission text,
-  length_in numeric,
-  width_in numeric,
-  height_in numeric,
-  body_type text,
-  colors_exterior text,
-  epa_combined_mpg numeric,
   CONSTRAINT user_vehicle_pkey PRIMARY KEY (id),
   CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id),
   CONSTRAINT user_vehicle_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
 );
+
 CREATE TABLE public.vehicle_data (
   id text NOT NULL,
   make text,
@@ -496,6 +481,7 @@ CREATE TABLE public.vehicle_data (
   new_year text,
   CONSTRAINT vehicle_data_pkey PRIMARY KEY (id)
 );
+
 CREATE TABLE public.vehicle_image_archive (
   vehicle_id text NOT NULL,
   url text NOT NULL,
@@ -504,6 +490,7 @@ CREATE TABLE public.vehicle_image_archive (
   CONSTRAINT vehicle_image_archive_pkey PRIMARY KEY (vehicle_id, url),
   CONSTRAINT vehicle_image_archive_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicle_data(id)
 );
+
 CREATE TABLE public.vehicle_primary_image (
   vehicle_id text NOT NULL,
   url text,
@@ -515,6 +502,7 @@ CREATE TABLE public.vehicle_primary_image (
   CONSTRAINT vehicle_primary_image_pkey PRIMARY KEY (vehicle_id),
   CONSTRAINT vehicle_primary_image_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicle_data(id)
 );
+
 CREATE TABLE public.vehicle_url_queue (
   id text NOT NULL,
   CONSTRAINT vehicle_url_queue_pkey PRIMARY KEY (id)
