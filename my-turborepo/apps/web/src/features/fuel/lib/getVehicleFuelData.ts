@@ -25,6 +25,7 @@ export interface VehicleFuelData {
     ymmt: string
     fuelType?: string
     factoryMpg?: number
+    odometer?: number | null
   }
   fuelEntries: FuelEntry[]
   stats: FuelStats
@@ -43,7 +44,7 @@ export async function getVehicleFuelData(vehicleId: string): Promise<VehicleFuel
   // Fetch vehicle info with fuel data
   const { data: vehicle, error: vehicleError } = await supabase
     .from('user_vehicle')
-    .select('id, name, ymmt, fuel_type, epa_combined_mpg')
+    .select('id, name, ymmt, fuel_type, epa_combined_mpg, odometer')
     .eq('id', vehicleId)
     .eq('owner_id', user.id)
     .single()
@@ -52,73 +53,37 @@ export async function getVehicleFuelData(vehicleId: string): Promise<VehicleFuel
     throw new Error('Vehicle not found or access denied')
   }
 
-  // Fetch maintenance logs that might be fuel entries
-  // Look for descriptions containing fuel-related keywords
-  const fuelKeywords = ['fuel', 'gas', 'gasoline', 'diesel', 'fill', 'refuel', 'pump']
-  const { data: maintenanceLogs, error: maintenanceError } = await supabase
-    .from('maintenance_log')
-    .select('id, description, cost, odometer, event_date, notes')
+  // Fetch fuel log entries from fuel_log table
+  const { data: fuelLogs, error: fuelLogError } = await supabase
+    .from('fuel_log')
+    .select('id, event_date, odometer, gallons, price_per_gallon, total_cost, trip_miles, mpg')
     .eq('user_vehicle_id', vehicleId)
-    .not('odometer', 'is', null) // Must have odometer reading
-    .ilike('description', `%${fuelKeywords.join('%')}%`) // Contains fuel keywords
     .order('event_date', { ascending: true })
 
-  if (maintenanceError) {
-    console.error('Error fetching maintenance logs:', maintenanceError)
-    throw new Error('Failed to fetch maintenance data')
+  if (fuelLogError) {
+    console.error('Error fetching fuel logs:', fuelLogError)
+    throw new Error('Failed to fetch fuel data')
   }
-
-  // For now, we'll work with maintenance logs as fuel entries
-  // In a real implementation, there might be a separate fuel_log table
-  // For now, let's assume fuel entries are stored as maintenance logs with fuel keywords
 
   const fuelEntries: FuelEntry[] = []
   let totalGallons = 0
   let totalCost = 0
 
-  if (maintenanceLogs && maintenanceLogs.length > 0) {
-    // Sort by date to calculate MPG between entries
-    const sortedLogs = maintenanceLogs.sort((a, b) =>
-      new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
-    )
-
-    // Convert maintenance logs to fuel entries
-    // For now, we'll use a simplified approach - assuming cost is fuel cost
-    // and we'll need gallons data (this might be stored in notes or we'd need a separate field)
-    sortedLogs.forEach((log, index) => {
-      // Try to extract gallons from notes or description
-      // This is a placeholder - real implementation would have gallons field
-      let gallons = 0
-
-      // Look for gallon amounts in notes/description (e.g., "10.5 gallons")
-      const gallonMatch = (log.notes || log.description || '').match(/(\d+(?:\.\d+)?)\s*(?:gal|gallons?)/i)
-      if (gallonMatch) {
-        gallons = parseFloat(gallonMatch[1])
-      }
-
-      // If no gallons found, skip this entry for MPG calculations
-      if (gallons <= 0) return
-
+  if (fuelLogs && fuelLogs.length > 0) {
+    fuelLogs.forEach((log) => {
       const fuelEntry: FuelEntry = {
         id: log.id,
         date: new Date(log.event_date),
-        gallons: gallons,
-        cost: log.cost || undefined,
-        odometer: log.odometer!,
-      }
-
-      // Calculate MPG if we have previous entry
-      if (index > 0 && sortedLogs[index - 1]!.odometer && log.odometer) {
-        const milesDriven = log.odometer - sortedLogs[index - 1]!.odometer
-        if (milesDriven > 0) {
-          fuelEntry.mpg = milesDriven / gallons
-        }
+        gallons: log.gallons,
+        cost: log.total_cost || undefined,
+        odometer: log.odometer,
+        mpg: log.mpg || undefined,
       }
 
       fuelEntries.push(fuelEntry)
 
-      totalGallons += gallons
-      if (log.cost) totalCost += log.cost
+      totalGallons += log.gallons
+      if (log.total_cost) totalCost += log.total_cost
     })
   }
 
@@ -152,6 +117,7 @@ export async function getVehicleFuelData(vehicleId: string): Promise<VehicleFuel
       ymmt: vehicle.ymmt,
       fuelType: vehicle.fuel_type || undefined,
       factoryMpg: vehicle.epa_combined_mpg || undefined,
+      odometer: vehicle.odometer || null,
     },
     fuelEntries,
     stats,

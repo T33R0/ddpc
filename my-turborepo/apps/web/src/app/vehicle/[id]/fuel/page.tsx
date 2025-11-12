@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import { FuelStatsCard } from '@/features/fuel/components/FuelStatsCard'
 import { FuelHistoryChart } from '@/features/fuel/components/FuelHistoryChart'
 import { AddFuelEntryDialog } from '@/features/fuel/components/AddFuelEntryDialog'
+import { MPGTrendChart } from '@/features/fuel/components/MPGTrendChart'
+import { MPGHealthDial } from '@/features/fuel/components/MPGHealthDial'
+import { FuelLogEntries } from '@/features/fuel/components/FuelLogEntries'
 import { getVehicleFuelData } from '@/features/fuel/lib/getVehicleFuelData'
 
 interface VehicleFuelPageProps {
@@ -42,11 +45,28 @@ export default async function VehicleFuelPage({ params }: VehicleFuelPageProps) 
               <h1 className="text-4xl font-bold text-white">Vehicle Fuel</h1>
               <p className="text-lg text-gray-400 mt-2">Fuel economy and consumption tracking</p>
             </div>
-            <AddFuelEntryDialog vehicleId={vehicleId} />
+            {fuelData && (
+              <AddFuelEntryDialog 
+                vehicleId={vehicleId} 
+                currentOdometer={fuelData.vehicle.odometer ?? null}
+              />
+            )}
           </div>
 
           {fuelData ? (
             <div className="space-y-6">
+              {/* MPG Trend Chart and Health Dial - Top Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <MPGTrendChart fuelEntries={fuelData.fuelEntries} />
+                <MPGHealthDial 
+                  averageMpg={fuelData.stats.averageMpg}
+                  factoryMpg={fuelData.stats.factoryMpg}
+                />
+              </div>
+
+              {/* Fuel Log Entries List */}
+              <FuelLogEntries fuelEntries={fuelData.fuelEntries} />
+
               {/* Vehicle Info Header */}
               <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
                 <div className="flex items-center justify-between">
