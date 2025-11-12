@@ -259,8 +259,7 @@ export function ServicePageClient({
             <div className="flex gap-2">
               <Button 
                 onClick={() => setIsFuelModalOpen(true)}
-                variant="outline"
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
                 <Fuel className="mr-2 h-4 w-4" /> Log Fuel
               </Button>

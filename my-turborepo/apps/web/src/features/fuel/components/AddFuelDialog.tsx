@@ -22,6 +22,8 @@ interface FormData {
   odometer: string
   gallons: string
   price_per_gallon: string
+  trip_miles: string
+  octane: string
 }
 
 export function AddFuelDialog({
@@ -38,6 +40,8 @@ export function AddFuelDialog({
     odometer: currentOdometer?.toString() || '',
     gallons: '',
     price_per_gallon: '',
+    trip_miles: '',
+    octane: '',
   })
 
   // Sync default values when props change (e.g., modal opens)
@@ -47,6 +51,8 @@ export function AddFuelDialog({
       odometer: currentOdometer?.toString() || '',
       gallons: '',
       price_per_gallon: '',
+      trip_miles: '',
+      octane: '',
     })
     setError(null)
   }, [isOpen, vehicleId, currentOdometer])
@@ -69,6 +75,8 @@ export function AddFuelDialog({
         odometer: parseFloat(formData.odometer),
         gallons: parseFloat(formData.gallons),
         price_per_gallon: parseFloat(formData.price_per_gallon),
+        trip_miles: formData.trip_miles ? parseFloat(formData.trip_miles) : null,
+        octane: formData.octane ? parseFloat(formData.octane) : null,
       }
 
       const result = await logFuel(fuelLogData)
@@ -95,6 +103,8 @@ export function AddFuelDialog({
         odometer: currentOdometer?.toString() || '',
         gallons: '',
         price_per_gallon: '',
+        trip_miles: '',
+        octane: '',
       })
 
       onClose()
@@ -187,6 +197,39 @@ export function AddFuelDialog({
               placeholder="e.g., 3.459"
               className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
               required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="trip_miles" className="text-gray-300">
+              Trip Miles (optional)
+            </Label>
+            <Input
+              id="trip_miles"
+              type="number"
+              step="0.1"
+              value={formData.trip_miles}
+              onChange={(e) => handleInputChange('trip_miles', e.target.value)}
+              placeholder="e.g., 350.5"
+              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Leave blank to calculate automatically from previous fuel-up
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="octane" className="text-gray-300">
+              Octane Rating (optional)
+            </Label>
+            <Input
+              id="octane"
+              type="number"
+              step="1"
+              value={formData.octane}
+              onChange={(e) => handleInputChange('octane', e.target.value)}
+              placeholder="e.g., 87, 91, 93"
+              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
             />
           </div>
 

@@ -180,54 +180,21 @@ The application uses Supabase with the following database schema:
 
 ### Core Tables
 
-```sql
-CREATE TABLE public.ai_embeddings (
+CREATE TABLE public.fuel_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  namespace text NOT NULL,
-  ref_id text NOT NULL,
-  title text,
-  text text NOT NULL,
-  embedding USER-DEFINED NOT NULL,
-  CONSTRAINT ai_embeddings_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.ai_memory_kv (
-  user_id uuid NOT NULL,
-  scope text NOT NULL,
-  key text NOT NULL,
-  value jsonb,
-  CONSTRAINT ai_memory_kv_pkey PRIMARY KEY (user_id, scope, key),
-  CONSTRAINT ai_memory_kv_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
-);
-CREATE TABLE public.ai_prompts (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  version text NOT NULL,
-  text text NOT NULL,
-  is_active boolean DEFAULT true,
-  CONSTRAINT ai_prompts_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.ai_session (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  started_at timestamp with time zone DEFAULT now(),
-  last_used_at timestamp with time zone DEFAULT now(),
-  skill_hint text,
-  token_spend numeric DEFAULT 0,
-  CONSTRAINT ai_session_pkey PRIMARY KEY (id),
-  CONSTRAINT ai_session_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
-);
-CREATE TABLE public.ai_turn (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  session_id uuid NOT NULL,
-  role text CHECK (role = ANY (ARRAY['user'::text, 'assistant'::text, 'tool'::text])),
-  text text,
-  tool_calls jsonb,
-  model_name text,
-  prompt_version text,
-  cost_cents numeric DEFAULT 0,
+  user_id uuid,
+  user_vehicle_id uuid,
+  event_date date NOT NULL,
+  odometer integer NOT NULL CHECK (odometer > 0),
+  gallons numeric NOT NULL CHECK (gallons > 0::numeric),
+  price_per_gallon numeric NOT NULL,
+  total_cost numeric,
+  trip_miles numeric,
+  mpg numeric,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT ai_turn_pkey PRIMARY KEY (id),
-  CONSTRAINT ai_turn_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.ai_session(id)
+  CONSTRAINT fuel_log_pkey PRIMARY KEY (id),
+  CONSTRAINT fuel_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT fuel_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
 CREATE TABLE public.maintenance_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -238,6 +205,8 @@ CREATE TABLE public.maintenance_log (
   odometer integer,
   event_date timestamp with time zone NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  notes text,
+  service_provider text,
   CONSTRAINT maintenance_log_pkey PRIMARY KEY (id),
   CONSTRAINT maintenance_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id),
   CONSTRAINT maintenance_log_service_interval_id_fkey FOREIGN KEY (service_interval_id) REFERENCES public.service_intervals(id)
@@ -249,6 +218,36 @@ CREATE TABLE public.maintenance_parts (
   CONSTRAINT maintenance_parts_pkey PRIMARY KEY (maintenance_log_id, part_id),
   CONSTRAINT maintenance_parts_maintenance_log_id_fkey FOREIGN KEY (maintenance_log_id) REFERENCES public.maintenance_log(id),
   CONSTRAINT maintenance_parts_part_id_fkey FOREIGN KEY (part_id) REFERENCES public.part_inventory(id)
+);
+CREATE TABLE public.master_parts_list (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  part_number text,
+  name text NOT NULL,
+  description text,
+  oem_or_aftermarket text CHECK (oem_or_aftermarket = ANY (ARRAY['oem'::text, 'aftermarket'::text])),
+  vendor_name text,
+  vendor_link text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT master_parts_list_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.master_schedule_to_parts (
+  master_service_schedule_id uuid NOT NULL,
+  master_parts_list_id uuid NOT NULL,
+  quantity_required integer NOT NULL DEFAULT 1,
+  CONSTRAINT master_schedule_to_parts_pkey PRIMARY KEY (master_service_schedule_id, master_parts_list_id),
+  CONSTRAINT master_schedule_to_parts_master_service_schedule_id_fkey FOREIGN KEY (master_service_schedule_id) REFERENCES public.master_service_schedule(id),
+  CONSTRAINT master_schedule_to_parts_master_parts_list_id_fkey FOREIGN KEY (master_parts_list_id) REFERENCES public.master_parts_list(id)
+);
+CREATE TABLE public.master_service_schedule (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  vehicle_data_id text,
+  name text NOT NULL,
+  description text,
+  interval_miles integer,
+  interval_months integer,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT master_service_schedule_pkey PRIMARY KEY (id),
+  CONSTRAINT master_service_schedule_vehicle_data_id_fkey FOREIGN KEY (vehicle_data_id) REFERENCES public.vehicle_data(id)
 );
 CREATE TABLE public.mod_outcome (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -288,6 +287,7 @@ CREATE TABLE public.odometer_log (
   user_vehicle_id uuid NOT NULL,
   reading_mi integer NOT NULL CHECK (reading_mi >= 0),
   recorded_at timestamp with time zone NOT NULL DEFAULT now(),
+  event_date timestamp with time zone,
   CONSTRAINT odometer_log_pkey PRIMARY KEY (id),
   CONSTRAINT odometer_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
@@ -313,8 +313,14 @@ CREATE TABLE public.service_intervals (
   interval_months integer,
   interval_miles integer,
   description text,
+  master_service_schedule_id uuid,
+  user_vehicle_id uuid,
+  due_date date,
+  due_miles integer,
   CONSTRAINT service_intervals_pkey PRIMARY KEY (id),
-  CONSTRAINT service_intervals_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT service_intervals_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT service_intervals_master_service_schedule_id_fkey FOREIGN KEY (master_service_schedule_id) REFERENCES public.master_service_schedule(id),
+  CONSTRAINT service_intervals_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
 CREATE TABLE public.user_profile (
   user_id uuid NOT NULL,
@@ -353,11 +359,23 @@ CREATE TABLE public.user_vehicle (
   current_status text DEFAULT 'daily_driver'::text CHECK (current_status = ANY (ARRAY['daily_driver'::text, 'parked'::text, 'listed'::text, 'sold'::text, 'retired'::text])),
   owner_id uuid NOT NULL,
   odometer integer,
+  horsepower_hp integer,
+  torque_ft_lbs integer,
+  engine_size_l numeric,
+  cylinders text,
+  fuel_type text,
+  drive_type text,
+  transmission text,
+  length_in numeric,
+  width_in numeric,
+  height_in numeric,
+  body_type text,
+  colors_exterior text,
+  epa_combined_mpg numeric,
   CONSTRAINT user_vehicle_pkey PRIMARY KEY (id),
   CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id),
   CONSTRAINT user_vehicle_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
 );
-
 CREATE TABLE public.vehicle_data (
   id text NOT NULL,
   make text,
@@ -481,7 +499,6 @@ CREATE TABLE public.vehicle_data (
   new_year text,
   CONSTRAINT vehicle_data_pkey PRIMARY KEY (id)
 );
-
 CREATE TABLE public.vehicle_image_archive (
   vehicle_id text NOT NULL,
   url text NOT NULL,
@@ -490,7 +507,6 @@ CREATE TABLE public.vehicle_image_archive (
   CONSTRAINT vehicle_image_archive_pkey PRIMARY KEY (vehicle_id, url),
   CONSTRAINT vehicle_image_archive_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicle_data(id)
 );
-
 CREATE TABLE public.vehicle_primary_image (
   vehicle_id text NOT NULL,
   url text,
@@ -502,12 +518,10 @@ CREATE TABLE public.vehicle_primary_image (
   CONSTRAINT vehicle_primary_image_pkey PRIMARY KEY (vehicle_id),
   CONSTRAINT vehicle_primary_image_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES public.vehicle_data(id)
 );
-
 CREATE TABLE public.vehicle_url_queue (
   id text NOT NULL,
   CONSTRAINT vehicle_url_queue_pkey PRIMARY KEY (id)
 );
-```
 
 ### Table Overview
 
@@ -518,20 +532,22 @@ CREATE TABLE public.vehicle_url_queue (
 - **`user_vehicle`**: User's personal vehicle collection
 - **`user_profile`**: Extended user profile information with preferred_vehicle_id
 
-#### AI & Chat Features
-- **`ai_session`**: AI conversation sessions
-- **`ai_turn`**: Individual messages in AI conversations
-- **`ai_prompts`**: Stored AI prompts and templates
-- **`ai_memory_kv`**: Key-value storage for AI memory
-- **`ai_embeddings`**: Vector embeddings for AI search
+#### Fuel & Maintenance Tracking
+- **`fuel_log`**: User's fuel consumption and cost tracking
+- **`maintenance_log`**: User's maintenance history with notes and service provider info
+- **`maintenance_parts`**: Junction table linking maintenance events to parts used
 
-#### Maintenance & Parts
-- **`service_intervals`**: Maintenance service intervals
-- **`maintenance_log`**: User's maintenance history
-- **`part_inventory`**: User's parts inventory
-- **`mods`**: Vehicle modifications tracking with odometer
-- **`mod_outcome`**: Modification outcome tracking (success/failure)
-- **`maintenance_parts`** & **`mod_parts`**: Junction tables for parts usage
+#### Parts Management
+- **`master_parts_list`**: Master catalog of available parts (OEM/Aftermarket)
+- **`master_schedule_to_parts`**: Links service schedules to required parts
+- **`master_service_schedule`**: Standardized maintenance schedules by vehicle
+- **`part_inventory`**: User's personal parts inventory
+- **`service_intervals`**: User's customized maintenance intervals
+
+#### Modifications & Outcomes
+- **`mods`**: Vehicle modifications tracking with odometer and status
+- **`mod_outcome`**: Modification outcome tracking (success/failure modes)
+- **`mod_parts`**: Junction table linking modifications to parts used
 
 #### Tracking & Monitoring
 - **`odometer_log`**: Historical odometer readings for vehicles

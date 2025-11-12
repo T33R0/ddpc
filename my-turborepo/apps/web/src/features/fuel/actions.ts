@@ -63,11 +63,16 @@ export async function logFuel(data: FuelLogInputs) {
 
     // --- 2. CALCULATE NEW FIELDS ---
     const total_cost = validatedData.gallons * validatedData.price_per_gallon
-    let trip_miles = null
+    let trip_miles = validatedData.trip_miles ?? null
     let mpg = null
 
-    if (lastLog && validatedData.odometer > lastLog.odometer) {
+    // If trip_miles not provided, calculate it from previous log
+    if (!trip_miles && lastLog && validatedData.odometer > lastLog.odometer) {
       trip_miles = validatedData.odometer - lastLog.odometer
+    }
+
+    // Calculate MPG if we have trip_miles
+    if (trip_miles && trip_miles > 0) {
       mpg = trip_miles / validatedData.gallons
     }
 
@@ -84,6 +89,7 @@ export async function logFuel(data: FuelLogInputs) {
         total_cost: total_cost,
         trip_miles: trip_miles,
         mpg: mpg,
+        octane: validatedData.octane ?? null,
       })
       .select('id')
       .single()

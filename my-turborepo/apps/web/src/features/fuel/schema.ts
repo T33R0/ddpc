@@ -7,6 +7,8 @@ export const FuelLogSchema = z.object({
   odometer: z.coerce.number().min(1, 'Odometer is required.'),
   gallons: z.coerce.number().min(0.01, 'Gallons are required.'),
   price_per_gallon: z.coerce.number().min(0.01, 'Price is required.'),
+  trip_miles: z.coerce.number().optional().nullable(),
+  octane: z.coerce.number().optional().nullable(),
 })
 
 export type FuelLogInputs = z.infer<typeof FuelLogSchema>
