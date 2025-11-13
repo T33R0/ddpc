@@ -122,7 +122,6 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
       .filter((mp: any) => mp.part_inventory) // Filter out any mod_parts with missing part_inventory
       .map((mp: any) => {
         const part = mp.part_inventory
-        if (!part) return null
         return {
           id: part.id || '',
           name: part.name || 'Unknown Part',
@@ -131,7 +130,6 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
           quantity: mp.quantity_used || 1
         }
       })
-      .filter((p): p is ModPart => p !== null)
 
     // Transform outcome - mod_outcome is an array but should only have one item due to UNIQUE constraint
     let outcome: ModOutcome | undefined
