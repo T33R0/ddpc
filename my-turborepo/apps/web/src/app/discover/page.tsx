@@ -118,7 +118,19 @@ function DiscoverContent() {
         setLoading(true);
         setError(null);
 
-        const vehicleData = await getVehicleSummaries(1, 24, filters);
+        // Use initial filters (all null) for the first load
+        const initialFilters = {
+          minYear: null,
+          maxYear: null,
+          make: null,
+          model: null,
+          engineType: null,
+          fuelType: null,
+          drivetrain: null,
+          doors: null,
+          vehicleType: null,
+        };
+        const vehicleData = await getVehicleSummaries(1, 24, initialFilters);
 
         setVehicles(vehicleData);
         setAllVehicles(vehicleData);
@@ -135,7 +147,8 @@ function DiscoverContent() {
     }
 
     initializeVehicles();
-  }, []); // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount with initial filters
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);

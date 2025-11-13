@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type { PostgrestResponse } from '@supabase/supabase-js';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,11 +17,14 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
-// Helper function to add timeout to promises
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+// Helper function to add timeout to Supabase RPC promises
+function withTimeout<T>(
+  promise: Promise<PostgrestResponse<T>>,
+  timeoutMs: number
+): Promise<PostgrestResponse<T>> {
   return Promise.race([
     promise,
-    new Promise<T>((_, reject) =>
+    new Promise<PostgrestResponse<T>>((_, reject) =>
       setTimeout(() => reject(new Error('Request timeout: The query took too long to complete')), timeoutMs)
     ),
   ]);
