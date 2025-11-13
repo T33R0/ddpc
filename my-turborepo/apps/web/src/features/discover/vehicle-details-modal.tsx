@@ -1,12 +1,60 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ImageWithFallback } from '../../components/image-with-fallback';
-import { getVehicleImageSources } from '../../lib/vehicle-images';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
+
+// Simple image component that matches the gallery card behavior
+type ImageWithTimeoutFallbackProps = {
+  src: string;
+  fallbackSrc: string;
+  alt: string;
+  className?: string;
+  timeout?: number;
+};
+
+function ImageWithTimeoutFallback({
+  src,
+  fallbackSrc,
+  alt,
+  className,
+  timeout = 3000
+}: ImageWithTimeoutFallbackProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!imageLoaded) {
+        setShowFallback(true);
+      }
+    }, timeout);
+
+    return () => clearTimeout(timer);
+  }, [timeout, imageLoaded]);
+
+  if (showFallback) {
+    return (
+      <img
+        src={fallbackSrc}
+        alt={alt}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onLoad={() => setImageLoaded(true)}
+      onError={() => setShowFallback(true)}
+    />
+  );
+}
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;
@@ -204,12 +252,6 @@ const VehicleDetailsModal = ({
 
   // Use the same image priority as the gallery card: heroImage first, then selected trim's image_url
   const primaryImageUrl = summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
-  const imageSources = getVehicleImageSources(
-    primaryImageUrl,
-    summary.make,
-    summary.model,
-    summary.year
-  );
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
@@ -262,12 +304,10 @@ const VehicleDetailsModal = ({
             {/* Left Column - Image and Trim Selector */}
             <div className="space-y-4">
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-gray-800">
-                <ImageWithFallback
-                  src={imageSources}
+                <ImageWithTimeoutFallback
+                  src={primaryImageUrl}
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
-                  width={600}
-                  height={338}
                   className="w-full h-full object-cover"
                 />
               </div>
