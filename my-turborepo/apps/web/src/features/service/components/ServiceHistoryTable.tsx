@@ -11,11 +11,16 @@ interface ServiceHistoryTableProps {
 export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps) {
   if (serviceHistory.length === 0) {
     return (
-      <Card className="bg-gray-900/50 border-gray-800">
+      <Card 
+        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <Wrench className="h-12 w-12 text-gray-600 mb-4" />
+          <Wrench className="h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-400 mb-2">No Service History</h3>
-          <p className="text-sm text-gray-500 text-center max-w-md">
+          <p className="text-sm text-gray-400 text-center max-w-md">
             Service records will appear here once maintenance work has been logged for this vehicle.
           </p>
         </CardContent>
@@ -24,7 +29,12 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
   }
 
   return (
-    <Card className="bg-gray-900/50 border-gray-800">
+    <Card 
+      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+      }}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Wrench className="h-5 w-5" />
@@ -35,7 +45,7 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
         {serviceHistory.map((service) => (
           <div
             key={service.id}
-            className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors"
+            className="bg-black/30 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:border-white/30 transition-colors"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">

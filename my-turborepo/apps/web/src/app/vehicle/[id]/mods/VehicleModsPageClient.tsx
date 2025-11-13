@@ -51,19 +51,39 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
           <div className="space-y-8">
             {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+              <div 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <div className="text-2xl font-bold text-white">{modsData.summary.totalMods}</div>
                 <div className="text-sm text-gray-400">Total Modifications</div>
               </div>
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+              <div 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <div className="text-2xl font-bold text-yellow-400">{modsData.summary.inProgressCount}</div>
                 <div className="text-sm text-gray-400">In Progress</div>
               </div>
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+              <div 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <div className="text-2xl font-bold text-green-400">{modsData.summary.completedCount}</div>
                 <div className="text-sm text-gray-400">Completed</div>
               </div>
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+              <div 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <div className="text-2xl font-bold text-blue-400">${modsData.summary.totalCost.toLocaleString()}</div>
                 <div className="text-sm text-gray-400">Total Cost</div>
               </div>
@@ -75,8 +95,13 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
             {/* Empty State */}
             {mods.length === 0 && (
               <div className="text-center py-12">
-                <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div 
+                  className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 max-w-md mx-auto text-white"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}
+                >
+                  <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Plus className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">No Modifications Yet</h3>

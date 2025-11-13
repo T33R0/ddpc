@@ -13,11 +13,16 @@ interface UpcomingServicesProps {
 export function UpcomingServices({ upcomingServices, onLogService }: UpcomingServicesProps) {
   if (upcomingServices.length === 0) {
     return (
-      <Card className="bg-gray-900/50 border-gray-800">
+      <Card 
+        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <CheckCircle className="h-12 w-12 text-gray-600 mb-4" />
+          <CheckCircle className="h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-400 mb-2">No Service Plan Items</h3>
-          <p className="text-sm text-gray-500 text-center max-w-md">
+          <p className="text-sm text-gray-400 text-center max-w-md">
             Service intervals from your vehicle's maintenance plan will be displayed here.
           </p>
         </CardContent>
@@ -26,7 +31,12 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
   }
 
   return (
-    <Card className="bg-gray-900/50 border-gray-800">
+    <Card 
+      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+      }}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Wrench className="h-5 w-5" />
@@ -37,7 +47,7 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
         {upcomingServices.map((service) => (
           <div
             key={service.id}
-            className="rounded-lg p-4 border bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors"
+            className="rounded-lg p-4 border bg-black/30 backdrop-blur-sm border-white/20 hover:border-white/30 transition-colors"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">

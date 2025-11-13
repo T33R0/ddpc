@@ -40,7 +40,12 @@ const getStatusIcon = (status: VehicleMod['status']) => {
 
 export function ModCard({ mod }: ModCardProps) {
   return (
-    <Card className="bg-gray-900 border-gray-700 hover:bg-gray-800 transition-colors">
+    <Card 
+      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white hover:bg-black/60 transition-colors"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+      }}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -85,7 +90,7 @@ export function ModCard({ mod }: ModCardProps) {
             <h4 className="text-sm font-medium text-gray-300 mb-2">Parts Used:</h4>
             <div className="space-y-1">
               {mod.parts.map((part) => (
-                <div key={part.id} className="flex items-center justify-between text-sm bg-gray-800 rounded px-2 py-1">
+                <div key={part.id} className="flex items-center justify-between text-sm bg-black/30 backdrop-blur-sm rounded px-2 py-1 border border-white/10">
                   <div className="flex-1">
                     <span className="text-gray-200">{part.name}</span>
                     {part.vendor && (

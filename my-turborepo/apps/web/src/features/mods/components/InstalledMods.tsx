@@ -18,7 +18,12 @@ export function InstalledMods({ mods }: InstalledModsProps) {
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <Card 
+      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+      }}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <CheckCircle className="h-5 w-5 text-green-400" />

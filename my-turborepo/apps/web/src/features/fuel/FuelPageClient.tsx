@@ -24,7 +24,12 @@ interface FuelPageClientProps {
 function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefined; factoryMpg: number | undefined }) {
   if (!factoryMpg || !averageMpg) {
     return (
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card 
+        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
         <CardHeader>
           <CardTitle className="text-white text-lg">MPG Health</CardTitle>
         </CardHeader>
@@ -100,7 +105,12 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   const needleEndY = centerY + Math.sin(angleRad) * needleLength
 
   return (
-    <Card className="bg-gray-900/50 border-gray-700">
+    <Card 
+      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+      }}
+    >
       <CardHeader>
         <CardTitle className="text-white text-lg">MPG Health</CardTitle>
       </CardHeader>

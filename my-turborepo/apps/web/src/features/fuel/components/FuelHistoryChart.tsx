@@ -51,7 +51,12 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
 
   if (chartData.length === 0) {
     return (
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card 
+        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
         <CardHeader>
           <CardTitle className="text-white text-lg">Fuel Efficiency Over Time</CardTitle>
         </CardHeader>
@@ -71,7 +76,12 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
   }
 
   return (
-    <Card className="bg-gray-900/50 border-gray-700">
+    <Card 
+      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+      }}
+    >
       <CardHeader>
         <CardTitle className="text-white text-lg">Fuel Efficiency Over Time</CardTitle>
       </CardHeader>

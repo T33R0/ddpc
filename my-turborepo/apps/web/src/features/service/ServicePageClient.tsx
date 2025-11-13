@@ -147,7 +147,7 @@ function PlanTabContent({
             {scheduledItems.map((item) => (
               <div
                 key={item.id}
-                className="p-4 border rounded-md bg-gray-800/50 border-gray-700 flex justify-between items-center"
+                className="p-4 border rounded-md bg-black/30 backdrop-blur-sm border-white/20 flex justify-between items-center"
               >
                 <div>
                   <p className="font-medium text-white">{item.description}</p>

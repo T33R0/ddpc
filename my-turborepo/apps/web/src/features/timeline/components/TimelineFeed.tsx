@@ -80,24 +80,37 @@ interface TimelineFeedProps {
 export function TimelineFeed({ events }: TimelineFeedProps) {
   if (events.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-2">No History Yet</h3>
-        <p className="text-gray-400">
-          Vehicle history will appear here once you add maintenance records, modifications, or mileage updates.
-        </p>
-      </div>
+      <Card 
+        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">No History Yet</h3>
+          <p className="text-gray-400">
+            Vehicle history will appear here once you add maintenance records, modifications, or mileage updates.
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
     <div className="space-y-4">
       {events.map((event) => (
-        <Card key={event.id} className="bg-gray-900/50 border-gray-700 hover:bg-gray-800/50 transition-colors">
+        <Card 
+          key={event.id} 
+          className="bg-black/50 backdrop-blur-lg rounded-2xl text-white hover:bg-black/60 transition-colors"
+          style={{
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+          }}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-4">
