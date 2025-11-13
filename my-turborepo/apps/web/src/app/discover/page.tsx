@@ -147,7 +147,6 @@ function DiscoverContent() {
     }
 
     initializeVehicles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount with initial filters
 
   const handleSearch = useCallback((query: string) => {

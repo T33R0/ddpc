@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // Use the SQL function to get unique vehicles with all their trims (with filtering)
     // Add timeout of 25 seconds (Supabase default is 20s, but we'll give a bit more buffer)
-    const rpcPromise = supabase.rpc('get_unique_vehicles_with_trims', {
+    const rpcCall = supabase.rpc('get_unique_vehicles_with_trims', {
       limit_param: pageSize,
       offset_param: offset,
       min_year_param: minYear,
@@ -63,6 +63,8 @@ export async function GET(request: NextRequest) {
       vehicle_type_param: vehicleType,
     });
 
+    // Await the RPC call and wrap it with timeout
+    const rpcPromise = rpcCall as Promise<PostgrestResponse<any>>;
     const { data, error } = await withTimeout(rpcPromise, 25000);
 
     if (error) {
