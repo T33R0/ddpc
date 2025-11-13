@@ -106,6 +106,17 @@ function DiscoverContent() {
         setFilterOptions(options);
       } catch (err) {
         console.error('Failed to load filter options:', err);
+        // Set empty filter options so UI doesn't break
+        // User can still use search functionality
+        setFilterOptions({ 
+          years: [], 
+          makes: [], 
+          models: [], 
+          engineTypes: [], 
+          fuelTypes: [], 
+          drivetrains: [], 
+          bodyTypes: [] 
+        });
       }
     }
     loadFilters();

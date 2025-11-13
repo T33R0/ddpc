@@ -34,8 +34,34 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching filter options:', error);
+      
+      // Check for timeout errors
+      const errorMessage = error.message || 'Unknown error';
+      const isTimeout = errorMessage.includes('timeout') || 
+                       errorMessage.includes('canceling statement') ||
+                       errorMessage.includes('statement timeout');
+      
+      // Return empty filter options on timeout so UI doesn't break
+      // The user can still use the search functionality
+      if (isTimeout) {
+        console.warn('Filter options query timed out, returning empty options');
+        return NextResponse.json({
+          years: [],
+          makes: [],
+          models: [],
+          engineTypes: [],
+          fuelTypes: [],
+          drivetrains: [],
+          bodyTypes: [],
+        }, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          },
+        });
+      }
+      
       return NextResponse.json(
-        { error: error.message },
+        { error: errorMessage },
         { status: 500 },
       );
     }
@@ -47,9 +73,21 @@ export async function GET(request: NextRequest) {
     });
   } catch (e: any) {
     console.error('Unexpected error in filters route:', e);
-    return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
-    );
+    
+    // Return empty filter options on any unexpected error
+    return NextResponse.json({
+      years: [],
+      makes: [],
+      models: [],
+      engineTypes: [],
+      fuelTypes: [],
+      drivetrains: [],
+      bodyTypes: [],
+    }, {
+      status: 200, // Return 200 so UI doesn't break
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   }
 }

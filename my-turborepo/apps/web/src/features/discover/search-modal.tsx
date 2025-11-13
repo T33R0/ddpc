@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody } from '@repo/ui/dialog';
 
 type SearchModalProps = {
   open: boolean;
@@ -73,6 +73,9 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
       <DialogContent className="max-w-4xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3">
         <DialogHeader>
           <DialogTitle className="text-white">Search Vehicles</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Search for vehicles by year, make, model, trim, or any vehicle specification
+          </DialogDescription>
         </DialogHeader>
         <DialogBody className="px-6 pb-6">
           <form onSubmit={handleSearch} className="space-y-4">

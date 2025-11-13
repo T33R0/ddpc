@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody } from '@repo/ui/dialog';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
 
 export type FilterState = {
@@ -59,6 +59,9 @@ export function VehicleFiltersModal({
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-white">Filter Vehicles</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Filter vehicles by year, make, model, engine type, fuel type, drivetrain, or body type
+          </DialogDescription>
         </DialogHeader>
         <DialogBody className="px-6 pb-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
