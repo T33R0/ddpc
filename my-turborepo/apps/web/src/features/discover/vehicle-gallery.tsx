@@ -43,8 +43,10 @@ function ImageWithTimeoutFallback({
           className={className}
         />
         {showMissingText && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="text-white text-xl font-semibold">Image Missing</span>
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
+              <span className="text-white text-lg font-semibold">Image Missing</span>
+            </div>
           </div>
         )}
       </div>
@@ -178,8 +180,10 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                   showMissingText={true}
                 />
               </div>
-              <div className="text-center">
-                <h3 className="font-bold text-2xl">{summary.year} {summary.make} {summary.model}</h3>
+              <div className="text-center h-16 flex items-center justify-center">
+                <h3 className="text-2xl leading-tight line-clamp-2">
+                  {summary.year} {summary.make} {summary.model}
+                </h3>
               </div>
             </div>
           </div>
