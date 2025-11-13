@@ -120,7 +120,36 @@ export async function logFuel(data: FuelLogInputs) {
       }
     }
 
-    // --- 5. Revalidate paths and return success ---
+    // --- 5. WRITE 3: Calculate and update average MPG in user_vehicle table ---
+    // Fetch all fuel logs with MPG to calculate the new average
+    const { data: allFuelLogs } = await supabase
+      .from('fuel_log')
+      .select('mpg')
+      .eq('user_vehicle_id', validatedData.user_vehicle_id)
+      .not('mpg', 'is', null)
+
+    if (allFuelLogs && allFuelLogs.length > 0) {
+      const validMpgEntries = allFuelLogs
+        .map(log => log.mpg)
+        .filter((mpg): mpg is number => mpg != null && mpg > 0)
+      
+      if (validMpgEntries.length > 0) {
+        const averageMpg = validMpgEntries.reduce((sum, mpg) => sum + mpg, 0) / validMpgEntries.length
+        
+        const { error: avgMpgUpdateError } = await supabase
+          .from('user_vehicle')
+          .update({ avg_mpg: averageMpg })
+          .eq('id', validatedData.user_vehicle_id)
+          .eq('owner_id', user.id) // RLS check
+
+        if (avgMpgUpdateError) {
+          console.error('Error updating vehicle avg_mpg:', avgMpgUpdateError)
+          // Soft fail, the log was still created.
+        }
+      }
+    }
+
+    // --- 6. Revalidate paths and return success ---
     // Revalidate both the service page (for Due Status) and the new fuel page
     try {
       revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)

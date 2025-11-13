@@ -29,16 +29,19 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload && payload.length > 0 && payload[0]) {
       const data = payload[0].payload
+      const mpgValue = payload[0].value
+      if (!data || mpgValue == null) return null
+      
       return (
         <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-semibold">{`Date: ${label}`}</p>
-          <p className="text-green-400">{`MPG: ${payload[0].value?.toFixed(1)}`}</p>
-          <p className="text-gray-400 text-sm">{`Gallons: ${data.gallons?.toFixed(1)}`}</p>
-          <p className="text-gray-400 text-sm">{`Odometer: ${data.odometer?.toLocaleString()} mi`}</p>
-          {data.cost && (
-            <p className="text-gray-400 text-sm">{`Cost: $${data.cost?.toFixed(2)}`}</p>
+          <p className="text-white font-semibold">{label ? `Date: ${label}` : 'Date: N/A'}</p>
+          <p className="text-green-400">{`MPG: ${typeof mpgValue === 'number' ? mpgValue.toFixed(1) : 'N/A'}`}</p>
+          <p className="text-gray-400 text-sm">{`Gallons: ${typeof data.gallons === 'number' ? data.gallons.toFixed(1) : 'N/A'}`}</p>
+          <p className="text-gray-400 text-sm">{`Odometer: ${typeof data.odometer === 'number' ? data.odometer.toLocaleString() : 'N/A'} mi`}</p>
+          {data.cost && typeof data.cost === 'number' && (
+            <p className="text-gray-400 text-sm">{`Cost: $${data.cost.toFixed(2)}`}</p>
           )}
         </div>
       )
