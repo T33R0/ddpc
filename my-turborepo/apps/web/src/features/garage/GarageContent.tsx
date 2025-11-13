@@ -67,7 +67,17 @@ function ImageWithTimeoutFallback({
   )
 }
 
-function VehicleCard({ vehicle }: { vehicle: VehicleWithOdometer }) {
+function VehicleCard({ 
+  vehicle, 
+  onDragStart, 
+  onDragEnd,
+  isDragging 
+}: { 
+  vehicle: VehicleWithOdometer
+  onDragStart?: () => void
+  onDragEnd?: () => void
+  isDragging?: boolean
+}) {
   const router = useRouter()
 
   // Format status for display
@@ -141,8 +151,18 @@ function VehicleCard({ vehicle }: { vehicle: VehicleWithOdometer }) {
 
   return (
     <div
-      className="group transition-all duration-300 cursor-pointer"
+      className={`group transition-all duration-300 cursor-pointer ${isDragging ? 'opacity-50' : ''}`}
       onClick={handleClick}
+      draggable={!!onDragStart}
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('vehicleId', vehicle.id)
+        e.dataTransfer.setData('currentStatus', vehicle.current_status)
+        onDragStart?.()
+      }}
+      onDragEnd={() => {
+        onDragEnd?.()
+      }}
     >
       <div
         className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4"
@@ -151,9 +171,11 @@ function VehicleCard({ vehicle }: { vehicle: VehicleWithOdometer }) {
           transition: 'all 0.3s ease-out',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)'
-          e.currentTarget.style.border = '1px solid rgb(132, 204, 22)'
-          e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)'
+          if (!isDragging) {
+            e.currentTarget.style.transform = 'scale(1.05)'
+            e.currentTarget.style.border = '1px solid rgb(132, 204, 22)'
+            e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)'
+          }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)'
@@ -219,7 +241,9 @@ function VehicleGallery({
   onAddClick,
   onLoadMore,
   loadingMore,
-  hasMore
+  hasMore,
+  onDrop,
+  galleryType
 }: {
   title: string
   vehicles: VehicleWithOdometer[]
@@ -228,7 +252,11 @@ function VehicleGallery({
   onLoadMore?: () => void
   loadingMore?: boolean
   hasMore?: boolean
+  onDrop?: (vehicleId: string, newStatus: string) => void
+  galleryType?: 'active' | 'stored'
 }) {
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const [draggingVehicleId, setDraggingVehicleId] = useState<string | null>(null)
   // Infinite scroll logic
   const handleScroll = useCallback(() => {
     if (!onLoadMore || loadingMore || !hasMore) return
@@ -254,12 +282,55 @@ function VehicleGallery({
     return null
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(true)
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(false)
+    
+    const vehicleId = e.dataTransfer.getData('vehicleId')
+    const currentStatus = e.dataTransfer.getData('currentStatus')
+    
+    if (vehicleId && onDrop && galleryType) {
+      const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+      if (currentStatus !== newStatus) {
+        onDrop(vehicleId, newStatus)
+      }
+    }
+    setDraggingVehicleId(null)
+  }
+
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div 
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${
+          isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         {vehicles.map((vehicle) => (
-          <VehicleCard key={vehicle.id} vehicle={vehicle} />
+          <VehicleCard 
+            key={vehicle.id} 
+            vehicle={vehicle}
+            onDragStart={() => setDraggingVehicleId(vehicle.id)}
+            onDragEnd={() => setDraggingVehicleId(null)}
+            isDragging={draggingVehicleId === vehicle.id}
+          />
         ))}
 
         {showAddCard && (
@@ -289,6 +360,7 @@ export function GarageContent({
   const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(
     initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
   )
+  const [storedVehiclesLocal, setStoredVehiclesLocal] = useState<VehicleWithOdometer[]>([])
 
   // For stored vehicles, we still need the hook since they load progressively
   const { vehicles: storedVehicles, isLoading: storedLoading, loadingMore, hasMore, loadMore } = useStoredVehicles()
@@ -297,12 +369,128 @@ export function GarageContent({
   // Show add vehicle card only if active vehicles < 3
   const canAddVehicle = activeVehicles.length < 3
 
+  // Sync stored vehicles from hook
+  useEffect(() => {
+    setStoredVehiclesLocal(storedVehicles)
+  }, [storedVehicles])
+
+  // Real-time subscription to vehicle status changes
+  useEffect(() => {
+    let subscription: any = null
+
+    const setupSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      subscription = supabase
+        .channel('vehicle-status-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'user_vehicle',
+            filter: `owner_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const updatedVehicle = payload.new as any
+            const vehicleId = updatedVehicle.id
+            const newStatus = updatedVehicle.current_status
+
+            // Update active vehicles
+            setActiveVehicles((prev) => {
+              const isActive = newStatus === 'daily_driver'
+              const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
+              
+              if (isActive && vehicleIndex === -1) {
+                // Vehicle became active, add it
+                const vehicle = initialVehicles.find((v) => v.id === vehicleId)
+                if (vehicle) {
+                  return [...prev, { ...vehicle, current_status: newStatus }]
+                }
+              } else if (!isActive && vehicleIndex !== -1) {
+                // Vehicle became inactive, remove it
+                return prev.filter((v) => v.id !== vehicleId)
+              } else if (vehicleIndex !== -1) {
+                // Update existing vehicle status
+                return prev.map((v) =>
+                  v.id === vehicleId ? { ...v, current_status: newStatus } : v
+                )
+              }
+              return prev
+            })
+
+            // Update stored vehicles
+            setStoredVehiclesLocal((prev) => {
+              const isStored = newStatus !== 'daily_driver'
+              const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
+              
+              if (isStored && vehicleIndex === -1) {
+                // Vehicle became stored, add it
+                const vehicle = initialVehicles.find((v) => v.id === vehicleId)
+                if (vehicle) {
+                  return [...prev, { ...vehicle, current_status: newStatus }]
+                }
+              } else if (!isStored && vehicleIndex !== -1) {
+                // Vehicle became active, remove it
+                return prev.filter((v) => v.id !== vehicleId)
+              } else if (vehicleIndex !== -1) {
+                // Update existing vehicle status
+                return prev.map((v) =>
+                  v.id === vehicleId ? { ...v, current_status: newStatus } : v
+                )
+              }
+              return prev
+            })
+          }
+        )
+        .subscribe()
+    }
+
+    setupSubscription()
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
+  }, [initialVehicles])
+
+  // Function to handle vehicle status change via drag and drop
+  const handleVehicleStatusChange = async (vehicleId: string, newStatus: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const response = await fetch('/api/garage/update-vehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          vehicleId,
+          status: newStatus,
+        }),
+      })
+
+      if (!response.ok) {
+        console.error('Failed to update vehicle status')
+      }
+    } catch (err) {
+      console.error('Error updating vehicle status:', err)
+    }
+  }
+
   // Function to refresh garage data when vehicles are added or updated
   const handleVehicleAdded = () => {
     // For now, refresh the page to re-run the Server Component
     // In a more sophisticated implementation, you could refetch data via API
     window.location.reload()
   }
+
+  // Combined stored vehicles (local + hook)
+  const allStoredVehicles = [...storedVehiclesLocal, ...storedVehicles.filter(v => !storedVehiclesLocal.find(lv => lv.id === v.id))]
 
   return (
     <AuthProvider supabase={supabase}>
@@ -327,15 +515,19 @@ export function GarageContent({
             vehicles={activeVehicles}
             showAddCard={canAddVehicle}
             onAddClick={() => setAddVehicleModalOpen(true)}
+            onDrop={handleVehicleStatusChange}
+            galleryType="active"
           />
 
           {/* Stored Vehicles Section - uses progressive loading */}
           <VehicleGallery
             title="Stored Vehicles"
-            vehicles={storedVehicles}
+            vehicles={allStoredVehicles}
             onLoadMore={loadMore}
             loadingMore={loadingMore}
             hasMore={hasMore}
+            onDrop={handleVehicleStatusChange}
+            galleryType="stored"
           />
 
           {storedLoading && storedVehicles.length === 0 && (

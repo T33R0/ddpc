@@ -7,7 +7,7 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
-import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock } from 'lucide-react'
+import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, Car, Gauge, Ruler, CarFront } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { Badge } from '@repo/ui/badge'
@@ -73,6 +73,7 @@ function ImageWithTimeoutFallback({
 function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId: string }) {
   const [isUploading, setIsUploading] = useState(false)
   const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || vehicle.image_url || null)
+  const [isHovered, setIsHovered] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,19 +163,31 @@ function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId:
   }
 
   return (
-    <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full relative group"
-          style={{
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            gridColumn: 'span 2',
-            gridRow: 'span 2',
-          }}>
+    <Card 
+      className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full relative cursor-pointer"
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        gridColumn: 'span 2',
+        gridRow: 'span 2',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <ImageWithTimeoutFallback
         src={imageUrl || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
         fallbackSrc="/branding/fallback-logo.png"
         alt={`${vehicle.name || 'Vehicle'} vehicle`}
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+      <div 
+        className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+          isHovered ? 'bg-black/60 opacity-100' : 'bg-black/0 opacity-0'
+        }`}
+        onClick={(e) => {
+          e.stopPropagation()
+          fileInputRef.current?.click()
+        }}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -185,9 +198,14 @@ function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId:
           disabled={isUploading}
         />
         <Button
-          onClick={() => fileInputRef.current?.click()}
+          onClick={(e) => {
+            e.stopPropagation()
+            fileInputRef.current?.click()
+          }}
           disabled={isUploading}
-          className="bg-black/70 hover:bg-black/90 text-white border border-white/30"
+          className={`bg-black/80 hover:bg-black/95 text-white border border-white/40 px-4 py-2 transition-all ${
+            isHovered ? 'scale-100' : 'scale-0'
+          }`}
         >
           <Upload className="w-4 h-4 mr-2" />
           {isUploading ? 'Uploading...' : 'Upload Image'}
@@ -470,7 +488,10 @@ function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
       <CardContent className="p-0 h-full flex flex-col">
-        <p className="text-sm font-semibold text-gray-400 mb-2">Build Specs</p>
+        <div className="flex items-center gap-2 mb-3">
+          <Car className="w-5 h-5 text-blue-400" />
+          <p className="text-base font-semibold text-gray-300">Build Specs</p>
+        </div>
         <div className="space-y-1 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Year:</span>
@@ -501,7 +522,10 @@ function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
       <CardContent className="p-0 h-full flex flex-col">
-        <p className="text-sm font-semibold text-gray-400 mb-2">Engine Specs</p>
+        <div className="flex items-center gap-2 mb-3">
+          <Gauge className="w-5 h-5 text-red-400" />
+          <p className="text-base font-semibold text-gray-300">Engine Specs</p>
+        </div>
         <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Power:</span>
@@ -532,7 +556,10 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
       <CardContent className="p-0 h-full flex flex-col">
-        <p className="text-sm font-semibold text-gray-400 mb-2">Dimensions</p>
+        <div className="flex items-center gap-2 mb-3">
+          <Ruler className="w-5 h-5 text-green-400" />
+          <p className="text-base font-semibold text-gray-300">Dimensions</p>
+        </div>
         <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Length:</span>
@@ -559,7 +586,10 @@ function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}>
       <CardContent className="p-0 h-full flex flex-col">
-        <p className="text-sm font-semibold text-gray-400 mb-2">Drivetrain</p>
+        <div className="flex items-center gap-2 mb-3">
+          <CarFront className="w-5 h-5 text-purple-400" />
+          <p className="text-base font-semibold text-gray-300">Drivetrain</p>
+        </div>
         <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Type:</span>
