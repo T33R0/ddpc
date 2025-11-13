@@ -267,17 +267,17 @@ const VehicleDetailsModal = ({
               
               {/* Trim Selector */}
               <div className="space-y-2">
-                <label htmlFor="trim-select" className="text-sm text-gray-400 block">
+                <label htmlFor="trim-select" className="text-sm text-gray-300 block">
                   Select Trim:
                 </label>
                 <select
                   id="trim-select"
                   value={selectedTrimId}
                   onChange={handleTrimChange}
-                  className="max-w-xs bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                  className="max-w-xs bg-black/30 backdrop-blur-sm border-white/20 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-white/40"
                 >
                   {summary.trims.map((trim) => (
-                    <option key={trim.id} value={trim.id} className="bg-gray-800 text-white">
+                    <option key={trim.id} value={trim.id} className="bg-black/50 text-white">
                       {trim.trim || trim.trim_description || trim.model}
                     </option>
                   ))}
@@ -430,8 +430,8 @@ const VehicleDetailsModal = ({
                 disabled={isAddingToGarage || isAddedToGarage}
                 className={`py-3 px-8 rounded-lg font-semibold transition-colors ${
                   isAddedToGarage
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-lime-500 hover:bg-lime-600 text-black'
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
               >
                 {isAddingToGarage
@@ -444,7 +444,10 @@ const VehicleDetailsModal = ({
 
               <button
                 onClick={() => setShowComingSoon(true)}
-                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-gray-700 hover:bg-gray-600 text-white min-w-[200px]"
+                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-black/30 backdrop-blur-sm border-white/20 hover:bg-black/40 hover:border-white/30 text-white min-w-[200px]"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                }}
               >
                 More Details
               </button>
@@ -459,16 +462,19 @@ const VehicleDetailsModal = ({
             onClick={() => setShowComingSoon(false)}
           >
             <div
-              className="bg-black/50 backdrop-blur-lg text-white rounded-2xl p-8 border border-white/30 max-w-md"
+              className="bg-black/50 backdrop-blur-lg text-white rounded-2xl p-8 max-w-md"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-2xl font-bold mb-4 text-white">Coming Soon</h3>
-              <p className="text-white/80 mb-6">
+              <p className="text-gray-300 mb-6">
                 This feature is currently under development and will be available soon!
               </p>
               <button
                 onClick={() => setShowComingSoon(false)}
-                className="w-full py-3 px-6 rounded-lg font-semibold bg-lime-500 hover:bg-lime-600 text-black transition-colors"
+                className="w-full py-3 px-6 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
               >
                 Got it
               </button>

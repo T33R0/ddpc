@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DiscoverActionButtons } from "../../features/discover/discover-action-buttons";
 import { VehicleGallery } from "../../features/discover/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
+import { ActiveFiltersDisplay } from "../../features/discover/active-filters-display";
 import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
 import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
@@ -174,6 +175,15 @@ function DiscoverContent() {
     setVehicles(filtered);
   }, [allVehicles]);
 
+  const handleClearFilter = useCallback((key: keyof FilterState) => {
+    setFilters(prev => ({ ...prev, [key]: null }));
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setVehicles(allVehicles);
+  }, [allVehicles]);
+
   return (
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
@@ -186,6 +196,14 @@ function DiscoverContent() {
           onFilterChange={setFilters} 
           filterOptions={filterOptions || { years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: [] }}
           onSearch={handleSearch}
+        />
+        
+        {/* Active Filters/Search Display */}
+        <ActiveFiltersDisplay
+          filters={filters}
+          searchQuery={searchQuery}
+          onClearFilter={handleClearFilter}
+          onClearSearch={handleClearSearch}
         />
         
         {/* Gallery or Loading State */}
