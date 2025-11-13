@@ -68,7 +68,7 @@ function ImageWithTimeoutFallback({
   )
 }
 
-function VehicleHeader({ vehicle, vehicleId, onNicknameUpdate }: { vehicle: Vehicle; vehicleId: string; onNicknameUpdate: (newNickname: string) => void }) {
+function VehicleHeader({ vehicle, vehicleId, onNicknameUpdate }: { vehicle: Vehicle; vehicleId: string; onNicknameUpdate: (newNickname: string | null) => void }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [nickname, setNickname] = useState(vehicle.name || '')
   const [isSaving, setIsSaving] = useState(false)
