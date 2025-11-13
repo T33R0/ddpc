@@ -103,20 +103,43 @@ function DiscoverContent() {
     async function loadFilters() {
       try {
         const options = await getVehicleFilterOptions();
+        // Only set filter options if we got valid data
+        // Empty arrays are valid (means timeout occurred), but we still want to set them
         setFilterOptions(options);
       } catch (err) {
         console.error('Failed to load filter options:', err);
-        // Set empty filter options so UI doesn't break
-        // User can still use search functionality
-        setFilterOptions({ 
-          years: [], 
-          makes: [], 
-          models: [], 
-          engineTypes: [], 
-          fuelTypes: [], 
-          drivetrains: [], 
-          bodyTypes: [] 
-        });
+        // Only set empty arrays on actual errors (not timeouts, which return 200 with empty arrays)
+        // This preserves the ability to retry if it's a transient error
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const isTimeout = errorMessage.includes('timeout') || 
+                         errorMessage.includes('canceling statement');
+        
+        if (isTimeout) {
+          // Timeout already handled by API returning empty arrays
+          // Set empty arrays here too for consistency
+          setFilterOptions({ 
+            years: [], 
+            makes: [], 
+            models: [], 
+            engineTypes: [], 
+            fuelTypes: [], 
+            drivetrains: [], 
+            bodyTypes: [] 
+          });
+        } else {
+          // For other errors, set empty arrays so UI doesn't break
+          // But log it so we know there's a real issue
+          console.warn('Non-timeout error loading filter options, using empty arrays as fallback');
+          setFilterOptions({ 
+            years: [], 
+            makes: [], 
+            models: [], 
+            engineTypes: [], 
+            fuelTypes: [], 
+            drivetrains: [], 
+            bodyTypes: [] 
+          });
+        }
       }
     }
     loadFilters();
