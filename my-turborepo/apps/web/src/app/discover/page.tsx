@@ -102,34 +102,23 @@ function DiscoverContent() {
   useEffect(() => {
     async function loadFilters() {
       try {
+        console.log('Loading filter options...');
         const options = await getVehicleFilterOptions();
-        // Only set filter options if we got valid data
-        // Empty arrays are valid (means timeout occurred), but we still want to set them
-        setFilterOptions(options);
-      } catch (err) {
-        console.error('Failed to load filter options:', err);
-        // Only set empty arrays on actual errors (not timeouts, which return 200 with empty arrays)
-        // This preserves the ability to retry if it's a transient error
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        const isTimeout = errorMessage.includes('timeout') || 
-                         errorMessage.includes('canceling statement');
+        console.log('Filter options received:', {
+          years: options?.years?.length || 0,
+          makes: options?.makes?.length || 0,
+          models: options?.models?.length || 0,
+          engineTypes: options?.engineTypes?.length || 0,
+          fuelTypes: options?.fuelTypes?.length || 0,
+          drivetrains: options?.drivetrains?.length || 0,
+          bodyTypes: options?.bodyTypes?.length || 0,
+        });
         
-        if (isTimeout) {
-          // Timeout already handled by API returning empty arrays
-          // Set empty arrays here too for consistency
-          setFilterOptions({ 
-            years: [], 
-            makes: [], 
-            models: [], 
-            engineTypes: [], 
-            fuelTypes: [], 
-            drivetrains: [], 
-            bodyTypes: [] 
-          });
+        // Validate that we got a proper response
+        if (options && typeof options === 'object') {
+          setFilterOptions(options);
         } else {
-          // For other errors, set empty arrays so UI doesn't break
-          // But log it so we know there's a real issue
-          console.warn('Non-timeout error loading filter options, using empty arrays as fallback');
+          console.error('Invalid filter options format:', options);
           setFilterOptions({ 
             years: [], 
             makes: [], 
@@ -140,6 +129,18 @@ function DiscoverContent() {
             bodyTypes: [] 
           });
         }
+      } catch (err) {
+        console.error('Failed to load filter options:', err);
+        // Set empty arrays on error so UI doesn't break
+        setFilterOptions({ 
+          years: [], 
+          makes: [], 
+          models: [], 
+          engineTypes: [], 
+          fuelTypes: [], 
+          drivetrains: [], 
+          bodyTypes: [] 
+        });
       }
     }
     loadFilters();

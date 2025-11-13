@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // Cache the response for 1 hour (3600 seconds)
 // This prevents the expensive database query from running on every request
-export const revalidate = 3600;
+// Temporarily disabled to debug filter options issue
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   // Create an admin client with service role key to bypass RLS
@@ -28,9 +29,15 @@ export async function GET(request: NextRequest) {
   });
   
   try {
+    console.log('Starting filter options query...');
+    const startTime = Date.now();
+    
     // Use the SQL function to get comprehensive filter options
     // This query can be slow on large datasets, hence the caching above
     const { data, error } = await supabase.rpc('get_vehicle_filter_options');
+    
+    const queryTime = Date.now() - startTime;
+    console.log(`Filter options query completed in ${queryTime}ms`);
 
     if (error) {
       console.error('Error fetching filter options:', error);
@@ -89,14 +96,28 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Log successful response for debugging
+    // Validate and log successful response for debugging
+    const responseData = {
+      years: Array.isArray(data.years) ? data.years : [],
+      makes: Array.isArray(data.makes) ? data.makes : [],
+      models: Array.isArray(data.models) ? data.models : [],
+      engineTypes: Array.isArray(data.engineTypes) ? data.engineTypes : [],
+      fuelTypes: Array.isArray(data.fuelTypes) ? data.fuelTypes : [],
+      drivetrains: Array.isArray(data.drivetrains) ? data.drivetrains : [],
+      bodyTypes: Array.isArray(data.bodyTypes) ? data.bodyTypes : [],
+    };
+
     console.log('Filter options loaded successfully:', {
-      years: Array.isArray(data.years) ? data.years.length : 'not array',
-      makes: Array.isArray(data.makes) ? data.makes.length : 'not array',
-      models: Array.isArray(data.models) ? data.models.length : 'not array',
+      years: responseData.years.length,
+      makes: responseData.makes.length,
+      models: responseData.models.length,
+      engineTypes: responseData.engineTypes.length,
+      fuelTypes: responseData.fuelTypes.length,
+      drivetrains: responseData.drivetrains.length,
+      bodyTypes: responseData.bodyTypes.length,
     });
 
-    return NextResponse.json(data, {
+    return NextResponse.json(responseData, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
       },
