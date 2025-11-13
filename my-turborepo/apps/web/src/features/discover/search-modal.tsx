@@ -72,11 +72,11 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3">
         <DialogHeader>
-          <DialogTitle>Search Vehicles</DialogTitle>
+          <DialogTitle className="text-white">Search Vehicles</DialogTitle>
         </DialogHeader>
-        <DialogBody>
+        <DialogBody className="px-6 pb-6">
           <form onSubmit={handleSearch} className="space-y-4">
-            <div className="relative">
+            <div className="relative space-y-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -84,13 +84,13 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
                 onChange={handleInputChange}
                 onFocus={handleFocus}
                 placeholder={showPlaceholder ? placeholders[currentPlaceholder] : ""}
-                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-white/40"
                 autoFocus
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-lime-500 hover:bg-lime-600 text-black font-bold py-3 rounded-lg transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
             >
               Search
             </button>

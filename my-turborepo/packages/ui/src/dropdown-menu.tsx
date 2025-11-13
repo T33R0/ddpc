@@ -12,9 +12,10 @@ type DropdownMenuProps = {
     onClick: () => void;
   }[];
   children: React.ReactNode;
+  className?: string;
 };
 
-export function DropdownMenu({ options, children }: DropdownMenuProps) {
+export function DropdownMenu({ options, children, className }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -28,7 +29,7 @@ export function DropdownMenu({ options, children }: DropdownMenuProps) {
       <Button
         onClick={toggleDropdown}
         variant="outline"
-        className="flex items-center gap-2"
+        className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm border-white/20 text-white hover:bg-black/40 hover:border-white/30 ${className || ''}`}
       >
         {children}
         <motion.span

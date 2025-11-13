@@ -58,11 +58,12 @@ export function VehicleFiltersModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Filter Vehicles</DialogTitle>
+          <DialogTitle className="text-white">Filter Vehicles</DialogTitle>
         </DialogHeader>
-        <DialogBody>
+        <DialogBody className="px-6 pb-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('minYear')(null) }, 
                 ...filterOptions.years.map((y: number) => ({ 
@@ -71,10 +72,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.minYear || 'Min Year'}
+              <span className="text-white">{filters.minYear || 'Min Year'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('maxYear')(null) }, 
                 ...filterOptions.years.map((y: number) => ({ 
@@ -83,10 +85,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.maxYear || 'Max Year'}
+              <span className="text-white">{filters.maxYear || 'Max Year'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('make')(null) }, 
                 ...filterOptions.makes.map((m: string) => ({ 
@@ -95,10 +98,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.make || 'Make'}
+              <span className="text-white">{filters.make || 'Make'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('model')(null) }, 
                 ...filteredModels.map((m: string) => ({ 
@@ -107,10 +111,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.model || 'Model'}
+              <span className="text-white">{filters.model || 'Model'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('engineType')(null) }, 
                 ...filterOptions.engineTypes.map((e: string) => ({ 
@@ -119,10 +124,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.engineType || 'Engine'}
+              <span className="text-white">{filters.engineType || 'Engine'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('fuelType')(null) }, 
                 ...filterOptions.fuelTypes.map((f: string) => ({ 
@@ -131,10 +137,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.fuelType || 'Fuel'}
+              <span className="text-white">{filters.fuelType || 'Fuel'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('drivetrain')(null) }, 
                 ...filterOptions.drivetrains.map((d: string) => ({ 
@@ -143,10 +150,11 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.drivetrain || 'Drivetrain'}
+              <span className="text-white">{filters.drivetrain || 'Drivetrain'}</span>
             </DropdownMenu>
             
             <DropdownMenu 
+              className="w-full"
               options={[
                 { label: 'All', onClick: () => handleValueChange('vehicleType')(null) }, 
                 ...filterOptions.bodyTypes.map((v: string) => ({ 
@@ -155,14 +163,14 @@ export function VehicleFiltersModal({
                 }))
               ]}
             >
-              {filters.vehicleType || 'Type'}
+              <span className="text-white">{filters.vehicleType || 'Type'}</span>
             </DropdownMenu>
           </div>
           
-          <div className="mt-6 pt-4 border-t border-gray-700 flex justify-end">
+          <div className="mt-6 pt-4 border-t border-white/20 flex justify-end">
             <button
               onClick={() => onOpenChange(false)}
-              className="bg-lime-500 hover:bg-lime-600 text-black font-bold py-2 px-6 rounded-lg transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
             >
               Apply Filters
             </button>
