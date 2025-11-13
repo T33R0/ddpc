@@ -148,7 +148,12 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 max-w-md">
+      <DialogContent 
+        className="bg-black/50 backdrop-blur-lg max-w-md text-white p-0"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Wrench className="h-5 w-5" />
@@ -159,14 +164,14 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3">
+              <p className="text-red-200 text-sm">{error}</p>
             </div>
           )}
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-300">
               Service Description *
             </Label>
@@ -175,12 +180,12 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="e.g., Oil change, brake pads replacement"
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="service_provider" className="text-gray-300">
               Service Provider
             </Label>
@@ -189,12 +194,12 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
               value={formData.service_provider}
               onChange={(e) => handleInputChange('service_provider', e.target.value)}
               placeholder="e.g., Dealership, Local Shop"
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="cost" className="text-gray-300">
                 Cost ($)
               </Label>
@@ -205,10 +210,10 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
                 value={formData.cost}
                 onChange={(e) => handleInputChange('cost', e.target.value)}
                 placeholder="0.00"
-                className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="odometer" className="text-gray-300">
                 Odometer (miles)
               </Label>
@@ -218,12 +223,12 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
                 value={formData.odometer}
                 onChange={(e) => handleInputChange('odometer', e.target.value)}
                 placeholder="Current mileage"
-                className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               />
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="event_date" className="text-gray-300">
               Service Date *
             </Label>
@@ -232,12 +237,12 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
               type="date"
               value={formData.event_date}
               onChange={(e) => handleInputChange('event_date', e.target.value)}
-              className="bg-gray-800 border-gray-600 text-white"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="notes" className="text-gray-300">
               Notes
             </Label>
@@ -246,16 +251,16 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Additional details about the service..."
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 min-h-[80px]"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 min-h-[80px] px-3 py-2 focus:border-white/40"
             />
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
             >
               Cancel
             </Button>

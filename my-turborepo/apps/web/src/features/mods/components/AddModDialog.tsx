@@ -66,7 +66,12 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 max-w-md">
+      <DialogContent 
+        className="bg-black/50 backdrop-blur-lg max-w-md text-white p-0"
+        style={{
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Wrench className="h-5 w-5" />
@@ -77,14 +82,14 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           {error && (
-            <div className="bg-red-900/50 border border-red-500 rounded p-3 text-red-200 text-sm">
+            <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
               {error}
             </div>
           )}
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="title" className="text-gray-300">
               Modification Title *
             </Label>
@@ -92,12 +97,12 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
               name="title"
               id="title"
               placeholder="e.g., Turbo Upgrade, Exhaust System"
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-300">
               Description
             </Label>
@@ -105,30 +110,30 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
               name="description"
               id="description"
               placeholder="Brief description of the modification..."
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 min-h-[60px]"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 min-h-[60px] px-3 py-2 focus:border-white/40"
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="status" className="text-gray-300">
               Status *
             </Label>
             <select
               name="status"
               id="status"
-              className="w-full bg-gray-800 border border-gray-600 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-black/30 backdrop-blur-sm border border-white/20 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-white/40"
               required
             >
-              <option value="" className="bg-gray-800 text-gray-400">Select status</option>
-              <option value="planned" className="bg-gray-800 text-white">Planned</option>
-              <option value="ordered" className="bg-gray-800 text-white">Ordered</option>
-              <option value="installed" className="bg-gray-800 text-white">Installed</option>
-              <option value="tuned" className="bg-gray-800 text-white">Tuned</option>
+              <option value="" className="bg-black/50 text-gray-400">Select status</option>
+              <option value="planned" className="bg-black/50 text-white">Planned</option>
+              <option value="ordered" className="bg-black/50 text-white">Ordered</option>
+              <option value="installed" className="bg-black/50 text-white">Installed</option>
+              <option value="tuned" className="bg-black/50 text-white">Tuned</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="cost" className="text-gray-300">
                 Cost ($)
               </Label>
@@ -138,10 +143,10 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="odometer" className="text-gray-300">
                 Odometer (miles)
               </Label>
@@ -150,12 +155,12 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 id="odometer"
                 type="number"
                 placeholder="Current mileage"
-                className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               />
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="event_date" className="text-gray-300">
               Date *
             </Label>
@@ -163,18 +168,17 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
               name="event_date"
               id="event_date"
               type="date"
-              className="bg-gray-800 border-gray-600 text-white"
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
-
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
             >
               Cancel
             </Button>
