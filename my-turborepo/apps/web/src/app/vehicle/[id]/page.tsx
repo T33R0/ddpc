@@ -85,6 +85,31 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     .limit(1)
     .single()
 
+  // --- 2.5. Fetch Stats for Navigation Cards ---
+  // Total Records (maintenance_log + mods + odometer_log)
+  const [maintenanceCount, modsCount, odometerCount] = await Promise.all([
+    supabase
+      .from('maintenance_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_vehicle_id', vehicle.id),
+    supabase
+      .from('mods')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_vehicle_id', vehicle.id),
+    supabase
+      .from('odometer_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_vehicle_id', vehicle.id),
+  ])
+
+  const totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
+  
+  // Service Count (maintenance_log count)
+  const serviceCount = maintenanceCount.count || 0
+  
+  // Avg MPG (from user_vehicle table)
+  const avgMpg = vehicle.avg_mpg || null
+
   // --- 3. Transform Data ---
   // Store the actual nickname for URL generation
   const vehicleNickname = vehicle.nickname || null
@@ -229,6 +254,11 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     <VehicleDetailPageClient
       vehicle={vehicleWithData}
       vehicleNickname={vehicleNickname}
+      stats={{
+        totalRecords,
+        serviceCount,
+        avgMpg,
+      }}
     />
   )
 }

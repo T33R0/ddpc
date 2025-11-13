@@ -6,10 +6,10 @@ import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog'
-import { Plus, Activity, Wrench, Fuel, Settings, Edit } from 'lucide-react'
-import { LogServiceModal } from '../../components/LogServiceModal'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
+import { Activity, Wrench, Fuel, Settings, Edit } from 'lucide-react'
 import { Vehicle } from '@repo/types'
+import { supabase } from '@/lib/supabase'
 
 type ImageWithTimeoutFallbackProps = {
   src: string
@@ -68,25 +68,119 @@ function ImageWithTimeoutFallback({
   )
 }
 
-function VehicleHeader({ vehicle }: { vehicle: Vehicle }) {
+function VehicleHeader({ vehicle, vehicleId, onNicknameUpdate }: { vehicle: Vehicle; vehicleId: string; onNicknameUpdate: (newNickname: string) => void }) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [nickname, setNickname] = useState(vehicle.name || '')
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        setError('You must be logged in to update the nickname')
+        setIsSaving(false)
+        return
+      }
+
+      const response = await fetch('/api/garage/update-vehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          vehicleId,
+          nickname: nickname.trim() || null,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update nickname')
+      }
+
+      // Update successful - close dialog and refresh
+      setIsEditDialogOpen(false)
+      onNicknameUpdate(nickname.trim())
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
-    <div className="mb-8 flex justify-between items-center">
-      <div className="flex items-center gap-3">
-        <h1 className="text-4xl font-bold text-white">{vehicle.name || 'Unnamed Vehicle'}</h1>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-gray-400 hover:text-white hover:bg-gray-800"
-          onClick={() => {/* TODO: Implement edit modal */}}
-        >
-          <Edit className="w-4 h-4" />
-        </Button>
+    <>
+      <div className="mb-8 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <h1 className="text-4xl font-bold text-white">{vehicle.name || 'Unnamed Vehicle'}</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-400 hover:text-white hover:bg-gray-800"
+            onClick={() => setIsEditDialogOpen(true)}
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-      <Button className="bg-red-600 hover:bg-red-700 text-white">
-        <Plus className="w-4 h-4 mr-2" />
-        Log Event
-      </Button>
-    </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Vehicle Nickname</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Change the nickname for this vehicle. Leave empty to remove the nickname.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="nickname" className="text-gray-300">Nickname</Label>
+              <Input
+                id="nickname"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="Enter vehicle nickname"
+                className="bg-gray-800 border-gray-700 text-white mt-2"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isSaving) {
+                    handleSave()
+                  }
+                }}
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-red-400">{error}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSaving}
+              className="text-gray-400 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -253,14 +347,19 @@ function NavigationCard({
 type VehicleDetailPageClientProps = {
   vehicle: Vehicle
   vehicleNickname?: string | null
+  stats?: {
+    totalRecords?: number
+    serviceCount?: number
+    avgMpg?: number | null
+  }
 }
 
-export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDetailPageClientProps) {
+export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: VehicleDetailPageClientProps) {
   const router = useRouter()
-  const [logServiceModalOpen, setLogServiceModalOpen] = useState(false)
+  const [currentNickname, setCurrentNickname] = useState(vehicleNickname || vehicle.name || null)
 
   // Use nickname for URLs if available, otherwise fall back to ID
-  const urlSlug = vehicleNickname || vehicle.id
+  const urlSlug = currentNickname || vehicle.id
 
   const handleNavigation = (path: string) => {
     router.push(path)
@@ -278,7 +377,13 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDet
         </div>
 
         <div className="relative container px-4 md:px-6 pt-24">
-          <VehicleHeader vehicle={vehicle} />
+          <VehicleHeader 
+            vehicle={{ ...vehicle, name: currentNickname || vehicle.name }} 
+            vehicleId={vehicle.id}
+            onNicknameUpdate={(newNickname) => {
+              setCurrentNickname(newNickname || null)
+            }}
+          />
 
           {/* Grid container - 4x3 layout */}
           <div className="grid w-full max-w-7xl mx-auto gap-4 min-h-[600px]" 
@@ -324,7 +429,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDet
               onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
               stats={[
                 { label: 'Last Service', value: '---' },
-                { label: 'Total Records', value: '---' }
+                { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
               ]}
             />
 
@@ -335,7 +440,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDet
               onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
               stats={[
                 { label: 'Next Service', value: '---' },
-                { label: 'Service Count', value: '---' }
+                { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
               ]}
             />
 
@@ -345,7 +450,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDet
               title="Fuel"
               onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
               stats={[
-                { label: 'Avg MPG', value: '---' },
+                { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
                 { label: 'Total Cost', value: '---' }
               ]}
             />
@@ -363,12 +468,6 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname }: VehicleDet
           </div>
         </div>
       </section>
-
-      {/* Log Service Modal */}
-      <LogServiceModal
-        open={logServiceModalOpen}
-        onOpenChange={setLogServiceModalOpen}
-      />
     </>
   )
 }
