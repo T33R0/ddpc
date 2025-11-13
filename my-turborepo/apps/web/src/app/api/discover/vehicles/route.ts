@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import type { PostgrestResponse } from '@supabase/supabase-js';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,19 +15,6 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     autoRefreshToken: false,
   },
 });
-
-// Helper function to add timeout to Supabase RPC promises
-function withTimeout<T>(
-  promise: Promise<PostgrestResponse<T>>,
-  timeoutMs: number
-): Promise<PostgrestResponse<T>> {
-  return Promise.race([
-    promise,
-    new Promise<PostgrestResponse<T>>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timeout: The query took too long to complete')), timeoutMs)
-    ),
-  ]);
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,8 +35,7 @@ export async function GET(request: NextRequest) {
     const vehicleType = searchParams.get('vehicleType') || null;
 
     // Use the SQL function to get unique vehicles with all their trims (with filtering)
-    // Add timeout of 25 seconds (Supabase default is 20s, but we'll give a bit more buffer)
-    const rpcCall = supabase.rpc('get_unique_vehicles_with_trims', {
+    const { data, error } = await supabase.rpc('get_unique_vehicles_with_trims', {
       limit_param: pageSize,
       offset_param: offset,
       min_year_param: minYear,
@@ -62,10 +47,6 @@ export async function GET(request: NextRequest) {
       drivetrain_param: drivetrain,
       vehicle_type_param: vehicleType,
     });
-
-    // Await the RPC call and wrap it with timeout
-    const rpcPromise = rpcCall as Promise<PostgrestResponse<any>>;
-    const { data, error } = await withTimeout(rpcPromise, 25000);
 
     if (error) {
       // Check for timeout-related errors
