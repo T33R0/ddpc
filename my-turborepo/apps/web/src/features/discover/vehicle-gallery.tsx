@@ -10,6 +10,7 @@ type ImageWithTimeoutFallbackProps = {
   alt: string;
   className?: string;
   timeout?: number; // in milliseconds
+  showMissingText?: boolean;
 };
 
 function ImageWithTimeoutFallback({
@@ -17,7 +18,8 @@ function ImageWithTimeoutFallback({
   fallbackSrc,
   alt,
   className,
-  timeout = 3000
+  timeout = 3000,
+  showMissingText = false
 }: ImageWithTimeoutFallbackProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
@@ -34,11 +36,18 @@ function ImageWithTimeoutFallback({
 
   if (showFallback) {
     return (
-      <img
-        src={fallbackSrc}
-        alt={alt}
-        className={className}
-      />
+      <div className="relative w-full h-full">
+        <img
+          src={fallbackSrc}
+          alt={alt}
+          className={className}
+        />
+        {showMissingText && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <span className="text-white text-xl font-semibold">Image Missing</span>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -144,7 +153,7 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
             onClick={() => handleOpenModal(summary, index)}
           >
             <div 
-              className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4 cursor-pointer"
+              className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-6 cursor-pointer"
               style={{
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 transition: 'all 0.3s ease-out',
@@ -160,28 +169,17 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <div className="flex items-center text-xs text-neutral-400">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  In {Math.floor(Math.random() * 100)} garages
-                </div>
-              </div>
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
                 <ImageWithTimeoutFallback
                   src={summary.heroImage || summary.trims[0]?.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
                   className="w-full h-full object-cover"
+                  showMissingText={true}
                 />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-lg">{summary.year} {summary.make} {summary.model}</h3>
-                <p className="text-neutral-400 text-sm">
-                  {summary.trims[0]?.trim || `${summary.trims.length} trims available`}
-                </p>
-              </div>
-              <div className="bg-lime-500/20 text-lime-400 text-xs text-center py-2 rounded-lg">
-                {summary.trims.length} trims · {Math.floor(Math.random() * 50)} public builds
+                <h3 className="font-bold text-2xl">{summary.year} {summary.make} {summary.model}</h3>
               </div>
             </div>
           </div>
