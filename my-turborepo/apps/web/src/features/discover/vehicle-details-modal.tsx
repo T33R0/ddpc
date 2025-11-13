@@ -202,8 +202,10 @@ const VehicleDetailsModal = ({
     }
   };
 
+  // Use the same image priority as the gallery card: heroImage first, then selected trim's image_url
+  const primaryImageUrl = summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
   const imageSources = getVehicleImageSources(
-    selectedTrim.image_url || summary.heroImage,
+    primaryImageUrl,
     summary.make,
     summary.model,
     summary.year
