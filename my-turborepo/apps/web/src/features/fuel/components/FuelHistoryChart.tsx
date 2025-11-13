@@ -14,18 +14,18 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
   // Prepare data for the chart
   const chartData = fuelEntries
     .filter(entry => entry.mpg) // Only entries with calculated MPG
-    .map(entry => ({
-      date: entry.date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: '2-digit'
-      }),
-      mpg: entry.mpg,
-      fullDate: entry.date.toISOString(),
-      gallons: entry.gallons,
-      cost: entry.cost,
-      odometer: entry.odometer,
-    }))
+    .map(entry => {
+      const month = String(entry.date.getMonth() + 1).padStart(2, '0')
+      const day = String(entry.date.getDate()).padStart(2, '0')
+      return {
+        date: `${month}/${day}`, // MM/DD format
+        mpg: entry.mpg,
+        fullDate: entry.date.toISOString(),
+        gallons: entry.gallons,
+        cost: entry.cost,
+        odometer: entry.odometer,
+      }
+    })
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
