@@ -135,16 +135,18 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
     let outcome: ModOutcome | undefined
     if (mod.mod_outcome && mod.mod_outcome.length > 0) {
       const outcomeData = mod.mod_outcome[0]
-      // Convert outcome_type enum to boolean (assuming 'success' means true, anything else means false)
-      // Since we don't know the exact enum values, we'll check if it contains 'success' or similar
-      const outcomeType = String(outcomeData.outcome_type || '').toLowerCase()
-      const success = outcomeType.includes('success') || outcomeType === 'successful'
-      
-      outcome = {
-        id: outcomeData.id,
-        success,
-        notes: outcomeData.notes || undefined,
-        event_date: new Date(outcomeData.event_date)
+      if (outcomeData) {
+        // Convert outcome_type enum to boolean (assuming 'success' means true, anything else means false)
+        // Since we don't know the exact enum values, we'll check if it contains 'success' or similar
+        const outcomeType = String(outcomeData.outcome_type || '').toLowerCase()
+        const success = outcomeType.includes('success') || outcomeType === 'successful'
+        
+        outcome = {
+          id: outcomeData.id,
+          success,
+          notes: outcomeData.notes || undefined,
+          event_date: new Date(outcomeData.event_date)
+        }
       }
     }
 
