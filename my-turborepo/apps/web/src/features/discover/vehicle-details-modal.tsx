@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;
@@ -219,7 +219,12 @@ const VehicleDetailsModal = ({
       >
         {/* Header */}
         <div className="sticky top-0 bg-black/50 backdrop-blur-lg border-b border-white/30 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-white">{summary.year} {summary.make} {summary.model}</h2>
+          <DialogTitle className="text-2xl font-bold text-white">
+            {summary.year} {summary.make} {summary.model}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Vehicle details and specifications for {summary.year} {summary.make} {summary.model}
+          </DialogDescription>
         </div>
 
         {/* Side Navigation Arrows - Fixed positioning */}

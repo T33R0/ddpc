@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DiscoverActionButtons } from "../../features/discover/discover-action-buttons";
 import { VehicleGallery } from "../../features/discover/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
@@ -42,6 +42,7 @@ function DiscoverContent() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const isInitialLoadRef = useRef(true);
 
   const loadVehicles = useCallback(async (page: number, append: boolean = false) => {
     try {
@@ -49,6 +50,7 @@ function DiscoverContent() {
         setLoadingMore(true);
       } else {
         setLoading(true);
+        setError(null); // Clear previous errors when starting a new load
       }
 
       const vehicleData = await getVehicleSummaries(page, 24, filters);
@@ -64,7 +66,13 @@ function DiscoverContent() {
       }
     } catch (err) {
       console.error('Failed to fetch vehicles:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load vehicles');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load vehicles';
+      setError(errorMessage);
+      // Set empty arrays on error so UI can show error state
+      if (!append) {
+        setVehicles([]);
+        setAllVehicles([]);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -79,15 +87,16 @@ function DiscoverContent() {
     }
   }, [currentPage, loadingMore, hasMore, loadVehicles]);
 
-  // Effect to reload vehicles when filters change (but not on initial filterOptions load)
+  // Effect to reload vehicles when filters change (after initial load)
   useEffect(() => {
-    // Skip if this is the initial load (vehicles array is empty means we're still loading initially)
-    if (filterOptions && vehicles.length > 0) {
+    // Only reload if initial load is complete
+    if (!isInitialLoadRef.current) {
       loadVehicles(1, false);
       setCurrentPage(1);
       setSearchQuery(''); // Clear search when filters change
     }
-  }, [filters]); // Only depend on filters, not filterOptions
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]); // Only depend on filters - loadVehicles is stable and depends on filters anyway
 
   // Load filter options immediately (doesn't block UI)
   useEffect(() => {
@@ -117,8 +126,11 @@ function DiscoverContent() {
       } catch (err) {
         console.error('Failed to initialize data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
+        setVehicles([]);
+        setAllVehicles([]);
       } finally {
         setLoading(false);
+        isInitialLoadRef.current = false; // Mark initial load as complete
       }
     }
 
