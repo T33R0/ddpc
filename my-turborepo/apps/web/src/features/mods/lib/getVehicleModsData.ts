@@ -52,10 +52,10 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
     throw new Error('Unauthorized')
   }
 
-  // Fetch vehicle info
+  // Fetch vehicle info - use correct columns from user_vehicle table
   const { data: vehicle, error: vehicleError } = await supabase
     .from('user_vehicle')
-    .select('id, name, ymmt, odometer')
+    .select('id, nickname, year, make, model, trim, odometer')
     .eq('id', vehicleId)
     .eq('owner_id', user.id)
     .single()
@@ -63,6 +63,10 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
   if (vehicleError || !vehicle) {
     throw new Error('Vehicle not found or access denied')
   }
+
+  // Construct vehicle name and ymmt from available fields
+  const vehicleName = vehicle.nickname || `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle'
+  const ymmt = `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} ${vehicle.trim || ''}`.trim()
 
   // Fetch mods with parts and outcomes
   const { data: modsData, error: modsError } = await supabase
@@ -75,25 +79,25 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
       cost,
       odometer,
       event_date,
+      created_at,
       mod_parts (
-        id,
-        quantity,
+        quantity_used,
         part_inventory (
           id,
           name,
-          vendor,
+          vendor_name,
           cost
         )
       ),
       mod_outcome (
         id,
-        success,
+        outcome_type,
         notes,
         event_date
       )
     `)
     .eq('user_vehicle_id', vehicleId)
-    .order('event_date', { ascending: false })
+    .order('event_date', { ascending: false, nullsFirst: false })
 
   if (modsError) {
     console.error('Error fetching mods:', modsError)
@@ -101,28 +105,63 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
   }
 
   // Transform the data
-  const mods: VehicleMod[] = modsData?.map(mod => ({
-    id: mod.id,
-    title: mod.title,
-    description: mod.description || undefined,
-    status: mod.status,
-    cost: mod.cost || undefined,
-    odometer: mod.odometer || undefined,
-    event_date: new Date(mod.event_date),
-    parts: mod.mod_parts?.map((mp: { id: string; quantity: number; part_inventory: { id: string; name: string; vendor?: string; cost?: number }[] }) => ({
-      id: mp.part_inventory[0]?.id || mp.id,
-      name: mp.part_inventory[0]?.name || 'Unknown Part',
-      vendor: mp.part_inventory[0]?.vendor || undefined,
-      cost: mp.part_inventory[0]?.cost || undefined,
-      quantity: mp.quantity || 1
-    })) || [],
-    outcome: mod.mod_outcome?.[0] ? {
-      id: mod.mod_outcome[0].id,
-      success: mod.mod_outcome[0].success,
-      notes: mod.mod_outcome[0].notes || undefined,
-      event_date: new Date(mod.mod_outcome[0].event_date)
-    } : undefined
-  })) || []
+  const mods: VehicleMod[] = (modsData || []).map(mod => {
+    // Handle event_date - it can be null, fallback to created_at
+    let eventDate: Date
+    if (mod.event_date) {
+      eventDate = new Date(mod.event_date)
+    } else if (mod.created_at) {
+      eventDate = new Date(mod.created_at)
+    } else {
+      // Last resort fallback
+      eventDate = new Date()
+    }
+
+    // Transform parts - mod_parts is an array, each with quantity_used and part_inventory (which is an object, not array)
+    const parts: ModPart[] = (mod.mod_parts || [])
+      .filter((mp: any) => mp.part_inventory) // Filter out any mod_parts with missing part_inventory
+      .map((mp: any) => {
+        const part = mp.part_inventory
+        if (!part) return null
+        return {
+          id: part.id || '',
+          name: part.name || 'Unknown Part',
+          vendor: part.vendor_name || undefined,
+          cost: part.cost ? Number(part.cost) : undefined,
+          quantity: mp.quantity_used || 1
+        }
+      })
+      .filter((p): p is ModPart => p !== null)
+
+    // Transform outcome - mod_outcome is an array but should only have one item due to UNIQUE constraint
+    let outcome: ModOutcome | undefined
+    if (mod.mod_outcome && mod.mod_outcome.length > 0) {
+      const outcomeData = mod.mod_outcome[0]
+      // Convert outcome_type enum to boolean (assuming 'success' means true, anything else means false)
+      // Since we don't know the exact enum values, we'll check if it contains 'success' or similar
+      const outcomeType = String(outcomeData.outcome_type || '').toLowerCase()
+      const success = outcomeType.includes('success') || outcomeType === 'successful'
+      
+      outcome = {
+        id: outcomeData.id,
+        success,
+        notes: outcomeData.notes || undefined,
+        event_date: new Date(outcomeData.event_date)
+      }
+    }
+
+    return {
+      id: mod.id,
+      title: mod.title,
+      description: mod.description || undefined,
+      status: mod.status,
+      cost: mod.cost ? Number(mod.cost) : undefined,
+      odometer: mod.odometer || undefined,
+      event_date: eventDate,
+      parts,
+      outcome
+    }
+  })
 
   // Calculate summary
   const totalMods = mods.length
@@ -137,8 +176,8 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
   return {
     vehicle: {
       id: vehicle.id,
-      name: vehicle.name,
-      ymmt: vehicle.ymmt,
+      name: vehicleName,
+      ymmt: ymmt,
       odometer: vehicle.odometer || undefined,
     },
     mods,
