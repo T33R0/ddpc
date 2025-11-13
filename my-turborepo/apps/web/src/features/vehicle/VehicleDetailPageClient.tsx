@@ -106,10 +106,14 @@ function VehicleHeader({ vehicle, vehicleId, onNicknameUpdate }: { vehicle: Vehi
         throw new Error(result.error || 'Failed to update nickname')
       }
 
-      // Update successful - close dialog and refresh
+      // Update successful - close dialog and redirect to new URL
       setIsEditDialogOpen(false)
-      onNicknameUpdate(nickname.trim())
-      router.refresh()
+      const newNickname = nickname.trim() || null
+      onNicknameUpdate(newNickname)
+      
+      // Redirect to the new nickname URL (or vehicle ID if nickname was removed)
+      const newSlug = newNickname || vehicleId
+      router.push(`/vehicle/${encodeURIComponent(newSlug)}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {

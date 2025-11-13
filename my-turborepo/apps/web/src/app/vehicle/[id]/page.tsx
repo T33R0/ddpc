@@ -244,9 +244,16 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.current_status = vehicle.current_status || 'parked'
 
   // --- 4. Redirect to nickname URL if accessed via UUID and nickname exists ---
+  // Also redirect if the URL slug doesn't match the current nickname (handles nickname changes)
   const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)
-  if (vehicleNickname && isLikelyUUID) {
+  const slugMatchesNickname = vehicleNickname && vehicleSlug === vehicleNickname
+  
+  if (vehicleNickname && (isLikelyUUID || !slugMatchesNickname)) {
+    // Redirect to nickname URL if accessed via UUID, or if URL doesn't match current nickname
     redirect(`/vehicle/${encodeURIComponent(vehicleNickname)}`)
+  } else if (!vehicleNickname && !isLikelyUUID && vehicleSlug !== vehicle.id) {
+    // If no nickname exists and URL is not the UUID, redirect to UUID
+    redirect(`/vehicle/${encodeURIComponent(vehicle.id)}`)
   }
 
   // --- 5. Pass Data to Client Component ---
