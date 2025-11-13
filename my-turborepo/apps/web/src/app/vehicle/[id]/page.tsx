@@ -184,7 +184,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     warranty_rust: vehicle.vehicle_data?.warranty_rust,
     source_json: vehicle.vehicle_data?.source_json,
     source_url: vehicle.vehicle_data?.source_url,
-    image_url: vehicle.photo_url || vehicle.vehicle_data?.image_url,
+    image_url: vehicle.vehicle_image || vehicle.photo_url || vehicle.vehicle_data?.image_url,
     review: vehicle.vehicle_data?.review,
     pros: vehicle.vehicle_data?.pros,
     cons: vehicle.vehicle_data?.cons,
@@ -242,6 +242,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // Add the user-specific fields that aren't in vehicle_data
   vehicleWithData.odometer = latestOdometer?.reading_mi || vehicle.odometer || null
   vehicleWithData.current_status = vehicle.current_status || 'parked'
+  vehicleWithData.privacy = vehicle.privacy || 'PRIVATE'
+  vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 
   // --- 4. Redirect to nickname URL if accessed via UUID and nickname exists ---
   // Also redirect if the URL slug doesn't match the current nickname (handles nickname changes)

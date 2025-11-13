@@ -7,9 +7,11 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
-import { Activity, Wrench, Fuel, Settings, Edit } from 'lucide-react'
+import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
+import { Badge } from '@repo/ui/badge'
+import { DropdownMenu } from '@repo/ui/dropdown-menu'
 
 type ImageWithTimeoutFallbackProps = {
   src: string
@@ -68,7 +70,268 @@ function ImageWithTimeoutFallback({
   )
 }
 
-function VehicleHeader({ vehicle, vehicleId, onNicknameUpdate }: { vehicle: Vehicle; vehicleId: string; onNicknameUpdate: (newNickname: string | null) => void }) {
+function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId: string }) {
+  const [isUploading, setIsUploading] = useState(false)
+  const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || vehicle.image_url || null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size must be less than 10MB')
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        alert('You must be logged in to upload images')
+        setIsUploading(false)
+        return
+      }
+
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${vehicleId}/${Date.now()}.${fileExt}`
+      const filePath = `vehicle-images/${fileName}`
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('vehicles')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) {
+        // If bucket doesn't exist or upload fails, try alternative approach
+        console.error('Upload error:', uploadError)
+        
+        // Fallback: Convert to base64 and store URL (or use a different storage solution)
+        // For now, we'll show an error
+        alert('Failed to upload image. Please try again.')
+        setIsUploading(false)
+        return
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('vehicles')
+        .getPublicUrl(filePath)
+
+      // Update vehicle record
+      const response = await fetch('/api/garage/update-vehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          vehicleId,
+          vehicle_image: publicUrl,
+        }),
+      })
+
+      if (response.ok) {
+        setImageUrl(publicUrl)
+      } else {
+        const result = await response.json()
+        alert(result.error || 'Failed to update vehicle image')
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err)
+      alert('An error occurred while uploading the image')
+    } finally {
+      setIsUploading(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  return (
+    <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full relative group"
+          style={{
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            gridColumn: 'span 2',
+            gridRow: 'span 2',
+          }}>
+      <ImageWithTimeoutFallback
+        src={imageUrl || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+        fallbackSrc="/branding/fallback-logo.png"
+        alt={`${vehicle.name || 'Vehicle'} vehicle`}
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+          id={`vehicle-image-upload-${vehicleId}`}
+          disabled={isUploading}
+        />
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="bg-black/70 hover:bg-black/90 text-white border border-white/30"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          {isUploading ? 'Uploading...' : 'Upload Image'}
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+function StatusBadge({ 
+  vehicleId, 
+  currentStatus, 
+  onUpdate 
+}: { 
+  vehicleId: string
+  currentStatus: string
+  onUpdate: (newStatus: string) => void
+}) {
+  const statusOptions = ['daily_driver', 'parked', 'listed', 'sold', 'retired']
+  const statusLabels: Record<string, string> = {
+    daily_driver: 'Daily Driver',
+    parked: 'Parked',
+    listed: 'Listed',
+    sold: 'Sold',
+    retired: 'Retired'
+  }
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const response = await fetch('/api/garage/update-vehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          vehicleId,
+          status: newStatus,
+        }),
+      })
+
+      if (response.ok) {
+        onUpdate(newStatus)
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err)
+    }
+  }
+
+  const availableOptions = statusOptions.filter(opt => opt !== currentStatus)
+
+  return (
+    <DropdownMenu
+      options={availableOptions.map(option => ({
+        label: statusLabels[option] || option,
+        onClick: () => handleStatusChange(option),
+      }))}
+    >
+      <Badge variant="outline" className="text-white border-white/30 bg-black/30 hover:bg-black/50 cursor-pointer">
+        {statusLabels[currentStatus] || currentStatus}
+      </Badge>
+    </DropdownMenu>
+  )
+}
+
+function PrivacyBadge({ 
+  vehicleId, 
+  privacy, 
+  onUpdate 
+}: { 
+  vehicleId: string
+  privacy: 'PUBLIC' | 'PRIVATE'
+  onUpdate: (newPrivacy: 'PUBLIC' | 'PRIVATE') => void
+}) {
+  const handlePrivacyChange = async (newPrivacy: 'PUBLIC' | 'PRIVATE') => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const response = await fetch('/api/garage/update-vehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          vehicleId,
+          privacy: newPrivacy,
+        }),
+      })
+
+      if (response.ok) {
+        onUpdate(newPrivacy)
+      }
+    } catch (err) {
+      console.error('Failed to update privacy:', err)
+    }
+  }
+
+  const otherOption = privacy === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC'
+
+  return (
+    <DropdownMenu
+      options={[{
+        label: otherOption === 'PUBLIC' ? 'Public' : 'Private',
+        onClick: () => handlePrivacyChange(otherOption),
+      }]}
+    >
+      <Badge 
+        variant="outline" 
+        className={`text-white border-white/30 bg-black/30 hover:bg-black/50 cursor-pointer flex items-center gap-1`}
+      >
+        {privacy === 'PUBLIC' ? (
+          <>
+            <Unlock className="w-3 h-3" />
+            Public
+          </>
+        ) : (
+          <>
+            <Lock className="w-3 h-3" />
+            Private
+          </>
+        )}
+      </Badge>
+    </DropdownMenu>
+  )
+}
+
+function VehicleHeader({ 
+  vehicle, 
+  vehicleId, 
+  onNicknameUpdate,
+  onStatusUpdate,
+  onPrivacyUpdate
+}: { 
+  vehicle: Vehicle
+  vehicleId: string
+  onNicknameUpdate: (newNickname: string | null) => void
+  onStatusUpdate: (newStatus: string) => void
+  onPrivacyUpdate: (newPrivacy: 'PUBLIC' | 'PRIVATE') => void
+}) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [nickname, setNickname] = useState(vehicle.name || '')
   const [isSaving, setIsSaving] = useState(false)
@@ -134,6 +397,18 @@ function VehicleHeader({ vehicle, vehicleId, onNicknameUpdate }: { vehicle: Vehi
           >
             <Edit className="w-4 h-4" />
           </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <PrivacyBadge 
+            vehicleId={vehicleId}
+            privacy={vehicle.privacy || 'PRIVATE'}
+            onUpdate={onPrivacyUpdate}
+          />
+          <StatusBadge 
+            vehicleId={vehicleId}
+            currentStatus={vehicle.current_status || 'parked'}
+            onUpdate={onStatusUpdate}
+          />
         </div>
       </div>
 
@@ -261,15 +536,15 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
         <div className="space-y-2 text-sm flex-1">
           <div className="flex justify-between">
             <span className="text-gray-400">Length:</span>
-            <span className="text-white">{vehicle.length_in ? `${(parseFloat(vehicle.length_in.toString()) * 25.4).toFixed(0)} mm` : 'UNK'}</span>
+            <span className="text-white">{vehicle.length_in ? `${parseFloat(vehicle.length_in.toString()).toFixed(1)} in` : 'UNK'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Width:</span>
-            <span className="text-white">{vehicle.width_in ? `${(parseFloat(vehicle.width_in.toString()) * 25.4).toFixed(0)} mm` : 'UNK'}</span>
+            <span className="text-white">{vehicle.width_in ? `${parseFloat(vehicle.width_in.toString()).toFixed(1)} in` : 'UNK'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Height:</span>
-            <span className="text-white">{vehicle.height_in ? `${(parseFloat(vehicle.height_in.toString()) * 25.4).toFixed(0)} mm` : 'UNK'}</span>
+            <span className="text-white">{vehicle.height_in ? `${parseFloat(vehicle.height_in.toString()).toFixed(1)} in` : 'UNK'}</span>
           </div>
         </div>
       </CardContent>
@@ -361,6 +636,8 @@ type VehicleDetailPageClientProps = {
 export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: VehicleDetailPageClientProps) {
   const router = useRouter()
   const [currentNickname, setCurrentNickname] = useState(vehicleNickname || vehicle.name || null)
+  const [currentStatus, setCurrentStatus] = useState(vehicle.current_status || 'parked')
+  const [currentPrivacy, setCurrentPrivacy] = useState<'PUBLIC' | 'PRIVATE'>(vehicle.privacy || 'PRIVATE')
 
   // Use nickname for URLs if available, otherwise fall back to ID
   const urlSlug = currentNickname || vehicle.id
@@ -382,10 +659,16 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
 
         <div className="relative container px-4 md:px-6 pt-24">
           <VehicleHeader 
-            vehicle={{ ...vehicle, name: currentNickname || vehicle.name }} 
+            vehicle={{ ...vehicle, name: currentNickname || vehicle.name, current_status: currentStatus, privacy: currentPrivacy }} 
             vehicleId={vehicle.id}
             onNicknameUpdate={(newNickname) => {
               setCurrentNickname(newNickname || null)
+            }}
+            onStatusUpdate={(newStatus) => {
+              setCurrentStatus(newStatus)
+            }}
+            onPrivacyUpdate={(newPrivacy) => {
+              setCurrentPrivacy(newPrivacy)
             }}
           />
 
@@ -401,19 +684,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
             <BuildSpecsCard vehicle={vehicle} />
 
             {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
-            <Card className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full"
-                  style={{
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    gridColumn: 'span 2',
-                    gridRow: 'span 2',
-                  }}>
-              <ImageWithTimeoutFallback
-                src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
-                fallbackSrc="/branding/fallback-logo.png"
-                alt={`${vehicle.name || 'Vehicle'} vehicle`}
-                className="w-full h-full object-cover"
-              />
-            </Card>
+            <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} />
 
             {/* Slot 4: Engine Specs */}
             <EngineSpecsCard vehicle={vehicle} />

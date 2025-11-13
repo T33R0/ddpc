@@ -24,6 +24,8 @@ export interface Vehicle {
   trim: string;
   odometer?: number | null; // Current odometer reading
   current_status?: string; // Vehicle status
+  privacy?: 'PUBLIC' | 'PRIVATE'; // Privacy setting
+  vehicle_image?: string | null; // User-uploaded vehicle image URL
   trim_description?: string;
   base_msrp?: string;
   base_invoice?: string;
