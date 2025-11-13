@@ -22,11 +22,12 @@ import {
   Settings,
   Crown,
   Eye,
-  EyeOff
+  EyeOff,
+  Palette
 } from 'lucide-react';
 import { User as UserType } from '@repo/types';
 
-type TabType = 'profile' | 'security' | 'billing' | 'account';
+type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme';
 
 export default function AccountPage() {
   const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle } = useAuth();
@@ -51,6 +52,9 @@ export default function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Theme preference state
+  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
 
   useEffect(() => {
     if (!loading && !authUser) {
@@ -225,20 +229,43 @@ export default function AccountPage() {
 
   if (loading || isSigningOut) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white">
-          {isSigningOut ? 'Signing out...' : 'Loading...'}
+      <section className="relative py-12 bg-black min-h-screen">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+        >
+          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
         </div>
-      </div>
+        <div className="relative container px-4 md:px-6 pt-24 flex items-center justify-center min-h-[60vh]">
+          <div className="text-white text-lg">
+            {isSigningOut ? 'Signing out...' : 'Loading...'}
+          </div>
+        </div>
+      </section>
     );
   }
 
   // Show unauthorized access page for non-authenticated users
   if (!loading && !authUser) {
     return (
-      <div className="min-h-screen bg-black text-white p-4">
-        <div className="max-w-md mx-auto flex items-center justify-center min-h-screen">
-          <Card className="bg-gray-900 border-gray-800 w-full">
+      <section className="relative py-12 bg-black min-h-screen">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+        >
+          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+        </div>
+
+        <div className="relative container px-4 md:px-6 pt-24">
+          <div className="max-w-md mx-auto flex items-center justify-center min-h-[60vh]">
+            <Card 
+              className="bg-black/50 backdrop-blur-lg rounded-2xl text-white w-full"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Access Restricted</CardTitle>
               <CardDescription className="text-gray-400">
@@ -278,26 +305,36 @@ export default function AccountPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Auth Modal */}
-        <AuthModal
-          open={authModalOpen}
-          onOpenChange={setAuthModalOpen}
-          onGoogleSignIn={handleGoogleSignIn}
-          onEmailSignUp={handleEmailSignUp}
-          onEmailSignIn={handleEmailSignIn}
-          initialMode={isSignUpMode ? 'signup' : 'signin'}
-        />
-      </div>
+          {/* Auth Modal */}
+          <AuthModal
+            open={authModalOpen}
+            onOpenChange={setAuthModalOpen}
+            onGoogleSignIn={handleGoogleSignIn}
+            onEmailSignUp={handleEmailSignUp}
+            onEmailSignIn={handleEmailSignIn}
+            initialMode={isSignUpMode ? 'signup' : 'signin'}
+          />
+        </div>
+        </div>
+      </section>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white">Loading profile...</div>
-      </div>
+      <section className="relative py-12 bg-black min-h-screen">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+        >
+          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+        </div>
+        <div className="relative container px-4 md:px-6 pt-24 flex items-center justify-center min-h-[60vh]">
+          <div className="text-white text-lg">Loading profile...</div>
+        </div>
+      </section>
     );
   }
 
@@ -320,22 +357,36 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Button
-            onClick={() => router.push('/dashboard')}
-            variant="ghost"
-            className="mb-4 text-gray-400 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold mb-2">Account Management</h1>
-          <p className="text-gray-400">Manage your account settings and preferences</p>
+    <>
+      <section className="relative py-12 bg-black min-h-screen">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+        >
+          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+        </div>
 
-          {/* Member info bar */}
-          <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-800">
+        <div className="relative container px-4 md:px-6 pt-24 max-w-4xl mx-auto">
+          <div className="mb-8">
+            <Button
+              onClick={() => router.push('/dashboard')}
+              variant="ghost"
+              className="mb-4 text-gray-400 hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <h1 className="text-4xl font-bold text-white mb-2">Account Management</h1>
+            <p className="text-lg text-gray-400">Manage your account settings and preferences</p>
+
+            {/* Member info bar */}
+            <div 
+              className="mt-4 p-4 bg-black/50 backdrop-blur-lg rounded-2xl"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
@@ -385,6 +436,10 @@ export default function AccountPage() {
               <Settings className="h-4 w-4 mr-2" />
               Account
             </ToggleGroupItem>
+            <ToggleGroupItem value="theme" className="data-[state=on]:bg-gray-700">
+              <Palette className="h-4 w-4 mr-2" />
+              Theme
+            </ToggleGroupItem>
           </ToggleGroup>
         </div>
 
@@ -394,7 +449,12 @@ export default function AccountPage() {
           {activeTab === 'profile' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Profile Information */}
-              <Card className="bg-gray-900 border-gray-800">
+              <Card 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
@@ -405,58 +465,58 @@ export default function AccountPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="username">Username *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-gray-300">Username *</Label>
                     <Input
                       id="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="bg-gray-800 border-gray-700 mt-1"
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                       placeholder="your_username"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="displayName">Display Name</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>
                     <Input
                       id="displayName"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="bg-gray-800 border-gray-700 mt-1"
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                       placeholder="Your Display Name"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="location">Location</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-gray-300">Location</Label>
                     <Input
                       id="location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="bg-gray-800 border-gray-700 mt-1"
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                       placeholder="City, Country"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="website">Website</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="website" className="text-gray-300">Website</Label>
                     <Input
                       id="website"
                       type="url"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
-                      className="bg-gray-800 border-gray-700 mt-1"
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                       placeholder="https://yourwebsite.com"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="bio">Bio</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio" className="text-gray-300">Bio</Label>
                     <Textarea
                       id="bio"
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="bg-gray-800 border-gray-700 mt-1"
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                       placeholder="Tell us about yourself..."
                       rows={3}
                     />
@@ -473,7 +533,12 @@ export default function AccountPage() {
               </Card>
 
               {/* Avatar & Privacy Settings */}
-              <Card className="bg-gray-900 border-gray-800">
+              <Card 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ImageIcon className="h-5 w-5" />
@@ -484,14 +549,14 @@ export default function AccountPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="avatarUrl">Avatar URL</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="avatarUrl" className="text-gray-300">Avatar URL</Label>
                     <Input
                       id="avatarUrl"
                       type="url"
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
-                      className="bg-gray-800 border-gray-700 mt-1"
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                       placeholder="https://example.com/avatar.jpg"
                     />
                   </div>
@@ -515,9 +580,9 @@ export default function AccountPage() {
                       id="isPublic"
                       checked={isPublic}
                       onChange={(e) => setIsPublic(e.target.checked)}
-                      className="rounded border-gray-700 bg-gray-800"
+                      className="w-4 h-4 rounded border-white/30 bg-black/30 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                     />
-                    <Label htmlFor="isPublic" className="text-sm">
+                    <Label htmlFor="isPublic" className="text-sm text-gray-300">
                       Make profile public
                     </Label>
                   </div>
@@ -542,7 +607,12 @@ export default function AccountPage() {
 
           {/* Security Tab */}
           {activeTab === 'security' && (
-            <Card className="bg-gray-900 border-gray-800 max-w-2xl">
+            <Card 
+              className="bg-black/50 backdrop-blur-lg rounded-2xl text-white max-w-2xl"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
@@ -553,38 +623,38 @@ export default function AccountPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="currentPassword">Current Password</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword" className="text-gray-300">Current Password</Label>
                   <Input
                     id="currentPassword"
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="bg-gray-800 border-gray-700 mt-1"
+                    className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                     placeholder="Enter your current password"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="newPassword">New Password</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-gray-300">New Password</Label>
                   <Input
                     id="newPassword"
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="bg-gray-800 border-gray-700 mt-1"
+                    className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                     placeholder="Enter your new password"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-gray-300">Confirm New Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-gray-800 border-gray-700 mt-1"
+                    className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                     placeholder="Confirm your new password"
                   />
                 </div>
@@ -603,7 +673,12 @@ export default function AccountPage() {
           {/* Billing Tab */}
           {activeTab === 'billing' && (
             <div className="space-y-6">
-              <Card className="bg-gray-900 border-gray-800">
+              <Card 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
@@ -614,7 +689,12 @@ export default function AccountPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                  <div 
+                    className="flex items-center justify-between p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                    style={{
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <div className="text-2xl">{getPlanIcon(user.plan)}</div>
                       <div>
@@ -633,7 +713,12 @@ export default function AccountPage() {
                     </Button>
                   </div>
 
-                  <div className="mt-4 p-4 border border-gray-700 rounded-lg">
+                  <div 
+                    className="mt-4 p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                    style={{
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
                     <h4 className="font-medium mb-2">Plan Features</h4>
                     <ul className="text-sm text-gray-400 space-y-1">
                       {user.plan === 'free' && (
@@ -665,7 +750,12 @@ export default function AccountPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gray-900 border-gray-800">
+              <Card 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <CardHeader>
                   <CardTitle>Upgrade Options</CardTitle>
                   <CardDescription>
@@ -689,7 +779,12 @@ export default function AccountPage() {
           {/* Account Tab */}
           {activeTab === 'account' && (
             <div className="space-y-6">
-              <Card className="bg-gray-900 border-gray-800">
+              <Card 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
@@ -701,20 +796,25 @@ export default function AccountPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-800 rounded-lg">
-                      <h4 className="font-medium mb-2">Account Information</h4>
+                    <div 
+                      className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                      style={{
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <h4 className="font-medium mb-2 text-white">Account Information</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">User ID:</span>
-                          <span className="font-mono text-xs">{user.id.slice(0, 8)}...</span>
+                          <span className="font-mono text-xs text-white">{user.id.slice(0, 8)}...</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Email:</span>
-                          <span>{user.email}</span>
+                          <span className="text-white">{user.email}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Role:</span>
-                          <span className="capitalize">{user.role}</span>
+                          <span className="capitalize text-white">{user.role}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Status:</span>
@@ -725,16 +825,21 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    <div className="p-4 bg-gray-800 rounded-lg">
-                      <h4 className="font-medium mb-2">Privacy Settings</h4>
+                    <div 
+                      className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                      style={{
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <h4 className="font-medium mb-2 text-white">Privacy Settings</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Profile Visibility:</span>
-                          <span>{isPublic ? 'Public' : 'Private'}</span>
+                          <span className="text-white">{isPublic ? 'Public' : 'Private'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Last Updated:</span>
-                          <span>{new Date(user.updatedAt).toLocaleDateString()}</span>
+                          <span className="text-white">{new Date(user.updatedAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
@@ -742,7 +847,12 @@ export default function AccountPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gray-900 border-gray-800">
+              <Card 
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <CardHeader>
                   <CardTitle>Account Actions</CardTitle>
                   <CardDescription>
@@ -769,7 +879,12 @@ export default function AccountPage() {
                     </Button>
                   </div>
 
-                  <div className="mt-4 p-4 bg-red-900/20 border border-red-800 rounded-lg">
+                  <div 
+                    className="mt-4 p-4 bg-red-900/20 rounded-lg"
+                    style={{
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                    }}
+                  >
                     <h4 className="font-medium text-red-400 mb-2">Danger Zone</h4>
                     <p className="text-sm text-gray-400">
                       Account deletion and data export features are coming soon. These actions cannot be undone.
@@ -779,8 +894,89 @@ export default function AccountPage() {
               </Card>
             </div>
           )}
+
+          {/* Theme Tab */}
+          {activeTab === 'theme' && (
+            <Card 
+              className="bg-black/50 backdrop-blur-lg rounded-2xl text-white max-w-2xl"
+              style={{
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Palette className="h-5 w-5" />
+                  Theme Preferences
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Choose your preferred color theme for the application
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                    <input
+                      type="radio"
+                      name="theme"
+                      value="light"
+                      checked={theme === 'light'}
+                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
+                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-white">Light</div>
+                      <div className="text-sm text-gray-400">Use light theme</div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                    <input
+                      type="radio"
+                      name="theme"
+                      value="dark"
+                      checked={theme === 'dark'}
+                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
+                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-white">Dark</div>
+                      <div className="text-sm text-gray-400">Use dark theme</div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                    <input
+                      type="radio"
+                      name="theme"
+                      value="auto"
+                      checked={theme === 'auto'}
+                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
+                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-white">Auto</div>
+                      <div className="text-sm text-gray-400">Follow system preference</div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="pt-4 border-t border-white/20">
+                  <Button
+                    onClick={() => {
+                      // TODO: Implement theme persistence
+                      toast.success('Theme preference saved!');
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Save Theme Preference
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </div>
-    </div>
+        </div>
+      </section>
+    </>
   );
 }
