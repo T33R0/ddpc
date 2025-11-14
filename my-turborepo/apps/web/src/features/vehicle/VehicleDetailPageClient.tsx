@@ -87,13 +87,14 @@ function ImageWithTimeoutFallback({
   )
 }
 
-function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId: string }) {
+function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; vehicleId: string; isOwner: boolean }) {
   const [isUploading, setIsUploading] = useState(false)
   const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || vehicle.image_url || null)
   const [isHovered, setIsHovered] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isOwner) return
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -167,15 +168,15 @@ function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId:
   }
 
   return (
-    <Card 
-      className="col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full relative cursor-pointer"
+    <Card
+      className={`col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full relative ${isOwner ? 'cursor-pointer' : ''}`}
       style={{
         border: '1px solid rgba(255, 255, 255, 0.3)',
         gridColumn: 'span 2',
         gridRow: 'span 2',
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={isOwner ? () => setIsHovered(true) : undefined}
+      onMouseLeave={isOwner ? () => setIsHovered(false) : undefined}
     >
       <ImageWithTimeoutFallback
         src={imageUrl || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
@@ -183,50 +184,54 @@ function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId:
         alt={`${vehicle.name || 'Vehicle'} vehicle`}
         className="w-full h-full object-cover"
       />
-      <div 
-        className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-          isHovered ? 'bg-black/60 opacity-100' : 'bg-black/0 opacity-0'
-        }`}
-        onClick={(e) => {
-          e.stopPropagation()
-          fileInputRef.current?.click()
-        }}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-          id={`vehicle-image-upload-${vehicleId}`}
-          disabled={isUploading}
-        />
-        <Button
+      {isOwner && (
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+            isHovered ? 'bg-black/60 opacity-100' : 'bg-black/0 opacity-0'
+          }`}
           onClick={(e) => {
             e.stopPropagation()
             fileInputRef.current?.click()
           }}
-          disabled={isUploading}
-          className={`bg-black/80 hover:bg-black/95 text-white border border-white/40 px-4 py-2 transition-all ${
-            isHovered ? 'scale-100' : 'scale-0'
-          }`}
         >
-          <Upload className="w-4 h-4 mr-2" />
-          {isUploading ? 'Uploading...' : 'Upload Image'}
-        </Button>
-      </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+            id={`vehicle-image-upload-${vehicleId}`}
+            disabled={isUploading}
+          />
+          <Button
+            onClick={(e) => {
+              e.stopPropagation()
+              fileInputRef.current?.click()
+            }}
+            disabled={isUploading}
+            className={`bg-black/80 hover:bg-black/95 text-white border border-white/40 px-4 py-2 transition-all ${
+              isHovered ? 'scale-100' : 'scale-0'
+            }`}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {isUploading ? 'Uploading...' : 'Upload Image'}
+          </Button>
+        </div>
+      )}
     </Card>
   )
 }
 
-function StatusBadge({ 
-  vehicleId, 
-  currentStatus, 
-  onUpdate 
-}: { 
+function StatusBadge({
+  vehicleId,
+  currentStatus,
+  onUpdate,
+  isOwner
+}: {
   vehicleId: string
   currentStatus: string
   onUpdate: (newStatus: string) => void
+  isOwner: boolean
 }) {
   const statusOptions = ['daily_driver', 'parked', 'listed', 'sold', 'retired']
   const statusLabels: Record<string, string> = {
@@ -235,6 +240,14 @@ function StatusBadge({
     listed: 'Listed',
     sold: 'Sold',
     retired: 'Retired'
+  }
+
+  if (!isOwner) {
+    return (
+      <Badge variant="outline" className="text-white border-white/30 bg-black/30 cursor-default">
+        {statusLabels[currentStatus] || currentStatus}
+      </Badge>
+    )
   }
 
   const handleStatusChange = async (newStatus: string) => {
@@ -278,15 +291,38 @@ function StatusBadge({
   )
 }
 
-function PrivacyBadge({ 
-  vehicleId, 
-  privacy, 
-  onUpdate 
-}: { 
+function PrivacyBadge({
+  vehicleId,
+  privacy,
+  onUpdate,
+  isOwner
+}: {
   vehicleId: string
   privacy: 'PUBLIC' | 'PRIVATE'
   onUpdate: (newPrivacy: 'PUBLIC' | 'PRIVATE') => void
+  isOwner: boolean
 }) {
+  if (!isOwner) {
+    return (
+      <Badge
+        variant="outline"
+        className="text-white border-white/30 bg-black/30 cursor-default flex items-center gap-1"
+      >
+        {privacy === 'PUBLIC' ? (
+          <>
+            <Unlock className="w-3 h-3" />
+            Public
+          </>
+        ) : (
+          <>
+            <Lock className="w-3 h-3" />
+            Private
+          </>
+        )}
+      </Badge>
+    )
+  }
+
   const handlePrivacyChange = async (newPrivacy: 'PUBLIC' | 'PRIVATE') => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -321,8 +357,8 @@ function PrivacyBadge({
         onClick: () => handlePrivacyChange(otherOption),
       }]}
     >
-      <Badge 
-        variant="outline" 
+      <Badge
+        variant="outline"
         className={`text-white border-white/30 bg-black/30 hover:bg-black/50 cursor-pointer flex items-center gap-1`}
       >
         {privacy === 'PUBLIC' ? (
@@ -341,18 +377,20 @@ function PrivacyBadge({
   )
 }
 
-function VehicleHeader({ 
-  vehicle, 
-  vehicleId, 
+function VehicleHeader({
+  vehicle,
+  vehicleId,
   onNicknameUpdate,
   onStatusUpdate,
-  onPrivacyUpdate
-}: { 
+  onPrivacyUpdate,
+  isOwner
+}: {
   vehicle: Vehicle
   vehicleId: string
   onNicknameUpdate: (newNickname: string | null) => void
   onStatusUpdate: (newStatus: string) => void
   onPrivacyUpdate: (newPrivacy: 'PUBLIC' | 'PRIVATE') => void
+  isOwner: boolean
 }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [nickname, setNickname] = useState(vehicle.name || '')
@@ -411,76 +449,82 @@ function VehicleHeader({
       <div className="mb-8 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <h1 className="text-4xl font-bold text-white">{vehicle.name || 'Unnamed Vehicle'}</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-400 hover:text-white hover:bg-gray-800"
-            onClick={() => setIsEditDialogOpen(true)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          {isOwner && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-white hover:bg-gray-800"
+              onClick={() => setIsEditDialogOpen(true)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-2">
-          <PrivacyBadge 
+          <PrivacyBadge
             vehicleId={vehicleId}
             privacy={vehicle.privacy || 'PRIVATE'}
             onUpdate={onPrivacyUpdate}
+            isOwner={isOwner}
           />
-          <StatusBadge 
+          <StatusBadge
             vehicleId={vehicleId}
             currentStatus={vehicle.current_status || 'parked'}
             onUpdate={onStatusUpdate}
+            isOwner={isOwner}
           />
         </div>
       </div>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gray-900 border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="text-white">Edit Vehicle Nickname</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Change the nickname for this vehicle. Leave empty to remove the nickname.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="nickname" className="text-gray-300">Nickname</Label>
-              <Input
-                id="nickname"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="Enter vehicle nickname"
-                className="bg-gray-800 border-gray-700 text-white mt-2"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !isSaving) {
-                    handleSave()
-                  }
-                }}
-              />
+      {isOwner && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="bg-gray-900 border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-white">Edit Vehicle Nickname</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Change the nickname for this vehicle. Leave empty to remove the nickname.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="nickname" className="text-gray-300">Nickname</Label>
+                <Input
+                  id="nickname"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Enter vehicle nickname"
+                  className="bg-gray-800 border-gray-700 text-white mt-2"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isSaving) {
+                      handleSave()
+                    }
+                  }}
+                />
+              </div>
+              {error && (
+                <p className="text-sm text-red-400">{error}</p>
+              )}
             </div>
-            {error && (
-              <p className="text-sm text-red-400">{error}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsEditDialogOpen(false)}
-              disabled={isSaving}
-              className="text-gray-400 hover:text-white"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={isSaving}
+                className="text-gray-400 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   )
 }
@@ -613,27 +657,34 @@ function NavigationCard({
   icon: Icon,
   title,
   onClick,
-  stats
+  stats,
+  disabled = false
 }: {
   icon: React.ComponentType<{ className?: string }>
   title: string
   onClick: () => void
   stats: Array<{ label: string; value: string }>
+  disabled?: boolean
 }) {
+  const handleClick = () => {
+    if (disabled) return
+    onClick()
+  }
+
   return (
     <Card
-      className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white cursor-pointer transition-all duration-300 h-full"
+      className={`bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white transition-all duration-300 h-full ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
       style={{
         border: '1px solid rgba(255, 255, 255, 0.3)',
         transition: 'all 0.3s ease-out',
       }}
-      onClick={onClick}
-      onMouseEnter={(e) => {
+      onClick={handleClick}
+      onMouseEnter={disabled ? undefined : (e) => {
         e.currentTarget.style.transform = 'scale(1.02)'
         e.currentTarget.style.border = '1px solid rgb(132, 204, 22)'
         e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)'
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={disabled ? undefined : (e) => {
         e.currentTarget.style.transform = 'scale(1)'
         e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)'
         e.currentTarget.style.boxShadow = 'none'
@@ -660,6 +711,7 @@ function NavigationCard({
 type VehicleDetailPageClientProps = {
   vehicle: Vehicle
   vehicleNickname?: string | null
+  isOwner: boolean
   stats?: {
     totalRecords?: number
     serviceCount?: number
@@ -667,7 +719,7 @@ type VehicleDetailPageClientProps = {
   }
 }
 
-export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: VehicleDetailPageClientProps) {
+export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwner }: VehicleDetailPageClientProps) {
   const router = useRouter()
   const [currentNickname, setCurrentNickname] = useState(vehicleNickname || vehicle.name || null)
   const [currentStatus, setCurrentStatus] = useState(vehicle.current_status || 'parked')
@@ -677,6 +729,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
   const urlSlug = currentNickname || vehicle.id
 
   const handleNavigation = (path: string) => {
+    if (!isOwner) return
     router.push(path)
   }
 
@@ -692,8 +745,8 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
         </div>
 
         <div className="relative container px-4 md:px-6 pt-24">
-          <VehicleHeader 
-            vehicle={{ ...vehicle, name: currentNickname || vehicle.name, current_status: currentStatus, privacy: currentPrivacy }} 
+          <VehicleHeader
+            vehicle={{ ...vehicle, name: currentNickname || vehicle.name, current_status: currentStatus, privacy: currentPrivacy }}
             vehicleId={vehicle.id}
             onNicknameUpdate={(newNickname) => {
               setCurrentNickname(newNickname || null)
@@ -704,6 +757,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
             onPrivacyUpdate={(newPrivacy) => {
               setCurrentPrivacy(newPrivacy)
             }}
+            isOwner={isOwner}
           />
 
           {/* Grid container - 4x3 layout */}
@@ -718,7 +772,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
             <BuildSpecsCard vehicle={vehicle} />
 
             {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
-            <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} />
+            <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
 
             {/* Slot 4: Engine Specs */}
             <EngineSpecsCard vehicle={vehicle} />
@@ -740,6 +794,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
                 { label: 'Last Service', value: '---' },
                 { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
               ]}
+              disabled={!isOwner}
             />
 
             {/* Slot 10: Service */}
@@ -751,6 +806,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
                 { label: 'Next Service', value: '---' },
                 { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
               ]}
+              disabled={!isOwner}
             />
 
             {/* Slot 11: Fuel */}
@@ -762,6 +818,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
                 { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
                 { label: 'Total Cost', value: '---' }
               ]}
+              disabled={!isOwner}
             />
 
             {/* Slot 12: Mods */}
@@ -773,6 +830,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats }: Veh
                 { label: 'Total Mods', value: '---' },
                 { label: 'Total Cost', value: '---' }
               ]}
+              disabled={!isOwner}
             />
           </div>
         </div>
