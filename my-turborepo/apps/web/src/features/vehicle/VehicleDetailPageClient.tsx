@@ -102,53 +102,35 @@ function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId:
         return
       }
 
-      // Create a unique filename
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${vehicleId}/${Date.now()}.${fileExt}`
-      const filePath = `vehicle-images/${fileName}`
+      // Use API route for upload (handles bucket creation errors better)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('vehicleId', vehicleId)
 
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('vehicles')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
+      const response = await fetch('/api/garage/upload-vehicle-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      })
 
-      if (uploadError) {
-        // If bucket doesn't exist or upload fails, try alternative approach
-        console.error('Upload error:', uploadError)
-        
-        // Fallback: Convert to base64 and store URL (or use a different storage solution)
-        // For now, we'll show an error
-        alert('Failed to upload image. Please try again.')
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.code === 'BUCKET_NOT_FOUND') {
+          alert('Storage bucket not configured. Please create a bucket named "vehicles" in your Supabase Storage dashboard.')
+        } else {
+          alert(result.error || 'Failed to upload image. Please try again.')
+        }
         setIsUploading(false)
         return
       }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('vehicles')
-        .getPublicUrl(filePath)
-
-      // Update vehicle record
-      const response = await fetch('/api/garage/update-vehicle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          vehicleId,
-          vehicle_image: publicUrl,
-        }),
-      })
-
-      if (response.ok) {
-        setImageUrl(publicUrl)
+      if (result.success && result.imageUrl) {
+        setImageUrl(result.imageUrl)
       } else {
-        const result = await response.json()
-        alert(result.error || 'Failed to update vehicle image')
+        alert('Upload succeeded but failed to get image URL')
       }
     } catch (err) {
       console.error('Error uploading image:', err)
