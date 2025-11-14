@@ -96,6 +96,7 @@ function CommunityContent() {
 
     const filtered = allVehicles.filter(vehicle => {
       // Helper function to safely check if a field contains search term
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fieldContains = (field: any, term: string) => {
         if (field == null) return false;
         return String(field).toLowerCase().includes(term);
@@ -111,7 +112,7 @@ function CommunityContent() {
       // Search in trim-specific fields (user vehicle data)
       const trimMatch = vehicle.trims.some(trim =>
         searchTerms.every(term =>
-          fieldContains(trim.nickname, term) ||
+          fieldContains(trim.name, term) ||
           fieldContains(trim.trim, term) ||
           fieldContains(trim.trim_description, term) ||
           fieldContains(trim.body_type, term) ||
@@ -169,7 +170,7 @@ function CommunityContent() {
           <div className="mb-6">
             <div className="inline-flex items-center gap-2 bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-lg px-4 py-2">
               <span className="text-blue-300 text-sm">
-                Showing {vehicles.length} result{vehicles.length !== 1 ? 's' : ''} for "{searchQuery}"
+                Showing {vehicles.length} result{vehicles.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
               </span>
               <button
                 onClick={handleClearSearch}
