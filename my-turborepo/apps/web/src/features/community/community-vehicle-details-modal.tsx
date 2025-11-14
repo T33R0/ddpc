@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
@@ -55,7 +55,6 @@ function ImageWithTimeoutFallback({
 
 type CommunityVehicleDetailsModalProps = {
   summary: VehicleSummary;
-  initialTrimId?: string;
   onClose: () => void;
   onNavigate?: (direction: 'prev' | 'next') => void;
   canNavigatePrev?: boolean;
@@ -140,7 +139,6 @@ const formatFuelEconomy = (trim: TrimVariant): string => {
 
 const CommunityVehicleDetailsModal = ({
   summary,
-  initialTrimId,
   onClose,
   onNavigate,
   canNavigatePrev = false,

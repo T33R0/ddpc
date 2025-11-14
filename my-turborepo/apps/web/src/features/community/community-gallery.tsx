@@ -73,7 +73,6 @@ type CommunityGalleryProps = {
 
 type SelectedVehicle = {
   summary: VehicleSummary;
-  initialTrimId?: string;
   index: number;
 };
 
@@ -102,7 +101,6 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
   const handleOpenModal = (summary: VehicleSummary, index: number) => {
     setSelectedVehicle({
       summary,
-      initialTrimId: summary.trims[0]?.id,
       index,
     });
   };
@@ -128,7 +126,6 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
       if (newVehicle) {
         setSelectedVehicle({
           summary: newVehicle,
-          initialTrimId: newVehicle.trims[0]?.id,
           index: newIndex,
         });
       }
@@ -206,7 +203,6 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
       {selectedVehicle && (
         <CommunityVehicleDetailsModal
           summary={selectedVehicle.summary}
-          initialTrimId={selectedVehicle.initialTrimId}
           onClose={handleCloseModal}
           onNavigate={handleNavigateVehicle}
           canNavigatePrev={selectedVehicle.index > 0}
