@@ -23,15 +23,17 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     error: authError,
   } = await supabase.auth.getUser()
 
-  if (authError || !user) {
-    redirect('/auth/signin?message=You must be logged in to view a vehicle.')
+  if (authError) {
+    console.error('VehicleDetailPage: Error retrieving auth user', authError)
   }
+
+  const userId = user?.id || null
 
   // --- 1. Fetch Vehicle Data (with Ownership Check) ---
   // This is the critical pattern from your audit (log-service route)
   // We fetch the vehicle AND check ownership in one query.
 
-  console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', user.id)
+  console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', userId)
 
   const selectClause = `
       *,
@@ -112,7 +114,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   if (!vehicle) {
     console.error('VehicleDetailPage: Vehicle not found or not accessible:', {
       vehicleSlug,
-      userId: user.id,
+      userId,
       vehicleError,
       hasVehicle: !!vehicle
     })
@@ -122,36 +124,42 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   console.log('VehicleDetailPage: Found vehicle:', vehicle.id, vehicle.nickname, vehicle.current_status)
 
   // --- 2. Fetch Latest Odometer Reading ---
-  const { data: latestOdometer } = await supabase
-    .from('odometer_log')
-    .select('reading_mi')
-    .eq('user_vehicle_id', vehicle.id)
-    .order('recorded_at', { ascending: false })
-    .limit(1)
-    .single()
+  type OdometerRow = { reading_mi: number | null }
 
-  // --- 2.5. Fetch Stats for Navigation Cards ---
-  // Total Records (maintenance_log + mods + odometer_log)
-  const [maintenanceCount, modsCount, odometerCount] = await Promise.all([
-    supabase
-      .from('maintenance_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_vehicle_id', vehicle.id),
-    supabase
-      .from('mods')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_vehicle_id', vehicle.id),
-    supabase
+  let latestOdometer: OdometerRow | null = null
+  let totalRecords = 0
+  let serviceCount = 0
+
+  if (isOwner) {
+    const { data: odometerData } = await supabase
       .from('odometer_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_vehicle_id', vehicle.id),
-  ])
+      .select('reading_mi')
+      .eq('user_vehicle_id', vehicle.id)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .single()
 
-  const totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
-  
-  // Service Count (maintenance_log count)
-  const serviceCount = maintenanceCount.count || 0
-  
+    latestOdometer = odometerData || null
+
+    const [maintenanceCount, modsCount, odometerCount] = await Promise.all([
+      supabase
+        .from('maintenance_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicle.id),
+      supabase
+        .from('mods')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicle.id),
+      supabase
+        .from('odometer_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicle.id),
+    ])
+
+    totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
+    serviceCount = maintenanceCount.count || 0
+  }
+
   // Avg MPG (from user_vehicle table)
   const avgMpg = vehicle.avg_mpg || null
 
