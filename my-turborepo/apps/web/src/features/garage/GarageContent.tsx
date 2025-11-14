@@ -188,7 +188,7 @@ function VehicleCard({
         </div>
         <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
           <ImageWithTimeoutFallback
-            src={vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+            src={(vehicle as any).vehicle_image || vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
             fallbackSrc="/branding/fallback-logo.png"
             alt={`${vehicle.name} vehicle`}
             className="w-full h-full object-cover"
@@ -210,8 +210,13 @@ function VehicleCard({
             })()}
           </div>
         </div>
-        <div className="text-xs text-gray-400">
-          {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-gray-400">
+            {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
+          </div>
+          <div className="text-xs text-gray-400 font-semibold">
+            {formatStatus(vehicle.current_status)}
+          </div>
         </div>
       </div>
     </div>
@@ -356,10 +361,13 @@ export function GarageContent({
   initialVehicles,
   preferredVehicleId,
 }: GarageContentProps) {
-  // Use server-fetched data as initial state
-  const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(
-    initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
+  // Use server-fetched data as initial state, ensuring no duplicates
+  const initialActive = initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
+  const uniqueInitialActive = initialActive.filter((v, index, self) =>
+    index === self.findIndex((t) => t.id === v.id)
   )
+  
+  const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(uniqueInitialActive)
   const [storedVehiclesLocal, setStoredVehiclesLocal] = useState<VehicleWithOdometer[]>([])
 
   // For stored vehicles, we still need the hook since they load progressively
@@ -369,10 +377,14 @@ export function GarageContent({
   // Show add vehicle card only if active vehicles < 3
   const canAddVehicle = activeVehicles.length < 3
 
-  // Sync stored vehicles from hook
+  // Sync stored vehicles from hook, filtering out any that are active
   useEffect(() => {
-    setStoredVehiclesLocal(storedVehicles)
-  }, [storedVehicles])
+    const filtered = storedVehicles.filter(v => 
+      v.current_status !== 'daily_driver' && 
+      !activeVehicles.find(av => av.id === v.id)
+    )
+    setStoredVehiclesLocal(filtered)
+  }, [storedVehicles, activeVehicles])
 
   // Real-time subscription to vehicle status changes
   useEffect(() => {
@@ -532,15 +544,81 @@ export function GarageContent({
     window.location.reload()
   }
 
-  // Combined stored vehicles (local + hook), excluding active vehicles
+  // Combined stored vehicles (local + hook), excluding active vehicles and duplicates
   const allStoredVehicles = [
-    ...storedVehiclesLocal.filter(v => v.current_status !== 'daily_driver'),
+    ...storedVehiclesLocal.filter(v => 
+      v.current_status !== 'daily_driver' && 
+      !activeVehicles.find(av => av.id === v.id)
+    ),
     ...storedVehicles.filter(v => 
       v.current_status !== 'daily_driver' && 
       !storedVehiclesLocal.find(lv => lv.id === v.id) &&
       !activeVehicles.find(av => av.id === v.id)
     )
   ]
+
+  // Remove duplicates from active vehicles (safety check)
+  const uniqueActiveVehicles = activeVehicles.filter((v, index, self) =>
+    index === self.findIndex((t) => t.id === v.id)
+  )
+
+  // Update state if duplicates found
+  useEffect(() => {
+    if (activeVehicles.length !== uniqueActiveVehicles.length) {
+      setActiveVehicles(uniqueActiveVehicles)
+    }
+  }, [activeVehicles.length, uniqueActiveVehicles.length])
+
+  // Refresh data when page becomes visible (handles navigation from vehicle page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refetch vehicles to ensure we have latest status
+        const refreshData = async () => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { data: vehicles } = await supabase
+              .from('user_vehicle')
+              .select('id, current_status, vehicle_image')
+              .eq('owner_id', user.id)
+
+            if (vehicles) {
+              // Update active vehicles - remove any that shouldn't be active
+              setActiveVehicles((prev) => {
+                const activeIds = vehicles.filter(v => v.current_status === 'daily_driver').map(v => v.id)
+                return prev
+                  .filter(v => activeIds.includes(v.id))
+                  .map(v => {
+                    const updated = vehicles.find(uv => uv.id === v.id)
+                    return updated ? { ...v, current_status: updated.current_status, vehicle_image: updated.vehicle_image } : v
+                  })
+              })
+
+              // Update stored vehicles - remove any that are now active
+              setStoredVehiclesLocal((prev) => {
+                const storedIds = vehicles.filter(v => v.current_status !== 'daily_driver').map(v => v.id)
+                return prev
+                  .filter(v => storedIds.includes(v.id))
+                  .map(v => {
+                    const updated = vehicles.find(uv => uv.id === v.id)
+                    return updated ? { ...v, current_status: updated.current_status, vehicle_image: updated.vehicle_image } : v
+                  })
+              })
+            }
+          } catch (err) {
+            console.error('Error refreshing vehicle data:', err)
+          }
+        }
+
+        refreshData()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
 
   return (
     <AuthProvider supabase={supabase}>
@@ -561,7 +639,7 @@ export function GarageContent({
           {/* Active Vehicles Section - uses server-fetched data */}
           <VehicleGallery
             title="Active Vehicles"
-            vehicles={activeVehicles}
+            vehicles={uniqueActiveVehicles}
             showAddCard={canAddVehicle}
             onAddClick={() => setAddVehicleModalOpen(true)}
             onDrop={handleVehicleStatusChange}

@@ -247,6 +247,7 @@ export interface VehicleWithOdometer {
   odometer: number | null;
   current_status: string;
   image_url?: string;
+  vehicle_image?: string | null; // User-uploaded vehicle image URL
   make?: string;
   model?: string;
   year?: string;

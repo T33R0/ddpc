@@ -58,7 +58,8 @@ export default async function GaragePage() {
             ymmt: `${v.year || ''} ${v.make || ''} ${v.model || ''} ${v.trim || ''}`.trim(),
             odometer: latestMileage,
             current_status: v.current_status || 'parked',
-            image_url: v.photo_url,
+            image_url: v.vehicle_image || v.photo_url, // Prioritize vehicle_image over photo_url
+            vehicle_image: v.vehicle_image, // Include vehicle_image field
             make: v.vehicle_data?.make,
             model: v.vehicle_data?.model,
             year: v.vehicle_data?.year,
