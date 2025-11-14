@@ -33,45 +33,90 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
 
   console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', user.id)
 
-  // First, try to find the vehicle by nickname
-  let { data: vehicle, error: vehicleError } = await supabase
-    .from('user_vehicle')
-    .select(`
+  const selectClause = `
       *,
       vehicle_data ( * )
-    `)
-    .eq('owner_id', user.id)
-    .eq('nickname', vehicleSlug)
-    .single()
+    `
+
+  let isOwner = false
+
+  const baseQuery = () =>
+    supabase
+      .from('user_vehicle')
+      .select(selectClause)
+
+  const fetchVehicle = async (
+    buildQuery: (builder: ReturnType<typeof baseQuery>) => ReturnType<typeof baseQuery>
+  ) => {
+    const { data, error } = await buildQuery(baseQuery()).maybeSingle()
+
+    return { data, error }
+  }
+
+  let { data: vehicle, error: vehicleError } = await fetchVehicle(query =>
+    query.eq('owner_id', user.id).eq('nickname', vehicleSlug)
+  )
 
   console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
 
-  // If not found by nickname, try by ID
-  if (!vehicle && !vehicleError) {
-    console.log('VehicleDetailPage: Trying ID search for:', vehicleSlug)
-    const { data: vehicleById, error: idError } = await supabase
-      .from('user_vehicle')
-      .select(`
-        *,
-        vehicle_data ( * )
-      `)
-      .eq('owner_id', user.id)
-      .eq('id', vehicleSlug)
-      .single()
-
-    vehicle = vehicleById
-    vehicleError = idError
-    console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
+  if (vehicle) {
+    isOwner = true
   }
 
-  if (vehicleError || !vehicle) {
-    console.error('VehicleDetailPage: Error fetching vehicle or vehicle not found:', {
+  if (!vehicle) {
+    const result = await fetchVehicle(query =>
+      query.eq('owner_id', user.id).eq('id', vehicleSlug)
+    )
+
+    vehicle = result.data
+    vehicleError = result.error
+    console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
+
+    if (vehicle) {
+      isOwner = true
+    }
+  }
+
+  if (!vehicle) {
+    const result = await fetchVehicle(query =>
+      query.eq('privacy', 'PUBLIC').eq('nickname', vehicleSlug)
+    )
+
+    vehicle = result.data
+    vehicleError = result.error
+
+    if (vehicle) {
+      console.log('VehicleDetailPage: Resolved public vehicle by nickname', vehicle.id)
+      isOwner = vehicle.owner_id === user.id
+    }
+  }
+
+  if (!vehicle) {
+    const result = await fetchVehicle(query =>
+      query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug)
+    )
+
+    vehicle = result.data
+    vehicleError = result.error
+
+    if (vehicle) {
+      console.log('VehicleDetailPage: Resolved public vehicle by ID', vehicle.id)
+      isOwner = vehicle.owner_id === user.id
+    }
+  }
+
+  if (vehicleError && vehicleError.code && vehicleError.code !== 'PGRST116') {
+    console.error('VehicleDetailPage: Error fetching vehicle:', vehicleError)
+  }
+
+  if (!vehicle) {
+    console.error('VehicleDetailPage: Vehicle not found or not accessible:', {
       vehicleSlug,
       userId: user.id,
       vehicleError,
       hasVehicle: !!vehicle
     })
-    notFound() // Triggers 404 page
+    notFound()
   }
 
   console.log('VehicleDetailPage: Found vehicle:', vehicle.id, vehicle.nickname, vehicle.current_status)
@@ -263,6 +308,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     <VehicleDetailPageClient
       vehicle={vehicleWithData}
       vehicleNickname={vehicleNickname}
+      isOwner={isOwner}
       stats={{
         totalRecords,
         serviceCount,

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { VehicleSummary } from '@repo/types';
-import CommunityVehicleDetailsModal from './community-vehicle-details-modal';
 
 type ImageWithTimeoutFallbackProps = {
   src: string;
@@ -71,13 +71,8 @@ type CommunityGalleryProps = {
   hasMore?: boolean;
 };
 
-type SelectedVehicle = {
-  summary: VehicleSummary;
-  index: number;
-};
-
 export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, hasMore = false }: CommunityGalleryProps) {
-  const [selectedVehicle, setSelectedVehicle] = useState<SelectedVehicle | null>(null);
+  const router = useRouter();
 
   // Infinite scroll logic
   const handleScroll = useCallback(() => {
@@ -98,38 +93,9 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  const handleOpenModal = (summary: VehicleSummary, index: number) => {
-    setSelectedVehicle({
-      summary,
-      index,
-    });
-  };
-
-  const handleCloseModal = () => {
-    setSelectedVehicle(null);
-  };
-
-  const handleNavigateVehicle = (direction: 'prev' | 'next') => {
-    if (!selectedVehicle) return;
-
-    const currentIndex = selectedVehicle.index;
-    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
-
-    // Check if we need to load more vehicles
-    if (direction === 'next' && newIndex >= vehicles.length - 1 && hasMore && !loadingMore && onLoadMore) {
-      onLoadMore();
-    }
-
-    // Navigate to the new vehicle if it exists
-    if (newIndex >= 0 && newIndex < vehicles.length) {
-      const newVehicle = vehicles[newIndex];
-      if (newVehicle) {
-        setSelectedVehicle({
-          summary: newVehicle,
-          index: newIndex,
-        });
-      }
-    }
+  const handleOpenVehicle = (summary: VehicleSummary) => {
+    const targetSlug = summary.id;
+    router.push(`/vehicle/${encodeURIComponent(targetSlug)}`);
   };
 
   return (
@@ -143,11 +109,11 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {vehicles.map((summary, index) => (
+          {vehicles.map((summary) => (
           <div
             key={summary.id}
             className="group transition-all duration-300"
-            onClick={() => handleOpenModal(summary, index)}
+            onClick={() => handleOpenVehicle(summary)}
           >
             <div
               className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-6 cursor-pointer"
@@ -198,17 +164,6 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
         <div className="flex justify-center items-center py-8">
           <div className="text-neutral-400 text-sm">No more vehicles to load</div>
         </div>
-      )}
-
-      {selectedVehicle && (
-        <CommunityVehicleDetailsModal
-          summary={selectedVehicle.summary}
-          onClose={handleCloseModal}
-          onNavigate={handleNavigateVehicle}
-          canNavigatePrev={selectedVehicle.index > 0}
-          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
-          open={true}
-        />
       )}
     </>
   );
