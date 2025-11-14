@@ -55,27 +55,24 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     return { data, error }
   }
 
-  let vehicle: Awaited<ReturnType<typeof fetchVehicle>>['data'] = null
-  let vehicleError: Awaited<ReturnType<typeof fetchVehicle>>['error'] = null
+  let { data: vehicle, error: vehicleError } = await fetchVehicle(query =>
+    query.eq('owner_id', user.id).eq('nickname', vehicleSlug)
+  )
 
-  if (userId) {
-    const result = await fetchVehicle(query => query.eq('owner_id', userId).eq('nickname', vehicleSlug))
-
-    vehicle = result.data
-    vehicleError = result.error
-  }
+  console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
 
   if (vehicle) {
-    console.log('VehicleDetailPage: Nickname search result for owner', { vehicle: !!vehicle })
     isOwner = true
   }
 
-  if (!vehicle && userId) {
-    const result = await fetchVehicle(query => query.eq('owner_id', userId).eq('id', vehicleSlug))
+  if (!vehicle) {
+    const result = await fetchVehicle(query =>
+      query.eq('owner_id', user.id).eq('id', vehicleSlug)
+    )
 
     vehicle = result.data
     vehicleError = result.error
-    console.log('VehicleDetailPage: ID search result for owner', { vehicle: !!vehicle, error: vehicleError })
+    console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
 
     if (vehicle) {
       isOwner = true
@@ -92,19 +89,21 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
 
     if (vehicle) {
       console.log('VehicleDetailPage: Resolved public vehicle by nickname', vehicle.id)
-      isOwner = userId ? vehicle.owner_id === userId : false
+      isOwner = vehicle.owner_id === user.id
     }
   }
 
   if (!vehicle) {
-    const result = await fetchVehicle(query => query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug))
+    const result = await fetchVehicle(query =>
+      query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug)
+    )
 
     vehicle = result.data
     vehicleError = result.error
 
     if (vehicle) {
       console.log('VehicleDetailPage: Resolved public vehicle by ID', vehicle.id)
-      isOwner = userId ? vehicle.owner_id === userId : false
+      isOwner = vehicle.owner_id === user.id
     }
   }
 
