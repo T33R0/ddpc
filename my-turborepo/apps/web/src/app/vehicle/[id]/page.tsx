@@ -23,90 +23,144 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     error: authError,
   } = await supabase.auth.getUser()
 
-  if (authError || !user) {
-    redirect('/auth/signin?message=You must be logged in to view a vehicle.')
+  if (authError) {
+    console.error('VehicleDetailPage: Error retrieving auth user', authError)
   }
+
+  const userId = user?.id || null
 
   // --- 1. Fetch Vehicle Data (with Ownership Check) ---
   // This is the critical pattern from your audit (log-service route)
   // We fetch the vehicle AND check ownership in one query.
 
-  console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', user.id)
+  console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', userId)
 
-  // First, try to find the vehicle by nickname
-  let { data: vehicle, error: vehicleError } = await supabase
-    .from('user_vehicle')
-    .select(`
+  const selectClause = `
       *,
       vehicle_data ( * )
-    `)
-    .eq('owner_id', user.id)
-    .eq('nickname', vehicleSlug)
-    .single()
+    `
 
-  console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
+  let isOwner = false
 
-  // If not found by nickname, try by ID
-  if (!vehicle && !vehicleError) {
-    console.log('VehicleDetailPage: Trying ID search for:', vehicleSlug)
-    const { data: vehicleById, error: idError } = await supabase
+  const baseQuery = () =>
+    supabase
       .from('user_vehicle')
-      .select(`
-        *,
-        vehicle_data ( * )
-      `)
-      .eq('owner_id', user.id)
-      .eq('id', vehicleSlug)
-      .single()
+      .select(selectClause)
 
-    vehicle = vehicleById
-    vehicleError = idError
-    console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
+  const fetchVehicle = async (
+    buildQuery: (builder: ReturnType<typeof baseQuery>) => ReturnType<typeof baseQuery>
+  ) => {
+    const { data, error } = await buildQuery(baseQuery()).maybeSingle()
+
+    return { data, error }
   }
 
-  if (vehicleError || !vehicle) {
-    console.error('VehicleDetailPage: Error fetching vehicle or vehicle not found:', {
+  let vehicle: Awaited<ReturnType<typeof fetchVehicle>>['data'] = null
+  let vehicleError: Awaited<ReturnType<typeof fetchVehicle>>['error'] = null
+
+  if (userId) {
+    const result = await fetchVehicle(query => query.eq('owner_id', userId).eq('nickname', vehicleSlug))
+
+    vehicle = result.data
+    vehicleError = result.error
+  }
+
+  if (vehicle) {
+    console.log('VehicleDetailPage: Nickname search result for owner', { vehicle: !!vehicle })
+    isOwner = true
+  }
+
+  if (!vehicle && userId) {
+    const result = await fetchVehicle(query => query.eq('owner_id', userId).eq('id', vehicleSlug))
+
+    vehicle = result.data
+    vehicleError = result.error
+    console.log('VehicleDetailPage: ID search result for owner', { vehicle: !!vehicle, error: vehicleError })
+
+    if (vehicle) {
+      isOwner = true
+    }
+  }
+
+  if (!vehicle) {
+    const result = await fetchVehicle(query =>
+      query.eq('privacy', 'PUBLIC').eq('nickname', vehicleSlug)
+    )
+
+    vehicle = result.data
+    vehicleError = result.error
+
+    if (vehicle) {
+      console.log('VehicleDetailPage: Resolved public vehicle by nickname', vehicle.id)
+      isOwner = userId ? vehicle.owner_id === userId : false
+    }
+  }
+
+  if (!vehicle) {
+    const result = await fetchVehicle(query => query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug))
+
+    vehicle = result.data
+    vehicleError = result.error
+
+    if (vehicle) {
+      console.log('VehicleDetailPage: Resolved public vehicle by ID', vehicle.id)
+      isOwner = userId ? vehicle.owner_id === userId : false
+    }
+  }
+
+  if (vehicleError && vehicleError.code && vehicleError.code !== 'PGRST116') {
+    console.error('VehicleDetailPage: Error fetching vehicle:', vehicleError)
+  }
+
+  if (!vehicle) {
+    console.error('VehicleDetailPage: Vehicle not found or not accessible:', {
       vehicleSlug,
-      userId: user.id,
+      userId,
       vehicleError,
       hasVehicle: !!vehicle
     })
-    notFound() // Triggers 404 page
+    notFound()
   }
 
   console.log('VehicleDetailPage: Found vehicle:', vehicle.id, vehicle.nickname, vehicle.current_status)
 
   // --- 2. Fetch Latest Odometer Reading ---
-  const { data: latestOdometer } = await supabase
-    .from('odometer_log')
-    .select('reading_mi')
-    .eq('user_vehicle_id', vehicle.id)
-    .order('recorded_at', { ascending: false })
-    .limit(1)
-    .single()
+  type OdometerRow = { reading_mi: number | null }
 
-  // --- 2.5. Fetch Stats for Navigation Cards ---
-  // Total Records (maintenance_log + mods + odometer_log)
-  const [maintenanceCount, modsCount, odometerCount] = await Promise.all([
-    supabase
-      .from('maintenance_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_vehicle_id', vehicle.id),
-    supabase
-      .from('mods')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_vehicle_id', vehicle.id),
-    supabase
+  let latestOdometer: OdometerRow | null = null
+  let totalRecords = 0
+  let serviceCount = 0
+
+  if (isOwner) {
+    const { data: odometerData } = await supabase
       .from('odometer_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_vehicle_id', vehicle.id),
-  ])
+      .select('reading_mi')
+      .eq('user_vehicle_id', vehicle.id)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .single()
 
-  const totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
-  
-  // Service Count (maintenance_log count)
-  const serviceCount = maintenanceCount.count || 0
-  
+    latestOdometer = odometerData || null
+
+    const [maintenanceCount, modsCount, odometerCount] = await Promise.all([
+      supabase
+        .from('maintenance_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicle.id),
+      supabase
+        .from('mods')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicle.id),
+      supabase
+        .from('odometer_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicle.id),
+    ])
+
+    totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
+    serviceCount = maintenanceCount.count || 0
+  }
+
   // Avg MPG (from user_vehicle table)
   const avgMpg = vehicle.avg_mpg || null
 
@@ -263,6 +317,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     <VehicleDetailPageClient
       vehicle={vehicleWithData}
       vehicleNickname={vehicleNickname}
+      isOwner={isOwner}
       stats={{
         totalRecords,
         serviceCount,
