@@ -636,9 +636,9 @@ function NavigationCard({
       }}
     >
       <CardContent className="p-0 h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-3">
           <Icon className="w-5 h-5 text-blue-400" />
-          <p className="text-sm font-semibold text-gray-400">{title}</p>
+          <p className="text-base font-semibold text-gray-300">{title}</p>
         </div>
         <div className="space-y-1 text-sm flex-1">
           {stats.map((stat, index) => (

@@ -458,6 +458,47 @@ export function GarageContent({
 
   // Function to handle vehicle status change via drag and drop
   const handleVehicleStatusChange = async (vehicleId: string, newStatus: string) => {
+    // Optimistically update the UI immediately
+    const vehicleToMove = activeVehicles.find(v => v.id === vehicleId) || 
+                         storedVehiclesLocal.find(v => v.id === vehicleId) ||
+                         storedVehicles.find(v => v.id === vehicleId)
+    
+    if (!vehicleToMove) return
+
+    const updatedVehicle = { ...vehicleToMove, current_status: newStatus }
+    const isActive = newStatus === 'daily_driver'
+
+    // Update active vehicles immediately
+    setActiveVehicles((prev) => {
+      if (isActive) {
+        // Moving to active - add if not already there
+        const exists = prev.find(v => v.id === vehicleId)
+        if (exists) {
+          return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
+        }
+        return [...prev, updatedVehicle]
+      } else {
+        // Moving away from active - remove
+        return prev.filter(v => v.id !== vehicleId)
+      }
+    })
+
+    // Update stored vehicles immediately
+    setStoredVehiclesLocal((prev) => {
+      if (!isActive) {
+        // Moving to stored - add if not already there
+        const exists = prev.find(v => v.id === vehicleId)
+        if (exists) {
+          return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
+        }
+        return [...prev, updatedVehicle]
+      } else {
+        // Moving away from stored - remove
+        return prev.filter(v => v.id !== vehicleId)
+      }
+    })
+
+    // Then update via API
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
@@ -476,9 +517,11 @@ export function GarageContent({
 
       if (!response.ok) {
         console.error('Failed to update vehicle status')
+        // Revert on error - the realtime subscription will handle the correct state
       }
     } catch (err) {
       console.error('Error updating vehicle status:', err)
+      // Revert on error - the realtime subscription will handle the correct state
     }
   }
 
