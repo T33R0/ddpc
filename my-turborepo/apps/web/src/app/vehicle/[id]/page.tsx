@@ -55,55 +55,67 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     return { data, error }
   }
 
-  let { data: vehicle, error: vehicleError } = await fetchVehicle(query =>
-    query.eq('owner_id', user.id).eq('nickname', vehicleSlug)
-  )
+  // Declare vehicle variables at top level
+  let vehicle: any = null
+  let vehicleError: any = null
 
-  console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
-
-  if (vehicle) {
-    isOwner = true
-  }
-
-  if (!vehicle) {
-    const result = await fetchVehicle(query =>
-      query.eq('owner_id', user.id).eq('id', vehicleSlug)
+  // First, try to find vehicle owned by current user (if logged in)
+  if (userId) {
+    const nicknameResult = await fetchVehicle(query =>
+      query.eq('owner_id', userId).eq('nickname', vehicleSlug)
     )
 
-    vehicle = result.data
-    vehicleError = result.error
-    console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
+    vehicle = nicknameResult.data
+    vehicleError = nicknameResult.error
+    console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
 
     if (vehicle) {
       isOwner = true
     }
+
+    if (!vehicle) {
+      const idResult = await fetchVehicle(query =>
+        query.eq('owner_id', userId).eq('id', vehicleSlug)
+      )
+
+      vehicle = idResult.data
+      vehicleError = idResult.error
+      console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
+
+      if (vehicle) {
+        isOwner = true
+      }
+    }
   }
 
+  // If not found as owned vehicle, try to find as public vehicle
   if (!vehicle) {
-    const result = await fetchVehicle(query =>
+    // Try public vehicle by nickname first
+    const nicknameResult = await fetchVehicle(query =>
       query.eq('privacy', 'PUBLIC').eq('nickname', vehicleSlug)
     )
 
-    vehicle = result.data
-    vehicleError = result.error
+    vehicle = nicknameResult.data
+    vehicleError = nicknameResult.error
 
     if (vehicle) {
       console.log('VehicleDetailPage: Resolved public vehicle by nickname', vehicle.id)
-      isOwner = vehicle.owner_id === user.id
+      isOwner = userId ? vehicle.owner_id === userId : false
     }
   }
 
   if (!vehicle) {
-    const result = await fetchVehicle(query =>
+    // Try public vehicle by ID (this should work for community vehicles accessed via UUID)
+    const idResult = await fetchVehicle(query =>
       query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug)
     )
 
-    vehicle = result.data
-    vehicleError = result.error
+    vehicle = idResult.data
+    vehicleError = idResult.error
 
     if (vehicle) {
       console.log('VehicleDetailPage: Resolved public vehicle by ID', vehicle.id)
-      isOwner = vehicle.owner_id === user.id
+      isOwner = userId ? vehicle.owner_id === userId : false
     }
   }
 
