@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +11,27 @@ export async function POST(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Create service client for storage operations (bypasses RLS, but we verify ownership)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+      return NextResponse.json({ 
+        error: 'Server configuration error. Please contact support.',
+        code: 'MISSING_SERVICE_KEY'
+      }, { status: 500 })
+    }
+
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Parse form data
     const formData = await request.formData()
@@ -55,8 +77,8 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Upload to Supabase Storage using service client (we've already verified ownership)
+    const { data: uploadData, error: uploadError } = await serviceClient.storage
       .from('vehicles')
       .upload(filePath, buffer, {
         contentType: file.type,
@@ -82,7 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = serviceClient.storage
       .from('vehicles')
       .getPublicUrl(filePath)
 
