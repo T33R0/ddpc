@@ -1,8 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
-import toast from 'react-hot-toast';
-import { useAuth } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
 
@@ -150,29 +147,14 @@ const CommunityVehicleDetailsModal = ({
   canNavigateNext = false,
   open = true
 }: CommunityVehicleDetailsModalProps) => {
-  const { user } = useAuth();
-  const [selectedTrimId, setSelectedTrimId] = useState<string>(initialTrimId ?? summary.trims[0]?.id ?? '');
-  const [isAddingToGarage, setIsAddingToGarage] = useState(false);
-  const [isAddedToGarage, setIsAddedToGarage] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  useEffect(() => {
-    setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
-  }, [summary, initialTrimId]);
-
-  const selectedTrim = useMemo<TrimVariant | null>(() => {
-    return summary.trims.find((trim) => trim.id === selectedTrimId) ?? summary.trims[0] ?? null;
-  }, [summary, selectedTrimId]);
+  const selectedTrim = summary.trims[0] ?? null;
 
   if (!selectedTrim) {
     return null;
   }
-
-  const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTrimId(event.target.value);
-  };
 
   // Touch handlers for swipe navigation
   const minSwipeDistance = 50;
@@ -200,58 +182,11 @@ const CommunityVehicleDetailsModal = ({
     }
   };
 
-  const handleAddToGarage = async () => {
-    if (!selectedTrim) {
-      toast.error('Select a trim before adding to your garage.');
-      return;
-    }
-
-    if (!user) {
-      toast.error('You must be signed in to add a vehicle to your garage.');
-      return;
-    }
-    setIsAddingToGarage(true);
-
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error('Could not get user session.');
-      }
-      const accessToken = sessionData.session.access_token;
-
-      const response = await fetch('/api/garage/add-vehicle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          vehicleDataId: selectedTrim.id,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to add vehicle to garage');
-      }
-
-      setIsAddedToGarage(true);
-      toast.success('Vehicle successfully added to your garage!');
-
-      setTimeout(() => {
-        onClose();
-      }, 2000);
-    } catch (error) {
-      console.error('Error adding vehicle to garage:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');
-    } finally {
-      setIsAddingToGarage(false);
-    }
-  };
-
-  // Use the same image priority as the gallery card: heroImage first, then selected trim's primaryImage
-  const primaryImageUrl = summary.heroImage || selectedTrim.primaryImage || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
+  // Prioritize user uploaded image, then stock photo
+  const primaryImageUrl = selectedTrim.vehicle_image || summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
+  
+  // Format YMMT (Year Make Model Trim)
+  const ymmt = `${summary.year} ${summary.make} ${summary.model} ${selectedTrim.trim || ''}`.trim();
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
@@ -264,10 +199,10 @@ const CommunityVehicleDetailsModal = ({
         {/* Header */}
         <div className="sticky top-0 bg-black/50 backdrop-blur-lg border-b border-white/30 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
           <DialogTitle className="text-2xl font-bold text-white">
-            {summary.year} {summary.make} {summary.model}
+            {ymmt}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Vehicle details and specifications for {summary.year} {summary.make} {summary.model}
+            Vehicle details and specifications for {ymmt}
           </DialogDescription>
         </div>
 
@@ -301,34 +236,15 @@ const CommunityVehicleDetailsModal = ({
         {/* Content */}
         <div className="p-6">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Left Column - Image and Trim Selector */}
+            {/* Left Column - Image */}
             <div className="space-y-4">
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-gray-800">
                 <ImageWithTimeoutFallback
                   src={primaryImageUrl}
                   fallbackSrc="/branding/fallback-logo.png"
-                  alt={`${summary.make} ${summary.model}`}
+                  alt={ymmt}
                   className="w-full h-full object-cover"
                 />
-              </div>
-
-              {/* Trim Selector */}
-              <div className="space-y-2">
-                <label htmlFor="trim-select" className="text-sm text-gray-300 block">
-                  Select Trim:
-                </label>
-                <select
-                  id="trim-select"
-                  value={selectedTrimId}
-                  onChange={handleTrimChange}
-                  className="max-w-xs bg-black/30 backdrop-blur-sm border-white/20 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-white/40"
-                >
-                  {summary.trims.map((trim) => (
-                    <option key={trim.id} value={trim.id} className="bg-black/50 text-white">
-                      {trim.trim || trim.trim_description || trim.model}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
 
@@ -468,66 +384,7 @@ const CommunityVehicleDetailsModal = ({
               )}
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="mt-6 pt-8 border-t border-white/30 pb-2">
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={handleAddToGarage}
-                disabled={isAddingToGarage || isAddedToGarage}
-                className={`py-3 px-8 rounded-lg font-semibold transition-colors ${
-                  isAddedToGarage
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
-              >
-                {isAddingToGarage
-                  ? 'Adding to Garage...'
-                  : isAddedToGarage
-                  ? '✓ Added to Garage'
-                  : 'Add to Garage'
-                }
-              </button>
-
-              <button
-                onClick={() => setShowComingSoon(true)}
-                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-black/30 backdrop-blur-sm border-white/20 hover:bg-black/40 hover:border-white/30 text-white min-w-[200px]"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                }}
-              >
-                More Details
-              </button>
-            </div>
-          </div>
         </div>
-
-        {/* Coming Soon Popup */}
-        {showComingSoon && (
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
-            onClick={() => setShowComingSoon(false)}
-          >
-            <div
-              className="bg-black/50 backdrop-blur-lg text-white rounded-2xl p-8 max-w-md"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-2xl font-bold mb-4 text-white">Coming Soon</h3>
-              <p className="text-gray-300 mb-6">
-                This feature is currently under development and will be available soon!
-              </p>
-              <button
-                onClick={() => setShowComingSoon(false)}
-                className="w-full py-3 px-6 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

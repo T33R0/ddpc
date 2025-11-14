@@ -378,12 +378,32 @@ export function GarageContent({
   const canAddVehicle = activeVehicles.length < 3
 
   // Sync stored vehicles from hook, filtering out any that are active
+  // Merge with existing local vehicles to preserve optimistically added ones
   useEffect(() => {
-    const filtered = storedVehicles.filter(v => 
+    const filteredFromHook = storedVehicles.filter(v => 
       v.current_status !== 'daily_driver' && 
       !activeVehicles.find(av => av.id === v.id)
     )
-    setStoredVehiclesLocal(filtered)
+    
+    // Merge: keep optimistically added vehicles that aren't in hook yet, plus hook vehicles
+    setStoredVehiclesLocal((prev) => {
+      // Keep vehicles that were optimistically added but aren't in hook yet
+      const optimisticOnly = prev.filter(lv => 
+        lv.current_status !== 'daily_driver' &&
+        !activeVehicles.find(av => av.id === lv.id) &&
+        !filteredFromHook.find(hv => hv.id === lv.id)
+      )
+      
+      // Combine: optimistic-only vehicles + hook vehicles (avoiding duplicates)
+      const combined = [...optimisticOnly]
+      filteredFromHook.forEach(hv => {
+        if (!combined.find(cv => cv.id === hv.id)) {
+          combined.push(hv)
+        }
+      })
+      
+      return combined
+    })
   }, [storedVehicles, activeVehicles])
 
   // Real-time subscription to vehicle status changes

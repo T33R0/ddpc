@@ -216,6 +216,7 @@ export async function GET(request: NextRequest) {
         year: vehicle.year?.toString() || '',
         make: vehicle.make || '',
         model: vehicle.model || '',
+        // Prioritize user uploaded image, then stock photo
         heroImage: vehicle.photo_url || specData.image_url || undefined,
         trims: [trim],
       };
