@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
       };
 
       return {
-        id: vehicle.id,
+        id: vehicle.nickname || vehicle.id, // Use nickname if available, otherwise UUID
         year: vehicle.year?.toString() || '',
         make: vehicle.make || '',
         model: vehicle.model || '',
