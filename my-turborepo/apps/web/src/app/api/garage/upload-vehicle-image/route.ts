@@ -103,10 +103,38 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = serviceClient.storage
-      .from('vehicles')
-      .getPublicUrl(filePath)
+    // Get public URL - use the path returned from upload
+    const uploadedPath = uploadData.path
+    
+    // Try to get public URL first
+    let publicUrl: string
+    try {
+      const { data: urlData } = serviceClient.storage
+        .from('vehicles')
+        .getPublicUrl(uploadedPath)
+      publicUrl = urlData.publicUrl
+      
+      // If bucket is not public, try creating a signed URL (valid for 1 year)
+      // But first check if the URL is accessible
+      console.log('Upload successful:', { uploadedPath, publicUrl, filePath })
+    } catch (urlError) {
+      console.error('Error getting public URL:', urlError)
+      // Fallback: create signed URL if bucket is private
+      const { data: signedData, error: signedError } = await serviceClient.storage
+        .from('vehicles')
+        .createSignedUrl(uploadedPath, 31536000) // 1 year expiry
+      
+      if (signedError || !signedData) {
+        console.error('Error creating signed URL:', signedError)
+        return NextResponse.json({ 
+          error: 'Failed to generate image URL. Please ensure the storage bucket is public.',
+          details: signedError?.message 
+        }, { status: 500 })
+      }
+      
+      publicUrl = signedData.signedUrl
+      console.log('Using signed URL:', publicUrl)
+    }
 
     // Update vehicle record
     const { error: updateError } = await supabase
@@ -123,9 +151,12 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
+    console.log('Vehicle updated with image URL:', publicUrl)
+
     return NextResponse.json({
       success: true,
-      imageUrl: publicUrl
+      imageUrl: publicUrl,
+      uploadedPath
     })
 
   } catch (error) {

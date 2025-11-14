@@ -26,30 +26,41 @@ function ImageWithTimeoutFallback({
   fallbackSrc,
   alt,
   className,
-  timeout = 3000
+  timeout = 5000
 }: ImageWithTimeoutFallbackProps) {
   const [imageLoaded, setImageLoaded] = React.useState(false)
   const [showFallback, setShowFallback] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
+  const [currentSrc, setCurrentSrc] = React.useState(src)
 
   React.useEffect(() => {
     setMounted(true)
   }, [])
 
+  // Update currentSrc when src changes
   React.useEffect(() => {
-    if (!mounted) return
+    if (src && src !== currentSrc) {
+      setCurrentSrc(src)
+      setImageLoaded(false)
+      setShowFallback(false)
+    }
+  }, [src, currentSrc])
+
+  React.useEffect(() => {
+    if (!mounted || !currentSrc) return
 
     const timer = setTimeout(() => {
       if (!imageLoaded) {
+        console.log('Image load timeout for:', currentSrc)
         setShowFallback(true)
       }
     }, timeout)
 
     return () => clearTimeout(timer)
-  }, [timeout, imageLoaded, mounted])
+  }, [timeout, imageLoaded, mounted, currentSrc])
 
   // On server-side or before hydration, show fallback
-  if (!mounted || showFallback) {
+  if (!mounted || showFallback || !currentSrc) {
     return (
       <img
         src={fallbackSrc}
@@ -61,11 +72,17 @@ function ImageWithTimeoutFallback({
 
   return (
     <img
-      src={src}
+      src={currentSrc}
       alt={alt}
       className={className}
-      onLoad={() => setImageLoaded(true)}
-      onError={() => setShowFallback(true)}
+      onLoad={() => {
+        console.log('Image loaded successfully:', currentSrc)
+        setImageLoaded(true)
+      }}
+      onError={(e) => {
+        console.error('Image load error for:', currentSrc, e)
+        setShowFallback(true)
+      }}
     />
   )
 }
@@ -128,7 +145,12 @@ function VehicleImageCard({ vehicle, vehicleId }: { vehicle: Vehicle; vehicleId:
       }
 
       if (result.success && result.imageUrl) {
+        console.log('Setting image URL:', result.imageUrl)
         setImageUrl(result.imageUrl)
+        // Force a small delay to ensure state updates
+        setTimeout(() => {
+          console.log('Image URL state updated')
+        }, 100)
       } else {
         alert('Upload succeeded but failed to get image URL')
       }

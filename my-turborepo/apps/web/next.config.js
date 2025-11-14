@@ -96,6 +96,11 @@ const config = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      // Supabase Storage
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
     ],
   },
   ...nextConfig,
