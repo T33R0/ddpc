@@ -532,8 +532,15 @@ export function GarageContent({
     window.location.reload()
   }
 
-  // Combined stored vehicles (local + hook)
-  const allStoredVehicles = [...storedVehiclesLocal, ...storedVehicles.filter(v => !storedVehiclesLocal.find(lv => lv.id === v.id))]
+  // Combined stored vehicles (local + hook), excluding active vehicles
+  const allStoredVehicles = [
+    ...storedVehiclesLocal.filter(v => v.current_status !== 'daily_driver'),
+    ...storedVehicles.filter(v => 
+      v.current_status !== 'daily_driver' && 
+      !storedVehiclesLocal.find(lv => lv.id === v.id) &&
+      !activeVehicles.find(av => av.id === v.id)
+    )
+  ]
 
   return (
     <AuthProvider supabase={supabase}>
@@ -549,7 +556,6 @@ export function GarageContent({
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="mb-10">
             <h1 className="text-4xl font-bold text-white mb-2">My Garage</h1>
-            <p className="text-lg text-gray-400">Here's your garage</p>
           </div>
 
           {/* Active Vehicles Section - uses server-fetched data */}
