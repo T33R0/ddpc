@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * pageSize;
 
     // Get public user vehicles with their data
+    // Note: privacy field uses uppercase 'PUBLIC'/'PRIVATE' per database schema
     const { data: userVehicles, error } = await supabase
       .from('user_vehicle')
       .select(`
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
         colors_exterior,
         spec_snapshot
       `)
-      .eq('privacy', 'public')
+      .eq('privacy', 'PUBLIC')
       .order('id', { ascending: false })
       .range(offset, offset + pageSize - 1);
 
@@ -65,6 +66,9 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Debug logging (remove in production if needed)
+    console.log(`Found ${userVehicles?.length || 0} public vehicles`);
 
     // Transform user vehicles into VehicleSummary format for compatibility with existing gallery
     const summaries: VehicleSummary[] = (userVehicles || []).map((vehicle: any) => {
