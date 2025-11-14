@@ -85,7 +85,6 @@ export async function GET(request: NextRequest) {
         trim_description: vehicle.title || specData.trim_description || '',
         odometer: vehicle.odometer,
         current_status: vehicle.current_status || 'parked',
-        image_url: vehicle.photo_url,
         vehicle_image: vehicle.photo_url,
         privacy: vehicle.privacy,
         body_type: vehicle.body_type || specData.body_type || '',
@@ -149,6 +148,7 @@ export async function GET(request: NextRequest) {
         warranty_rust: specData.warranty_rust || '',
         source_json: specData.source_json || '',
         source_url: specData.source_url || '',
+        // image_url: prefer spec_snapshot image, fallback to vehicle photo_url
         image_url: specData.image_url || vehicle.photo_url || '',
         review: specData.review || '',
         pros: specData.pros || '',
