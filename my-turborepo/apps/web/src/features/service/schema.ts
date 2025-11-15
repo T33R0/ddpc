@@ -11,6 +11,10 @@ export const ServiceLogSchema = z.object({
   notes: z.string().optional(),
   // This is the key. It's the ID of the `service_intervals` item.
   plan_item_id: z.string().uuid().optional(),
+  // Service item ID from service_items table
+  service_item_id: z.string().uuid().optional(),
+  // Status: "History" for past/completed services, "Plan" for planned services
+  status: z.enum(['History', 'Plan']).optional(),
 })
 
 export type ServiceLogInputs = z.infer<typeof ServiceLogSchema>

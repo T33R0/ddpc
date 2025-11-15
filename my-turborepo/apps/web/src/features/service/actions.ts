@@ -85,6 +85,8 @@ export async function logPlannedService(data: ServiceLogInputs) {
         notes: validatedData.notes || null,
         // We can even link it to the plan item for traceability
         service_interval_id: validatedData.plan_item_id || null,
+        // Link to service item if provided
+        service_item_id: validatedData.service_item_id || null,
       })
       .select('id')
       .single()
@@ -221,6 +223,8 @@ export async function logFreeTextService(data: ServiceLogInputs) {
         odometer: odometerValue,
         event_date: validatedData.event_date,
         notes: validatedData.notes || null,
+        // Link to service item if provided
+        service_item_id: validatedData.service_item_id || null,
       })
       .select('id')
       .single()
