@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { VehicleDetailPageClient } from '@/features/vehicle/VehicleDetailPageClient'
 import { Vehicle } from '@repo/types'
 import { isUUID } from '@/lib/vehicle-utils'
+import { getPublicVehicleBySlug } from '@/lib/public-vehicle-utils'
 
 type VehiclePageProps = {
   params: Promise<{
@@ -90,59 +91,22 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   }
 
   // If not found as owned vehicle, try to find as public vehicle
-  // Note: RLS policy checks for lowercase 'public', but database stores uppercase 'PUBLIC'
-  // We need to try both to handle the case sensitivity issue
-  // Also: Always try nickname first, then ID (only if slug looks like a UUID)
+  // Note: RLS policy has a case sensitivity issue - it checks for 'public' but DB stores 'PUBLIC'
+  // Use service role client to bypass RLS and fetch public vehicles
   const slugIsUUID = isUUID(vehicleSlug)
   
   if (!vehicle) {
-    // Try public vehicle by nickname first (try both uppercase and lowercase for RLS compatibility)
-    const nicknameResult1 = await fetchVehicle(query =>
-      query.eq('privacy', 'PUBLIC').eq('nickname', vehicleSlug)
-    )
+    // Use service role client to fetch public vehicle (bypasses RLS)
+    const publicVehicleData = await getPublicVehicleBySlug(vehicleSlug)
     
-    if (!nicknameResult1.data) {
-      const nicknameResult2 = await fetchVehicle(query =>
-        query.eq('privacy', 'public').eq('nickname', vehicleSlug)
-      )
-      vehicle = nicknameResult2.data
-      vehicleError = nicknameResult2.error
-    } else {
-      vehicle = nicknameResult1.data
-      vehicleError = nicknameResult1.error
-    }
-
-    if (vehicle) {
-      console.log('VehicleDetailPage: Resolved public vehicle by nickname', vehicle.id)
+    if (publicVehicleData) {
+      vehicle = publicVehicleData
+      vehicleError = null
+      
+      console.log('VehicleDetailPage: Resolved public vehicle via service role lookup', vehicle.id)
       isOwner = userId ? vehicle.owner_id === userId : false
-    } else if (vehicleError && vehicleError.code !== 'PGRST116') {
-      console.log('VehicleDetailPage: Public nickname lookup error:', vehicleError)
-    }
-  }
-
-  // Only try ID lookup if slug looks like a UUID (to avoid PostgreSQL UUID parsing errors)
-  if (!vehicle && slugIsUUID) {
-    // Try public vehicle by ID (try both uppercase and lowercase for RLS compatibility)
-    const idResult1 = await fetchVehicle(query =>
-      query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug)
-    )
-    
-    if (!idResult1.data) {
-      const idResult2 = await fetchVehicle(query =>
-        query.eq('privacy', 'public').eq('id', vehicleSlug)
-      )
-      vehicle = idResult2.data
-      vehicleError = idResult2.error
     } else {
-      vehicle = idResult1.data
-      vehicleError = idResult1.error
-    }
-
-    if (vehicle) {
-      console.log('VehicleDetailPage: Resolved public vehicle by ID', vehicle.id)
-      isOwner = userId ? vehicle.owner_id === userId : false
-    } else if (vehicleError && vehicleError.code !== 'PGRST116') {
-      console.log('VehicleDetailPage: Public ID lookup error:', vehicleError)
+      console.log('VehicleDetailPage: Public vehicle not found by slug:', vehicleSlug)
     }
   }
 
