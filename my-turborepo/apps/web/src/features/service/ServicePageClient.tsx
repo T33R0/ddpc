@@ -12,8 +12,7 @@ import { Plus, Fuel } from 'lucide-react'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
 import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
 import { ServicePlanView } from '@/features/service/components/ServicePlanView'
-import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable'
-import { ServiceHistoryItem } from '@/features/service/lib/getVehicleServiceData'
+import { ServiceHistoryList } from '@/features/service/components/ServiceHistoryList'
 
 // -----------------
 // PROPS
@@ -117,22 +116,10 @@ function PlanTabContent({
 }
 
 // The "History" tab's content
-function HistoryTabContent({ historyItems }: { historyItems: MaintenanceLog[] }) {
-  // Transform MaintenanceLog to ServiceHistoryItem format
-  const serviceHistory: ServiceHistoryItem[] = historyItems.map((log) => ({
-    id: log.id,
-    description: log.description,
-    cost: log.cost || undefined,
-    odometer: log.odometer || undefined,
-    event_date: new Date(log.event_date),
-    notes: log.notes || undefined,
-    service_provider: log.service_provider || undefined,
-    service_interval_id: log.service_interval_id || undefined,
-  }))
-
+function HistoryTabContent({ vehicleId }: { vehicleId: string }) {
   return (
     <div className="space-y-8 mt-4">
-      <ServiceHistoryTable serviceHistory={serviceHistory} />
+      <ServiceHistoryList vehicleId={vehicleId} />
     </div>
   )
 }
@@ -256,7 +243,7 @@ export function ServicePageClient({
             </TabsContent>
 
             <TabsContent value="history">
-              <HistoryTabContent historyItems={initialHistory} />
+              <HistoryTabContent vehicleId={vehicle.id} />
             </TabsContent>
           </Tabs>
         </div>
