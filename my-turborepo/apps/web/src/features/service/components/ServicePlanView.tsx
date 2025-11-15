@@ -78,7 +78,16 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
 
       if (error) throw error
 
-      setPlannedLogs((data || []) as PlannedServiceLog[])
+      // Transform the data to match the interface
+      // PostgREST returns service_item as an array, but we need a single object
+      const transformedData = (data || []).map((log: any) => ({
+        ...log,
+        service_item: Array.isArray(log.service_item) 
+          ? log.service_item[0] || null 
+          : log.service_item || null
+      })) as PlannedServiceLog[]
+
+      setPlannedLogs(transformedData)
     } catch (err) {
       console.error('Error fetching planned logs:', err)
     } finally {

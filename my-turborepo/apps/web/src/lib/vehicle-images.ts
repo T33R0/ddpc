@@ -31,9 +31,9 @@ export function parseImageUrls(imageUrlString?: string | null): string[] {
  */
 export function getVehicleImageSources(
   imageUrlString?: string | null,
-  make?: string,
-  model?: string,
-  year?: string
+  _make?: string,
+  _model?: string,
+  _year?: string
 ): string[] {
   // If the input is already a proxied URL, return it directly
   if (imageUrlString && imageUrlString.startsWith('/api/images/proxy?url=')) {
