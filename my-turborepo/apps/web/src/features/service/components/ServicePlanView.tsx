@@ -47,6 +47,7 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
   // Fetch planned service logs
   useEffect(() => {
     fetchPlannedLogs()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleId])
 
   // Fetch service categories and items for checklist

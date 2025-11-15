@@ -93,19 +93,17 @@ export function AddServiceDialog({
 
   // Fetch service categories on mount
   useEffect(() => {
-    if (isOpen && currentStep === 1) {
+    if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog) {
       console.log('Modal opened, fetching service categories...')
       fetchServiceCategories()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, currentStep])
+  }, [isOpen, currentStep, prefillServiceItemId, plannedLog])
 
   // Fetch service items when category is selected
   useEffect(() => {
     if (selectedCategory && currentStep === 2) {
       fetchServiceItems(selectedCategory.id)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, currentStep])
 
   // Pre-fill form when modal opens with plannedLog or prefillServiceItemId
@@ -188,6 +186,7 @@ export function AddServiceDialog({
       })
       setError(null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, plannedLog, prefillServiceItemId, prefillStatus, planItem])
 
   const fetchServiceItemAndCategory = async (serviceItemId: string) => {
@@ -195,7 +194,7 @@ export function AddServiceDialog({
       // Fetch the service item to get its category
       const { data: item, error: itemError } = await supabase
         .from('service_items')
-        .select('id, name, category_id, category:service_categories(id, name)')
+        .select('id, name, category_id, service_categories!inner(id, name)')
         .eq('id', serviceItemId)
         .single()
 
@@ -204,10 +203,17 @@ export function AddServiceDialog({
       if (item && item.category_id) {
         // Fetch all items for this category
         await fetchServiceItems(item.category_id)
-        // Set selected category
-        const category = item.category as { id: string; name: string }
-        setSelectedCategory(category)
-        setCurrentStep(2)
+        // Fetch the category separately to get its details
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('service_categories')
+          .select('id, name')
+          .eq('id', item.category_id)
+          .single()
+
+        if (!categoryError && categoryData) {
+          setSelectedCategory(categoryData as ServiceCategory)
+          setCurrentStep(2)
+        }
       }
     } catch (err) {
       console.error('Error fetching service item:', err)
