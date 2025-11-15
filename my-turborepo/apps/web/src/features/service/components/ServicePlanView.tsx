@@ -112,7 +112,9 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
         if (!grouped[item.category_id]) {
           grouped[item.category_id] = []
         }
-        grouped[item.category_id].push(item)
+        // TypeScript doesn't narrow after the check, so we use non-null assertion
+        // since we know it exists after the check above
+        grouped[item.category_id]!.push(item)
       })
 
       setServiceItemsByCategory(grouped)
