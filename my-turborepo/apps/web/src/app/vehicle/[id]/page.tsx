@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { VehicleDetailPageClient } from '@/features/vehicle/VehicleDetailPageClient'
 import { Vehicle } from '@repo/types'
+import { isUUID } from '@/lib/vehicle-utils'
 
 type VehiclePageProps = {
   params: Promise<{
@@ -91,6 +92,9 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // If not found as owned vehicle, try to find as public vehicle
   // Note: RLS policy checks for lowercase 'public', but database stores uppercase 'PUBLIC'
   // We need to try both to handle the case sensitivity issue
+  // Also: Always try nickname first, then ID (only if slug looks like a UUID)
+  const slugIsUUID = isUUID(vehicleSlug)
+  
   if (!vehicle) {
     // Try public vehicle by nickname first (try both uppercase and lowercase for RLS compatibility)
     const nicknameResult1 = await fetchVehicle(query =>
@@ -111,12 +115,13 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     if (vehicle) {
       console.log('VehicleDetailPage: Resolved public vehicle by nickname', vehicle.id)
       isOwner = userId ? vehicle.owner_id === userId : false
-    } else if (vehicleError) {
+    } else if (vehicleError && vehicleError.code !== 'PGRST116') {
       console.log('VehicleDetailPage: Public nickname lookup error:', vehicleError)
     }
   }
 
-  if (!vehicle) {
+  // Only try ID lookup if slug looks like a UUID (to avoid PostgreSQL UUID parsing errors)
+  if (!vehicle && slugIsUUID) {
     // Try public vehicle by ID (try both uppercase and lowercase for RLS compatibility)
     const idResult1 = await fetchVehicle(query =>
       query.eq('privacy', 'PUBLIC').eq('id', vehicleSlug)
@@ -136,7 +141,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     if (vehicle) {
       console.log('VehicleDetailPage: Resolved public vehicle by ID', vehicle.id)
       isOwner = userId ? vehicle.owner_id === userId : false
-    } else if (vehicleError) {
+    } else if (vehicleError && vehicleError.code !== 'PGRST116') {
       console.log('VehicleDetailPage: Public ID lookup error:', vehicleError)
     }
   }
