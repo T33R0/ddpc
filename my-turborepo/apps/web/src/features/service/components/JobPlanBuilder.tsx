@@ -134,6 +134,23 @@ export function JobPlanBuilder({
     }
   }
 
+  const handleUpdateStep = async (stepId: string, description: string) => {
+    try {
+      const { error } = await supabase
+        .from('job_steps')
+        .update({ description })
+        .eq('id', stepId)
+
+      if (error) throw error
+
+      setSteps(steps.map(step => 
+        step.id === stepId ? { ...step, description } : step
+      ))
+    } catch (error) {
+      console.error('Error updating step description:', error)
+    }
+  }
+
   const handleDragStart = (e: React.DragEvent, stepId: string) => {
     setDraggedStepId(stepId)
     e.dataTransfer.effectAllowed = 'move'
@@ -242,6 +259,7 @@ export function JobPlanBuilder({
               key={step.id}
               step={step}
               onToggleComplete={handleToggleComplete}
+              onUpdate={handleUpdateStep}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
