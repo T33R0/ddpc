@@ -54,7 +54,11 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
   const [isLoadingPlanned, setIsLoadingPlanned] = useState(false)
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  // Default all categories to collapsed
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
+    // We'll initialize this after categories are loaded
+    return new Set()
+  })
 
   const fetchPlannedLogs = async () => {
     setIsLoadingPlanned(true)
@@ -122,6 +126,11 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
       if (categoriesError) throw categoriesError
 
       setServiceCategories(categories || [])
+      
+      // Default all categories to collapsed
+      if (categories && categories.length > 0) {
+        setCollapsedCategories(new Set(categories.map(cat => cat.id)))
+      }
 
       // Fetch all service items
       const { data: items, error: itemsError } = await supabase

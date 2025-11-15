@@ -5,6 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
 import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { JobPlanBuilder } from './JobPlanBuilder'
+import { supabase } from '@/lib/supabase'
+import { useEffect, useState } from 'react'
 
 type JobDetailsPageClientProps = {
   vehicle: {
@@ -25,6 +28,17 @@ export function JobDetailsPageClient({
 }: JobDetailsPageClientProps) {
   const router = useRouter()
   const vehicleSlug = vehicle.nickname || vehicle.id
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+      }
+    }
+    getUserId()
+  }, [])
 
   const handleBack = () => {
     router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service`)
@@ -65,9 +79,15 @@ export function JobDetailsPageClient({
           <TabsContent value="plan" className="mt-6">
             <Card className="bg-black/30 backdrop-blur-sm border-white/20">
               <CardContent className="p-6">
-                <p className="text-gray-400">
-                  Job Plan content will be displayed here. This section will show the planned service details, schedule, and related information.
-                </p>
+                {userId && jobLog?.id ? (
+                  <JobPlanBuilder
+                    maintenanceLogId={jobLog.id}
+                    userId={userId}
+                    jobTitle={jobTitle}
+                  />
+                ) : (
+                  <div className="text-gray-400">Loading...</div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,0 +1,256 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Input } from '@repo/ui/input'
+import { Button } from '@repo/ui/button'
+import { Plus } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { JobStep, JobStepData } from './JobStep'
+
+interface JobPlanBuilderProps {
+  maintenanceLogId: string
+  userId: string
+  jobTitle: string
+}
+
+export function JobPlanBuilder({
+  maintenanceLogId,
+  userId,
+  jobTitle,
+}: JobPlanBuilderProps) {
+  const [steps, setSteps] = useState<JobStepData[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [stepInput, setStepInput] = useState('')
+  const [draggedStepId, setDraggedStepId] = useState<string | null>(null)
+  const [jobPlanId, setJobPlanId] = useState<string | null>(null)
+
+  // Fetch or create job plan
+  useEffect(() => {
+    fetchOrCreateJobPlan()
+  }, [maintenanceLogId, userId, jobTitle])
+
+  // Fetch steps when job plan is available
+  useEffect(() => {
+    if (jobPlanId) {
+      fetchSteps()
+    }
+  }, [jobPlanId])
+
+  const fetchOrCreateJobPlan = async () => {
+    try {
+      // First, try to find existing job plan for this maintenance log
+      const { data: existingPlan, error: fetchError } = await supabase
+        .from('job_plans')
+        .select('id')
+        .eq('maintenance_log_id', maintenanceLogId)
+        .eq('user_id', userId)
+        .single()
+
+      if (existingPlan) {
+        setJobPlanId(existingPlan.id)
+        return
+      }
+
+      // If no plan exists, create one
+      const { data: newPlan, error: createError } = await supabase
+        .from('job_plans')
+        .insert({
+          user_id: userId,
+          maintenance_log_id: maintenanceLogId,
+          name: jobTitle,
+        })
+        .select('id')
+        .single()
+
+      if (createError) throw createError
+      if (newPlan) {
+        setJobPlanId(newPlan.id)
+      }
+    } catch (error) {
+      console.error('Error fetching/creating job plan:', error)
+    }
+  }
+
+  const fetchSteps = async () => {
+    if (!jobPlanId) return
+
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('job_steps')
+        .select('*')
+        .eq('job_plan_id', jobPlanId)
+        .order('step_order', { ascending: true })
+
+      if (error) throw error
+      setSteps(data || [])
+    } catch (error) {
+      console.error('Error fetching steps:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAddStep = async () => {
+    if (!stepInput.trim() || !jobPlanId) return
+
+    const newStepOrder = steps.length > 0 ? Math.max(...steps.map(s => s.step_order)) + 1 : 1
+
+    try {
+      const { data, error } = await supabase
+        .from('job_steps')
+        .insert({
+          job_plan_id: jobPlanId,
+          step_order: newStepOrder,
+          description: stepInput.trim(),
+          is_completed: false,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setSteps([...steps, data])
+      setStepInput('')
+    } catch (error) {
+      console.error('Error adding step:', error)
+    }
+  }
+
+  const handleToggleComplete = async (stepId: string, completed: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('job_steps')
+        .update({ is_completed: completed })
+        .eq('id', stepId)
+
+      if (error) throw error
+
+      setSteps(steps.map(step => 
+        step.id === stepId ? { ...step, is_completed: completed } : step
+      ))
+    } catch (error) {
+      console.error('Error updating step:', error)
+    }
+  }
+
+  const handleDragStart = (e: React.DragEvent, stepId: string) => {
+    setDraggedStepId(stepId)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', stepId)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = async (e: React.DragEvent, targetStepId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!draggedStepId || draggedStepId === targetStepId || !jobPlanId) {
+      setDraggedStepId(null)
+      return
+    }
+
+    const draggedStep = steps.find(s => s.id === draggedStepId)
+    const targetStep = steps.find(s => s.id === targetStepId)
+
+    if (!draggedStep || !targetStep) {
+      setDraggedStepId(null)
+      return
+    }
+
+    // Calculate new order
+    const draggedIndex = steps.findIndex(s => s.id === draggedStepId)
+    const targetIndex = steps.findIndex(s => s.id === targetStepId)
+
+    // Create new ordered array
+    const newSteps = [...steps]
+    newSteps.splice(draggedIndex, 1)
+    newSteps.splice(targetIndex, 0, draggedStep)
+
+    // Update step_order for all affected steps
+    const updates = newSteps.map((step, index) => ({
+      id: step.id,
+      step_order: index + 1,
+    }))
+
+    try {
+      // Update all steps in parallel
+      await Promise.all(
+        updates.map(update =>
+          supabase
+            .from('job_steps')
+            .update({ step_order: update.step_order })
+            .eq('id', update.id)
+        )
+      )
+
+      setSteps(newSteps.map((step, index) => ({
+        ...step,
+        step_order: index + 1,
+      })))
+    } catch (error) {
+      console.error('Error reordering steps:', error)
+    }
+
+    setDraggedStepId(null)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleAddStep()
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Input Section */}
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          placeholder="Enter step"
+          value={stepInput}
+          onChange={(e) => setStepInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40"
+        />
+        <Button
+          onClick={handleAddStep}
+          disabled={!stepInput.trim()}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Step
+        </Button>
+      </div>
+
+      {/* Steps List */}
+      {isLoading ? (
+        <div className="text-center py-8 text-gray-400">Loading steps...</div>
+      ) : steps.length === 0 ? (
+        <div className="text-center py-8 text-gray-400">
+          No steps yet. Add your first step above.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {steps.map((step) => (
+            <JobStep
+              key={step.id}
+              step={step}
+              onToggleComplete={handleToggleComplete}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              isDragging={draggedStepId === step.id}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
