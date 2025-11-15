@@ -13,7 +13,7 @@ import {
   DialogBody,
   DialogFooter,
 } from '@repo/ui/dialog'
-import { GripVertical, Pencil, Check, FileText } from 'lucide-react'
+import { GripVertical, Pencil, Check, FileText, Trash2 } from 'lucide-react'
 
 export interface JobStepData {
   id: string
@@ -28,6 +28,7 @@ interface JobStepProps {
   onToggleComplete: (stepId: string, completed: boolean) => void
   onUpdate: (stepId: string, description: string) => void
   onUpdateNotes: (stepId: string, notes: string) => void
+  onDelete: (stepId: string) => void
   onDragStart: (e: React.DragEvent, stepId: string) => void
   onDragOver: (e: React.DragEvent) => void
   onDrop: (e: React.DragEvent, stepId: string) => void
@@ -39,6 +40,7 @@ export function JobStep({
   onToggleComplete,
   onUpdate,
   onUpdateNotes,
+  onDelete,
   onDragStart,
   onDragOver,
   onDrop,
@@ -98,11 +100,12 @@ export function JobStep({
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, step.id)}
       className={`
-        flex items-center gap-3 p-3 rounded-lg border transition-all
+        flex flex-col gap-2 p-3 rounded-lg border transition-all
         ${isDragging ? 'opacity-50' : ''}
         ${step.is_completed ? 'bg-black/20 border-white/10' : 'bg-black/30 border-white/20'}
       `}
     >
+      <div className="flex items-center gap-3">
       {/* Drag Handle */}
       {!isEditing && (
         <div
@@ -144,10 +147,14 @@ export function JobStep({
           <span
             className={`flex-1 transition-all ${
               step.is_completed 
-                ? 'line-through text-gray-400' 
+                ? 'text-gray-400' 
                 : 'text-white'
             }`}
-            style={step.is_completed ? { opacity: 0.6 } : undefined}
+            style={step.is_completed ? { 
+              opacity: 0.6, 
+              textDecoration: 'line-through',
+              textDecorationThickness: '2px'
+            } : { textDecoration: 'none' }}
           >
             {step.description}
           </span>
@@ -168,7 +175,23 @@ export function JobStep({
           >
             <FileText className="h-4 w-4" />
           </button>
+          <button
+            onClick={() => onDelete(step.id)}
+            className="text-gray-400 hover:text-red-400 transition-colors p-1"
+            type="button"
+            title="Delete step"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </>
+      )}
+      </div>
+      
+      {/* Notes Display */}
+      {step.notes && !isEditing && (
+        <div className="text-sm text-gray-400 ml-[52px] truncate">
+          {step.notes}
+        </div>
       )}
 
       {/* Notes Dialog */}

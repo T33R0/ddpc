@@ -170,6 +170,45 @@ export function JobPlanBuilder({
     }
   }
 
+  const handleDeleteStep = async (stepId: string) => {
+    if (!jobPlanId) return
+
+    try {
+      const { error } = await supabase
+        .from('job_steps')
+        .delete()
+        .eq('id', stepId)
+
+      if (error) throw error
+
+      // Remove from local state
+      const deletedStep = steps.find(s => s.id === stepId)
+      const remainingSteps = steps.filter(s => s.id !== stepId)
+
+      // Reorder remaining steps
+      const reorderedSteps = remainingSteps.map((step, index) => ({
+        ...step,
+        step_order: index + 1,
+      }))
+
+      // Update step_order in database
+      if (deletedStep) {
+        await Promise.all(
+          reorderedSteps.map(step =>
+            supabase
+              .from('job_steps')
+              .update({ step_order: step.step_order })
+              .eq('id', step.id)
+          )
+        )
+      }
+
+      setSteps(reorderedSteps)
+    } catch (error) {
+      console.error('Error deleting step:', error)
+    }
+  }
+
   const handleDragStart = (e: React.DragEvent, stepId: string) => {
     setDraggedStepId(stepId)
     e.dataTransfer.effectAllowed = 'move'
@@ -373,6 +412,7 @@ export function JobPlanBuilder({
               onToggleComplete={handleToggleComplete}
               onUpdate={handleUpdateStep}
               onUpdateNotes={handleUpdateNotes}
+              onDelete={handleDeleteStep}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
