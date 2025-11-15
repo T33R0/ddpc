@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, RotateCcw, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { JobStep, JobStepData } from './JobStep'
 
@@ -23,6 +23,8 @@ export function JobPlanBuilder({
   const [stepInput, setStepInput] = useState('')
   const [draggedStepId, setDraggedStepId] = useState<string | null>(null)
   const [jobPlanId, setJobPlanId] = useState<string | null>(null)
+  const [isReassemblyMode, setIsReassemblyMode] = useState(false)
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
 
   // Fetch or create job plan
   useEffect(() => {
@@ -151,6 +153,23 @@ export function JobPlanBuilder({
     }
   }
 
+  const handleUpdateNotes = async (stepId: string, notes: string) => {
+    try {
+      const { error } = await supabase
+        .from('job_steps')
+        .update({ notes: notes.trim() || null })
+        .eq('id', stepId)
+
+      if (error) throw error
+
+      setSteps(steps.map(step => 
+        step.id === stepId ? { ...step, notes: notes.trim() || null } : step
+      ))
+    } catch (error) {
+      console.error('Error updating step notes:', error)
+    }
+  }
+
   const handleDragStart = (e: React.DragEvent, stepId: string) => {
     setDraggedStepId(stepId)
     e.dataTransfer.effectAllowed = 'move'
@@ -223,8 +242,101 @@ export function JobPlanBuilder({
     }
   }
 
+  const handleReassemblyMode = async () => {
+    if (!jobPlanId) return
+
+    const reversedSteps = [...steps].reverse()
+    const newSteps = reversedSteps.map((step, index) => ({
+      ...step,
+      step_order: index + 1,
+      is_completed: false,
+    }))
+
+    try {
+      // Update step_order and is_completed for all steps
+      await Promise.all(
+        newSteps.map(step =>
+          supabase
+            .from('job_steps')
+            .update({ 
+              step_order: step.step_order,
+              is_completed: false 
+            })
+            .eq('id', step.id)
+        )
+      )
+
+      setSteps(newSteps)
+      setIsReassemblyMode(!isReassemblyMode)
+    } catch (error) {
+      console.error('Error reversing steps:', error)
+    }
+  }
+
+  const handleSaveAsTemplate = async () => {
+    if (!jobPlanId || steps.length === 0) return
+
+    setIsSavingTemplate(true)
+    try {
+      // Create job template
+      const { data: template, error: templateError } = await supabase
+        .from('job_templates')
+        .insert({
+          user_id: userId,
+          name: jobTitle,
+        })
+        .select('id')
+        .single()
+
+      if (templateError) throw templateError
+      if (!template) throw new Error('Failed to create template')
+
+      // Create template steps
+      const templateSteps = steps.map((step, index) => ({
+        job_template_id: template.id,
+        step_order: index + 1,
+        description: step.description,
+        notes: step.notes || null,
+      }))
+
+      const { error: stepsError } = await supabase
+        .from('job_template_steps')
+        .insert(templateSteps)
+
+      if (stepsError) throw stepsError
+
+      alert(`Template "${jobTitle}" saved successfully!`)
+    } catch (error) {
+      console.error('Error saving template:', error)
+      alert('Failed to save template. Please try again.')
+    } finally {
+      setIsSavingTemplate(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {/* Action Buttons */}
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          onClick={handleReassemblyMode}
+          variant="outline"
+          className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          {isReassemblyMode ? 'Disassembly Mode' : 'Re-assembly Mode'}
+        </Button>
+        <Button
+          onClick={handleSaveAsTemplate}
+          disabled={isSavingTemplate || steps.length === 0}
+          variant="outline"
+          className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {isSavingTemplate ? 'Saving...' : 'Save as Template'}
+        </Button>
+      </div>
+
       {/* Input Section */}
       <div className="flex gap-2">
         <Input
@@ -260,6 +372,7 @@ export function JobPlanBuilder({
               step={step}
               onToggleComplete={handleToggleComplete}
               onUpdate={handleUpdateStep}
+              onUpdateNotes={handleUpdateNotes}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}

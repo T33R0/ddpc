@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react'
 import { Checkbox } from '@repo/ui/checkbox'
 import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
-import { GripVertical, Pencil, Check } from 'lucide-react'
+import { Textarea } from '@repo/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+} from '@repo/ui/dialog'
+import { GripVertical, Pencil, Check, FileText } from 'lucide-react'
 
 export interface JobStepData {
   id: string
@@ -18,6 +27,7 @@ interface JobStepProps {
   step: JobStepData
   onToggleComplete: (stepId: string, completed: boolean) => void
   onUpdate: (stepId: string, description: string) => void
+  onUpdateNotes: (stepId: string, notes: string) => void
   onDragStart: (e: React.DragEvent, stepId: string) => void
   onDragOver: (e: React.DragEvent) => void
   onDrop: (e: React.DragEvent, stepId: string) => void
@@ -28,6 +38,7 @@ export function JobStep({
   step,
   onToggleComplete,
   onUpdate,
+  onUpdateNotes,
   onDragStart,
   onDragOver,
   onDrop,
@@ -35,6 +46,8 @@ export function JobStep({
 }: JobStepProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(step.description)
+  const [isNotesOpen, setIsNotesOpen] = useState(false)
+  const [notesValue, setNotesValue] = useState(step.notes || '')
 
   // Update edit value when step description changes externally
   useEffect(() => {
@@ -42,6 +55,11 @@ export function JobStep({
       setEditValue(step.description)
     }
   }, [step.description, isEditing])
+
+  // Update notes value when step notes change externally
+  useEffect(() => {
+    setNotesValue(step.notes || '')
+  }, [step.notes])
 
   const handleSave = () => {
     if (editValue.trim() && editValue.trim() !== step.description) {
@@ -61,6 +79,16 @@ export function JobStep({
     } else if (e.key === 'Escape') {
       handleCancel()
     }
+  }
+
+  const handleSaveNotes = () => {
+    onUpdateNotes(step.id, notesValue)
+    setIsNotesOpen(false)
+  }
+
+  const handleCancelNotes = () => {
+    setNotesValue(step.notes || '')
+    setIsNotesOpen(false)
   }
 
   return (
@@ -130,8 +158,51 @@ export function JobStep({
           >
             <Pencil className="h-4 w-4" />
           </button>
+          <button
+            onClick={() => setIsNotesOpen(true)}
+            className={`text-gray-400 hover:text-white transition-colors p-1 ${
+              step.notes ? 'text-blue-400' : ''
+            }`}
+            type="button"
+            title="Notes"
+          >
+            <FileText className="h-4 w-4" />
+          </button>
         </>
       )}
+
+      {/* Notes Dialog */}
+      <Dialog open={isNotesOpen} onOpenChange={setIsNotesOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Step Notes</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <Textarea
+              value={notesValue}
+              onChange={(e) => setNotesValue(e.target.value)}
+              placeholder="Add notes for this step (e.g., torque specs, warnings, tool sizes)..."
+              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 min-h-[120px]"
+              autoFocus
+            />
+          </DialogBody>
+          <DialogFooter>
+            <Button
+              onClick={handleCancelNotes}
+              variant="outline"
+              className="border-white/20 text-gray-300 hover:bg-black/30"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveNotes}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Save Notes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
