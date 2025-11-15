@@ -152,8 +152,8 @@ export async function GET(request: NextRequest) {
         warranty_rust: specData.warranty_rust || '',
         source_json: specData.source_json || '',
         source_url: specData.source_url || '',
-        // image_url: prefer spec_snapshot image, fallback to vehicle photo_url
-        image_url: specData.image_url || vehicle.photo_url || '',
+        // image_url: prefer user uploaded image, then stock image
+        image_url: vehicle.photo_url || specData.image_url || '',
         review: specData.review || '',
         pros: specData.pros || '',
         cons: specData.cons || '',

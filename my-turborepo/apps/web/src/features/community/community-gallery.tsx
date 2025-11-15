@@ -134,7 +134,13 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
             >
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
                 <ImageWithTimeoutFallback
-                  src={summary.trims[0]?.vehicle_image || summary.heroImage || summary.trims[0]?.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+                  src={
+                    // Priority: 1. User uploaded vehicle_image, 2. User uploaded heroImage, 3. Stock image_url, 4. Fallback
+                    summary.trims[0]?.vehicle_image || 
+                    summary.heroImage || 
+                    summary.trims[0]?.image_url || 
+                    "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"
+                  }
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
                   className="w-full h-full object-cover"
