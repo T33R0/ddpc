@@ -169,7 +169,7 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
   }
 
   const formatLogEntry = (log: HistoryLog) => {
-    const serviceName = log.service_item?.name || log.description
+    const serviceName = log.service_item?.name || 'Service Entry'
     const date = format(new Date(log.event_date), 'MMM d, yyyy')
     const odometer = log.odometer ? ` @ ${log.odometer.toLocaleString()} miles` : ''
     return `${serviceName}: ${date}${odometer}`
