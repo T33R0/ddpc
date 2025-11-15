@@ -69,6 +69,7 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
   // Fetch service categories on mount
   useEffect(() => {
     if (isOpen && currentStep === 1) {
+      console.log('Modal opened, fetching service categories...')
       fetchServiceCategories()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,17 +104,29 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
 
   const fetchServiceCategories = async () => {
     setIsLoadingCategories(true)
+    setError(null) // Clear any previous errors
     try {
       const { data, error } = await supabase
         .from('service_categories')
         .select('id, name')
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error fetching service categories:', error)
+        throw error
+      }
+      
+      console.log('Fetched service categories:', data)
       setServiceCategories(data || [])
+      
+      if (!data || data.length === 0) {
+        console.warn('No service categories found in database')
+      }
     } catch (err) {
       console.error('Error fetching service categories:', err)
-      setError('Failed to load service categories')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load service categories'
+      setError(`Failed to load service categories: ${errorMessage}`)
+      setServiceCategories([]) // Ensure empty array on error
     } finally {
       setIsLoadingCategories(false)
     }
@@ -276,6 +289,11 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
 
               {isLoadingCategories ? (
                 <div className="text-center py-8 text-gray-400">Loading categories...</div>
+              ) : serviceCategories.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-400 mb-4">No service categories found.</p>
+                  <p className="text-gray-500 text-sm">Please ensure service categories are set up in the database.</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {serviceCategories.map((category) => (
