@@ -189,7 +189,7 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h3 className="font-medium text-white mb-1">
-                        {log.service_item?.name || log.description}
+                        {log.service_item?.name || 'Service Entry'}
                       </h3>
                       <p className="text-sm text-gray-400">
                         Due: {formatDueDate(log)}
