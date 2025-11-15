@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         title,
         odometer,
         current_status,
+        vehicle_image,
         photo_url,
         privacy,
         body_type,
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
         trim_description: vehicle.title || specData.trim_description || '',
         odometer: vehicle.odometer,
         current_status: vehicle.current_status || 'parked',
-        vehicle_image: vehicle.photo_url,
+        vehicle_image: vehicle.vehicle_image || vehicle.photo_url || null, // Prioritize vehicle_image (user uploaded) over photo_url
         privacy: vehicle.privacy,
         body_type: vehicle.body_type || specData.body_type || '',
         cylinders: vehicle.cylinders || specData.cylinders || '',
@@ -152,8 +153,8 @@ export async function GET(request: NextRequest) {
         warranty_rust: specData.warranty_rust || '',
         source_json: specData.source_json || '',
         source_url: specData.source_url || '',
-        // image_url: prefer user uploaded image, then stock image
-        image_url: vehicle.photo_url || specData.image_url || '',
+        // image_url: prefer user uploaded vehicle_image, then photo_url, then stock image
+        image_url: vehicle.vehicle_image || vehicle.photo_url || specData.image_url || '',
         review: specData.review || '',
         pros: specData.pros || '',
         cons: specData.cons || '',
@@ -216,8 +217,8 @@ export async function GET(request: NextRequest) {
         year: vehicle.year?.toString() || '',
         make: vehicle.make || '',
         model: vehicle.model || '',
-        // Prioritize user uploaded image, then stock photo
-        heroImage: vehicle.photo_url || specData.image_url || undefined,
+        // Prioritize user uploaded vehicle_image, then photo_url, then stock photo
+        heroImage: vehicle.vehicle_image || vehicle.photo_url || specData.image_url || undefined,
         trims: [trim],
       };
     });
