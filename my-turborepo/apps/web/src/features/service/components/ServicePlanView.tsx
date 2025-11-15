@@ -64,11 +64,10 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
         .from('maintenance_log')
         .select(`
           id,
-          description,
           event_date,
           odometer,
           service_item_id,
-          service_items (
+          service_item:service_items (
             id,
             name
           )
