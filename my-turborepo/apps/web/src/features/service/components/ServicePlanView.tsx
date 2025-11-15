@@ -4,7 +4,7 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'rea
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
-import { Plus, CheckCircle2, Trash2 } from 'lucide-react'
+import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface PlannedServiceLog {
@@ -54,6 +54,7 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
   const [isLoadingPlanned, setIsLoadingPlanned] = useState(false)
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
 
   const fetchPlannedLogs = async () => {
     setIsLoadingPlanned(true)
@@ -191,6 +192,18 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     }
   }
 
+  const toggleCategory = (categoryId: string) => {
+    setCollapsedCategories((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId)
+      } else {
+        newSet.add(categoryId)
+      }
+      return newSet
+    })
+  }
+
   return (
     <div className="space-y-8 mt-4">
       {/* Section 1: Your Active Plan */}
@@ -212,8 +225,22 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
             {plannedLogs.map((log) => (
               <Card
                 key={log.id}
-                className="bg-black/30 backdrop-blur-sm border-white/20 cursor-pointer hover:border-white/40 hover:bg-black/40 transition-colors"
+                className="bg-black/30 backdrop-blur-sm border-white/20 cursor-pointer transition-all duration-300"
+                style={{
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  transition: 'all 0.3s ease-out',
+                }}
                 onClick={() => handleCardClick(log)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)'
+                  e.currentTarget.style.border = '1px solid rgb(132, 204, 22)'
+                  e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)'
+                  e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
@@ -265,34 +292,48 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
               const items = serviceItemsByCategory[category.id] || []
               if (items.length === 0) return null
 
+              const isCollapsed = collapsedCategories.has(category.id)
+
               return (
                 <Card
                   key={category.id}
                   className="bg-black/30 backdrop-blur-sm border-white/20"
                 >
-                  <CardHeader>
-                    <CardTitle className="text-lg text-white">{category.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex justify-between items-center py-2 border-b border-white/10 last:border-0"
-                        >
-                          <span className="text-gray-300">{item.name}</span>
-                          <Button
-                            onClick={() => onAddToPlan(item.id)}
-                            variant="outline"
-                            size="sm"
-                            className="border-white/20 text-gray-300 hover:bg-black/40 hover:border-white/30"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                  <CardHeader
+                    className="cursor-pointer"
+                    onClick={() => toggleCategory(category.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-white">{category.name}</CardTitle>
+                      {isCollapsed ? (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                      )}
                     </div>
-                  </CardContent>
+                  </CardHeader>
+                  {!isCollapsed && (
+                    <CardContent>
+                      <div className="space-y-2">
+                        {items.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex justify-between items-center py-2 border-b border-white/10 last:border-0"
+                          >
+                            <span className="text-gray-300">{item.name}</span>
+                            <Button
+                              onClick={() => onAddToPlan(item.id)}
+                              variant="outline"
+                              size="sm"
+                              className="border-white/20 text-gray-300 hover:bg-black/40 hover:border-white/30"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  )}
                 </Card>
               )
             })}
