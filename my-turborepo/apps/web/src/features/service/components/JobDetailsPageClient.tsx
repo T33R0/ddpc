@@ -1,0 +1,89 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
+import { Card, CardContent } from '@repo/ui/card'
+import { Button } from '@repo/ui/button'
+import { ArrowLeft } from 'lucide-react'
+
+type JobDetailsPageClientProps = {
+  vehicle: {
+    id: string
+    make: string
+    model: string
+    year: string
+    nickname?: string | null
+  }
+  jobTitle: string
+  jobLog: any
+}
+
+export function JobDetailsPageClient({
+  vehicle,
+  jobTitle,
+  jobLog,
+}: JobDetailsPageClientProps) {
+  const router = useRouter()
+  const vehicleSlug = vehicle.nickname || vehicle.id
+
+  const handleBack = () => {
+    router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service`)
+  }
+
+  return (
+    <section className="relative py-12 bg-black min-h-screen">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+      >
+        <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+        <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+      </div>
+
+      <div className="relative container px-4 md:px-6 pt-24">
+        <div className="mb-8">
+          <Button
+            onClick={handleBack}
+            variant="outline"
+            className="mb-4 border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Service
+          </Button>
+          <h1 className="text-4xl font-bold text-white">Job Details</h1>
+          <p className="text-lg text-gray-400 mt-2">
+            {jobTitle}
+          </p>
+        </div>
+
+        <Tabs defaultValue="plan" className="w-full text-white">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="plan">Job Plan</TabsTrigger>
+            <TabsTrigger value="parts">Parts</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="plan" className="mt-6">
+            <Card className="bg-black/30 backdrop-blur-sm border-white/20">
+              <CardContent className="p-6">
+                <p className="text-gray-400">
+                  Job Plan content will be displayed here. This section will show the planned service details, schedule, and related information.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="parts" className="mt-6">
+            <Card className="bg-black/30 backdrop-blur-sm border-white/20">
+              <CardContent className="p-6">
+                <p className="text-gray-400">
+                  Parts content will be displayed here. This section will show the parts list, quantities, and related information for this service job.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </section>
+  )
+}
+

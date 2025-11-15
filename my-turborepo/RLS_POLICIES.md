@@ -5,6 +5,22 @@
 | schemaname | tablename             | policyname                                                | permissive | cmd    | qual                                                                                                                                                                                                                | with_check                                                                                                                                                                                                          |
 | ---------- | --------------------- | --------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | public     | fuel_log              | Enable all access for authenticated users (own fuel logs) | PERMISSIVE | ALL    | (auth.uid() = user_id)                                                                                                                                                                                              | (auth.uid() = user_id)                                                                                                                                                                                              |
+| public     | job_plans             | Users can manage their own job plans                      | PERMISSIVE | ALL    | (auth.uid() = user_id)                                                                                                                                                                                              | (auth.uid() = user_id)                                                                                                                                                                                              |
+| public     | job_steps             | Users can manage steps for their own job plans            | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM job_plans jp
+  WHERE ((jp.id = job_steps.job_plan_id) AND (jp.user_id = auth.uid()))))                                                                                                   | (EXISTS ( SELECT 1
+   FROM job_plans jp
+  WHERE ((jp.id = job_steps.job_plan_id) AND (jp.user_id = auth.uid()))))                                                                                                   |
+| public     | job_template_steps    | Public template steps are viewable                        | PERMISSIVE | SELECT | (EXISTS ( SELECT 1
+   FROM job_templates jt
+  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.is_public = true))))                                                                                      | null                                                                                                                                                                                                                |
+| public     | job_template_steps    | Users can manage steps for their own templates            | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
+   FROM job_templates jt
+  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.user_id = auth.uid()))))                                                                                  | (EXISTS ( SELECT 1
+   FROM job_templates jt
+  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.user_id = auth.uid()))))                                                                                  |
+| public     | job_templates         | Public templates are viewable                             | PERMISSIVE | SELECT | (is_public = true)                                                                                                                                                                                                  | null                                                                                                                                                                                                                |
+| public     | job_templates         | Users can manage their own job templates                  | PERMISSIVE | ALL    | (auth.uid() = user_id)                                                                                                                                                                                              | (auth.uid() = user_id)                                                                                                                                                                                              |
 | public     | maintenance_log       | maintenance_log_owner_all                                 | PERMISSIVE | ALL    | (EXISTS ( SELECT 1
    FROM user_vehicle uv
   WHERE ((uv.id = maintenance_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                                                     | (EXISTS ( SELECT 1
@@ -71,6 +87,10 @@
 
 ## Notes
 - **FUEL_LOG**: Users can only access their own fuel logs
+- **JOB_PLANS**: Users can only access their own job plans
+- **JOB_STEPS**: Users can only access steps for job plans they own (via job_plan ownership check)
+- **JOB_TEMPLATES**: Users can manage their own templates; public templates are viewable by all
+- **JOB_TEMPLATE_STEPS**: Public template steps are viewable; users can manage steps for their own templates
 - **MAINTENANCE_LOG**: Users can only access maintenance logs for vehicles they own
 - **MASTER TABLES**: Public read access for parts list, mod categories, mod items, service categories, and service items
 - **MOD_OUTCOME**: Users can only access outcomes for mods on vehicles they own

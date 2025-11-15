@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ServiceInterval,
@@ -11,7 +11,7 @@ import { Button } from '@repo/ui/button'
 import { Plus, Fuel } from 'lucide-react'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
 import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
-import { ServicePlanView } from '@/features/service/components/ServicePlanView'
+import { ServicePlanView, ServicePlanViewRef } from '@/features/service/components/ServicePlanView'
 import { ServiceHistoryList } from '@/features/service/components/ServiceHistoryList'
 
 // -----------------
@@ -97,23 +97,22 @@ function getDueStatus(
 // -----------------
 
 // The "Plan" tab's content - replaced with ServicePlanView
-function PlanTabContent({
-  vehicleId,
-  onMarkComplete,
-  onAddToPlan,
-}: {
+const PlanTabContent = React.forwardRef<ServicePlanViewRef, {
   vehicleId: string
   onMarkComplete: (log: any) => void
   onAddToPlan: (serviceItemId: string) => void
-}) {
+}>(({ vehicleId, onMarkComplete, onAddToPlan }, ref) => {
   return (
     <ServicePlanView
+      ref={ref}
       vehicleId={vehicleId}
       onMarkComplete={onMarkComplete}
       onAddToPlan={onAddToPlan}
     />
   )
-}
+})
+
+PlanTabContent.displayName = 'PlanTabContent'
 
 // The "History" tab's content
 function HistoryTabContent({ vehicleId }: { vehicleId: string }) {
@@ -134,6 +133,7 @@ export function ServicePageClient({
   initialScheduled,
 }: ServicePageClientProps) {
   const router = useRouter()
+  const servicePlanViewRef = useRef<ServicePlanViewRef>(null)
   
   // Modal state for Service dialog
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false)
@@ -239,6 +239,7 @@ export function ServicePageClient({
                 vehicleId={vehicle.id}
                 onMarkComplete={handleMarkComplete}
                 onAddToPlan={handleAddToPlan}
+                ref={servicePlanViewRef}
               />
             </TabsContent>
 
@@ -254,6 +255,8 @@ export function ServicePageClient({
         onClose={closeServiceDialog}
         onSuccess={() => {
           closeServiceDialog()
+          // Refresh the active plan section
+          servicePlanViewRef.current?.refresh()
           router.refresh()
         }}
         planItem={selectedPlanItem}

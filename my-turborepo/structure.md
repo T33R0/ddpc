@@ -213,6 +213,96 @@ CREATE TABLE public.fuel_log (
 
 );
 
+CREATE TABLE public.job_plans (
+
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+
+  user_id uuid NOT NULL,
+
+  maintenance_log_id uuid,
+
+  mod_log_id uuid,
+
+  name text NOT NULL,
+
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+
+  CONSTRAINT job_plans_pkey PRIMARY KEY (id),
+
+  CONSTRAINT job_plans_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+
+  CONSTRAINT job_plans_maintenance_log_id_fkey FOREIGN KEY (maintenance_log_id) REFERENCES public.maintenance_log(id),
+
+  CONSTRAINT job_plans_mod_log_id_fkey FOREIGN KEY (mod_log_id) REFERENCES public.mods(id)
+
+);
+
+CREATE TABLE public.job_steps (
+
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+
+  job_plan_id uuid NOT NULL,
+
+  step_order integer NOT NULL,
+
+  description text NOT NULL,
+
+  notes text,
+
+  is_completed boolean NOT NULL DEFAULT false,
+
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+
+  CONSTRAINT job_steps_pkey PRIMARY KEY (id),
+
+  CONSTRAINT job_steps_job_plan_id_fkey FOREIGN KEY (job_plan_id) REFERENCES public.job_plans(id)
+
+);
+
+CREATE TABLE public.job_template_steps (
+
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+
+  job_template_id uuid NOT NULL,
+
+  step_order integer NOT NULL,
+
+  description text NOT NULL,
+
+  notes text,
+
+  CONSTRAINT job_template_steps_pkey PRIMARY KEY (id),
+
+  CONSTRAINT job_template_steps_job_template_id_fkey FOREIGN KEY (job_template_id) REFERENCES public.job_templates(id)
+
+);
+
+CREATE TABLE public.job_templates (
+
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+
+  user_id uuid NOT NULL,
+
+  name text NOT NULL,
+
+  service_item_id uuid,
+
+  mod_item_id uuid,
+
+  is_public boolean NOT NULL DEFAULT false,
+
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+
+  CONSTRAINT job_templates_pkey PRIMARY KEY (id),
+
+  CONSTRAINT job_templates_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+
+  CONSTRAINT job_templates_service_item_id_fkey FOREIGN KEY (service_item_id) REFERENCES public.service_items(id),
+
+  CONSTRAINT job_templates_mod_item_id_fkey FOREIGN KEY (mod_item_id) REFERENCES public.mod_items(id)
+
+);
+
 CREATE TABLE public.maintenance_log (
 
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -234,6 +324,8 @@ CREATE TABLE public.maintenance_log (
   service_provider text,
 
   service_item_id uuid,
+
+  status text DEFAULT 'History'::text CHECK (status = ANY (ARRAY['History'::text, 'Plan'::text])),
 
   CONSTRAINT maintenance_log_pkey PRIMARY KEY (id),
 
@@ -894,8 +986,14 @@ CREATE TABLE public.vehicle_url_queue (
 
 #### Fuel & Maintenance Tracking
 - **`fuel_log`**: User's fuel consumption and cost tracking
-- **`maintenance_log`**: User's maintenance history with notes and service provider info
+- **`maintenance_log`**: User's maintenance history with notes and service provider info (includes status: History/Plan)
 - **`maintenance_parts`**: Junction table linking maintenance events to parts used
+
+#### Job Planning & Templates
+- **`job_templates`**: Reusable job templates linked to service items or mod items (can be public or private)
+- **`job_template_steps`**: Steps that make up a job template
+- **`job_plans`**: User's job plans linked to maintenance logs or mods
+- **`job_steps`**: Steps that make up a job plan with completion tracking
 
 #### Parts Management
 - **`master_parts_list`**: Master catalog of available parts (OEM/Aftermarket)

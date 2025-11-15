@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Plus, CheckCircle2, Trash2 } from 'lucide-react'
@@ -38,24 +39,21 @@ interface ServicePlanViewProps {
   onAddToPlan: (serviceItemId: string) => void
 }
 
-export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: ServicePlanViewProps) {
+export interface ServicePlanViewRef {
+  refresh: () => void
+}
+
+export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewProps>(
+  ({ vehicleId, onMarkComplete, onAddToPlan }, ref) => {
+  const router = useRouter()
+  const params = useParams()
+  const vehicleSlug = params.id as string
   const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>([])
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
   const [serviceItemsByCategory, setServiceItemsByCategory] = useState<Record<string, ServiceItem[]>>({})
   const [isLoadingPlanned, setIsLoadingPlanned] = useState(false)
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-
-  // Fetch planned service logs
-  useEffect(() => {
-    fetchPlannedLogs()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicleId])
-
-  // Fetch service categories and items for checklist
-  useEffect(() => {
-    fetchServiceChecklist()
-  }, [])
 
   const fetchPlannedLogs = async () => {
     setIsLoadingPlanned(true)
@@ -94,6 +92,22 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
       setIsLoadingPlanned(false)
     }
   }
+
+  // Expose refresh function to parent
+  useImperativeHandle(ref, () => ({
+    refresh: fetchPlannedLogs
+  }))
+
+  // Fetch planned service logs
+  useEffect(() => {
+    fetchPlannedLogs()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicleId])
+
+  // Fetch service categories and items for checklist
+  useEffect(() => {
+    fetchServiceChecklist()
+  }, [])
 
   const fetchServiceChecklist = async () => {
     setIsLoadingChecklist(true)
@@ -170,6 +184,13 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
     return 'Not specified'
   }
 
+  const handleCardClick = (log: PlannedServiceLog) => {
+    if (log.service_item?.name) {
+      const jobTitle = encodeURIComponent(log.service_item.name)
+      router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service/${jobTitle}`)
+    }
+  }
+
   return (
     <div className="space-y-8 mt-4">
       {/* Section 1: Your Active Plan */}
@@ -191,7 +212,8 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
             {plannedLogs.map((log) => (
               <Card
                 key={log.id}
-                className="bg-black/30 backdrop-blur-sm border-white/20"
+                className="bg-black/30 backdrop-blur-sm border-white/20 cursor-pointer hover:border-white/40 hover:bg-black/40 transition-colors"
+                onClick={() => handleCardClick(log)}
               >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
@@ -203,7 +225,7 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
                         Due: {formatDueDate(log)}
                       </p>
                     </div>
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
                       <Button
                         onClick={() => onMarkComplete(log)}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -279,5 +301,7 @@ export function ServicePlanView({ vehicleId, onMarkComplete, onAddToPlan }: Serv
       </div>
     </div>
   )
-}
+})
+
+ServicePlanView.displayName = 'ServicePlanView'
 
