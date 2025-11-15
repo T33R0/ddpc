@@ -77,7 +77,6 @@ export async function logPlannedService(data: ServiceLogInputs) {
       .from('maintenance_log')
       .insert({
         user_vehicle_id: validatedData.user_vehicle_id,
-        description: validatedData.description,
         service_provider: validatedData.service_provider || null,
         cost: validatedData.cost || null,
         odometer: odometerValue,
@@ -87,6 +86,8 @@ export async function logPlannedService(data: ServiceLogInputs) {
         service_interval_id: validatedData.plan_item_id || null,
         // Link to service item if provided
         service_item_id: validatedData.service_item_id || null,
+        // Status field
+        status: validatedData.status || 'History',
       })
       .select('id')
       .single()
@@ -217,7 +218,6 @@ export async function logFreeTextService(data: ServiceLogInputs) {
       .from('maintenance_log')
       .insert({
         user_vehicle_id: validatedData.user_vehicle_id,
-        description: validatedData.description,
         service_provider: validatedData.service_provider || null,
         cost: validatedData.cost || null,
         odometer: odometerValue,
@@ -225,6 +225,8 @@ export async function logFreeTextService(data: ServiceLogInputs) {
         notes: validatedData.notes || null,
         // Link to service item if provided
         service_item_id: validatedData.service_item_id || null,
+        // Status field
+        status: validatedData.status || 'History',
       })
       .select('id')
       .single()

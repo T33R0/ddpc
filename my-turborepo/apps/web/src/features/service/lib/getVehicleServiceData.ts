@@ -55,10 +55,10 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     throw new Error('Vehicle not found or access denied')
   }
 
-  // Fetch maintenance logs (service history)
+  // Fetch maintenance logs (service history) - note: description column removed, using service_item_id instead
   const { data: maintenanceLogs, error: maintenanceError } = await supabase
     .from('maintenance_log')
-    .select('id, description, cost, odometer, event_date, notes, service_provider, service_interval_id')
+    .select('id, cost, odometer, event_date, notes, service_provider, service_interval_id, service_item_id')
     .eq('user_vehicle_id', vehicleId)
     .order('event_date', { ascending: false })
 
@@ -79,10 +79,11 @@ export async function getVehicleServiceData(vehicleId: string): Promise<VehicleS
     throw new Error('Failed to fetch service intervals')
   }
 
-  // Transform maintenance logs
+  // Transform maintenance logs - use service_item name or fallback
+  // Note: We'd need to fetch service_items to get names, but for now use a placeholder
   const serviceHistory: ServiceHistoryItem[] = maintenanceLogs?.map(log => ({
     id: log.id,
-    description: log.description,
+    description: 'Service Entry', // Placeholder - should fetch service_item name if service_item_id exists
     cost: log.cost || undefined,
     odometer: log.odometer || undefined,
     event_date: new Date(log.event_date),

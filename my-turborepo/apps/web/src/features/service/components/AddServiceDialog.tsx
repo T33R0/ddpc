@@ -16,7 +16,6 @@ import { supabase } from '@/lib/supabase'
 
 interface PlannedServiceLog {
   id: string
-  description: string
   event_date: string
   odometer: number | null
   service_item_id: string | null
@@ -150,7 +149,7 @@ export function AddServiceDialog({
           cost: '',
           odometer: '',
           event_date: new Date().toISOString().split('T')[0]!,
-          notes: planItem.description || planItem.master_service_schedule?.description || '',
+          notes: planItem.description || '',
           plan_item_id: planItem.id,
         })
         setCurrentStep(1)
@@ -336,7 +335,6 @@ export function AddServiceDialog({
         // Prepare the data matching ServiceLogSchema
         const serviceLogData: ServiceLogInputs = {
           user_vehicle_id: vehicleId,
-          description: selectedItem.name, // Use service item name as description
           event_date: formData.event_date,
           ...(formData.service_provider?.trim() && { service_provider: formData.service_provider.trim() }),
           ...(formData.cost && formData.cost.trim() && !isNaN(parseFloat(formData.cost)) && { cost: parseFloat(formData.cost) }),

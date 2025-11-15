@@ -3,7 +3,6 @@ import { z } from 'zod'
 // Zod schema for the form
 export const ServiceLogSchema = z.object({
   user_vehicle_id: z.string().uuid(),
-  description: z.string().min(3, 'Description is required.'),
   service_provider: z.string().optional(),
   cost: z.coerce.number().min(0).optional(),
   odometer: z.coerce.number().min(0).optional(),

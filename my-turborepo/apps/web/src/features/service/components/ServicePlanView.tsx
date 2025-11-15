@@ -8,10 +8,12 @@ import { supabase } from '@/lib/supabase'
 
 interface PlannedServiceLog {
   id: string
-  description: string
   event_date: string
   odometer: number | null
   service_item_id: string | null
+  notes?: string | null
+  service_provider?: string | null
+  cost?: number | null
   service_item?: {
     id: string
     name: string

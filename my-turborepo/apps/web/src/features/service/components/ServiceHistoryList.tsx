@@ -8,7 +8,6 @@ import Link from 'next/link'
 
 interface HistoryLog {
   id: string
-  description: string
   event_date: string
   odometer: number | null
   notes: string | null
@@ -50,7 +49,7 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
       // First fetch the logs
       const { data: logsData, error: logsError } = await supabase
         .from('maintenance_log')
-        .select('id, description, event_date, odometer, notes, service_item_id')
+        .select('id, event_date, odometer, notes, service_item_id')
         .eq('user_vehicle_id', vehicleId)
         .eq('status', 'History')
         .order('event_date', { ascending: false })
@@ -117,7 +116,7 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
         const serviceItem = log.service_item_id ? serviceItemsMap[log.service_item_id] : null
         const categoryId = serviceItem?.category_id || 'uncategorized'
         const categoryName = serviceItem?.category_name || 'Uncategorized'
-        const serviceItemName = serviceItem?.name || log.description
+        const serviceItemName = serviceItem?.name || 'Service Entry'
 
         if (!grouped[categoryId]) {
           grouped[categoryId] = {

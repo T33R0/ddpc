@@ -60,14 +60,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
   // --- 3. Fetch the "Plan" (from service_intervals) ---
   const { data: plan, error: planError } = await supabase
     .from('service_intervals')
-    .select(
-      `
-      *,
-      master_service_schedule (
-        description
-      )
-    `
-    )
+    .select('*')
     .eq('user_vehicle_id', vehicleId) // Use resolved UUID
     .order('interval_miles', { ascending: true })
 
