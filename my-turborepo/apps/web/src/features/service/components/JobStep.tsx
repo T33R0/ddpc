@@ -100,7 +100,7 @@ export function JobStep({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="bg-black/40 backdrop-blur-sm border-white/30 text-white focus:border-white/50 flex-1"
+            className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 flex-1 h-8"
             autoFocus
           />
           <Button
@@ -114,11 +114,12 @@ export function JobStep({
       ) : (
         <>
           <span
-            className={`flex-1 text-white transition-all ${
+            className={`flex-1 transition-all ${
               step.is_completed 
-                ? 'line-through text-gray-400 opacity-60' 
+                ? 'line-through text-gray-400' 
                 : 'text-white'
             }`}
+            style={step.is_completed ? { opacity: 0.6 } : undefined}
           >
             {step.description}
           </span>
