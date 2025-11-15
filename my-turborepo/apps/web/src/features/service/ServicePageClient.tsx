@@ -11,9 +11,8 @@ import { Button } from '@repo/ui/button'
 import { Plus, Fuel } from 'lucide-react'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
 import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
-import { UpcomingServices } from '@/features/service/components/UpcomingServices'
+import { ServicePlanView } from '@/features/service/components/ServicePlanView'
 import { ServiceHistoryTable } from '@/features/service/components/ServiceHistoryTable'
-import { UpcomingService } from '@/features/service/lib/getVehicleServiceData'
 import { ServiceHistoryItem } from '@/features/service/lib/getVehicleServiceData'
 
 // -----------------
@@ -98,82 +97,22 @@ function getDueStatus(
 // HELPER COMPONENTS (to keep the main component clean)
 // -----------------
 
-// The "Plan" tab's content
+// The "Plan" tab's content - replaced with ServicePlanView
 function PlanTabContent({
-  planItems,
-  scheduledItems,
-  onLogPlanItem,
-  currentOdometer,
+  vehicleId,
+  onMarkComplete,
+  onAddToPlan,
 }: {
-  planItems: ServiceInterval[]
-  scheduledItems: MaintenanceLog[]
-  onLogPlanItem: (item: ServiceInterval) => void
-  currentOdometer: number | null
+  vehicleId: string
+  onMarkComplete: (log: any) => void
+  onAddToPlan: (serviceItemId: string) => void
 }) {
-  // Transform ServiceInterval to UpcomingService format for the UpcomingServices component
-  const upcomingServices: UpcomingService[] = planItems.map((interval) => {
-    const dueStatus = getDueStatus(interval, currentOdometer)
-    return {
-      id: interval.id,
-      name: interval.name,
-      description: interval.description || interval.master_service_schedule?.description || undefined,
-      interval_months: interval.interval_months ?? undefined,
-      interval_miles: interval.interval_miles ?? undefined,
-      due_date: interval.due_date ? new Date(interval.due_date) : null,
-      due_miles: interval.due_miles ?? undefined,
-      is_overdue: dueStatus.status === 'overdue',
-      due_status: dueStatus.status,
-      due_message: dueStatus.message,
-    }
-  })
-
-  // Handler that converts UpcomingService back to ServiceInterval and calls onLogPlanItem
-  const handleLogService = (service: UpcomingService) => {
-    const interval = planItems.find(si => si.id === service.id)
-    if (interval) {
-      onLogPlanItem(interval)
-    }
-  }
-
   return (
-    <div className="space-y-8 mt-4">
-      {/* Section 1: Scheduled Maintenance (from maintenance_log)
-        These are items you've already scheduled for the future.
-      */}
-      {scheduledItems.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-white">Scheduled</h3>
-          <div className="space-y-2">
-            {scheduledItems.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 border rounded-md bg-black/30 backdrop-blur-sm border-white/20 flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium text-white">{item.description}</p>
-                  <p className="text-sm text-gray-400">
-                    Scheduled for: {new Date(item.event_date).toLocaleDateString()}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Edit
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Section 2: Factory Plan (from service_intervals)
-        This is the "Due" list.
-      */}
-      <div>
-        <UpcomingServices 
-          upcomingServices={upcomingServices} 
-          onLogService={handleLogService}
-        />
-      </div>
-    </div>
+    <ServicePlanView
+      vehicleId={vehicleId}
+      onMarkComplete={onMarkComplete}
+      onAddToPlan={onAddToPlan}
+    />
   )
 }
 
@@ -214,25 +153,55 @@ export function ServicePageClient({
 
   // This will be used to pass a selected plan item to the modal
   const [selectedPlanItem, setSelectedPlanItem] = useState<ServiceInterval | null>(null)
+  
+  // For planned log (marking complete)
+  const [selectedPlannedLog, setSelectedPlannedLog] = useState<any>(null)
+  
+  // For pre-filling service item (Add to Plan)
+  const [prefillServiceItemId, setPrefillServiceItemId] = useState<string | undefined>(undefined)
+  const [prefillStatus, setPrefillStatus] = useState<'History' | 'Plan'>('Plan')
 
   // Modal state for Fuel dialog
   const [isFuelModalOpen, setIsFuelModalOpen] = useState(false)
 
   // Handler for the "+ Add Service" button (free-text)
   const openAddServiceModal = () => {
-    setSelectedPlanItem(null) // Clear any selected item
+    setSelectedPlanItem(null)
+    setSelectedPlannedLog(null)
+    setPrefillServiceItemId(undefined)
+    setIsServiceModalOpen(true)
+  }
+
+  // Handler for marking a planned log as complete
+  const handleMarkComplete = (log: any) => {
+    setSelectedPlannedLog(log)
+    setSelectedPlanItem(null)
+    setPrefillServiceItemId(undefined)
+    setIsServiceModalOpen(true)
+  }
+
+  // Handler for adding a service item to plan
+  const handleAddToPlan = (serviceItemId: string) => {
+    setPrefillServiceItemId(serviceItemId)
+    setPrefillStatus('Plan')
+    setSelectedPlanItem(null)
+    setSelectedPlannedLog(null)
     setIsServiceModalOpen(true)
   }
 
   // Handler for the "Log Service" button (guided)
   const openLogPlanItemModal = (item: ServiceInterval) => {
     setSelectedPlanItem(item) // Set the selected item
+    setSelectedPlannedLog(null)
+    setPrefillServiceItemId(undefined)
     setIsServiceModalOpen(true)
   }
 
   const closeServiceDialog = () => {
     setIsServiceModalOpen(false)
     setSelectedPlanItem(null)
+    setSelectedPlannedLog(null)
+    setPrefillServiceItemId(undefined)
   }
 
   const displayName = vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`
@@ -280,10 +249,9 @@ export function ServicePageClient({
 
             <TabsContent value="plan">
               <PlanTabContent
-                planItems={initialPlan}
-                scheduledItems={initialScheduled}
-                onLogPlanItem={openLogPlanItemModal}
-                currentOdometer={vehicle.odometer ?? null}
+                vehicleId={vehicle.id}
+                onMarkComplete={handleMarkComplete}
+                onAddToPlan={handleAddToPlan}
               />
             </TabsContent>
 
@@ -302,7 +270,11 @@ export function ServicePageClient({
           router.refresh()
         }}
         planItem={selectedPlanItem}
+        plannedLog={selectedPlannedLog}
         vehicleId={vehicle.id}
+        lockStatusToHistory={!!selectedPlannedLog}
+        prefillServiceItemId={prefillServiceItemId}
+        prefillStatus={prefillStatus}
       />
 
       <AddFuelDialog

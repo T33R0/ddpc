@@ -14,12 +14,27 @@ import { logPlannedService, logFreeTextService } from '../actions'
 import { ServiceLogInputs } from '../schema'
 import { supabase } from '@/lib/supabase'
 
+interface PlannedServiceLog {
+  id: string
+  description: string
+  event_date: string
+  odometer: number | null
+  service_item_id: string | null
+  service_provider?: string | null
+  cost?: number | null
+  notes?: string | null
+}
+
 interface AddServiceDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
   planItem?: ServiceInterval | null // Changed from initialData to planItem
+  plannedLog?: PlannedServiceLog | null // Pre-fill from planned log
   vehicleId: string
+  lockStatusToHistory?: boolean // Lock status to History (for marking complete)
+  prefillServiceItemId?: string // Pre-fill with service item ID (for Add to Plan)
+  prefillStatus?: 'History' | 'Plan' // Pre-fill status
 }
 
 interface ServiceCategory {
@@ -45,7 +60,17 @@ interface FormData {
   plan_item_id?: string | null
 }
 
-export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicleId }: AddServiceDialogProps) {
+export function AddServiceDialog({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  planItem, 
+  plannedLog,
+  vehicleId,
+  lockStatusToHistory = false,
+  prefillServiceItemId,
+  prefillStatus = 'History'
+}: AddServiceDialogProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -83,9 +108,72 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, currentStep])
 
-  // Reset form when modal opens/closes
+  // Pre-fill form when modal opens with plannedLog or prefillServiceItemId
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (plannedLog) {
+        // Pre-fill from planned log (for Mark as Completed)
+        setFormData({
+          service_item_id: plannedLog.service_item_id || '',
+          status: 'History', // Always History when marking complete
+          service_provider: plannedLog.service_provider || '',
+          cost: plannedLog.cost?.toString() || '',
+          odometer: plannedLog.odometer?.toString() || '',
+          event_date: plannedLog.event_date ? new Date(plannedLog.event_date).toISOString().split('T')[0]! : new Date().toISOString().split('T')[0]!,
+          notes: plannedLog.notes || '',
+          plan_item_id: null,
+        })
+        // Skip to step 2 and fetch the service item's category
+        if (plannedLog.service_item_id) {
+          fetchServiceItemAndCategory(plannedLog.service_item_id)
+        } else {
+          setCurrentStep(2)
+        }
+      } else if (prefillServiceItemId) {
+        // Pre-fill with service item ID (for Add to Plan)
+        setFormData({
+          service_item_id: prefillServiceItemId,
+          status: prefillStatus,
+          service_provider: '',
+          cost: '',
+          odometer: '',
+          event_date: new Date().toISOString().split('T')[0]!,
+          notes: '',
+          plan_item_id: null,
+        })
+        // Skip to step 2 and fetch the service item's category
+        fetchServiceItemAndCategory(prefillServiceItemId)
+      } else if (planItem) {
+        // Pre-populate form for "guided" mode (planned service from service_intervals)
+        setFormData({
+          service_item_id: '',
+          status: 'History',
+          service_provider: '',
+          cost: '',
+          odometer: '',
+          event_date: new Date().toISOString().split('T')[0]!,
+          notes: planItem.description || planItem.master_service_schedule?.description || '',
+          plan_item_id: planItem.id,
+        })
+        setCurrentStep(1)
+      } else {
+        // Reset form for "free-text" mode
+        setCurrentStep(1)
+        setSelectedCategory(null)
+        setFormData({
+          service_item_id: '',
+          status: 'History',
+          service_provider: '',
+          cost: '',
+          odometer: '',
+          event_date: new Date().toISOString().split('T')[0]!,
+          notes: '',
+          plan_item_id: null,
+        })
+      }
+      setError(null)
+    } else {
+      // Reset when closing
       setCurrentStep(1)
       setSelectedCategory(null)
       setFormData({
@@ -100,7 +188,32 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
       })
       setError(null)
     }
-  }, [isOpen])
+  }, [isOpen, plannedLog, prefillServiceItemId, prefillStatus, planItem])
+
+  const fetchServiceItemAndCategory = async (serviceItemId: string) => {
+    try {
+      // Fetch the service item to get its category
+      const { data: item, error: itemError } = await supabase
+        .from('service_items')
+        .select('id, name, category_id, category:service_categories(id, name)')
+        .eq('id', serviceItemId)
+        .single()
+
+      if (itemError) throw itemError
+
+      if (item && item.category_id) {
+        // Fetch all items for this category
+        await fetchServiceItems(item.category_id)
+        // Set selected category
+        const category = item.category as { id: string; name: string }
+        setSelectedCategory(category)
+        setCurrentStep(2)
+      }
+    } catch (err) {
+      console.error('Error fetching service item:', err)
+      setError('Failed to load service item details')
+    }
+  }
 
   const fetchServiceCategories = async () => {
     setIsLoadingCategories(true)
@@ -196,43 +309,62 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
         throw new Error('Selected service item not found')
       }
 
-      // Prepare the data matching ServiceLogSchema
-      const serviceLogData: ServiceLogInputs = {
-        user_vehicle_id: vehicleId,
-        description: selectedItem.name, // Use service item name as description
-        event_date: formData.event_date,
-        ...(formData.service_provider?.trim() && { service_provider: formData.service_provider.trim() }),
-        ...(formData.cost && formData.cost.trim() && !isNaN(parseFloat(formData.cost)) && { cost: parseFloat(formData.cost) }),
-        ...(formData.odometer && formData.odometer.trim() && !isNaN(parseFloat(formData.odometer)) && { odometer: parseFloat(formData.odometer) }),
-        ...(formData.notes?.trim() && { notes: formData.notes.trim() }),
-        ...(formData.plan_item_id && formData.plan_item_id.trim() && { plan_item_id: formData.plan_item_id }),
-        service_item_id: formData.service_item_id,
-        status: formData.status,
-      }
+      // If we're marking a planned log as complete, update it instead of creating new
+      if (plannedLog) {
+        const { error: updateError } = await supabase
+          .from('maintenance_log')
+          .update({
+            status: 'History',
+            event_date: formData.event_date,
+            ...(formData.service_provider?.trim() && { service_provider: formData.service_provider.trim() }),
+            ...(formData.cost && formData.cost.trim() && !isNaN(parseFloat(formData.cost)) && { cost: parseFloat(formData.cost) }),
+            ...(formData.odometer && formData.odometer.trim() && !isNaN(parseFloat(formData.odometer)) && { odometer: parseFloat(formData.odometer) }),
+            ...(formData.notes?.trim() && { notes: formData.notes.trim() }),
+          })
+          .eq('id', plannedLog.id)
 
-      // Call the appropriate action based on whether it's a planned service
-      let result
-      if (planItem) {
-        // "Guided" mode - two-write operation
-        result = await logPlannedService(serviceLogData)
-      } else {
-        // "Free-text" mode - single-write operation
-        result = await logFreeTextService(serviceLogData)
-      }
-
-      if (result.error) {
-        if (result.details && Array.isArray(result.details)) {
-          const errorMessages = result.details.map((err: { message?: string; path?: (string | number)[] }) => {
-            const field = err.path?.map(String).join('.') || 'field'
-            return `${field}: ${err.message || 'Invalid value'}`
-          }).join(', ')
-          throw new Error(`${result.error} ${errorMessages}`)
+        if (updateError) {
+          throw new Error(`Failed to update service log: ${updateError.message}`)
         }
-        throw new Error(result.error)
-      }
+      } else {
+        // Prepare the data matching ServiceLogSchema
+        const serviceLogData: ServiceLogInputs = {
+          user_vehicle_id: vehicleId,
+          description: selectedItem.name, // Use service item name as description
+          event_date: formData.event_date,
+          ...(formData.service_provider?.trim() && { service_provider: formData.service_provider.trim() }),
+          ...(formData.cost && formData.cost.trim() && !isNaN(parseFloat(formData.cost)) && { cost: parseFloat(formData.cost) }),
+          ...(formData.odometer && formData.odometer.trim() && !isNaN(parseFloat(formData.odometer)) && { odometer: parseFloat(formData.odometer) }),
+          ...(formData.notes?.trim() && { notes: formData.notes.trim() }),
+          ...(formData.plan_item_id && formData.plan_item_id.trim() && { plan_item_id: formData.plan_item_id }),
+          service_item_id: formData.service_item_id,
+          status: formData.status,
+        }
 
-      if (!result.success) {
-        throw new Error('Failed to log service')
+        // Call the appropriate action based on whether it's a planned service
+        let result
+        if (planItem) {
+          // "Guided" mode - two-write operation
+          result = await logPlannedService(serviceLogData)
+        } else {
+          // "Free-text" mode - single-write operation
+          result = await logFreeTextService(serviceLogData)
+        }
+
+        if (result.error) {
+          if (result.details && Array.isArray(result.details)) {
+            const errorMessages = result.details.map((err: { message?: string; path?: (string | number)[] }) => {
+              const field = err.path?.map(String).join('.') || 'field'
+              return `${field}: ${err.message || 'Invalid value'}`
+            }).join(', ')
+            throw new Error(`${result.error} ${errorMessages}`)
+          }
+          throw new Error(result.error)
+        }
+
+        if (!result.success) {
+          throw new Error('Failed to log service')
+        }
       }
 
       // Success - reset form and close dialog
@@ -377,20 +509,26 @@ export function AddServiceDialog({ isOpen, onClose, onSuccess, planItem, vehicle
                   value={formData.status}
                   onValueChange={handleStatusChange}
                   className="justify-start"
+                  disabled={lockStatusToHistory}
                 >
                   <ToggleGroupItem 
                     value="History" 
-                    className="data-[state=on]:bg-blue-600 data-[state=on]:text-white text-gray-300 border-white/20 bg-black/30"
+                    className="data-[state=on]:bg-blue-600 data-[state=on]:text-white text-gray-300 border-white/20 bg-black/30 disabled:opacity-50"
+                    disabled={lockStatusToHistory}
                   >
                     History
                   </ToggleGroupItem>
                   <ToggleGroupItem 
                     value="Plan" 
-                    className="data-[state=on]:bg-blue-600 data-[state=on]:text-white text-gray-300 border-white/20 bg-black/30"
+                    className="data-[state=on]:bg-blue-600 data-[state=on]:text-white text-gray-300 border-white/20 bg-black/30 disabled:opacity-50"
+                    disabled={lockStatusToHistory}
                   >
                     Plan
                   </ToggleGroupItem>
                 </ToggleGroup>
+                {lockStatusToHistory && (
+                  <p className="text-xs text-gray-500">Status is locked to History when marking a plan as completed.</p>
+                )}
               </div>
 
               {/* Date */}
