@@ -8,15 +8,23 @@ import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import { Search, X } from 'lucide-react';
 import { Input } from '@repo/ui/input';
+import { useSearch } from '../../lib/hooks/useSearch';
+import { searchVehicleSummary } from '../../lib/search';
 
 function CommunityContent() {
-  const [vehicles, setVehicles] = useState<VehicleSummary[]>([]);
-  const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]); // For search functionality
+  const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
+  const {
+    searchQuery,
+    setSearchQuery: handleSearch,
+    filteredItems: vehicles,
+    handleClearSearch
+  } = useSearch(allVehicles, searchVehicleSummary);
+
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
+
   const [hasMore, setHasMore] = useState(true);
   const isInitialLoadRef = useRef(true);
 
@@ -47,11 +55,9 @@ function CommunityContent() {
       const vehicleData = payload.data || [];
 
       if (append) {
-        setVehicles(prev => [...prev, ...vehicleData]);
         setAllVehicles(prev => [...prev, ...vehicleData]);
         setHasMore(vehicleData.length === 24); // If we got a full page, there might be more
       } else {
-        setVehicles(vehicleData);
         setAllVehicles(vehicleData);
         setHasMore(vehicleData.length === 24);
       }
@@ -61,7 +67,6 @@ function CommunityContent() {
       setError(errorMessage);
       // Set empty arrays on error so UI can show error state
       if (!append) {
-        setVehicles([]);
         setAllVehicles([]);
       }
     } finally {
@@ -84,58 +89,7 @@ function CommunityContent() {
     isInitialLoadRef.current = false; // Mark initial load as complete
   }, [loadVehicles]); // Include loadVehicles in dependencies
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setVehicles(allVehicles);
-      return;
-    }
 
-    const searchLower = query.toLowerCase();
-    const searchTerms = searchLower.split(/\s+/); // Split by whitespace for multi-word search
-
-    const filtered = allVehicles.filter(vehicle => {
-      // Helper function to safely check if a field contains search term
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fieldContains = (field: any, term: string) => {
-        if (field == null) return false;
-        return String(field).toLowerCase().includes(term);
-      };
-
-      // Search in vehicle summary fields
-      const summaryMatch = searchTerms.every(term =>
-        fieldContains(vehicle.year, term) ||
-        fieldContains(vehicle.make, term) ||
-        fieldContains(vehicle.model, term)
-      );
-
-      // Search in trim-specific fields (user vehicle data)
-      const trimMatch = vehicle.trims.some(trim =>
-        searchTerms.every(term =>
-          fieldContains(trim.name, term) ||
-          fieldContains(trim.trim, term) ||
-          fieldContains(trim.trim_description, term) ||
-          fieldContains(trim.body_type, term) ||
-          fieldContains(trim.engine_type, term) ||
-          fieldContains(trim.fuel_type, term) ||
-          fieldContains(trim.drive_type, term) ||
-          fieldContains(trim.transmission, term) ||
-          fieldContains(trim.cylinders, term) ||
-          fieldContains(trim.engine_size_l, term) ||
-          fieldContains(trim.horsepower_hp, term)
-        )
-      );
-
-      return summaryMatch || trimMatch;
-    });
-
-    setVehicles(filtered);
-  }, [allVehicles]);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
-    setVehicles(allVehicles);
-  }, [allVehicles]);
 
   return (
     <section className="relative py-12 min-h-screen">

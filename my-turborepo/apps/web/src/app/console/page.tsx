@@ -10,12 +10,21 @@ import { useRouter } from 'next/navigation';
 import { Search, Plus, AlertTriangle, Calendar, FileText, BarChart, Receipt, Download, Car, Activity, Wrench, Fuel, Settings } from 'lucide-react';
 import { LogServiceModal } from '../../components/LogServiceModal';
 import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleton';
+import { useSearch } from '../../lib/hooks/useSearch';
+import { searchConsoleVehicle } from '../../lib/search';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
   const { data: vehiclesData, isLoading: vehiclesLoading } = useVehicles();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
+  const vehicles = vehiclesData?.vehicles || [];
+
+  const {
+    searchQuery: searchTerm,
+    setSearchQuery: setSearchTerm,
+    filteredItems: searchFilteredVehicles
+  } = useSearch(vehicles, searchConsoleVehicle);
+
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [logServiceModalOpen, setLogServiceModalOpen] = useState(false);
 
@@ -32,22 +41,18 @@ export default function ConsolePage() {
     return null;
   }
 
-  const vehicles = vehiclesData?.vehicles || [];
-  const filteredVehicles = vehicles.filter(vehicle => {
-    const matchesSearch = vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vehicle.ymmt.toLowerCase().includes(searchTerm.toLowerCase());
-
+  const filteredVehicles = searchFilteredVehicles.filter(vehicle => {
     switch (selectedFilter) {
       case 'Active':
-        return matchesSearch; // For now, assume all vehicles are active
+        return true; // For now, assume all vehicles are active
       case 'Needs Attention':
-        return matchesSearch && Math.random() > 0.7; // Mock filter
+        return Math.random() > 0.7; // Mock filter
       case 'Service Due':
-        return matchesSearch && Math.random() > 0.8; // Mock filter
+        return Math.random() > 0.8; // Mock filter
       case 'Inactive':
-        return matchesSearch && Math.random() > 0.9; // Mock filter
+        return Math.random() > 0.9; // Mock filter
       default:
-        return matchesSearch;
+        return true;
     }
   });
 

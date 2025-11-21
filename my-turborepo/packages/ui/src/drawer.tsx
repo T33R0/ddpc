@@ -59,7 +59,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn('bg-black/50 backdrop-blur-lg flex w-full flex-col gap-1 rounded-t-3xl border-b border-slate-800 px-4 py-2 md:mx-auto md:max-w-md', className)}
+      className={cn('bg-background flex w-full flex-col gap-1 rounded-t-3xl border-b border-border px-4 py-2 md:mx-auto md:max-w-md', className)}
       {...props}
     />
   );
@@ -73,18 +73,18 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn('bg-transparent mt-auto grid w-full gap-2 border-t border-slate-800 px-4 py-3 md:mx-auto md:max-w-md', className)}
+      className={cn('bg-transparent mt-auto grid w-full gap-2 border-t border-border px-4 py-3 md:mx-auto md:max-w-md', className)}
       {...props}
     />
   );
 }
 
 function DrawerTitle({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Title>) {
-  return <DrawerPrimitive.Title data-slot="drawer-title" className={cn('text-white font-heading font-medium', className)} {...props} />;
+  return <DrawerPrimitive.Title data-slot="drawer-title" className={cn('text-foreground font-heading font-medium', className)} {...props} />;
 }
 
 function DrawerDescription({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Description>) {
-  return <DrawerPrimitive.Description data-slot="drawer-description" className={cn('text-slate-400 text-sm', className)} {...props} />;
+  return <DrawerPrimitive.Description data-slot="drawer-description" className={cn('text-muted-foreground text-sm', className)} {...props} />;
 }
 
 export {

@@ -10,6 +10,8 @@ import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import type { FilterState } from '../../features/discover/vehicle-filters-modal';
+import { useSearch } from '../../lib/hooks/useSearch';
+import { searchVehicleSummary } from '../../lib/search';
 
 type FilterOptions = {
   years: number[];
@@ -22,24 +24,30 @@ type FilterOptions = {
 };
 
 function DiscoverContent() {
-  const [vehicles, setVehicles] = useState<VehicleSummary[]>([]);
-  const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]); // For search functionality
+  const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredItems: vehicles,
+    handleClearSearch
+  } = useSearch(allVehicles, searchVehicleSummary);
+
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterState>({ 
-    minYear: null, 
-    maxYear: null, 
-    make: null, 
-    model: null, 
-    engineType: null, 
-    fuelType: null, 
-    drivetrain: null, 
-    doors: null, 
-    vehicleType: null 
+  const [filters, setFilters] = useState<FilterState>({
+    minYear: null,
+    maxYear: null,
+    make: null,
+    model: null,
+    engineType: null,
+    fuelType: null,
+    drivetrain: null,
+    doors: null,
+    vehicleType: null
   });
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  // searchQuery state removed, using hook
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const isInitialLoadRef = useRef(true);
@@ -56,11 +64,9 @@ function DiscoverContent() {
       const vehicleData = await getVehicleSummaries(page, 24, filters);
 
       if (append) {
-        setVehicles(prev => [...prev, ...vehicleData]);
         setAllVehicles(prev => [...prev, ...vehicleData]);
         setHasMore(vehicleData.length === 24); // If we got a full page, there might be more
       } else {
-        setVehicles(vehicleData);
         setAllVehicles(vehicleData);
         setHasMore(vehicleData.length === 24);
       }
@@ -70,7 +76,6 @@ function DiscoverContent() {
       setError(errorMessage);
       // Set empty arrays on error so UI can show error state
       if (!append) {
-        setVehicles([]);
         setAllVehicles([]);
       }
     } finally {
@@ -113,33 +118,33 @@ function DiscoverContent() {
           drivetrains: options?.drivetrains?.length || 0,
           bodyTypes: options?.bodyTypes?.length || 0,
         });
-        
+
         // Validate that we got a proper response
         if (options && typeof options === 'object') {
           setFilterOptions(options);
         } else {
           console.error('Invalid filter options format:', options);
-          setFilterOptions({ 
-            years: [], 
-            makes: [], 
-            models: [], 
-            engineTypes: [], 
-            fuelTypes: [], 
-            drivetrains: [], 
-            bodyTypes: [] 
+          setFilterOptions({
+            years: [],
+            makes: [],
+            models: [],
+            engineTypes: [],
+            fuelTypes: [],
+            drivetrains: [],
+            bodyTypes: []
           });
         }
       } catch (err) {
         console.error('Failed to load filter options:', err);
         // Set empty arrays on error so UI doesn't break
-        setFilterOptions({ 
-          years: [], 
-          makes: [], 
-          models: [], 
-          engineTypes: [], 
-          fuelTypes: [], 
-          drivetrains: [], 
-          bodyTypes: [] 
+        setFilterOptions({
+          years: [],
+          makes: [],
+          models: [],
+          engineTypes: [],
+          fuelTypes: [],
+          drivetrains: [],
+          bodyTypes: []
         });
       }
     }
@@ -167,13 +172,11 @@ function DiscoverContent() {
         };
         const vehicleData = await getVehicleSummaries(1, 24, initialFilters);
 
-        setVehicles(vehicleData);
         setAllVehicles(vehicleData);
         setHasMore(vehicleData.length === 24);
       } catch (err) {
         console.error('Failed to initialize data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
-        setVehicles([]);
         setAllVehicles([]);
       } finally {
         setLoading(false);
@@ -186,77 +189,28 @@ function DiscoverContent() {
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-    if (!query.trim()) {
-      setVehicles(allVehicles);
-      return;
-    }
-
-    const searchLower = query.toLowerCase();
-    const searchTerms = searchLower.split(/\s+/); // Split by whitespace for multi-word search
-
-    const filtered = allVehicles.filter(vehicle => {
-      // Helper function to safely check if a field contains search term
-      const fieldContains = (field: any, term: string) => {
-        if (field == null) return false;
-        return String(field).toLowerCase().includes(term);
-      };
-
-      // Search in vehicle summary fields
-      const summaryMatch = searchTerms.every(term =>
-        fieldContains(vehicle.year, term) ||
-        fieldContains(vehicle.make, term) ||
-        fieldContains(vehicle.model, term)
-      );
-
-      // Search in trim-specific fields
-      const trimMatch = vehicle.trims.some(trim =>
-        searchTerms.every(term =>
-          fieldContains(trim.trim, term) ||
-          fieldContains(trim.trim_description, term) ||
-          fieldContains(trim.body_type, term) ||
-          fieldContains(trim.doors, term) ||
-          fieldContains(trim.cylinders, term) ||
-          fieldContains(trim.engine_size_l, term) ||
-          fieldContains(trim.horsepower_hp, term) ||
-          fieldContains(trim.drive_type, term) ||
-          fieldContains(trim.engine_type, term) ||
-          fieldContains(trim.pros, term) ||
-          fieldContains(trim.cons, term) ||
-          fieldContains(trim.country_of_origin, term) ||
-          fieldContains(trim.car_classification, term) ||
-          fieldContains(trim.platform_code_generation, term)
-        )
-      );
-
-      return summaryMatch || trimMatch;
-    });
-
-    setVehicles(filtered);
-  }, [allVehicles]);
+  }, [setSearchQuery]);
 
   const handleClearFilter = useCallback((key: keyof FilterState) => {
     setFilters(prev => ({ ...prev, [key]: null }));
   }, []);
 
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
-    setVehicles(allVehicles);
-  }, [allVehicles]);
+  // handleClearSearch is provided by useSearch
 
   return (
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
         <h1 className="text-4xl font-bold text-white mb-8">Discover</h1>
-        
+
         {/* Action Buttons - Always show immediately */}
-        <DiscoverActionButtons 
-          filters={filters} 
-          onFilterChange={setFilters} 
+        <DiscoverActionButtons
+          filters={filters}
+          onFilterChange={setFilters}
           filterOptions={filterOptions || { years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: [] }}
           onSearch={handleSearch}
         />
-        
+
         {/* Active Filters/Search Display */}
         <ActiveFiltersDisplay
           filters={filters}
@@ -264,7 +218,7 @@ function DiscoverContent() {
           onClearFilter={handleClearFilter}
           onClearSearch={handleClearSearch}
         />
-        
+
         {/* Gallery or Loading State */}
         {error ? (
           <div className="flex items-center justify-center min-h-[50vh]">
@@ -273,11 +227,11 @@ function DiscoverContent() {
         ) : loading ? (
           <GalleryLoadingSkeleton />
         ) : (
-          <VehicleGallery 
-            vehicles={vehicles} 
-            onLoadMore={loadMore} 
-            loadingMore={loadingMore} 
-            hasMore={hasMore && !searchQuery} 
+          <VehicleGallery
+            vehicles={vehicles}
+            onLoadMore={loadMore}
+            loadingMore={loadingMore}
+            hasMore={hasMore && !searchQuery}
           />
         )}
       </div>

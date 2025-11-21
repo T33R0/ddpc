@@ -26,7 +26,7 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/60 backdrop-blur-sm',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-background/80 backdrop-blur-sm',
         className
       )}
       {...props}
@@ -41,7 +41,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'bg-black/50 backdrop-blur-lg border-white/30 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] rounded-2xl shadow-lg duration-200 sm:max-w-lg',
+          'bg-background border-border data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] border rounded-2xl shadow-lg duration-200 sm:max-w-lg',
           className
         )}
         {...props}>
@@ -59,7 +59,7 @@ function DialogHeader({ className, children, hideCloseButton = false, ...props }
   return (
     <div
       data-slot="dialog-header"
-      className={cn('bg-black/50 backdrop-blur-lg flex flex-col gap-2 rounded-t-2xl border-b border-white/30 p-6 text-center sm:text-left', className)}
+      className={cn('bg-background flex flex-col gap-2 rounded-t-2xl border-b border-border p-6 text-center sm:text-left', className)}
       {...props}>
       {children}
       {!hideCloseButton && (
@@ -76,7 +76,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('bg-transparent flex flex-col gap-2 rounded-b-2xl border-t border-white/30 px-6 py-4 sm:flex-row sm:justify-end', className)}
+      className={cn('bg-transparent flex flex-col gap-2 rounded-b-2xl border-t border-border px-6 py-4 sm:flex-row sm:justify-end', className)}
       {...props}
     />
   );
@@ -86,7 +86,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn('font-heading text-xl leading-none font-bold text-white', className)}
+      className={cn('font-heading text-xl leading-none font-bold text-foreground', className)}
       {...props}
     />
   );

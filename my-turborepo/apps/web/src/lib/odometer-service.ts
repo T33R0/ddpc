@@ -85,7 +85,7 @@ export async function validateAndRecordOdometerReading(
       .insert({
         user_vehicle_id: vehicleId,
         reading_mi: newMileageValue,
-        recorded_at: new Date().toISOString(), // When this was logged in the system
+        recorded_at: newEventDate, // Use the actual event date, not system time
       })
       .select('id')
       .single();

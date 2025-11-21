@@ -36,7 +36,17 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
   // Fetch maintenance logs
   const { data: maintenanceLogs, error: maintenanceError } = await supabase
     .from('maintenance_log')
-    .select('id, description, cost, odometer, event_date, notes, service_provider')
+    .select(`
+      id,
+      cost,
+      odometer,
+      event_date,
+      notes,
+      service_provider,
+      service_items (
+        name
+      )
+    `)
     .eq('user_vehicle_id', vehicleId)
     .order('event_date', { ascending: false })
 
@@ -48,7 +58,19 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
   // Fetch mods
   const { data: mods, error: modsError } = await supabase
     .from('mods')
-    .select('id, title, description, cost, odometer, event_date, status, created_at')
+    .select(`
+      id,
+      cost,
+      odometer,
+      event_date,
+      status,
+      created_at,
+      notes,
+      mod_items (
+        name,
+        description
+      )
+    `)
     .eq('user_vehicle_id', vehicleId)
     .order('event_date', { ascending: false })
 
@@ -74,11 +96,11 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
 
   // Add maintenance events
   if (maintenanceLogs) {
-    maintenanceLogs.forEach(log => {
+    maintenanceLogs.forEach((log: any) => {
       events.push({
         id: `maintenance-${log.id}`,
         date: new Date(log.event_date),
-        title: log.description || 'Maintenance Service',
+        title: log.service_items?.name || 'Maintenance Service',
         description: log.notes || log.service_provider || '',
         type: 'maintenance',
         cost: log.cost || undefined,
@@ -89,13 +111,13 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
 
   // Add modification events
   if (mods) {
-    mods.forEach(mod => {
+    mods.forEach((mod: any) => {
       const eventDate = mod.event_date ? new Date(mod.event_date) : new Date(mod.created_at)
       events.push({
         id: `mod-${mod.id}`,
         date: eventDate,
-        title: mod.title || 'Vehicle Modification',
-        description: mod.description || '',
+        title: mod.mod_items?.name || 'Vehicle Modification',
+        description: mod.notes || mod.mod_items?.description || '',
         type: 'modification',
         cost: mod.cost || undefined,
         odometer: mod.odometer || undefined,
