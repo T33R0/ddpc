@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '../../lib/auth';
+import { useTheme } from '../../lib/theme-context';
 import { Button } from '@repo/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
 import { Input } from '@repo/ui/input';
@@ -31,6 +32,7 @@ type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme';
 
 export default function AccountPage() {
   const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle } = useAuth();
+  const { theme, setTheme, saveTheme } = useTheme();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [user, setUser] = useState<UserType | null>(null);
@@ -53,8 +55,7 @@ export default function AccountPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Theme preference state
-  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
+
 
   useEffect(() => {
     if (!loading && !authUser) {
@@ -828,24 +829,19 @@ export default function AccountPage() {
 
             {/* Theme Tab */}
             {activeTab === 'theme' && (
-              <Card
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white max-w-2xl"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
+              <Card className="max-w-2xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
+                  <CardTitle className="flex items-center gap-2">
                     <Palette className="h-5 w-5" />
                     Theme Preferences
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription>
                     Choose your preferred color theme for the application
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-card border border-border hover:border-accent">
                       <input
                         type="radio"
                         name="theme"
@@ -855,8 +851,8 @@ export default function AccountPage() {
                         className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-white">Light</div>
-                        <div className="text-sm text-gray-400">Use light theme</div>
+                        <div className="font-medium">Light</div>
+                        <div className="text-sm text-muted-foreground">Use light theme</div>
                       </div>
                     </label>
 
@@ -870,8 +866,8 @@ export default function AccountPage() {
                         className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-white">Dark</div>
-                        <div className="text-sm text-gray-400">Use dark theme</div>
+                        <div className="font-medium">Dark</div>
+                        <div className="text-sm text-muted-foreground">Use dark theme</div>
                       </div>
                     </label>
 
@@ -885,16 +881,16 @@ export default function AccountPage() {
                         className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-white">Auto</div>
-                        <div className="text-sm text-gray-400">Follow system preference</div>
+                        <div className="font-medium">Auto</div>
+                        <div className="text-sm text-muted-foreground">Follow system preference</div>
                       </div>
                     </label>
                   </div>
 
-                  <div className="pt-4 border-t border-white/20">
+                  <div className="pt-4 border-t border-border">
                     <Button
                       onClick={() => {
-                        // TODO: Implement theme persistence
+                        saveTheme(theme);
                         toast.success('Theme preference saved!');
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
