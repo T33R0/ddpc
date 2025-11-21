@@ -4,7 +4,7 @@ import React from 'react';
 
 export function Hero() {
   return (
-    <div className="relative bg-black text-white py-40">
+    <div className="relative bg-background text-foreground py-40">
       <div
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -16,10 +16,10 @@ export function Hero() {
         <h1 className="text-5xl md:text-7xl font-bold tracking-tighter">
           Stop <span className="text-red-500">Winging</span> It.
         </h1>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Your build is more than a list of parts. It's a project. A legacy. Stop tracking it in notebooks and spreadsheets. ddpc is the source of truth for your garage, where every part, every repair, and every mile is logged and ready.
         </p>
-        <div className="text-lg font-medium text-slate-400">
+        <div className="text-lg font-medium text-muted-foreground">
           ↓ Scroll to explore ddpc
         </div>
       </div>

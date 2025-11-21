@@ -21,14 +21,14 @@ const thirdColumn = testimonials.slice(6, 9);
 
 export function Testimonials() {
   return (
-    <section className="py-20 bg-black text-white">
+    <section className="py-20 bg-background text-foreground">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <div className="inline-block border border-slate-700 py-1 px-4 rounded-lg mb-6 text-sm text-slate-300">Testimonials</div>
+          <div className="inline-block border border-border py-1 px-4 rounded-lg mb-6 text-sm text-muted-foreground">Testimonials</div>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6">
             What Our Users Say
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             See what our customers have to say about ddpc.
           </p>
         </div>

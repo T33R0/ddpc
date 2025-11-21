@@ -37,8 +37,8 @@ export const TestimonialsColumn = ({
     <div className="flex-1 space-y-8 overflow-hidden">
       <motion.div ref={columnRef} animate={controls} className="space-y-8">
         {[...testimonials, ...testimonials].map((testimonial, index) => (
-          <div key={index} className="bg-[#1E1E1E] p-6 rounded-2xl border border-slate-800 w-full">
-            <p className="text-slate-300 mb-6 text-sm">{`"${testimonial.text}"`}</p>
+          <div key={index} className="bg-card p-6 rounded-2xl border border-border w-full">
+            <p className="text-muted-foreground mb-6 text-sm">{`"${testimonial.text}"`}</p>
             <div className="flex items-center">
               <Image
                 src={testimonial.image}
@@ -48,8 +48,8 @@ export const TestimonialsColumn = ({
                 className="rounded-full mr-4"
               />
               <div>
-                <div className="font-semibold text-white text-sm">{testimonial.name}</div>
-                <div className="text-xs text-slate-400">{testimonial.role}</div>
+                <div className="font-semibold text-foreground text-sm">{testimonial.name}</div>
+                <div className="text-xs text-muted-foreground">{testimonial.role}</div>
               </div>
             </div>
           </div>

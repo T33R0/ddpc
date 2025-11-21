@@ -24,7 +24,7 @@ export const ZoomParallax = ({ images }: { images: { src: string; alt: string }[
   }
 
   return (
-    <div ref={container} className="relative h-[300vh] bg-black">
+    <div ref={container} className="relative h-[300vh] bg-background">
       <div className="sticky top-0 h-screen overflow-hidden">
         {images.slice(0, 7).map((image, index) => {
           const scale = scales[index]!;
