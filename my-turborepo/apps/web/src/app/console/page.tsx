@@ -12,10 +12,12 @@ import { LogServiceModal } from '../../components/LogServiceModal';
 import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleton';
 import { useSearch } from '../../lib/hooks/useSearch';
 import { searchConsoleVehicle } from '../../lib/search';
+import { useConsoleStats } from '../../lib/hooks/useConsoleStats';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
   const { data: vehiclesData, isLoading: vehiclesLoading } = useVehicles();
+  const { data: consoleStats, isLoading: statsLoading } = useConsoleStats();
   const router = useRouter();
   const vehicles = vehiclesData?.vehicles || [];
 
@@ -42,15 +44,17 @@ export default function ConsolePage() {
   }
 
   const filteredVehicles = searchFilteredVehicles.filter(vehicle => {
+    const serviceStatus = consoleStats?.vehicleServiceStatus?.[vehicle.id];
+
     switch (selectedFilter) {
       case 'Active':
-        return true; // For now, assume all vehicles are active
+        return vehicle.current_status === 'daily_driver';
       case 'Needs Attention':
-        return Math.random() > 0.7; // Mock filter
+        return serviceStatus?.needsAttention || false;
       case 'Service Due':
-        return Math.random() > 0.8; // Mock filter
+        return serviceStatus?.serviceDue || false;
       case 'Inactive':
-        return Math.random() > 0.9; // Mock filter
+        return ['parked', 'retired', 'sold'].includes(vehicle.current_status);
       default:
         return true;
     }
@@ -207,11 +211,19 @@ export default function ConsolePage() {
                           </div>
                           <div className="text-center">
                             <p className="text-xs text-gray-400">Fuel Level</p>
-                            <p className="text-sm font-medium text-white">---</p>
+                            <p className="text-sm font-medium text-white">
+                              {consoleStats?.vehicleStats?.[vehicle.id]?.fuelPercentage
+                                ? `${consoleStats.vehicleStats[vehicle.id]?.fuelPercentage}%`
+                                : '---'}
+                            </p>
                           </div>
                           <div className="text-center">
                             <p className="text-xs text-gray-400">Avg. MPG</p>
-                            <p className="text-sm font-medium text-white">---</p>
+                            <p className="text-sm font-medium text-white">
+                              {consoleStats?.vehicleStats?.[vehicle.id]?.avgMpg
+                                ? consoleStats.vehicleStats[vehicle.id]?.avgMpg?.toFixed(1)
+                                : '---'}
+                            </p>
                           </div>
                         </div>
 
@@ -337,15 +349,21 @@ export default function ConsolePage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-white">$0</p>
+                    <p className="text-2xl font-bold text-white">
+                      ${consoleStats?.financials?.totalSpend?.toLocaleString() || '0'}
+                    </p>
                     <p className="text-xs text-gray-400">Total Spend</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-white">$0</p>
+                    <p className="text-2xl font-bold text-white">
+                      ${consoleStats?.financials?.avgMonthly?.toLocaleString() || '0'}
+                    </p>
                     <p className="text-xs text-gray-400">Avg Monthly</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-white">0</p>
+                    <p className="text-2xl font-bold text-white">
+                      {consoleStats?.financials?.totalLogs || 0}
+                    </p>
                     <p className="text-xs text-gray-400">Total Logs</p>
                   </div>
                 </div>

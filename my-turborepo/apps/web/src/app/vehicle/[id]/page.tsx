@@ -12,6 +12,10 @@ type VehiclePageProps = {
   }>
 }
 
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 //
 // This is now an async Server Component
 //
@@ -94,15 +98,15 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // Note: RLS policy has a case sensitivity issue - it checks for 'public' but DB stores 'PUBLIC'
   // Use service role client to bypass RLS and fetch public vehicles
   const slugIsUUID = isUUID(vehicleSlug)
-  
+
   if (!vehicle) {
     // Use service role client to fetch public vehicle (bypasses RLS)
     const publicVehicleData = await getPublicVehicleBySlug(vehicleSlug)
-    
+
     if (publicVehicleData) {
       vehicle = publicVehicleData
       vehicleError = null
-      
+
       console.log('VehicleDetailPage: Resolved public vehicle via service role lookup', vehicle.id)
       isOwner = userId ? vehicle.owner_id === userId : false
     } else {
@@ -169,7 +173,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // --- 3. Transform Data ---
   // Store the actual nickname for URL generation
   const vehicleNickname = vehicle.nickname || null
-  
+
   const vehicleWithData: Vehicle = {
     id: vehicle.id,
     name: vehicle.nickname || vehicle.title || vehicleSlug || `${vehicle.vehicle_data?.year || vehicle.year || ''} ${vehicle.vehicle_data?.make || vehicle.make || ''} ${vehicle.vehicle_data?.model || vehicle.model || ''} ${vehicle.vehicle_data?.trim || vehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
@@ -305,7 +309,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // Also redirect if the URL slug doesn't match the current nickname (handles nickname changes)
   const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)
   const slugMatchesNickname = vehicleNickname && vehicleSlug === vehicleNickname
-  
+
   if (vehicleNickname && (isLikelyUUID || !slugMatchesNickname)) {
     // Redirect to nickname URL if accessed via UUID, or if URL doesn't match current nickname
     redirect(`/vehicle/${encodeURIComponent(vehicleNickname)}`)

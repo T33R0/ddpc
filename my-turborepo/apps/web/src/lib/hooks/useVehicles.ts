@@ -24,7 +24,12 @@ export function useVehicles() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/garage/vehicles');
+      const response = await fetch('/api/garage/vehicles', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -74,7 +79,12 @@ export function useStoredVehicles() {
         setCurrentPage(0);
       }
 
-      const response = await fetch(`/api/garage/vehicles?page=${page}&limit=24&stored_only=true`);
+      const response = await fetch(`/api/garage/vehicles?page=${page}&limit=24&stored_only=true`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
 
       if (!response.ok) {
         if (response.status === 401) {

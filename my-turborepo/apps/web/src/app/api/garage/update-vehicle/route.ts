@@ -6,6 +6,7 @@ console.log('SUPABASE_SERVICE_KEY loaded:', !!process.env.SUPABASE_SERVICE_ROLE_
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { revalidatePath } from 'next/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -131,6 +132,11 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Vehicle updated successfully:', updatedVehicle);
+
+    // Revalidate all pages that might display this vehicle's data
+    revalidatePath('/garage')
+    revalidatePath('/console')
+    revalidatePath(`/vehicle/${vehicleId}`)
 
     return NextResponse.json({
       success: true,

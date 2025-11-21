@@ -229,16 +229,9 @@ export default function AccountPage() {
 
   if (loading || isSigningOut) {
     return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
+      <section className="relative py-12 min-h-screen">
         <div className="relative container px-4 md:px-6 pt-24 flex items-center justify-center min-h-[60vh]">
-          <div className="text-white text-lg">
+          <div className="text-foreground text-lg">
             {isSigningOut ? 'Signing out...' : 'Loading...'}
           </div>
         </div>
@@ -249,73 +242,60 @@ export default function AccountPage() {
   // Show unauthorized access page for non-authenticated users
   if (!loading && !authUser) {
     return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
-
+      <section className="relative py-12 min-h-screen">
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="max-w-md mx-auto flex items-center justify-center min-h-[60vh]">
-            <Card 
-              className="bg-black/50 backdrop-blur-lg rounded-2xl text-white w-full"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-            >
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Access Restricted</CardTitle>
-              <CardDescription className="text-gray-400">
-                You must be signed in to access this page
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Button
-                  onClick={handleSignInClick}
-                  className="w-full"
-                  size="lg"
-                >
-                  Sign In
-                </Button>
+            <Card className="w-full">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Access Restricted</CardTitle>
+                <CardDescription className="text-gray-400">
+                  You must be signed in to access this page
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleSignInClick}
+                    className="w-full"
+                    size="lg"
+                  >
+                    Sign In
+                  </Button>
 
-                <Button
-                  onClick={handleSignUpClick}
-                  variant="outline"
-                  className="w-full border-gray-700 hover:bg-gray-800"
-                  size="lg"
-                >
-                  Create Account
-                </Button>
+                  <Button
+                    onClick={handleSignUpClick}
+                    variant="outline"
+                    className="w-full border-gray-700 hover:bg-gray-800"
+                    size="lg"
+                  >
+                    Create Account
+                  </Button>
 
-                <Button
-                  onClick={handleGoBack}
-                  variant="ghost"
-                  className="w-full text-gray-400 hover:text-white hover:bg-gray-800"
-                >
-                  Go Back
-                </Button>
-              </div>
+                  <Button
+                    onClick={handleGoBack}
+                    variant="ghost"
+                    className="w-full text-gray-400 hover:text-white hover:bg-gray-800"
+                  >
+                    Go Back
+                  </Button>
+                </div>
 
-              <div className="text-center text-sm text-gray-500 mt-6">
-                <p>Manage your profile, security settings, and account preferences</p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="text-center text-sm text-gray-500 mt-6">
+                  <p>Manage your profile, security settings, and account preferences</p>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Auth Modal */}
-          <AuthModal
-            open={authModalOpen}
-            onOpenChange={setAuthModalOpen}
-            onGoogleSignIn={handleGoogleSignIn}
-            onEmailSignUp={handleEmailSignUp}
-            onEmailSignIn={handleEmailSignIn}
-            initialMode={isSignUpMode ? 'signup' : 'signin'}
-          />
-        </div>
+            {/* Auth Modal */}
+            <AuthModal
+              open={authModalOpen}
+              onOpenChange={setAuthModalOpen}
+              onGoogleSignIn={handleGoogleSignIn}
+              onEmailSignUp={handleEmailSignUp}
+              onEmailSignIn={handleEmailSignIn}
+              initialMode={isSignUpMode ? 'signup' : 'signin'}
+            />
+          </div>
         </div>
       </section>
     );
@@ -323,16 +303,9 @@ export default function AccountPage() {
 
   if (!user) {
     return (
-      <section className="relative py-12 bg-black min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
+      <section className="relative py-12 min-h-screen">
         <div className="relative container px-4 md:px-6 pt-24 flex items-center justify-center min-h-[60vh]">
-          <div className="text-white text-lg">Loading profile...</div>
+          <div className="text-foreground text-lg">Loading profile...</div>
         </div>
       </section>
     );
@@ -358,14 +331,7 @@ export default function AccountPage() {
 
   return (
     <>
-      <section className="relative py-12 bg-black min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
+      <section className="relative py-12 min-h-screen">
 
         <div className="relative container px-4 md:px-6 pt-24 max-w-4xl mx-auto">
           <div className="mb-8">
@@ -381,600 +347,565 @@ export default function AccountPage() {
             <p className="text-lg text-gray-400">Manage your account settings and preferences</p>
 
             {/* Member info bar */}
-            <div 
-              className="mt-4 p-4 bg-black/50 backdrop-blur-lg rounded-2xl"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-            >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-400">
-                    Member since: {new Date(user.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Crown className={`h-4 w-4 ${getPlanColor(user.plan)}`} />
-                  <span className={`text-sm font-medium ${getPlanColor(user.plan)}`}>
-                    {getPlanIcon(user.plan)} {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-400">
-                    Email confirmed
-                  </span>
+            <div className="mt-4 p-4 bg-card border border-border rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">
+                      Member since: {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Crown className={`h-4 w-4 ${getPlanColor(user.plan)}`} />
+                    <span className={`text-sm font-medium ${getPlanColor(user.plan)}`}>
+                      {getPlanIcon(user.plan)} {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">
+                      Email confirmed
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-6">
-          <ToggleGroup
-            type="single"
-            value={activeTab}
-            onValueChange={(value) => value && setActiveTab(value as TabType)}
-            className="justify-start"
-          >
-            <ToggleGroupItem value="profile" className="data-[state=on]:bg-gray-700">
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </ToggleGroupItem>
-            <ToggleGroupItem value="security" className="data-[state=on]:bg-gray-700">
-              <Shield className="h-4 w-4 mr-2" />
-              Security
-            </ToggleGroupItem>
-            <ToggleGroupItem value="billing" className="data-[state=on]:bg-gray-700">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Billing
-            </ToggleGroupItem>
-            <ToggleGroupItem value="account" className="data-[state=on]:bg-gray-700">
-              <Settings className="h-4 w-4 mr-2" />
-              Account
-            </ToggleGroupItem>
-            <ToggleGroupItem value="theme" className="data-[state=on]:bg-gray-700">
-              <Palette className="h-4 w-4 mr-2" />
-              Theme
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+          {/* Tab Navigation */}
+          <div className="mb-6">
+            <ToggleGroup
+              type="single"
+              value={activeTab}
+              onValueChange={(value) => value && setActiveTab(value as TabType)}
+              className="justify-start"
+            >
+              <ToggleGroupItem value="profile" className="data-[state=on]:bg-gray-700">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </ToggleGroupItem>
+              <ToggleGroupItem value="security" className="data-[state=on]:bg-gray-700">
+                <Shield className="h-4 w-4 mr-2" />
+                Security
+              </ToggleGroupItem>
+              <ToggleGroupItem value="billing" className="data-[state=on]:bg-gray-700">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Billing
+              </ToggleGroupItem>
+              <ToggleGroupItem value="account" className="data-[state=on]:bg-gray-700">
+                <Settings className="h-4 w-4 mr-2" />
+                Account
+              </ToggleGroupItem>
+              <ToggleGroupItem value="theme" className="data-[state=on]:bg-gray-700">
+                <Palette className="h-4 w-4 mr-2" />
+                Theme
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
 
-        {/* Tab Content */}
-        <div className="space-y-6">
-          {/* Profile Tab */}
-          {activeTab === 'profile' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Profile Information */}
-              <Card 
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Profile Information
-                  </CardTitle>
-                  <CardDescription>
-                    Update your public profile information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username" className="text-gray-300">Username *</Label>
-                    <Input
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                      placeholder="your_username"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>
-                    <Input
-                      id="displayName"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                      placeholder="Your Display Name"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="text-gray-300">Location</Label>
-                    <Input
-                      id="location"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                      placeholder="City, Country"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="website" className="text-gray-300">Website</Label>
-                    <Input
-                      id="website"
-                      type="url"
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                      placeholder="https://yourwebsite.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-gray-300">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                      placeholder="Tell us about yourself..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleUpdateProfile}
-                    disabled={isLoading}
-                    className="w-full"
-                  >
-                    {isLoading ? 'Updating...' : 'Update Profile'}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Avatar & Privacy Settings */}
-              <Card 
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ImageIcon className="h-5 w-5" />
-                    Avatar & Privacy
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your profile picture and privacy settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="avatarUrl" className="text-gray-300">Avatar URL</Label>
-                    <Input
-                      id="avatarUrl"
-                      type="url"
-                      value={avatarUrl}
-                      onChange={(e) => setAvatarUrl(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                      placeholder="https://example.com/avatar.jpg"
-                    />
-                  </div>
-
-                  {avatarUrl && (
-                    <div className="flex justify-center">
-                      <img
-                        src={avatarUrl}
-                        alt="Avatar preview"
-                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
+          {/* Tab Content */}
+          <div className="space-y-6">
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Profile Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Profile Information
+                    </CardTitle>
+                    <CardDescription>
+                      Update your public profile information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="username" className="text-gray-300">Username *</Label>
+                      <Input
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        placeholder="your_username"
                       />
                     </div>
-                  )}
 
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isPublic"
-                      checked={isPublic}
-                      onChange={(e) => setIsPublic(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/30 bg-black/30 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-                    />
-                    <Label htmlFor="isPublic" className="text-sm text-gray-300">
-                      Make profile public
-                    </Label>
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>
+                      <Input
+                        id="displayName"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        placeholder="Your Display Name"
+                      />
+                    </div>
 
-                  <div className="text-xs text-gray-400">
-                    {isPublic ? (
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        Your profile is visible to other users
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <EyeOff className="h-3 w-3" />
-                        Your profile is private
+                    <div className="space-y-2">
+                      <Label htmlFor="location" className="text-gray-300">Location</Label>
+                      <Input
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        placeholder="City, Country"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="website" className="text-gray-300">Website</Label>
+                      <Input
+                        id="website"
+                        type="url"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        placeholder="https://yourwebsite.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bio" className="text-gray-300">Bio</Label>
+                      <Textarea
+                        id="bio"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        placeholder="Tell us about yourself..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleUpdateProfile}
+                      disabled={isLoading}
+                      className="w-full"
+                    >
+                      {isLoading ? 'Updating...' : 'Update Profile'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Avatar & Privacy Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" />
+                      Avatar & Privacy
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your profile picture and privacy settings
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="avatarUrl" className="text-gray-300">Avatar URL</Label>
+                      <Input
+                        id="avatarUrl"
+                        type="url"
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        placeholder="https://example.com/avatar.jpg"
+                      />
+                    </div>
+
+                    {avatarUrl && (
+                      <div className="flex justify-center">
+                        <img
+                          src={avatarUrl}
+                          alt="Avatar preview"
+                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
                       </div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
-          {/* Security Tab */}
-          {activeTab === 'security' && (
-            <Card 
-              className="bg-black/50 backdrop-blur-lg rounded-2xl text-white max-w-2xl"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Security Settings
-                </CardTitle>
-                <CardDescription>
-                  Update your password and security preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword" className="text-gray-300">Current Password</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                    placeholder="Enter your current password"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-gray-300">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                    placeholder="Enter your new password"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-gray-300">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
-                    placeholder="Confirm your new password"
-                  />
-                </div>
-
-                <Button
-                  onClick={handleUpdatePassword}
-                  disabled={isLoading || !newPassword || !confirmPassword || !currentPassword}
-                  className="w-full"
-                >
-                  {isLoading ? 'Updating Password...' : 'Update Password'}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Billing Tab */}
-          {activeTab === 'billing' && (
-            <div className="space-y-6">
-              <Card 
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Current Plan
-                  </CardTitle>
-                  <CardDescription>
-                    Your current subscription and billing information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div 
-                    className="flex items-center justify-between p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                    style={{
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-2xl">{getPlanIcon(user.plan)}</div>
-                      <div>
-                        <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
-                          {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                          {user.plan === 'free' && 'Basic features with limited usage'}
-                          {user.plan === 'builder' && 'Enhanced features for enthusiasts'}
-                          {user.plan === 'pro' && 'Full access to all premium features'}
-                        </p>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="isPublic"
+                        checked={isPublic}
+                        onChange={(e) => setIsPublic(e.target.checked)}
+                        className="w-4 h-4 rounded border-white/30 bg-black/30 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                      <Label htmlFor="isPublic" className="text-sm text-gray-300">
+                        Make profile public
+                      </Label>
                     </div>
-                    <Button variant="outline" disabled>
-                      Current Plan
-                    </Button>
-                  </div>
 
-                  <div 
-                    className="mt-4 p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                    style={{
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                  >
-                    <h4 className="font-medium mb-2">Plan Features</h4>
-                    <ul className="text-sm text-gray-400 space-y-1">
-                      {user.plan === 'free' && (
-                        <>
-                          <li>• Access to basic vehicle database</li>
-                          <li>• Limited garage size (5 vehicles)</li>
-                          <li>• Basic search and filtering</li>
-                        </>
+                    <div className="text-xs text-gray-400">
+                      {isPublic ? (
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          Your profile is visible to other users
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <EyeOff className="h-3 w-3" />
+                          Your profile is private
+                        </div>
                       )}
-                      {user.plan === 'builder' && (
-                        <>
-                          <li>• Everything in Free</li>
-                          <li>• Unlimited garage size</li>
-                          <li>• Advanced search and filtering</li>
-                          <li>• Export capabilities</li>
-                        </>
-                      )}
-                      {user.plan === 'pro' && (
-                        <>
-                          <li>• Everything in Builder</li>
-                          <li>• Priority support</li>
-                          <li>• Advanced analytics</li>
-                          <li>• API access</li>
-                          <li>• Custom integrations</li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-              <Card 
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
-                <CardHeader>
-                  <CardTitle>Upgrade Options</CardTitle>
-                  <CardDescription>
-                    Unlock more features with a premium plan
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-gray-400 mb-4">
-                      Billing management and plan upgrades coming soon!
-                    </p>
-                    <Button variant="outline" disabled>
-                      Manage Billing
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Account Tab */}
-          {activeTab === 'account' && (
-            <div className="space-y-6">
-              <Card 
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
+            {/* Security Tab */}
+            {activeTab === 'security' && (
+              <Card className="max-w-2xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Account Settings
+                    <Shield className="h-5 w-5" />
+                    Security Settings
                   </CardTitle>
                   <CardDescription>
-                    Manage your account preferences and data
+                    Update your password and security preferences
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div 
-                      className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                      style={{
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      <h4 className="font-medium mb-2 text-white">Account Information</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">User ID:</span>
-                          <span className="font-mono text-xs text-white">{user.id.slice(0, 8)}...</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Email:</span>
-                          <span className="text-white">{user.email}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Role:</span>
-                          <span className="capitalize text-white">{user.role}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Status:</span>
-                          <span className={user.banned ? 'text-red-400' : 'text-green-400'}>
-                            {user.banned ? 'Banned' : 'Active'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div 
-                      className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                      style={{
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      <h4 className="font-medium mb-2 text-white">Privacy Settings</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Profile Visibility:</span>
-                          <span className="text-white">{isPublic ? 'Public' : 'Private'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Last Updated:</span>
-                          <span className="text-white">{new Date(user.updatedAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword" className="text-gray-300">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                      placeholder="Enter your current password"
+                    />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword" className="text-gray-300">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                      placeholder="Enter your new password"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-gray-300">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                      placeholder="Confirm your new password"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleUpdatePassword}
+                    disabled={isLoading || !newPassword || !confirmPassword || !currentPassword}
+                    className="w-full"
+                  >
+                    {isLoading ? 'Updating Password...' : 'Update Password'}
+                  </Button>
                 </CardContent>
               </Card>
+            )}
 
-              <Card 
-                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+            {/* Billing Tab */}
+            {activeTab === 'billing' && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Current Plan
+                    </CardTitle>
+                    <CardDescription>
+                      Your current subscription and billing information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      className="flex items-center justify-between p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                      style={{
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">{getPlanIcon(user.plan)}</div>
+                        <div>
+                          <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
+                            {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
+                          </h3>
+                          <p className="text-sm text-gray-400">
+                            {user.plan === 'free' && 'Basic features with limited usage'}
+                            {user.plan === 'builder' && 'Enhanced features for enthusiasts'}
+                            {user.plan === 'pro' && 'Full access to all premium features'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="outline" disabled>
+                        Current Plan
+                      </Button>
+                    </div>
+
+                    <div
+                      className="mt-4 p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                      style={{
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      <h4 className="font-medium mb-2">Plan Features</h4>
+                      <ul className="text-sm text-gray-400 space-y-1">
+                        {user.plan === 'free' && (
+                          <>
+                            <li>• Access to basic vehicle database</li>
+                            <li>• Limited garage size (5 vehicles)</li>
+                            <li>• Basic search and filtering</li>
+                          </>
+                        )}
+                        {user.plan === 'builder' && (
+                          <>
+                            <li>• Everything in Free</li>
+                            <li>• Unlimited garage size</li>
+                            <li>• Advanced search and filtering</li>
+                            <li>• Export capabilities</li>
+                          </>
+                        )}
+                        {user.plan === 'pro' && (
+                          <>
+                            <li>• Everything in Builder</li>
+                            <li>• Priority support</li>
+                            <li>• Advanced analytics</li>
+                            <li>• API access</li>
+                            <li>• Custom integrations</li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Upgrade Options</CardTitle>
+                    <CardDescription>
+                      Unlock more features with a premium plan
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <p className="text-gray-400 mb-4">
+                        Billing management and plan upgrades coming soon!
+                      </p>
+                      <Button variant="outline" disabled>
+                        Manage Billing
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Account Tab */}
+            {activeTab === 'account' && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Account Settings
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your account preferences and data
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div
+                        className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                        style={{
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                        }}
+                      >
+                        <h4 className="font-medium mb-2 text-white">Account Information</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">User ID:</span>
+                            <span className="font-mono text-xs text-white">{user.id.slice(0, 8)}...</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Email:</span>
+                            <span className="text-white">{user.email}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Role:</span>
+                            <span className="capitalize text-white">{user.role}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Status:</span>
+                            <span className={user.banned ? 'text-red-400' : 'text-green-400'}>
+                              {user.banned ? 'Banned' : 'Active'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
+                        style={{
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                        }}
+                      >
+                        <h4 className="font-medium mb-2 text-white">Privacy Settings</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Profile Visibility:</span>
+                            <span className="text-white">{isPublic ? 'Public' : 'Private'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Last Updated:</span>
+                            <span className="text-white">{new Date(user.updatedAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  }}
+                >
+                  <CardHeader>
+                    <CardTitle>Account Actions</CardTitle>
+                    <CardDescription>
+                      Manage your account status and data
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-4 flex-wrap">
+                      <Button
+                        onClick={handleSignOut}
+                        disabled={isSigningOut}
+                        variant="outline"
+                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                      >
+                        {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                      </Button>
+
+                      <Button variant="outline" disabled>
+                        Export Data
+                      </Button>
+
+                      <Button variant="outline" disabled className="border-red-600 text-red-400">
+                        Delete Account
+                      </Button>
+                    </div>
+
+                    <div
+                      className="mt-4 p-4 bg-red-900/20 rounded-lg"
+                      style={{
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                      }}
+                    >
+                      <h4 className="font-medium text-red-400 mb-2">Danger Zone</h4>
+                      <p className="text-sm text-gray-400">
+                        Account deletion and data export features are coming soon. These actions cannot be undone.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Theme Tab */}
+            {activeTab === 'theme' && (
+              <Card
+                className="bg-black/50 backdrop-blur-lg rounded-2xl text-white max-w-2xl"
                 style={{
                   border: '1px solid rgba(255, 255, 255, 0.3)',
                 }}
               >
                 <CardHeader>
-                  <CardTitle>Account Actions</CardTitle>
-                  <CardDescription>
-                    Manage your account status and data
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <Palette className="h-5 w-5" />
+                    Theme Preferences
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Choose your preferred color theme for the application
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4 flex-wrap">
-                    <Button
-                      onClick={handleSignOut}
-                      disabled={isSigningOut}
-                      variant="outline"
-                      className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                    >
-                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
-                    </Button>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                      <input
+                        type="radio"
+                        name="theme"
+                        value="light"
+                        checked={theme === 'light'}
+                        onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
+                        className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-white">Light</div>
+                        <div className="text-sm text-gray-400">Use light theme</div>
+                      </div>
+                    </label>
 
-                    <Button variant="outline" disabled>
-                      Export Data
-                    </Button>
+                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                      <input
+                        type="radio"
+                        name="theme"
+                        value="dark"
+                        checked={theme === 'dark'}
+                        onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
+                        className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-white">Dark</div>
+                        <div className="text-sm text-gray-400">Use dark theme</div>
+                      </div>
+                    </label>
 
-                    <Button variant="outline" disabled className="border-red-600 text-red-400">
-                      Delete Account
-                    </Button>
+                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                      <input
+                        type="radio"
+                        name="theme"
+                        value="auto"
+                        checked={theme === 'auto'}
+                        onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
+                        className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-white">Auto</div>
+                        <div className="text-sm text-gray-400">Follow system preference</div>
+                      </div>
+                    </label>
                   </div>
 
-                  <div 
-                    className="mt-4 p-4 bg-red-900/20 rounded-lg"
-                    style={{
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                    }}
-                  >
-                    <h4 className="font-medium text-red-400 mb-2">Danger Zone</h4>
-                    <p className="text-sm text-gray-400">
-                      Account deletion and data export features are coming soon. These actions cannot be undone.
-                    </p>
+                  <div className="pt-4 border-t border-white/20">
+                    <Button
+                      onClick={() => {
+                        // TODO: Implement theme persistence
+                        toast.success('Theme preference saved!');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Save Theme Preference
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
-
-          {/* Theme Tab */}
-          {activeTab === 'theme' && (
-            <Card 
-              className="bg-black/50 backdrop-blur-lg rounded-2xl text-white max-w-2xl"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Palette className="h-5 w-5" />
-                  Theme Preferences
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Choose your preferred color theme for the application
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
-                    <input
-                      type="radio"
-                      name="theme"
-                      value="light"
-                      checked={theme === 'light'}
-                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-white">Light</div>
-                      <div className="text-sm text-gray-400">Use light theme</div>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
-                    <input
-                      type="radio"
-                      name="theme"
-                      value="dark"
-                      checked={theme === 'dark'}
-                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-white">Dark</div>
-                      <div className="text-sm text-gray-400">Use dark theme</div>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
-                    <input
-                      type="radio"
-                      name="theme"
-                      value="auto"
-                      checked={theme === 'auto'}
-                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-white">Auto</div>
-                      <div className="text-sm text-gray-400">Follow system preference</div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="pt-4 border-t border-white/20">
-                  <Button
-                    onClick={() => {
-                      // TODO: Implement theme persistence
-                      toast.success('Theme preference saved!');
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Save Theme Preference
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+            )}
+          </div>
         </div>
       </section>
     </>

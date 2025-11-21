@@ -18,16 +18,16 @@ export function LogoutModal() {
 
   return (
     <Modal open={showLogoutModal} onOpenChange={setShowLogoutModal}>
-      <ModalContent className="bg-black/90 border-neutral-800">
+      <ModalContent>
         <ModalHeader>
-          <ModalTitle className="text-white">Logout Successful</ModalTitle>
+          <ModalTitle>Logout Successful</ModalTitle>
         </ModalHeader>
-        <ModalDescription className="text-gray-300">
+        <ModalDescription>
           You have successfully logged out of your account.
         </ModalDescription>
         <ModalFooter>
           <ModalClose asChild>
-            <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-black">
+            <Button variant="outline">
               Thanks!
             </Button>
           </ModalClose>
