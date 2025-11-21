@@ -9,10 +9,10 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
 import { Fuel } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { 
-  AddFuelDialog, 
-  FuelHistoryChart, 
-  FuelLogEntries 
+import {
+  AddFuelDialog,
+  FuelHistoryChart,
+  FuelLogEntries
 } from './components'
 import { VehicleFuelData } from './lib/getVehicleFuelData'
 
@@ -24,7 +24,7 @@ interface FuelPageClientProps {
 function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefined; factoryMpg: number | undefined }) {
   if (!factoryMpg || !averageMpg) {
     return (
-      <Card 
+      <Card
         className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
         style={{
           border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -105,14 +105,11 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   const needleEndY = centerY + Math.sin(angleRad) * needleLength
 
   return (
-    <Card 
-      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-      }}
+    <Card
+      className="bg-card rounded-2xl text-foreground border border-border"
     >
       <CardHeader>
-        <CardTitle className="text-white text-lg">MPG Health</CardTitle>
+        <CardTitle className="text-foreground text-lg">MPG Health</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center justify-center">
@@ -123,7 +120,7 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
               <path
                 d={`M 50 150 A 100 100 0 0 1 250 150`}
                 fill="none"
-                stroke="#374151"
+                stroke="hsl(var(--border))"
                 strokeWidth="20"
                 strokeLinecap="round"
               />
@@ -191,25 +188,25 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
             {/* Labels */}
             <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-2">
               <div className="text-left">
-                <p className="text-xs text-gray-400">{minMpg.toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground">{minMpg.toFixed(0)}</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-blue-400 font-semibold">Factory: {factoryMpg.toFixed(0)}</p>
+                <p className="text-xs text-blue-500 font-semibold">Factory: {factoryMpg.toFixed(0)}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">{maxMpg.toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground">{maxMpg.toFixed(0)}</p>
               </div>
             </div>
           </div>
 
           {/* Current MPG Display */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-400 mb-1">Your Average MPG</p>
+            <p className="text-sm text-muted-foreground mb-1">Your Average MPG</p>
             <p className="text-3xl font-bold" style={{ color: needleColor }}>
               {averageMpg.toFixed(1)}
             </p>
             {difference !== 0 && (
-              <p className={`text-sm mt-2 ${difference > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-sm mt-2 ${difference > 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {difference > 0 ? '+' : ''}{difference.toFixed(1)} MPG vs Factory
               </p>
             )}
@@ -228,12 +225,12 @@ export function FuelPageClient({ fuelData }: FuelPageClientProps) {
     <>
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-white">Vehicle Fuel</h1>
-          <p className="text-lg text-gray-400 mt-2">Fuel economy and consumption tracking</p>
+          <h1 className="text-4xl font-bold text-foreground">Vehicle Fuel</h1>
+          <p className="text-lg text-muted-foreground mt-2">Fuel economy and consumption tracking</p>
         </div>
         <Button
           onClick={() => setIsFuelModalOpen(true)}
-          className="bg-red-600 hover:bg-red-700 text-white"
+          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
         >
           <Fuel className="mr-2 h-4 w-4" /> Log Fuel
         </Button>

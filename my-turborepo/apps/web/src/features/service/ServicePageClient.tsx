@@ -134,16 +134,16 @@ export function ServicePageClient({
 }: ServicePageClientProps) {
   const router = useRouter()
   const servicePlanViewRef = useRef<ServicePlanViewRef>(null)
-  
+
   // Modal state for Service dialog
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false)
 
   // This will be used to pass a selected plan item to the modal
   const [selectedPlanItem, setSelectedPlanItem] = useState<ServiceInterval | null>(null)
-  
+
   // For planned log (marking complete)
   const [selectedPlannedLog, setSelectedPlannedLog] = useState<any>(null)
-  
+
   // For pre-filling service item (Add to Plan)
   const [prefillServiceItemId, setPrefillServiceItemId] = useState<string | undefined>(undefined)
   const [prefillStatus, setPrefillStatus] = useState<'History' | 'Plan'>('Plan')
@@ -195,7 +195,7 @@ export function ServicePageClient({
 
   return (
     <>
-      <section className="relative py-12 bg-black min-h-screen">
+      <section className="relative py-12 bg-background min-h-screen">
         <div
           aria-hidden="true"
           className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -207,28 +207,28 @@ export function ServicePageClient({
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-white">Vehicle Service</h1>
-              <p className="text-lg text-gray-400 mt-2">
+              <h1 className="text-4xl font-bold text-foreground">Vehicle Service</h1>
+              <p className="text-lg text-muted-foreground mt-2">
                 Service records and maintenance schedules for {displayName}
               </p>
             </div>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => setIsFuelModalOpen(true)}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
                 <Fuel className="mr-2 h-4 w-4" /> Log Fuel
               </Button>
-              <Button 
+              <Button
                 onClick={openAddServiceModal}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Plus className="mr-2 h-4 w-4" /> Add Service
               </Button>
             </div>
           </div>
 
-          <Tabs defaultValue="plan" className="w-full text-white">
+          <Tabs defaultValue="plan" className="w-full text-foreground">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="plan">Plan</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>

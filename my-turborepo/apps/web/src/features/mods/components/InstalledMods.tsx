@@ -18,18 +18,15 @@ export function InstalledMods({ mods }: InstalledModsProps) {
   }
 
   return (
-    <Card 
-      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-      }}
+    <Card
+      className="bg-card rounded-2xl text-foreground border border-border"
     >
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <CheckCircle className="h-5 w-5 text-green-400" />
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <CheckCircle className="h-5 w-5 text-green-500" />
           Installed / Tuned
         </CardTitle>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Completed modifications and performance enhancements
         </p>
       </CardHeader>
@@ -43,8 +40,8 @@ export function InstalledMods({ mods }: InstalledModsProps) {
 
         {installedMods.length === 0 && (
           <div className="text-center py-8">
-            <Wrench className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No completed modifications yet</p>
+            <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No completed modifications yet</p>
           </div>
         )}
       </CardContent>

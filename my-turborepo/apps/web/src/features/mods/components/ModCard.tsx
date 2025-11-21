@@ -40,18 +40,15 @@ const getStatusIcon = (status: VehicleMod['status']) => {
 
 export function ModCard({ mod }: ModCardProps) {
   return (
-    <Card 
-      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white hover:bg-black/60 transition-colors"
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-      }}
+    <Card
+      className="bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border"
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg text-white mb-1">{mod.title}</CardTitle>
+            <CardTitle className="text-lg text-foreground mb-1">{mod.title}</CardTitle>
             {mod.description && (
-              <p className="text-sm text-gray-400">{mod.description}</p>
+              <p className="text-sm text-muted-foreground">{mod.description}</p>
             )}
           </div>
           <Badge variant={getStatusBadgeVariant(mod.status)} className="ml-2 flex items-center gap-1">
@@ -65,21 +62,21 @@ export function ModCard({ mod }: ModCardProps) {
         {/* Key Details */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           {mod.cost && (
-            <div className="flex items-center gap-2 text-gray-300">
-              <DollarSign className="h-4 w-4 text-green-400" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <DollarSign className="h-4 w-4 text-green-500" />
               <span>${mod.cost.toLocaleString()}</span>
             </div>
           )}
           {mod.odometer && (
-            <div className="flex items-center gap-2 text-gray-300">
-              <Gauge className="h-4 w-4 text-blue-400" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Gauge className="h-4 w-4 text-blue-500" />
               <span>{mod.odometer.toLocaleString()} mi</span>
             </div>
           )}
         </div>
 
         {/* Date */}
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>{mod.event_date.toLocaleDateString()}</span>
         </div>
@@ -87,21 +84,21 @@ export function ModCard({ mod }: ModCardProps) {
         {/* Parts */}
         {mod.parts.length > 0 && (
           <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Parts Used:</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Parts Used:</h4>
             <div className="space-y-1">
               {mod.parts.map((part) => (
-                <div key={part.id} className="flex items-center justify-between text-sm bg-black/30 backdrop-blur-sm rounded px-2 py-1 border border-white/10">
+                <div key={part.id} className="flex items-center justify-between text-sm bg-muted/50 backdrop-blur-sm rounded px-2 py-1 border border-border">
                   <div className="flex-1">
-                    <span className="text-gray-200">{part.name}</span>
+                    <span className="text-foreground">{part.name}</span>
                     {part.vendor && (
-                      <span className="text-gray-400 ml-2">({part.vendor})</span>
+                      <span className="text-muted-foreground ml-2">({part.vendor})</span>
                     )}
                     {part.quantity > 1 && (
-                      <span className="text-gray-400 ml-2">×{part.quantity}</span>
+                      <span className="text-muted-foreground ml-2">×{part.quantity}</span>
                     )}
                   </div>
                   {part.cost && (
-                    <span className="text-green-400 font-medium">
+                    <span className="text-green-500 font-medium">
                       ${(part.cost * part.quantity).toLocaleString()}
                     </span>
                   )}
@@ -113,20 +110,20 @@ export function ModCard({ mod }: ModCardProps) {
 
         {/* Outcome */}
         {mod.outcome && (
-          <div className="border-t border-gray-700 pt-3">
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Outcome:</h4>
+          <div className="border-t border-border pt-3">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Outcome:</h4>
             <div className="flex items-center gap-2 text-sm">
               {mod.outcome.success ? (
-                <CheckCircle className="h-4 w-4 text-green-400" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
               ) : (
-                <XCircle className="h-4 w-4 text-red-400" />
+                <XCircle className="h-4 w-4 text-destructive" />
               )}
-              <span className={mod.outcome.success ? 'text-green-400' : 'text-red-400'}>
+              <span className={mod.outcome.success ? 'text-green-500' : 'text-destructive'}>
                 {mod.outcome.success ? 'Successful' : 'Issues Encountered'}
               </span>
             </div>
             {mod.outcome.notes && (
-              <p className="text-sm text-gray-400 mt-1">{mod.outcome.notes}</p>
+              <p className="text-sm text-muted-foreground mt-1">{mod.outcome.notes}</p>
             )}
           </div>
         )}

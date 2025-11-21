@@ -67,12 +67,12 @@ function ImageWithTimeoutFallback({
   )
 }
 
-function VehicleCard({ 
-  vehicle, 
-  onDragStart, 
+function VehicleCard({
+  vehicle,
+  onDragStart,
   onDragEnd,
-  isDragging 
-}: { 
+  isDragging
+}: {
   vehicle: VehicleWithOdometer
   onDragStart?: () => void
   onDragEnd?: () => void
@@ -165,21 +165,20 @@ function VehicleCard({
       }}
     >
       <div
-        className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 text-white flex flex-col gap-4"
+        className="bg-card rounded-2xl p-4 text-foreground flex flex-col gap-4 border border-border"
         style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
           transition: 'all 0.3s ease-out',
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
             e.currentTarget.style.transform = 'scale(1.05)'
-            e.currentTarget.style.border = '1px solid rgb(132, 204, 22)'
-            e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)'
+            e.currentTarget.style.borderColor = 'hsl(var(--accent))'
+            e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.6)'
           }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)'
-          e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)'
+          e.currentTarget.style.borderColor = 'hsl(var(--border))'
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
@@ -198,7 +197,7 @@ function VehicleCard({
           <div className="flex-1">
             <h3 className="font-bold text-lg">{vehicle.name}</h3>
           </div>
-          <div className="text-right text-xs text-gray-400 leading-tight">
+          <div className="text-right text-xs text-muted-foreground leading-tight">
             {(() => {
               const { line1, line2 } = formatYmmt(vehicle.ymmt)
               return (
@@ -211,10 +210,10 @@ function VehicleCard({
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-muted-foreground">
             {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
           </div>
-          <div className="text-xs text-gray-400 font-semibold">
+          <div className="text-xs text-muted-foreground font-semibold">
             {formatStatus(vehicle.current_status)}
           </div>
         </div>
@@ -226,11 +225,11 @@ function VehicleCard({
 function AddVehicleCard({ onClick }: { onClick: () => void }) {
   return (
     <Card
-      className="min-h-[250px] border-2 border-dashed border-gray-700 bg-transparent hover:bg-gray-900/50 hover:border-red-500/50 transition-colors duration-300 cursor-pointer"
+      className="min-h-[250px] border-2 border-dashed border-border bg-transparent hover:bg-card/50 hover:border-accent/50 transition-colors duration-300 cursor-pointer"
       onClick={onClick}
     >
       <CardContent className="flex items-center justify-center h-full p-6">
-        <div className="flex flex-col items-center justify-center text-gray-400 hover:text-red-400 transition-colors duration-300">
+        <div className="flex flex-col items-center justify-center text-muted-foreground hover:text-accent transition-colors duration-300">
           <Plus className="text-4xl mb-2" />
           <span className="text-sm font-semibold">Add a Vehicle</span>
         </div>
@@ -304,10 +303,10 @@ function VehicleGallery({
     e.preventDefault()
     e.stopPropagation()
     setIsDraggingOver(false)
-    
+
     const vehicleId = e.dataTransfer.getData('vehicleId')
     const currentStatus = e.dataTransfer.getData('currentStatus')
-    
+
     if (vehicleId && onDrop && galleryType) {
       const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
       if (currentStatus !== newStatus) {
@@ -319,18 +318,17 @@ function VehicleGallery({
 
   return (
     <div className="mb-12">
-      <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
-      <div 
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${
-          isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
-        }`}
+      <h2 className="text-2xl font-bold text-foreground mb-6">{title}</h2>
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
+          }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {vehicles.map((vehicle) => (
-          <VehicleCard 
-            key={vehicle.id} 
+          <VehicleCard
+            key={vehicle.id}
             vehicle={vehicle}
             onDragStart={() => setDraggingVehicleId(vehicle.id)}
             onDragEnd={() => setDraggingVehicleId(null)}
@@ -339,13 +337,13 @@ function VehicleGallery({
         ))}
 
         {showAddCard && (
-          <AddVehicleCard onClick={onAddClick || (() => {})} />
+          <AddVehicleCard onClick={onAddClick || (() => { })} />
         )}
       </div>
 
       {loadingMore && (
         <div className="flex justify-center mt-8">
-          <div className="text-gray-400">Loading more vehicles...</div>
+          <div className="text-muted-foreground">Loading more vehicles...</div>
         </div>
       )}
     </div>
@@ -366,7 +364,7 @@ export function GarageContent({
   const uniqueInitialActive = initialActive.filter((v, index, self) =>
     index === self.findIndex((t) => t.id === v.id)
   )
-  
+
   const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(uniqueInitialActive)
   const [storedVehiclesLocal, setStoredVehiclesLocal] = useState<VehicleWithOdometer[]>([])
 
@@ -380,20 +378,20 @@ export function GarageContent({
   // Sync stored vehicles from hook, filtering out any that are active
   // Merge with existing local vehicles to preserve optimistically added ones
   useEffect(() => {
-    const filteredFromHook = storedVehicles.filter(v => 
-      v.current_status !== 'daily_driver' && 
+    const filteredFromHook = storedVehicles.filter(v =>
+      v.current_status !== 'daily_driver' &&
       !activeVehicles.find(av => av.id === v.id)
     )
-    
+
     // Merge: keep optimistically added vehicles that aren't in hook yet, plus hook vehicles
     setStoredVehiclesLocal((prev) => {
       // Keep vehicles that were optimistically added but aren't in hook yet
-      const optimisticOnly = prev.filter(lv => 
+      const optimisticOnly = prev.filter(lv =>
         lv.current_status !== 'daily_driver' &&
         !activeVehicles.find(av => av.id === lv.id) &&
         !filteredFromHook.find(hv => hv.id === lv.id)
       )
-      
+
       // Combine: optimistic-only vehicles + hook vehicles (avoiding duplicates)
       const combined = [...optimisticOnly]
       filteredFromHook.forEach(hv => {
@@ -401,7 +399,7 @@ export function GarageContent({
           combined.push(hv)
         }
       })
-      
+
       return combined
     })
   }, [storedVehicles, activeVehicles])
@@ -433,7 +431,7 @@ export function GarageContent({
             setActiveVehicles((prev) => {
               const isActive = newStatus === 'daily_driver'
               const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
-              
+
               if (isActive && vehicleIndex === -1) {
                 // Vehicle became active, add it
                 const vehicle = initialVehicles.find((v) => v.id === vehicleId)
@@ -456,7 +454,7 @@ export function GarageContent({
             setStoredVehiclesLocal((prev) => {
               const isStored = newStatus !== 'daily_driver'
               const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
-              
+
               if (isStored && vehicleIndex === -1) {
                 // Vehicle became stored, add it
                 const vehicle = initialVehicles.find((v) => v.id === vehicleId)
@@ -491,10 +489,10 @@ export function GarageContent({
   // Function to handle vehicle status change via drag and drop
   const handleVehicleStatusChange = async (vehicleId: string, newStatus: string) => {
     // Optimistically update the UI immediately
-    const vehicleToMove = activeVehicles.find(v => v.id === vehicleId) || 
-                         storedVehiclesLocal.find(v => v.id === vehicleId) ||
-                         storedVehicles.find(v => v.id === vehicleId)
-    
+    const vehicleToMove = activeVehicles.find(v => v.id === vehicleId) ||
+      storedVehiclesLocal.find(v => v.id === vehicleId) ||
+      storedVehicles.find(v => v.id === vehicleId)
+
     if (!vehicleToMove) return
 
     const updatedVehicle = { ...vehicleToMove, current_status: newStatus }
@@ -566,12 +564,12 @@ export function GarageContent({
 
   // Combined stored vehicles (local + hook), excluding active vehicles and duplicates
   const allStoredVehicles = [
-    ...storedVehiclesLocal.filter(v => 
-      v.current_status !== 'daily_driver' && 
+    ...storedVehiclesLocal.filter(v =>
+      v.current_status !== 'daily_driver' &&
       !activeVehicles.find(av => av.id === v.id)
     ),
-    ...storedVehicles.filter(v => 
-      v.current_status !== 'daily_driver' && 
+    ...storedVehicles.filter(v =>
+      v.current_status !== 'daily_driver' &&
       !storedVehiclesLocal.find(lv => lv.id === v.id) &&
       !activeVehicles.find(av => av.id === v.id)
     )
@@ -642,7 +640,7 @@ export function GarageContent({
 
   return (
     <AuthProvider supabase={supabase}>
-      <section className="relative py-12 bg-black min-h-screen">
+      <section className="relative py-12 bg-background min-h-screen">
         <div
           aria-hidden="true"
           className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -653,7 +651,7 @@ export function GarageContent({
 
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="mb-10">
-            <h1 className="text-4xl font-bold text-white mb-2">My Garage</h1>
+            <h1 className="text-4xl font-bold text-foreground mb-2">My Garage</h1>
           </div>
 
           {/* Active Vehicles Section - uses server-fetched data */}
@@ -679,7 +677,7 @@ export function GarageContent({
 
           {storedLoading && storedVehicles.length === 0 && (
             <div className="flex justify-center mt-8">
-              <div className="text-gray-400">Loading stored vehicles...</div>
+              <div className="text-muted-foreground">Loading stored vehicles...</div>
             </div>
           )}
         </div>

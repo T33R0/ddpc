@@ -132,10 +132,10 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
           ...log,
           service_item: serviceItem
             ? {
-                id: serviceItem.id,
-                name: serviceItemName,
-                category_id: categoryId,
-              }
+              id: serviceItem.id,
+              name: serviceItemName,
+              category_id: categoryId,
+            }
             : undefined,
           service_category: {
             id: categoryId,
@@ -177,15 +177,15 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
 
   if (isLoading) {
     return (
-      <div className="text-center py-8 text-gray-400">Loading service history...</div>
+      <div className="text-center py-8 text-muted-foreground">Loading service history...</div>
     )
   }
 
   if (groupedLogs.length === 0) {
     return (
-      <Card className="bg-black/30 backdrop-blur-sm border-white/20">
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
-          <p className="text-gray-400 text-center">
+          <p className="text-muted-foreground text-center">
             No service history logged. Click 'Add Service Entry' to get started.
           </p>
         </CardContent>
@@ -198,10 +198,10 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
       {groupedLogs.map((group) => (
         <Card
           key={group.categoryId}
-          className="bg-black/30 backdrop-blur-sm border-white/20"
+          className="bg-card border-border"
         >
           <CardHeader>
-            <CardTitle className="text-lg text-white">{group.categoryName}</CardTitle>
+            <CardTitle className="text-lg text-foreground">{group.categoryName}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -209,11 +209,11 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
                 <li key={log.id}>
                   <Link
                     href={`#`} // TODO: Link to future "Job Detail Page" - e.g., `/vehicle/${vehicleId}/service/${log.id}`
-                    className="block text-gray-300 hover:text-white transition-colors py-2 border-b border-white/10 last:border-0"
+                    className="block text-muted-foreground hover:text-foreground transition-colors py-2 border-b border-border last:border-0"
                   >
                     <div className="font-medium">{formatLogEntry(log)}</div>
                     {log.notes && (
-                      <div className="text-sm text-gray-400 mt-1">{log.notes}</div>
+                      <div className="text-sm text-muted-foreground mt-1">{log.notes}</div>
                     )}
                   </Link>
                 </li>

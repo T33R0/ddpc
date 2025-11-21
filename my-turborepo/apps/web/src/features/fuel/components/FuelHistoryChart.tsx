@@ -33,15 +33,15 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
       const data = payload[0].payload
       const mpgValue = payload[0].value
       if (!data || mpgValue == null) return null
-      
+
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-semibold">{label ? `Date: ${label}` : 'Date: N/A'}</p>
-          <p className="text-green-400">{`MPG: ${typeof mpgValue === 'number' ? mpgValue.toFixed(1) : 'N/A'}`}</p>
-          <p className="text-gray-400 text-sm">{`Gallons: ${typeof data.gallons === 'number' ? data.gallons.toFixed(1) : 'N/A'}`}</p>
-          <p className="text-gray-400 text-sm">{`Odometer: ${typeof data.odometer === 'number' ? data.odometer.toLocaleString() : 'N/A'} mi`}</p>
+        <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+          <p className="text-popover-foreground font-semibold">{label ? `Date: ${label}` : 'Date: N/A'}</p>
+          <p className="text-green-500">{`MPG: ${typeof mpgValue === 'number' ? mpgValue.toFixed(1) : 'N/A'}`}</p>
+          <p className="text-muted-foreground text-sm">{`Gallons: ${typeof data.gallons === 'number' ? data.gallons.toFixed(1) : 'N/A'}`}</p>
+          <p className="text-muted-foreground text-sm">{`Odometer: ${typeof data.odometer === 'number' ? data.odometer.toLocaleString() : 'N/A'} mi`}</p>
           {data.cost && typeof data.cost === 'number' && (
-            <p className="text-gray-400 text-sm">{`Cost: $${data.cost.toFixed(2)}`}</p>
+            <p className="text-muted-foreground text-sm">{`Cost: $${data.cost.toFixed(2)}`}</p>
           )}
         </div>
       )
@@ -51,17 +51,14 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
 
   if (chartData.length === 0) {
     return (
-      <Card 
-        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
+      <Card
+        className="bg-card rounded-2xl text-foreground border border-border"
       >
         <CardHeader>
-          <CardTitle className="text-white text-lg">Fuel Efficiency Over Time</CardTitle>
+          <CardTitle className="text-foreground text-lg">Fuel Efficiency Over Time</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64 text-gray-400">
+          <div className="flex items-center justify-center h-64 text-muted-foreground">
             <div className="text-center">
               <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -76,29 +73,26 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
   }
 
   return (
-    <Card 
-      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-      }}
+    <Card
+      className="bg-card rounded-2xl text-foreground border border-border"
     >
       <CardHeader>
-        <CardTitle className="text-white text-lg">Fuel Efficiency Over Time</CardTitle>
+        <CardTitle className="text-foreground text-lg">Fuel Efficiency Over Time</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="date"
-                stroke="#9CA3AF"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="#9CA3AF"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -130,7 +124,7 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
           </ResponsiveContainer>
         </div>
         {factoryMpg && (
-          <div className="flex items-center justify-center mt-2 text-xs text-gray-400">
+          <div className="flex items-center justify-center mt-2 text-xs text-muted-foreground">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-0.5 bg-green-400"></div>
               <span>Your MPG</span>

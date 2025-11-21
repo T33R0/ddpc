@@ -7,7 +7,7 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
-import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, Car, Gauge, Ruler, CarFront } from 'lucide-react'
+import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, Car, Gauge, Ruler, CarFront, Scale, Cog } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { Badge } from '@repo/ui/badge'
@@ -169,9 +169,8 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
 
   return (
     <Card
-      className={`col-span-2 row-span-2 bg-black/50 backdrop-blur-lg rounded-2xl overflow-hidden h-full relative ${isOwner ? 'cursor-pointer' : ''}`}
+      className={`col-span-2 row-span-2 bg-card rounded-2xl overflow-hidden h-full relative border border-border ${isOwner ? 'cursor-pointer' : ''}`}
       style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
         gridColumn: 'span 2',
         gridRow: 'span 2',
       }}
@@ -186,9 +185,8 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
       />
       {isOwner && (
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
-            isHovered ? 'bg-black/60 opacity-100' : 'bg-black/0 opacity-0'
-          }`}
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isHovered ? 'bg-black/60 opacity-100' : 'bg-black/0 opacity-0'
+            }`}
           onClick={(e) => {
             e.stopPropagation()
             fileInputRef.current?.click()
@@ -209,9 +207,8 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
               fileInputRef.current?.click()
             }}
             disabled={isUploading}
-            className={`bg-black/80 hover:bg-black/95 text-white border border-white/40 px-4 py-2 transition-all ${
-              isHovered ? 'scale-100' : 'scale-0'
-            }`}
+            className={`bg-black/80 hover:bg-black/95 text-white border border-white/40 px-4 py-2 transition-all ${isHovered ? 'scale-100' : 'scale-0'
+              }`}
           >
             <Upload className="w-4 h-4 mr-2" />
             {isUploading ? 'Uploading...' : 'Upload Image'}
@@ -244,7 +241,7 @@ function StatusBadge({
 
   if (!isOwner) {
     return (
-      <Badge variant="outline" className="text-white border-white/30 bg-black/30 cursor-default">
+      <Badge variant="outline" className="text-muted-foreground border-border bg-muted cursor-default">
         {statusLabels[currentStatus] || currentStatus}
       </Badge>
     )
@@ -284,7 +281,7 @@ function StatusBadge({
         onClick: () => handleStatusChange(option),
       }))}
     >
-      <Badge variant="outline" className="text-white border-white/30 bg-black/30 hover:bg-black/50 cursor-pointer">
+      <Badge variant="outline" className="text-muted-foreground border-border bg-muted hover:bg-muted/80 cursor-pointer">
         {statusLabels[currentStatus] || currentStatus}
       </Badge>
     </DropdownMenu>
@@ -306,7 +303,7 @@ function PrivacyBadge({
     return (
       <Badge
         variant="outline"
-        className="text-white border-white/30 bg-black/30 cursor-default flex items-center gap-1"
+        className="text-muted-foreground border-border bg-muted cursor-default flex items-center gap-1"
       >
         {privacy === 'PUBLIC' ? (
           <>
@@ -359,7 +356,7 @@ function PrivacyBadge({
     >
       <Badge
         variant="outline"
-        className={`text-white border-white/30 bg-black/30 hover:bg-black/50 cursor-pointer flex items-center gap-1`}
+        className={`text-muted-foreground border-border bg-muted hover:bg-muted/80 cursor-pointer flex items-center gap-1`}
       >
         {privacy === 'PUBLIC' ? (
           <>
@@ -404,7 +401,7 @@ function VehicleHeader({
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (!session) {
         setError('You must be logged in to update the nickname')
         setIsSaving(false)
@@ -433,7 +430,7 @@ function VehicleHeader({
       setIsEditDialogOpen(false)
       const newNickname = nickname.trim() || null
       onNicknameUpdate(newNickname)
-      
+
       // Redirect to the new nickname URL (or vehicle ID if nickname was removed)
       const newSlug = newNickname || vehicleId
       router.push(`/vehicle/${encodeURIComponent(newSlug)}`)
@@ -448,12 +445,12 @@ function VehicleHeader({
     <>
       <div className="mb-8 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <h1 className="text-4xl font-bold text-white">{vehicle.name || 'Unnamed Vehicle'}</h1>
+          <h1 className="text-4xl font-bold text-foreground">{vehicle.name || 'Unnamed Vehicle'}</h1>
           {isOwner && (
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-400 hover:text-white hover:bg-gray-800"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
               onClick={() => setIsEditDialogOpen(true)}
             >
               <Edit className="w-4 h-4" />
@@ -478,22 +475,22 @@ function VehicleHeader({
 
       {isOwner && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="bg-gray-900 border-gray-700">
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-white">Edit Vehicle Nickname</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogTitle className="text-foreground">Edit Vehicle Nickname</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Change the nickname for this vehicle. Leave empty to remove the nickname.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="nickname" className="text-gray-300">Nickname</Label>
+                <Label htmlFor="nickname" className="text-foreground">Nickname</Label>
                 <Input
                   id="nickname"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="Enter vehicle nickname"
-                  className="bg-gray-800 border-gray-700 text-white mt-2"
+                  className="bg-background border-border text-foreground mt-2"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !isSaving) {
                       handleSave()
@@ -502,7 +499,7 @@ function VehicleHeader({
                 />
               </div>
               {error && (
-                <p className="text-sm text-red-400">{error}</p>
+                <p className="text-sm text-destructive">{error}</p>
               )}
             </div>
             <DialogFooter>
@@ -510,14 +507,14 @@ function VehicleHeader({
                 variant="ghost"
                 onClick={() => setIsEditDialogOpen(false)}
                 disabled={isSaving}
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
@@ -531,124 +528,116 @@ function VehicleHeader({
 
 function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
-          style={{
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-          }}>
-      <CardContent className="p-0 h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <Car className="w-5 h-5 text-blue-400" />
-          <p className="text-base font-semibold text-gray-300">Build Specs</p>
+    <Card className="bg-card rounded-2xl p-6 h-full border border-border">
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Wrench className="h-5 w-5 text-accent" />
+        Build Specs
+      </h3>
+      <div className="space-y-4">
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Trim</span>
+          <span className="text-foreground font-medium">{vehicle.trim || '-'}</span>
         </div>
-        <div className="space-y-1 text-sm flex-1">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Year:</span>
-            <span className="text-white">{vehicle.year || 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Make:</span>
-            <span className="text-white">{vehicle.make || 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Model:</span>
-            <span className="text-white">{vehicle.model || 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Trim:</span>
-            <span className="text-white">{vehicle.trim || 'UNK'}</span>
-          </div>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Color</span>
+          <span className="text-foreground font-medium">{vehicle.colors_exterior || '-'}</span>
         </div>
-      </CardContent>
+        {/* <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">VIN</span>
+          <span className="text-foreground font-medium font-mono text-sm">{vehicle.vin || '-'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">License Plate</span>
+          <span className="text-foreground font-medium font-mono text-sm">{vehicle.license_plate || '-'}</span>
+        </div> */}
+      </div>
     </Card>
   )
 }
 
 function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
-          style={{
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-          }}>
-      <CardContent className="p-0 h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <Gauge className="w-5 h-5 text-red-400" />
-          <p className="text-base font-semibold text-gray-300">Engine Specs</p>
+    <Card className="bg-card rounded-2xl p-6 h-full border border-border">
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Gauge className="h-5 w-5 text-accent" />
+        Engine & Power
+      </h3>
+      <div className="space-y-4">
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Engine Type</span>
+          <span className="text-foreground font-medium">{vehicle.engine_type || '-'}</span>
         </div>
-        <div className="space-y-2 text-sm flex-1">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Power:</span>
-            <span className="text-white">{vehicle.horsepower_hp ? `${vehicle.horsepower_hp} hp` : 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Torque:</span>
-            <span className="text-white">{vehicle.torque_ft_lbs ? `${vehicle.torque_ft_lbs} ft-lbs` : 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Size:</span>
-            <span className="text-white">{vehicle.engine_size_l ? `${vehicle.engine_size_l}L` : 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Cylinders:</span>
-            <span className="text-white">{vehicle.cylinders || 'UNK'}</span>
-          </div>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Displacement</span>
+          <span className="text-foreground font-medium">{vehicle.engine_size_l || '-'}</span>
         </div>
-      </CardContent>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Horsepower</span>
+          <span className="text-foreground font-medium">{vehicle.horsepower_hp ? `${vehicle.horsepower_hp} hp` : '-'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Torque</span>
+          <span className="text-foreground font-medium">{vehicle.torque_ft_lbs ? `${vehicle.torque_ft_lbs} lb-ft` : '-'}</span>
+        </div>
+      </div>
     </Card>
   )
 }
 
 function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
-          style={{
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-          }}>
-      <CardContent className="p-0 h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <Ruler className="w-5 h-5 text-green-400" />
-          <p className="text-base font-semibold text-gray-300">Dimensions</p>
+    <Card className="bg-card rounded-2xl p-6 h-full border border-border">
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Scale className="h-5 w-5 text-accent" />
+        Dimensions & Weight
+      </h3>
+      <div className="space-y-4">
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Curb Weight</span>
+          <span className="text-foreground font-medium">{vehicle.curb_weight_lbs ? `${vehicle.curb_weight_lbs} lbs` : '-'}</span>
         </div>
-        <div className="space-y-2 text-sm flex-1">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Length:</span>
-            <span className="text-white">{vehicle.length_in ? `${parseFloat(vehicle.length_in.toString()).toFixed(1)} in` : 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Width:</span>
-            <span className="text-white">{vehicle.width_in ? `${parseFloat(vehicle.width_in.toString()).toFixed(1)} in` : 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Height:</span>
-            <span className="text-white">{vehicle.height_in ? `${parseFloat(vehicle.height_in.toString()).toFixed(1)} in` : 'UNK'}</span>
-          </div>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Length</span>
+          <span className="text-foreground font-medium">{vehicle.length_in ? `${vehicle.length_in}"` : '-'}</span>
         </div>
-      </CardContent>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Width</span>
+          <span className="text-foreground font-medium">{vehicle.width_in ? `${vehicle.width_in}"` : '-'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Height</span>
+          <span className="text-foreground font-medium">{vehicle.height_in ? `${vehicle.height_in}"` : '-'}</span>
+        </div>
+      </div>
     </Card>
   )
 }
 
 function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white h-full"
-          style={{
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-          }}>
-      <CardContent className="p-0 h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <CarFront className="w-5 h-5 text-purple-400" />
-          <p className="text-base font-semibold text-gray-300">Drivetrain</p>
+    <Card className="bg-card rounded-2xl p-6 h-full border border-border">
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Cog className="h-5 w-5 text-accent" />
+        Drivetrain & Chassis
+      </h3>
+      <div className="space-y-4">
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Transmission</span>
+          <span className="text-foreground font-medium">{vehicle.transmission || '-'}</span>
         </div>
-        <div className="space-y-2 text-sm flex-1">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Type:</span>
-            <span className="text-white">{vehicle.drive_type || 'UNK'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Transmission:</span>
-            <span className="text-white text-right flex-1">{vehicle.transmission || 'UNK'}</span>
-          </div>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Drivetrain</span>
+          <span className="text-foreground font-medium">{vehicle.drive_type || '-'}</span>
         </div>
-      </CardContent>
+        <div className="flex justify-between border-b border-border pb-2">
+          <span className="text-muted-foreground">Brake System</span>
+          <span className="text-foreground font-medium">{'Unknown'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Wheel Size</span>
+          <span className="text-foreground font-medium">{vehicle.tires_and_wheels || '-'}</span>
+        </div>
+      </div>
     </Card>
   )
 }
@@ -673,33 +662,29 @@ function NavigationCard({
 
   return (
     <Card
-      className={`bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white transition-all duration-300 h-full ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        transition: 'all 0.3s ease-out',
-      }}
+      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
       onClick={handleClick}
       onMouseEnter={disabled ? undefined : (e) => {
         e.currentTarget.style.transform = 'scale(1.02)'
-        e.currentTarget.style.border = '1px solid rgb(132, 204, 22)'
-        e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)'
+        e.currentTarget.style.borderColor = 'hsl(var(--accent))'
+        e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.3)'
       }}
       onMouseLeave={disabled ? undefined : (e) => {
         e.currentTarget.style.transform = 'scale(1)'
-        e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)'
+        e.currentTarget.style.borderColor = 'hsl(var(--border))'
         e.currentTarget.style.boxShadow = 'none'
       }}
     >
       <CardContent className="p-0 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-3">
-          <Icon className="w-5 h-5 text-blue-400" />
-          <p className="text-base font-semibold text-gray-300">{title}</p>
+          <Icon className="w-5 h-5 text-accent" />
+          <p className="text-base font-semibold text-muted-foreground">{title}</p>
         </div>
         <div className="space-y-1 text-sm flex-1">
           {stats.map((stat, index) => (
             <div key={index} className="flex justify-between">
-              <span className="text-gray-400">{stat.label}:</span>
-              <span className="text-white">{stat.value}</span>
+              <span className="text-muted-foreground">{stat.label}:</span>
+              <span className="text-foreground">{stat.value}</span>
             </div>
           ))}
         </div>
@@ -735,7 +720,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
 
   return (
     <>
-      <section className="relative py-12 bg-black min-h-screen">
+      <section className="relative py-12 bg-background min-h-screen">
         <div
           aria-hidden="true"
           className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -761,12 +746,12 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
           />
 
           {/* Grid container - 4x3 layout */}
-          <div className="grid w-full max-w-7xl mx-auto gap-4 min-h-[600px]" 
-               style={{ 
-                 display: 'grid',
-                 gridTemplateColumns: 'repeat(4, 1fr)', 
-                 gridTemplateRows: 'repeat(3, 1fr)',
-               }}>
+          <div className="grid w-full max-w-7xl mx-auto gap-4 min-h-[600px]"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gridTemplateRows: 'repeat(3, 1fr)',
+            }}>
             {/* Row 1 */}
             {/* Slot 1: Build Specs */}
             <BuildSpecsCard vehicle={vehicle} />

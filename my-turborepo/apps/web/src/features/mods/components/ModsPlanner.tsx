@@ -18,18 +18,15 @@ export function ModsPlanner({ mods }: ModsPlannerProps) {
   }
 
   return (
-    <Card 
-      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-      }}
+    <Card
+      className="bg-card rounded-2xl text-foreground border border-border"
     >
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <Clock className="h-5 w-5 text-yellow-400" />
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <Clock className="h-5 w-5 text-yellow-500" />
           In Progress
         </CardTitle>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Modifications currently planned or ordered
         </p>
       </CardHeader>
@@ -43,8 +40,8 @@ export function ModsPlanner({ mods }: ModsPlannerProps) {
 
         {inProgressMods.length === 0 && (
           <div className="text-center py-8">
-            <AlertCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No modifications in progress</p>
+            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No modifications in progress</p>
           </div>
         )}
       </CardContent>

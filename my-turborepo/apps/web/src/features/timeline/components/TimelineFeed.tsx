@@ -69,7 +69,7 @@ function getEventTypeColor(type: VehicleEvent['type']) {
     case 'mileage':
       return 'text-orange-400'
     default:
-      return 'text-gray-400'
+      return 'text-muted-foreground'
   }
 }
 
@@ -80,20 +80,15 @@ interface TimelineFeedProps {
 export function TimelineFeed({ events }: TimelineFeedProps) {
   if (events.length === 0) {
     return (
-      <Card 
-        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
-      >
+      <Card className="bg-card rounded-2xl text-foreground border border-border">
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">No History Yet</h3>
-          <p className="text-gray-400">
+          <h3 className="text-xl font-semibold text-foreground mb-2">No History Yet</h3>
+          <p className="text-muted-foreground">
             Vehicle history will appear here once you add maintenance records, modifications, or mileage updates.
           </p>
         </CardContent>
@@ -104,12 +99,9 @@ export function TimelineFeed({ events }: TimelineFeedProps) {
   return (
     <div className="space-y-4">
       {events.map((event) => (
-        <Card 
-          key={event.id} 
-          className="bg-black/50 backdrop-blur-lg rounded-2xl text-white hover:bg-black/60 transition-colors"
-          style={{
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-          }}
+        <Card
+          key={event.id}
+          className="bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border"
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -121,23 +113,23 @@ export function TimelineFeed({ events }: TimelineFeedProps) {
                       {getEventTypeLabel(event.type)}
                     </span>
                     {event.status && event.type === 'modification' && (
-                      <span className="text-xs bg-gray-700 text-white px-2 py-1 rounded-full">
+                      <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
                         {event.status}
                       </span>
                     )}
                   </div>
-                  <CardTitle className="text-lg font-bold text-white mb-1">
+                  <CardTitle className="text-lg font-bold text-foreground mb-1">
                     {event.title}
                   </CardTitle>
                   {event.description && (
-                    <p className="text-gray-400 text-sm leading-relaxed">
+                    <p className="text-muted-foreground text-sm leading-relaxed">
                       {event.description}
                     </p>
                   )}
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm text-gray-300 font-medium">
+                <p className="text-sm text-muted-foreground font-medium">
                   {event.date.toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -145,7 +137,7 @@ export function TimelineFeed({ events }: TimelineFeedProps) {
                   })}
                 </p>
                 {event.odometer && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {event.odometer.toLocaleString()} miles
                   </p>
                 )}
@@ -155,8 +147,8 @@ export function TimelineFeed({ events }: TimelineFeedProps) {
           {(event.cost !== undefined && event.cost > 0) && (
             <CardContent className="pt-0">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Cost:</span>
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm text-muted-foreground">Cost:</span>
+                <span className="text-sm font-semibold text-foreground">
                   ${event.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>

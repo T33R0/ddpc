@@ -52,7 +52,7 @@ export default async function VehicleFuelPage({ params }: VehicleFuelPageProps) 
   }
 
   return (
-    <section className="relative py-12 bg-black min-h-screen">
+    <section className="relative py-12 bg-background min-h-screen">
       <div
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
