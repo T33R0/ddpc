@@ -115,15 +115,15 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
 
   const handleNavigateVehicle = (direction: 'prev' | 'next') => {
     if (!selectedVehicle) return;
-    
+
     const currentIndex = selectedVehicle.index;
     const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
-    
+
     // Check if we need to load more vehicles
     if (direction === 'next' && newIndex >= vehicles.length - 1 && hasMore && !loadingMore && onLoadMore) {
       onLoadMore();
     }
-    
+
     // Navigate to the new vehicle if it exists
     if (newIndex >= 0 && newIndex < vehicles.length) {
       const newVehicle = vehicles[newIndex];
@@ -149,45 +149,51 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
       ) : (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {vehicles.map((summary, index) => (
-          <div 
-            key={summary.id} 
-            className="group transition-all duration-300" 
-            onClick={() => handleOpenModal(summary, index)}
-          >
-            <div 
-              className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-6 cursor-pointer"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                transition: 'all 0.3s ease-out',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
-                e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+            <div
+              key={summary.id}
+              className="group transition-all duration-300"
+              onClick={() => handleOpenModal(summary, index)}
             >
-              <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
-                <ImageWithTimeoutFallback
-                  src={summary.heroImage || summary.trims[0]?.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
-                  fallbackSrc="/branding/fallback-logo.png"
-                  alt={`${summary.make} ${summary.model}`}
-                  className="w-full h-full object-cover"
-                  showMissingText={true}
-                />
-              </div>
-              <div className="text-center h-16 flex items-center justify-center">
-                <h3 className="text-2xl leading-tight line-clamp-2">
-                  {summary.year} {summary.make} {summary.model}
-                </h3>
+              <div
+                className="bg-card rounded-2xl p-6 text-foreground flex flex-col gap-6 cursor-pointer border border-border"
+                style={{
+                  transition: 'all 0.3s ease-out',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.borderColor = 'hsl(var(--accent))';
+                  e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10">
+                  <ImageWithTimeoutFallback
+                    src={summary.heroImage || summary.trims[0]?.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+                    fallbackSrc="/branding/fallback-logo.png"
+                    alt={`${summary.make} ${summary.model}`}
+                    className="w-full h-full object-cover"
+                    showMissingText={true}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 items-start">
+                  <h3 className="font-bold text-lg text-foreground">
+                    {summary.year} {summary.make} {summary.model}
+                  </h3>
+                  {/* Discover cards don't have nickname/YMMT separation in the same way, 
+                    but we align the style. We could add trim info here if available. */}
+                  {summary.trims && summary.trims.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      {summary.trims.length} Trim{summary.trims.length !== 1 ? 's' : ''} Available
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
         </div>
       )}
 
