@@ -120,18 +120,13 @@ export function AddFuelDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        className="bg-black/50 backdrop-blur-lg max-w-md text-white p-0"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
-      >
+      <DialogContent className="sm:max-w-md p-0">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
+          <DialogTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5" />
             Log Fuel
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription>
             Enter the details from your fuel-up. This will also update your
             vehicle's current mileage.
           </DialogDescription>
@@ -139,13 +134,13 @@ export function AddFuelDialog({
 
         <form onSubmit={onSubmit} className="px-6 pb-6 space-y-4">
           {error && (
-            <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3">
-              <p className="text-red-200 text-sm">{error}</p>
+            <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-3">
+              <p className="text-destructive text-sm">{error}</p>
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="event_date" className="text-gray-300">
+            <Label htmlFor="event_date">
               Date *
             </Label>
             <Input
@@ -153,13 +148,12 @@ export function AddFuelDialog({
               type="date"
               value={formData.event_date}
               onChange={(e) => handleInputChange('event_date', e.target.value)}
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="odometer" className="text-gray-300">
+            <Label htmlFor="odometer">
               Odometer (miles) *
             </Label>
             <Input
@@ -168,13 +162,12 @@ export function AddFuelDialog({
               value={formData.odometer}
               onChange={(e) => handleInputChange('odometer', e.target.value)}
               placeholder="e.g., 60500"
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="gallons" className="text-gray-300">
+            <Label htmlFor="gallons">
               Gallons *
             </Label>
             <Input
@@ -184,13 +177,12 @@ export function AddFuelDialog({
               value={formData.gallons}
               onChange={(e) => handleInputChange('gallons', e.target.value)}
               placeholder="e.g., 12.345"
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price_per_gallon" className="text-gray-300">
+            <Label htmlFor="price_per_gallon">
               Price per Gallon ($) *
             </Label>
             <Input
@@ -200,13 +192,12 @@ export function AddFuelDialog({
               value={formData.price_per_gallon}
               onChange={(e) => handleInputChange('price_per_gallon', e.target.value)}
               placeholder="e.g., 3.459"
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="trip_miles" className="text-gray-300">
+            <Label htmlFor="trip_miles">
               Trip Miles (optional)
             </Label>
             <Input
@@ -216,15 +207,14 @@ export function AddFuelDialog({
               value={formData.trip_miles}
               onChange={(e) => handleInputChange('trip_miles', e.target.value)}
               placeholder="e.g., 350.5"
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Leave blank to calculate automatically from previous fuel-up
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="octane" className="text-gray-300">
+            <Label htmlFor="octane">
               Octane Rating (optional)
             </Label>
             <Input
@@ -234,7 +224,6 @@ export function AddFuelDialog({
               value={formData.octane}
               onChange={(e) => handleInputChange('octane', e.target.value)}
               placeholder="e.g., 87, 91, 93"
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
             />
           </div>
 
@@ -244,14 +233,12 @@ export function AddFuelDialog({
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
-              className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isSubmitting ? 'Saving...' : 'Save Log'}
             </Button>

@@ -102,14 +102,14 @@ export function JobStep({
       className={`
         flex flex-col gap-2 p-3 rounded-lg border transition-all
         ${isDragging ? 'opacity-50' : ''}
-        ${step.is_completed ? 'bg-black/20 border-white/10' : 'bg-black/30 border-white/20'}
+        ${step.is_completed ? 'bg-muted/50 border-border/50' : 'bg-card border-border'}
       `}
     >
       <div className="flex items-center gap-3">
       {/* Drag Handle */}
       {!isEditing && (
         <div
-          className="cursor-move text-gray-400 hover:text-white transition-colors"
+          className="cursor-move text-muted-foreground hover:text-foreground transition-colors"
           onMouseDown={(e) => e.stopPropagation()}
         >
           <GripVertical className="h-5 w-5" />
@@ -120,7 +120,6 @@ export function JobStep({
       <Checkbox
         checked={step.is_completed}
         onCheckedChange={(checked) => onToggleComplete(step.id, checked === true)}
-        className="border-white/30 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
         disabled={isEditing}
       />
 
@@ -131,13 +130,13 @@ export function JobStep({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 flex-1 h-8"
+            className="flex-1 h-8"
             autoFocus
           />
           <Button
             onClick={handleSave}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3"
+            className="h-8 px-3"
           >
             <Check className="h-4 w-4" />
           </Button>
@@ -147,11 +146,10 @@ export function JobStep({
           <span
             className={`flex-1 transition-all ${
               step.is_completed 
-                ? 'text-gray-400' 
-                : 'text-white'
+                ? 'text-muted-foreground' 
+                : 'text-foreground'
             }`}
             style={step.is_completed ? { 
-              opacity: 0.6, 
               textDecoration: 'line-through',
               textDecorationThickness: '2px'
             } : { textDecoration: 'none' }}
@@ -160,15 +158,15 @@ export function JobStep({
           </span>
           <button
             onClick={() => setIsEditing(true)}
-            className="text-gray-400 hover:text-white transition-colors p-1"
+            className="text-muted-foreground hover:text-foreground transition-colors p-1"
             type="button"
           >
             <Pencil className="h-4 w-4" />
           </button>
           <button
             onClick={() => setIsNotesOpen(true)}
-            className={`text-gray-400 hover:text-white transition-colors p-1 ${
-              step.notes ? 'text-blue-400' : ''
+            className={`text-muted-foreground hover:text-foreground transition-colors p-1 ${
+              step.notes ? 'text-primary' : ''
             }`}
             type="button"
             title="Notes"
@@ -177,7 +175,7 @@ export function JobStep({
           </button>
           <button
             onClick={() => onDelete(step.id)}
-            className="text-gray-400 hover:text-red-400 transition-colors p-1"
+            className="text-muted-foreground hover:text-destructive transition-colors p-1"
             type="button"
             title="Delete step"
           >
@@ -189,7 +187,7 @@ export function JobStep({
       
       {/* Notes Display */}
       {step.notes && !isEditing && (
-        <div className="text-sm text-gray-400 ml-[52px] truncate">
+        <div className="text-sm text-muted-foreground ml-[52px] truncate">
           {step.notes}
         </div>
       )}
@@ -200,26 +198,24 @@ export function JobStep({
           <DialogHeader>
             <DialogTitle>Step Notes</DialogTitle>
           </DialogHeader>
-          <DialogBody>
+          <div className="px-6 py-4">
             <Textarea
               value={notesValue}
               onChange={(e) => setNotesValue(e.target.value)}
               placeholder="Add notes for this step (e.g., torque specs, warnings, tool sizes)..."
-              className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 min-h-[120px]"
+              className="min-h-[120px]"
               autoFocus
             />
-          </DialogBody>
+          </div>
           <DialogFooter>
             <Button
               onClick={handleCancelNotes}
               variant="outline"
-              className="border-white/20 text-gray-300 hover:bg-black/30"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveNotes}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Save Notes
             </Button>

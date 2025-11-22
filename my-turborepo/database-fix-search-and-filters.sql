@@ -106,6 +106,8 @@ $$;
 -- We will rewrite it to be slightly more efficient by using the indexes explicitly if needed, but the previous version was okay if indexes exist.
 -- Let's just make sure it's defined correctly.
 
+DROP FUNCTION IF EXISTS get_vehicle_filter_options();
+
 CREATE OR REPLACE FUNCTION get_vehicle_filter_options()
 RETURNS json
 LANGUAGE plpgsql STABLE

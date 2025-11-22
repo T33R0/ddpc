@@ -386,13 +386,13 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
         {/* Tab Navigation */}
         <div className="px-6 pt-4">
-          <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
+          <div className="flex space-x-1 bg-muted p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('vin')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'vin'
-                  ? 'bg-lime-500 text-black'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
               }`}
             >
               VIN Decoder
@@ -401,8 +401,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
               onClick={() => setActiveTab('manual')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'manual'
-                  ? 'bg-lime-500 text-black'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
               }`}
             >
               Manual Entry
@@ -420,20 +420,20 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                   value={vin}
                   onChange={(e) => setVin(e.target.value.toUpperCase())}
                   placeholder="Enter VIN (17 characters)"
-                  className="flex-1 bg-gray-800 border-gray-700 text-white"
+                  className="flex-1"
                   maxLength={17}
                 />
                 <Button
                   onClick={handleVinDecode}
                   disabled={isDecodingVin || vin.length !== 17}
-                  className="bg-lime-500 hover:bg-lime-600 text-black"
+                  variant="secondary"
                 >
                   {isDecodingVin ? 'Decoding...' : 'Decode'}
                 </Button>
               </div>
 
               {vinVehicleData && (
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-muted-foreground">
                   VIN decoding will show vehicle details here once implemented.
                 </div>
               )}
@@ -443,7 +443,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400 block">Year:</label>
+                  <label className="text-sm text-muted-foreground block">Year:</label>
                   <select
                     value={selectedYear}
                     onChange={(e) => {
@@ -453,7 +453,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                       setSelectedTrimId('');
                       setManualVehicleData(null);
                     }}
-                    className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Select Year</option>
                     {filterOptions?.years.map((year) => (
@@ -465,7 +465,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400 block">Make:</label>
+                  <label className="text-sm text-muted-foreground block">Make:</label>
                   <select
                     value={selectedMake}
                     onChange={(e) => {
@@ -475,7 +475,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                       setManualVehicleData(null);
                     }}
                     disabled={!selectedYear}
-                    className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent disabled:opacity-50"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Select Make</option>
                     {availableMakes.map((make) => (
@@ -487,7 +487,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400 block">Model:</label>
+                  <label className="text-sm text-muted-foreground block">Model:</label>
                   <select
                     value={selectedModel}
                     onChange={(e) => {
@@ -496,7 +496,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                       setManualVehicleData(null);
                     }}
                     disabled={!selectedMake}
-                    className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent disabled:opacity-50"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Select Model</option>
                     {availableModels.map((model) => (
@@ -511,7 +511,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                   <Button
                     onClick={handleManualSearch}
                     disabled={!selectedYear || !selectedMake || !selectedModel}
-                    className="w-full bg-lime-500 hover:bg-lime-600 text-black"
+                    className="w-full"
                   >
                     <Search className="w-4 h-4 mr-2" />
                     Search
@@ -521,11 +521,11 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
               {manualVehicleData && (
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400 block">Trim:</label>
+                  <label className="text-sm text-muted-foreground block">Trim:</label>
                   <select
                     value={selectedTrimId}
                     onChange={(e) => setSelectedTrimId(e.target.value)}
-                    className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {manualVehicleData.trims.map((trim) => (
                       <option key={trim.id} value={trim.id}>
@@ -540,11 +540,11 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
           {/* Vehicle Details Display */}
           {currentVehicleData && selectedTrim && (
-            <div className="mt-6 border-t border-white/30 pt-6">
+            <div className="mt-6 border-t border-border pt-6">
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Left Column - Image and Trim Selector */}
                 <div className="space-y-4">
-                  <div className="w-full aspect-video overflow-hidden rounded-lg bg-gray-800">
+                  <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted">
                     <ImageWithFallback
                       src={imageSources}
                       fallbackSrc="/branding/fallback-logo.png"
@@ -556,10 +556,10 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                   </div>
 
                   <div className="text-center">
-                    <h3 className="font-bold text-lg text-white">
+                    <h3 className="font-bold text-lg text-foreground">
                       {currentVehicleData.year} {currentVehicleData.make} {currentVehicleData.model}
                     </h3>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       {selectedTrim.trim || `${currentVehicleData.trims.length} trims available`}
                     </p>
                   </div>
@@ -569,8 +569,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 <div className="space-y-4">
                   {/* Vehicle Type */}
                   {(selectedTrim.body_type || selectedTrim.drive_type) && (
-                    <div className="text-gray-300">
-                      <span className="text-lg">
+                    <div className="text-muted-foreground">
+                      <span className="text-lg text-foreground">
                         {[selectedTrim.body_type, selectedTrim.drive_type].filter(Boolean).join(', ')}
                       </span>
                     </div>
@@ -579,8 +579,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                   {/* Engine */}
                   {selectedTrim.engine_size_l && (
                     <div className="space-y-1">
-                      <div className="text-gray-400 text-sm">Engine:</div>
-                      <div className="text-white">
+                      <div className="text-muted-foreground text-sm">Engine:</div>
+                      <div className="text-foreground">
                         {formatEngine(selectedTrim)}
                         {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type}`}
                       </div>
@@ -590,8 +590,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                   {/* Output */}
                   {(selectedTrim.horsepower_hp || selectedTrim.torque_ft_lbs) && (
                     <div className="space-y-1">
-                      <div className="text-gray-400 text-sm">Output:</div>
-                      <div className="text-white">
+                      <div className="text-muted-foreground text-sm">Output:</div>
+                      <div className="text-foreground">
                         {selectedTrim.horsepower_hp && (
                           <>
                             {selectedTrim.horsepower_hp} hp
@@ -612,16 +612,16 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                   {/* Transmission */}
                   {selectedTrim.transmission && (
                     <div className="space-y-1">
-                      <div className="text-gray-400 text-sm">Transmission:</div>
-                      <div className="text-white">{selectedTrim.transmission}</div>
+                      <div className="text-muted-foreground text-sm">Transmission:</div>
+                      <div className="text-foreground">{selectedTrim.transmission}</div>
                     </div>
                   )}
 
                   {/* Fuel Economy/Range */}
                   {selectedTrim.epa_combined_mpg && (
                     <div className="space-y-1">
-                      <div className="text-gray-400 text-sm">Fuel Economy/Range:</div>
-                      <div className="text-white">{formatFuelEconomy(selectedTrim)}</div>
+                      <div className="text-muted-foreground text-sm">Fuel Economy/Range:</div>
+                      <div className="text-foreground">{formatFuelEconomy(selectedTrim)}</div>
                     </div>
                   )}
                 </div>
@@ -630,44 +630,38 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="px-6 pb-6">
-          <div className="flex gap-4 justify-center">
-            <Button
-              onClick={handleAddToGarage}
-              disabled={!canAddToGarage}
-              className={`py-3 px-8 rounded-lg font-semibold transition-colors ${
-                isAddedToGarage
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-lime-500 hover:bg-lime-600 text-black'
-              } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
-            >
-              {isAddingToGarage
-                ? 'Adding to Garage...'
-                : isAddedToGarage
-                ? '✓ Added to Garage'
-                : 'Add Vehicle'
-              }
-            </Button>
-
-            <Button
-              onClick={() => onOpenChange(false)}
-              className="py-3 px-8 rounded-lg font-semibold transition-colors bg-gray-700 hover:bg-gray-600 text-white min-w-[200px]"
-            >
-              Cancel
-            </Button>
+        <DialogFooter>
+          <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-between items-center">
+            <div className="hidden sm:block">
+              <Button
+                onClick={handleDiscoverClick}
+                variant="ghost"
+              >
+                Need help finding a vehicle?
+              </Button>
+            </div>
+            <div className="flex gap-4 w-full sm:w-auto justify-end">
+              <Button
+                onClick={() => onOpenChange(false)}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddToGarage}
+                disabled={!canAddToGarage}
+                className={isAddedToGarage ? 'bg-green-600 hover:bg-green-700' : ''}
+              >
+                {isAddingToGarage
+                  ? 'Adding...'
+                  : isAddedToGarage
+                  ? 'Added'
+                  : 'Add Vehicle'
+                }
+              </Button>
+            </div>
           </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm mb-3">Need to find your next vehicle?</p>
-            <Button
-              onClick={handleDiscoverClick}
-              className="py-2 px-6 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Discover
-            </Button>
-          </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

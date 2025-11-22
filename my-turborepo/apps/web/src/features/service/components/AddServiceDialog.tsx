@@ -397,38 +397,33 @@ export function AddServiceDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        className="bg-black/50 backdrop-blur-lg max-w-md text-white p-0"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
-      >
+      <DialogContent className="sm:max-w-md p-0">
         {/* Step 1: Category Selection */}
         {currentStep === 1 && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-white">
+              <DialogTitle className="flex items-center gap-2">
                 <Wrench className="h-5 w-5" />
                 Add Service Entry
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription>
                 What system did you service?
               </DialogDescription>
             </DialogHeader>
 
             <div className="px-6 pb-6">
               {error && (
-                <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3 mb-4">
-                  <p className="text-red-200 text-sm">{error}</p>
+                <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-3 mb-4">
+                  <p className="text-destructive text-sm">{error}</p>
                 </div>
               )}
 
               {isLoadingCategories ? (
-                <div className="text-center py-8 text-gray-400">Loading categories...</div>
+                <div className="text-center py-8 text-muted-foreground">Loading categories...</div>
               ) : serviceCategories.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-400 mb-4">No service categories found.</p>
-                  <p className="text-gray-500 text-sm">Please ensure service categories are set up in the database.</p>
+                  <p className="text-muted-foreground mb-4">No service categories found.</p>
+                  <p className="text-muted-foreground text-sm">Please ensure service categories are set up in the database.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
@@ -436,10 +431,10 @@ export function AddServiceDialog({
                     <Card
                       key={category.id}
                       onClick={() => handleCategorySelect(category)}
-                      className="cursor-pointer bg-black/30 backdrop-blur-sm border-white/20 hover:border-white/40 hover:bg-black/40 transition-colors"
+                      className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <CardContent className="p-4">
-                        <p className="text-white font-medium text-sm">{category.name}</p>
+                        <p className="font-medium text-sm">{category.name}</p>
                       </CardContent>
                     </Card>
                   ))}
@@ -451,7 +446,6 @@ export function AddServiceDialog({
                   type="button"
                   variant="outline"
                   onClick={onClose}
-                  className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
                 >
                   Cancel
                 </Button>
@@ -464,40 +458,40 @@ export function AddServiceDialog({
         {currentStep === 2 && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-white">
+              <DialogTitle className="flex items-center gap-2">
                 <Wrench className="h-5 w-5" />
                 Log: {selectedCategory?.name || 'Service'}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription>
                 Select the service job and fill in the details.
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
               {error && (
-                <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-3">
-                  <p className="text-red-200 text-sm">{error}</p>
+                <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-3">
+                  <p className="text-destructive text-sm">{error}</p>
                 </div>
               )}
 
               {/* Service Job Selection */}
               <div className="space-y-2">
-                <Label htmlFor="service_item_id" className="text-gray-300">
+                <Label htmlFor="service_item_id">
                   Service Job *
                 </Label>
                 {isLoadingItems ? (
-                  <div className="text-gray-400 text-sm py-2">Loading jobs...</div>
+                  <div className="text-muted-foreground text-sm py-2">Loading jobs...</div>
                 ) : (
                   <select
                     id="service_item_id"
                     value={formData.service_item_id}
                     onChange={(e) => handleInputChange('service_item_id', e.target.value)}
-                    className="w-full h-10 rounded-md border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-2 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     required
                   >
-                    <option value="" className="bg-gray-900 text-white">Select a service job</option>
+                    <option value="">Select a service job</option>
                     {serviceItems.map((item) => (
-                      <option key={item.id} value={item.id} className="bg-gray-900 text-white">
+                      <option key={item.id} value={item.id}>
                         {item.name}
                       </option>
                     ))}
@@ -507,7 +501,7 @@ export function AddServiceDialog({
 
               {/* Status */}
               <div className="space-y-2">
-                <Label className="text-gray-300">Status</Label>
+                <Label>Status</Label>
                 <ToggleGroup
                   type="single"
                   value={formData.status}
@@ -517,27 +511,25 @@ export function AddServiceDialog({
                 >
                   <ToggleGroupItem 
                     value="History" 
-                    className="data-[state=on]:bg-blue-600 data-[state=on]:text-white text-gray-300 border-white/20 bg-black/30 disabled:opacity-50"
                     disabled={lockStatusToHistory}
                   >
                     History
                   </ToggleGroupItem>
                   <ToggleGroupItem 
                     value="Plan" 
-                    className="data-[state=on]:bg-blue-600 data-[state=on]:text-white text-gray-300 border-white/20 bg-black/30 disabled:opacity-50"
                     disabled={lockStatusToHistory}
                   >
                     Plan
                   </ToggleGroupItem>
                 </ToggleGroup>
                 {lockStatusToHistory && (
-                  <p className="text-xs text-gray-500">Status is locked to History when marking a plan as completed.</p>
+                  <p className="text-xs text-muted-foreground">Status is locked to History when marking a plan as completed.</p>
                 )}
               </div>
 
               {/* Date */}
               <div className="space-y-2">
-                <Label htmlFor="event_date" className="text-gray-300">
+                <Label htmlFor="event_date">
                   {formData.status === 'Plan' ? 'Planned Date' : 'Date'} *
                 </Label>
                 <Input
@@ -545,14 +537,13 @@ export function AddServiceDialog({
                   type="date"
                   value={formData.event_date}
                   onChange={(e) => handleInputChange('event_date', e.target.value)}
-                  className="bg-black/30 backdrop-blur-sm border-white/20 text-white focus:border-white/40 px-3 py-2"
                   required
                 />
               </div>
 
               {/* Odometer */}
               <div className="space-y-2">
-                <Label htmlFor="odometer" className="text-gray-300">
+                <Label htmlFor="odometer">
                   {formData.status === 'Plan' ? 'Planned Odometer' : 'Odometer'}
                 </Label>
                 <Input
@@ -561,13 +552,12 @@ export function AddServiceDialog({
                   value={formData.odometer}
                   onChange={(e) => handleInputChange('odometer', e.target.value)}
                   placeholder="Current mileage"
-                  className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                 />
               </div>
 
               {/* Cost */}
               <div className="space-y-2">
-                <Label htmlFor="cost" className="text-gray-300">
+                <Label htmlFor="cost">
                   Total Cost
                 </Label>
                 <Input
@@ -577,13 +567,12 @@ export function AddServiceDialog({
                   value={formData.cost}
                   onChange={(e) => handleInputChange('cost', e.target.value)}
                   placeholder="0.00"
-                  className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
                 />
               </div>
 
               {/* Notes */}
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-gray-300">
+                <Label htmlFor="notes">
                   Notes
                 </Label>
                 <Textarea
@@ -591,7 +580,7 @@ export function AddServiceDialog({
                   value={formData.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder="e.g., Used Liqui Moly 5W-40, DIY job, Shop: The M Shop..."
-                  className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 min-h-[80px] px-3 py-2 focus:border-white/40"
+                  className="min-h-[80px]"
                 />
               </div>
 
@@ -600,7 +589,6 @@ export function AddServiceDialog({
                   type="button"
                   variant="outline"
                   onClick={handleBackToStep1}
-                  className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
@@ -608,7 +596,6 @@ export function AddServiceDialog({
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {isSubmitting ? (
                     'Saving...'

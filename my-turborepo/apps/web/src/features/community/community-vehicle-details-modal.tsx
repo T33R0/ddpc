@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@repo/ui/dialog';
 
 // Simple image component that matches the gallery card behavior
 type ImageWithTimeoutFallbackProps = {
@@ -195,14 +195,14 @@ const CommunityVehicleDetailsModal = ({
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-black/50 backdrop-blur-lg border-b border-white/30 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
-          <DialogTitle className="text-2xl font-bold text-white">
+        <DialogHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border z-10">
+          <DialogTitle className="text-2xl font-bold text-foreground text-left">
             {ymmt}
           </DialogTitle>
           <DialogDescription className="sr-only">
             Vehicle details and specifications for {ymmt}
           </DialogDescription>
-        </div>
+        </DialogHeader>
 
         {/* Side Navigation Arrows - Fixed positioning */}
         {canNavigatePrev && (
@@ -212,9 +212,9 @@ const CommunityVehicleDetailsModal = ({
               onNavigate?.('prev');
             }}
             aria-label="Previous vehicle"
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-black/50 backdrop-blur-lg border border-white/30 rounded-full hover:bg-gray-700/50 transition-colors"
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg"
           >
-            <ChevronLeft className="w-8 h-8 text-white" />
+            <ChevronLeft className="w-8 h-8 text-foreground" />
           </button>
         )}
 
@@ -225,9 +225,9 @@ const CommunityVehicleDetailsModal = ({
               onNavigate?.('next');
             }}
             aria-label="Next vehicle"
-            className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-black/50 backdrop-blur-lg border border-white/30 rounded-full hover:bg-gray-700/50 transition-colors"
+            className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg"
           >
-            <ChevronRight className="w-8 h-8 text-white" />
+            <ChevronRight className="w-8 h-8 text-foreground" />
           </button>
         )}
 
@@ -236,7 +236,7 @@ const CommunityVehicleDetailsModal = ({
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left Column - Image */}
             <div className="space-y-4">
-              <div className="w-full aspect-video overflow-hidden rounded-lg bg-gray-800">
+              <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10">
                 <ImageWithTimeoutFallback
                   src={primaryImageUrl}
                   fallbackSrc="/branding/fallback-logo.png"
@@ -250,8 +250,8 @@ const CommunityVehicleDetailsModal = ({
             <div className="space-y-4">
               {/* Vehicle Type */}
               {(selectedTrim.body_type || selectedTrim.drive_type) && (
-                <div className="text-gray-300">
-                  <span className="text-lg">
+                <div className="text-muted-foreground">
+                  <span className="text-lg text-foreground">
                     {[selectedTrim.body_type, selectedTrim.drive_type].filter(Boolean).join(', ')}
                   </span>
                 </div>
@@ -260,8 +260,8 @@ const CommunityVehicleDetailsModal = ({
               {/* Engine */}
               {selectedTrim.engine_size_l && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Engine:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Engine:</div>
+                  <div className="text-foreground">
                     {formatEngine(selectedTrim)}
                     {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type}`}
                   </div>
@@ -271,8 +271,8 @@ const CommunityVehicleDetailsModal = ({
               {/* Output */}
               {(selectedTrim.horsepower_hp || selectedTrim.torque_ft_lbs) && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Output:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Output:</div>
+                  <div className="text-foreground">
                     {selectedTrim.horsepower_hp && (
                       <>
                         {selectedTrim.horsepower_hp} hp
@@ -293,27 +293,27 @@ const CommunityVehicleDetailsModal = ({
               {/* Transmission */}
               {selectedTrim.transmission && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Transmission:</div>
-                  <div className="text-white">{selectedTrim.transmission}</div>
+                  <div className="text-muted-foreground text-sm">Transmission:</div>
+                  <div className="text-foreground">{selectedTrim.transmission}</div>
                 </div>
               )}
 
               {/* Curb Weight */}
               {selectedTrim.curb_weight_lbs && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Curb Weight:</div>
-                  <div className="text-white">{formatSpec(selectedTrim.curb_weight_lbs, ' lb')}</div>
+                  <div className="text-muted-foreground text-sm">Curb Weight:</div>
+                  <div className="text-foreground">{formatSpec(selectedTrim.curb_weight_lbs, ' lb')}</div>
                 </div>
               )}
 
               {/* Power-to-Weight Ratio */}
               {selectedTrim.horsepower_hp && selectedTrim.curb_weight_lbs && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Power-to-Weight:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Power-to-Weight:</div>
+                  <div className="text-foreground">
                     {calculatePowerToWeight(selectedTrim.horsepower_hp, selectedTrim.curb_weight_lbs)}
                     {' • '}
-                    <span className="text-gray-400">Specific Output:</span>
+                    <span className="text-muted-foreground">Specific Output:</span>
                     {' '}
                     {calculateSpecificOutput(selectedTrim.horsepower_hp, selectedTrim.engine_size_l)}
                   </div>
@@ -323,56 +323,56 @@ const CommunityVehicleDetailsModal = ({
               {/* Suspension */}
               {selectedTrim.suspension && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Suspension:</div>
-                  <div className="text-white">{selectedTrim.suspension}</div>
+                  <div className="text-muted-foreground text-sm">Suspension:</div>
+                  <div className="text-foreground">{selectedTrim.suspension}</div>
                 </div>
               )}
 
               {/* Drivetrain */}
               {selectedTrim.drive_type && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Drivetrain:</div>
-                  <div className="text-white">{selectedTrim.drive_type}</div>
+                  <div className="text-muted-foreground text-sm">Drivetrain:</div>
+                  <div className="text-foreground">{selectedTrim.drive_type}</div>
                 </div>
               )}
 
               {/* Fuel Economy/Range */}
               {selectedTrim.epa_combined_mpg && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Fuel Economy/Range:</div>
-                  <div className="text-white">{formatFuelEconomy(selectedTrim)}</div>
+                  <div className="text-muted-foreground text-sm">Fuel Economy/Range:</div>
+                  <div className="text-foreground">{formatFuelEconomy(selectedTrim)}</div>
                 </div>
               )}
 
               {/* Ground Clearance */}
               {selectedTrim.ground_clearance_in && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Ground Clearance:</div>
-                  <div className="text-white">{formatSpec(selectedTrim.ground_clearance_in, ' in.')}</div>
+                  <div className="text-muted-foreground text-sm">Ground Clearance:</div>
+                  <div className="text-foreground">{formatSpec(selectedTrim.ground_clearance_in, ' in.')}</div>
                 </div>
               )}
 
               {/* Towing Capacity (if available) */}
               {selectedTrim.max_towing_capacity_lbs && selectedTrim.max_towing_capacity_lbs !== '0' && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Max Towing Capacity:</div>
-                  <div className="text-white">{formatSpec(selectedTrim.max_towing_capacity_lbs, ' lb')}</div>
+                  <div className="text-muted-foreground text-sm">Max Towing Capacity:</div>
+                  <div className="text-foreground">{formatSpec(selectedTrim.max_towing_capacity_lbs, ' lb')}</div>
                 </div>
               )}
 
               {/* Seating */}
               {selectedTrim.total_seating && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Seating:</div>
-                  <div className="text-white">{selectedTrim.total_seating} passengers</div>
+                  <div className="text-muted-foreground text-sm">Seating:</div>
+                  <div className="text-foreground">{selectedTrim.total_seating} passengers</div>
                 </div>
               )}
 
               {/* Cargo Capacity */}
               {selectedTrim.cargo_capacity_cuft && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Cargo Capacity:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Cargo Capacity:</div>
+                  <div className="text-foreground">
                     {formatSpec(selectedTrim.cargo_capacity_cuft, ' cu ft')}
                     {selectedTrim.max_cargo_capacity_cuft &&
                       ` (${formatSpec(selectedTrim.max_cargo_capacity_cuft, ' cu ft')} max)`

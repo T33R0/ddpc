@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody } from '@repo/ui/dialog';
+import { Input } from '@repo/ui/input';
+import { Button } from '@repo/ui/button';
 
 type SearchModalProps = {
   open: boolean;
@@ -79,24 +81,24 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
         </DialogHeader>
         <DialogBody className="px-6 pb-6">
           <form onSubmit={handleSearch} className="space-y-4">
-            <div className="relative space-y-2">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={handleInputChange}
                 onFocus={handleFocus}
                 placeholder={showPlaceholder ? placeholders[currentPlaceholder] : ""}
-                className="w-full pl-10 pr-3 py-2 bg-input border border-border text-foreground placeholder-muted-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full pl-10 pr-3"
                 autoFocus
               />
             </div>
-            <button
+            <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors"
             >
               Search
-            </button>
+            </Button>
           </form>
         </DialogBody>
       </DialogContent>

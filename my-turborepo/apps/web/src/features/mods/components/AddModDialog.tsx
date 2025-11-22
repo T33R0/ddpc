@@ -67,14 +67,14 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="bg-background max-w-md text-foreground p-0 border border-border"
+        className="sm:max-w-md p-0"
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
+          <DialogTitle className="flex items-center gap-2">
             <Wrench className="h-5 w-5" />
             Add Modification
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription>
             Track a new modification or upgrade for your vehicle.
           </DialogDescription>
         </DialogHeader>
@@ -87,51 +87,50 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-foreground">
+            <Label htmlFor="title">
               Modification Title *
             </Label>
             <Input
               name="title"
               id="title"
               placeholder="e.g., Turbo Upgrade, Exhaust System"
-              className="bg-input border-input text-foreground placeholder:text-muted-foreground focus:border-ring px-3 py-2"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-foreground">
+            <Label htmlFor="description">
               Description
             </Label>
             <Textarea
               name="description"
               id="description"
               placeholder="Brief description of the modification..."
-              className="bg-input border-input text-foreground placeholder:text-muted-foreground min-h-[60px] px-3 py-2 focus:border-ring"
+              className="min-h-[60px]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status" className="text-foreground">
+            <Label htmlFor="status">
               Status *
             </Label>
             <select
               name="status"
               id="status"
-              className="w-full bg-input border border-input text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
             >
-              <option value="" className="bg-background text-muted-foreground">Select status</option>
-              <option value="planned" className="bg-background text-foreground">Planned</option>
-              <option value="ordered" className="bg-background text-foreground">Ordered</option>
-              <option value="installed" className="bg-background text-foreground">Installed</option>
-              <option value="tuned" className="bg-background text-foreground">Tuned</option>
+              <option value="">Select status</option>
+              <option value="planned">Planned</option>
+              <option value="ordered">Ordered</option>
+              <option value="installed">Installed</option>
+              <option value="tuned">Tuned</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cost" className="text-foreground">
+              <Label htmlFor="cost">
                 Cost ($)
               </Label>
               <Input
@@ -140,11 +139,10 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="bg-input border-input text-foreground placeholder:text-muted-foreground focus:border-ring px-3 py-2"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="odometer" className="text-foreground">
+              <Label htmlFor="odometer">
                 Odometer (miles)
               </Label>
               <Input
@@ -152,20 +150,18 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 id="odometer"
                 type="number"
                 placeholder="Current mileage"
-                className="bg-input border-input text-foreground placeholder:text-muted-foreground focus:border-ring px-3 py-2"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="event_date" className="text-foreground">
+            <Label htmlFor="event_date">
               Date *
             </Label>
             <Input
               name="event_date"
               id="event_date"
               type="date"
-              className="bg-input border-input text-foreground focus:border-ring px-3 py-2"
               required
             />
           </div>
@@ -175,14 +171,12 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isSubmitting ? (
                 'Adding...'

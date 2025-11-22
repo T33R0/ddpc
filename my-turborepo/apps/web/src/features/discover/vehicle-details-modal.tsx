@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@repo/ui/dialog';
+import { Button } from '@repo/ui/button';
 import Link from 'next/link';
 
 // Simple image component that matches the gallery card behavior
@@ -256,20 +257,20 @@ const VehicleDetailsModal = ({
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0 bg-background border-border"
+        className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
-          <DialogTitle className="text-2xl font-bold text-foreground">
+        <DialogHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
+          <DialogTitle className="text-2xl font-bold text-foreground text-left">
             {summary.year} {summary.make} {summary.model}
           </DialogTitle>
           <DialogDescription className="sr-only">
             Vehicle details and specifications for {summary.year} {summary.make} {summary.model}
           </DialogDescription>
-        </div>
+        </DialogHeader>
 
         {/* Side Navigation Arrows - Fixed positioning */}
         {canNavigatePrev && (
@@ -321,7 +322,7 @@ const VehicleDetailsModal = ({
                   id="trim-select"
                   value={selectedTrimId}
                   onChange={handleTrimChange}
-                  className="max-w-xs bg-background border border-border text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                  className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {summary.trims.map((trim) => (
                     <option key={trim.id} value={trim.id} className="bg-background text-foreground">
@@ -337,7 +338,7 @@ const VehicleDetailsModal = ({
               {/* Vehicle Type */}
               {(selectedTrim.body_type || selectedTrim.drive_type) && (
                 <div className="text-muted-foreground">
-                  <span className="text-lg">
+                  <span className="text-lg text-foreground">
                     {[selectedTrim.body_type, selectedTrim.drive_type].filter(Boolean).join(', ')}
                   </span>
                 </div>
@@ -470,15 +471,12 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 pt-8 border-t border-border pb-2">
-            <div className="flex gap-4 justify-center">
-              <button
+          <DialogFooter className="pt-6">
+            <div className="flex gap-4 justify-center w-full">
+              <Button
                 onClick={handleAddToGarage}
                 disabled={isAddingToGarage || isAddedToGarage}
-                className={`py-3 px-8 rounded-lg font-semibold transition-colors ${isAddedToGarage
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
+                className={`min-w-[200px] ${isAddedToGarage ? 'bg-green-600 hover:bg-green-700' : ''}`}
               >
                 {isAddingToGarage
                   ? 'Adding to Garage...'
@@ -486,19 +484,22 @@ const VehicleDetailsModal = ({
                     ? '✓ Added to Garage'
                     : 'Add to Garage'
                 }
-              </button>
+              </Button>
 
-              <Link
-                href={`/details/${summary.year}/${encodeURIComponent(summary.make)}/${encodeURIComponent(summary.model)}?trim=${selectedTrimId}`}
-                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-background border border-border hover:bg-muted text-foreground min-w-[200px] text-center flex items-center justify-center"
+              <Button
+                asChild
+                variant="outline"
+                className="min-w-[200px]"
               >
-                More Details
-              </Link>
+                <Link
+                  href={`/details/${summary.year}/${encodeURIComponent(summary.make)}/${encodeURIComponent(summary.model)}?trim=${selectedTrimId}`}
+                >
+                  More Details
+                </Link>
+              </Button>
             </div>
-          </div>
+          </DialogFooter>
         </div>
-
-        {/* Coming Soon Popup - Removed */}
       </DialogContent>
     </Dialog>
   );

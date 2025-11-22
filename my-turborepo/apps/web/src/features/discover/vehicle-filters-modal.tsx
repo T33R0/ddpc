@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from '@repo/ui/dialog';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
+import { Button } from '@repo/ui/button';
 
 export type FilterState = {
   minYear?: number | null;
@@ -170,14 +171,14 @@ export function VehicleFiltersModal({
             </DropdownMenu>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-border flex justify-end">
-            <button
+          <DialogFooter className="mt-6 pt-4 border-t border-border">
+            <Button
               onClick={() => onOpenChange(false)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors"
             >
               Apply Filters
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </DialogBody>
       </DialogContent>
     </Dialog>
