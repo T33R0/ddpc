@@ -10,27 +10,22 @@ const formatSpec = (value: string | number | null | undefined, unit: string = ''
     return unit ? `${value}${unit}` : `${value}`;
 };
 
-export default async function VehicleDetailsPage({
-    params,
-    searchParams,
-}: {
-    params: { year: string; make: string; model: string };
-    searchParams: { trim?: string };
+export default async function VehicleDetailsPage(props: {
+    params: Promise<{ year: string; make: string; model: string }>;
+    searchParams: Promise<{ trim?: string }>;
 }) {
+    const params = await props.params;
+    const searchParams = await props.searchParams;
     const { year, make, model } = params;
     const decodedMake = decodeURIComponent(make);
     const decodedModel = decodeURIComponent(model);
     const trimId = searchParams.trim;
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Fetch all trims for this vehicle
     const { data: vehicles, error } = await supabase
         .from('vehicle_data')
-        .select('*')
-        .eq('year', year)
-        .eq('make', decodedMake)
-        .eq('model', decodedModel);
 
     if (error || !vehicles || vehicles.length === 0) {
         console.error('Error fetching vehicle:', error);
@@ -95,8 +90,8 @@ export default async function VehicleDetailsPage({
                                         key={v.id}
                                         href={`/details/${year}/${make}/${model}?trim=${v.id}`}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${v.id === selectedVehicle.id
-                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-card text-card-foreground border-border hover:bg-muted'
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-card text-card-foreground border-border hover:bg-muted'
                                             }`}
                                     >
                                         {v.trim || v.trim_description || 'Base'}
