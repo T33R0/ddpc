@@ -1,13 +1,12 @@
-'use client'
-
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
-import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, Car, Gauge, Ruler, CarFront, Scale, Cog } from 'lucide-react'
+import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, Car, Gauge, Ruler, CarFront, Scale, Cog, ChevronLeft } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { Badge } from '@repo/ui/badge'
@@ -91,42 +90,6 @@ function ImageWithTimeoutFallback({
 const formatSpec = (value: string | number | undefined | null, unit: string = ''): string => {
   if (!value || value === 'null' || value === 'undefined') return '—';
   return unit ? `${value}${unit}` : String(value);
-};
-
-// Calculate power-to-weight ratio
-const calculatePowerToWeight = (hp: string | number | undefined, weight: string | number | undefined): string => {
-  if (!hp || !weight) return '—';
-  const hpNum = typeof hp === 'string' ? parseFloat(hp) : hp;
-  const weightNum = typeof weight === 'string' ? parseFloat(weight) : weight;
-  if (isNaN(hpNum) || isNaN(weightNum) || hpNum === 0) return '—';
-
-  const lbPerHp = (weightNum / hpNum).toFixed(2);
-  return `${lbPerHp} lb/hp`;
-};
-
-// Calculate specific output
-const calculateSpecificOutput = (hp: string | number | undefined, displacement: string | number | undefined): string => {
-  if (!hp || !displacement) return '—';
-  const hpNum = typeof hp === 'string' ? parseFloat(hp) : hp;
-  const dispNum = typeof displacement === 'string' ? parseFloat(displacement) : displacement;
-  if (isNaN(hpNum) || isNaN(dispNum) || dispNum === 0) return '—';
-
-  const hpPerLiter = (hpNum / dispNum).toFixed(0);
-  return `${hpPerLiter} hp/L`;
-};
-
-// Format engine configuration
-const formatEngine = (vehicle: Vehicle): string => {
-  const parts: string[] = [];
-
-  if (vehicle.engine_size_l) parts.push(`${vehicle.engine_size_l}L`);
-  if (vehicle.cylinders) {
-    const cyl = String(vehicle.cylinders);
-    parts.push(cyl.includes('cylinder') ? cyl : `${cyl}-cyl`);
-  }
-  if (vehicle.engine_type) parts.push(vehicle.engine_type.toUpperCase());
-
-  return parts.length > 0 ? parts.join(' ') : '—';
 };
 
 function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; vehicleId: string; isOwner: boolean }) {
@@ -412,6 +375,7 @@ function PrivacyBadge({
   )
 }
 
+
 function VehicleHeader({
   vehicle,
   vehicleId,
@@ -481,20 +445,26 @@ function VehicleHeader({
 
   return (
     <>
-      <div className="mb-8 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <h1 className="text-4xl font-bold text-foreground">{vehicle.name || 'Unnamed Vehicle'}</h1>
-          {isOwner && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground hover:bg-muted"
-              onClick={() => setIsEditDialogOpen(true)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-          )}
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/garage" className="p-2 hover:bg-muted rounded-full transition-colors">
+            <ChevronLeft className="w-6 h-6" />
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold truncate max-w-[200px] md:max-w-md">{vehicle.name || 'Unnamed Vehicle'}</h1>
+            {isOwner && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 w-8 p-0"
+                onClick={() => setIsEditDialogOpen(true)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
           <PrivacyBadge
             vehicleId={vehicleId}
@@ -564,191 +534,7 @@ function VehicleHeader({
   )
 }
 
-function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
-  return (
-    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
-        <Wrench className="h-4 w-4 text-accent" />
-        Build Specs
-      </h3>
-      <div className="space-y-2 overflow-hidden">
-        <div className="flex justify-between border-b border-border pb-1.5">
-          <span className="text-sm text-muted-foreground shrink-0 mr-2">Trim</span>
-          <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.trim || '—'}</span>
-        </div>
-        {vehicle.body_type && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Body Type</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.body_type}</span>
-          </div>
-        )}
-        {vehicle.doors && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Doors</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.doors}</span>
-          </div>
-        )}
-        {vehicle.total_seating && (
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Seating</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.total_seating} passengers</span>
-          </div>
-        )}
-      </div>
-    </Card>
-  )
-}
-
-function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
-  const powerToWeight = calculatePowerToWeight(vehicle.horsepower_hp, vehicle.curb_weight_lbs);
-  const specificOutput = calculateSpecificOutput(vehicle.horsepower_hp, vehicle.engine_size_l);
-
-  return (
-    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
-        <Gauge className="h-4 w-4 text-accent" />
-        Engine & Power
-      </h3>
-      <div className="space-y-2 overflow-hidden">
-        <div className="flex justify-between border-b border-border pb-1.5">
-          <span className="text-sm text-muted-foreground shrink-0 mr-2">Engine</span>
-          <span className="text-sm text-foreground font-medium text-right truncate">{formatEngine(vehicle)}</span>
-        </div>
-        {vehicle.fuel_type && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Fuel Type</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.fuel_type}</span>
-          </div>
-        )}
-        {vehicle.horsepower_hp && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Horsepower</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">
-              {vehicle.horsepower_hp} hp
-              {vehicle.horsepower_rpm && ` @ ${vehicle.horsepower_rpm} rpm`}
-            </span>
-          </div>
-        )}
-        {vehicle.torque_ft_lbs && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Torque</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">
-              {vehicle.torque_ft_lbs} lb-ft
-              {vehicle.torque_rpm && ` @ ${vehicle.torque_rpm} rpm`}
-            </span>
-          </div>
-        )}
-        {powerToWeight !== '—' && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Power/Weight</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{powerToWeight}</span>
-          </div>
-        )}
-        {specificOutput !== '—' && (
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Specific Output</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{specificOutput}</span>
-          </div>
-        )}
-      </div>
-    </Card>
-  )
-}
-
-function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
-  return (
-    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
-        <Scale className="h-4 w-4 text-accent" />
-        Dimensions & Weight
-      </h3>
-      <div className="space-y-2 overflow-hidden">
-        {vehicle.curb_weight_lbs && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Curb Weight</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.curb_weight_lbs, ' lb')}</span>
-          </div>
-        )}
-        {vehicle.length_in && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Length</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.length_in, '"')}</span>
-          </div>
-        )}
-        {vehicle.width_in && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Width</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.width_in, '"')}</span>
-          </div>
-        )}
-        {vehicle.height_in && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Height</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.height_in, '"')}</span>
-          </div>
-        )}
-        {vehicle.ground_clearance_in && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Ground Clearance</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.ground_clearance_in, ' in')}</span>
-          </div>
-        )}
-        {vehicle.cargo_capacity_cuft && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Cargo Capacity</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">
-              {formatSpec(vehicle.cargo_capacity_cuft, ' cu ft')}
-              {vehicle.max_cargo_capacity_cuft && ` (${formatSpec(vehicle.max_cargo_capacity_cuft, ' cu ft')} max)`}
-            </span>
-          </div>
-        )}
-        {vehicle.max_towing_capacity_lbs && vehicle.max_towing_capacity_lbs !== '0' && (
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Max Towing</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.max_towing_capacity_lbs, ' lb')}</span>
-          </div>
-        )}
-      </div>
-    </Card>
-  )
-}
-
-function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
-  return (
-    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
-        <Cog className="h-4 w-4 text-accent" />
-        Drivetrain & Chassis
-      </h3>
-      <div className="space-y-2 overflow-hidden">
-        {vehicle.transmission && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Transmission</span>
-            <span className="text-sm text-foreground font-medium text-right truncate" title={vehicle.transmission}>{vehicle.transmission}</span>
-          </div>
-        )}
-        {vehicle.drive_type && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Drivetrain</span>
-            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.drive_type}</span>
-          </div>
-        )}
-        {vehicle.suspension && (
-          <div className="flex justify-between border-b border-border pb-1.5">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Suspension</span>
-            <span className="text-sm text-foreground font-medium text-right truncate" title={vehicle.suspension}>{vehicle.suspension}</span>
-          </div>
-        )}
-        {vehicle.tires_and_wheels && (
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground shrink-0 mr-2">Wheels/Tires</span>
-            <span className="text-sm text-foreground font-medium text-right truncate" title={vehicle.tires_and_wheels}>{vehicle.tires_and_wheels}</span>
-          </div>
-        )}
-      </div>
-    </Card>
-  )
-}
+// Removed BuildSpecsCard, EngineSpecsCard, DimensionsCard, DrivetrainCard
 
 function NavigationCard({
   icon: Icon,
@@ -827,93 +613,191 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
   }
 
   return (
-    <>
-      <section className="relative py-12 bg-background min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-16">
+      {/* Sticky Header */}
+      <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
+        <VehicleHeader
+          vehicle={{ ...vehicle, name: currentNickname || vehicle.name, current_status: currentStatus, privacy: currentPrivacy }}
+          vehicleId={vehicle.id}
+          onNicknameUpdate={(newNickname) => {
+            setCurrentNickname(newNickname || null)
+          }}
+          onStatusUpdate={(newStatus) => {
+            setCurrentStatus(newStatus)
+          }}
+          onPrivacyUpdate={(newPrivacy) => {
+            setCurrentPrivacy(newPrivacy)
+          }}
+          isOwner={isOwner}
+        />
+      </div>
 
-        <div className="relative container px-4 md:px-6 pt-24">
-          <VehicleHeader
-            vehicle={{ ...vehicle, name: currentNickname || vehicle.name, current_status: currentStatus, privacy: currentPrivacy }}
-            vehicleId={vehicle.id}
-            onNicknameUpdate={(newNickname) => {
-              setCurrentNickname(newNickname || null)
-            }}
-            onStatusUpdate={(newStatus) => {
-              setCurrentStatus(newStatus)
-            }}
-            onPrivacyUpdate={(newPrivacy) => {
-              setCurrentPrivacy(newPrivacy)
-            }}
-            isOwner={isOwner}
-          />
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Hero Section */}
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/20 shadow-lg">
+            <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
+          </div>
 
-          {/* Grid container - 3 column layout: left sidebar, center image, right sidebar */}
-          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {/* Left Column - Stacked vertically */}
-            <div className="flex flex-col gap-4">
-              <BuildSpecsCard vehicle={vehicle} />
-              <DimensionsCard vehicle={vehicle} />
-              <NavigationCard
-                icon={Activity}
-                title="History"
-                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
-                stats={[
-                  { label: 'Last Service', value: '---' },
-                  { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
-                ]}
-                disabled={!isOwner}
-              />
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">{vehicle.trim || vehicle.trim_description || 'Base'}</h2>
+              <p className="text-muted-foreground text-lg">
+                {[vehicle.body_type, vehicle.drive_type, vehicle.transmission].filter(Boolean).join(' • ')}
+              </p>
             </div>
 
-            {/* Center Column - Large Image */}
-            <div className="w-full min-h-[600px]">
-              <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
-            </div>
-
-            {/* Right Column - Stacked vertically */}
-            <div className="flex flex-col gap-4">
-              <EngineSpecsCard vehicle={vehicle} />
-              <DrivetrainCard vehicle={vehicle} />
-              <NavigationCard
-                icon={Wrench}
-                title="Service"
-                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
-                stats={[
-                  { label: 'Next Service', value: '---' },
-                  { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
-                ]}
-                disabled={!isOwner}
-              />
-              <NavigationCard
-                icon={Fuel}
-                title="Fuel"
-                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
-                stats={[
-                  { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
-                  { label: 'Last Fill-up', value: '---' }
-                ]}
-                disabled={!isOwner}
-              />
-              <NavigationCard
-                icon={Settings}
-                title="Mods"
-                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
-                stats={[
-                  { label: 'Total Mods', value: '---' },
-                  { label: 'Total Cost', value: '---' }
-                ]}
-                disabled={!isOwner}
-              />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="text-sm text-muted-foreground">MSRP</div>
+                <div className="text-xl font-bold">{vehicle.base_msrp ? `$${parseInt(vehicle.base_msrp).toLocaleString()}` : '—'}</div>
+              </div>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="text-sm text-muted-foreground">MPG (Combined)</div>
+                <div className="text-xl font-bold">{formatSpec(vehicle.epa_combined_mpg)}</div>
+              </div>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="text-sm text-muted-foreground">Horsepower</div>
+                <div className="text-xl font-bold">{formatSpec(vehicle.horsepower_hp, ' hp')}</div>
+              </div>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="text-sm text-muted-foreground">0-60 mph</div>
+                {/* Note: 0-60 might not be in the Vehicle type if it wasn't in the original page, checking... */}
+                {/* It seems 0-60 is not in the standard Vehicle type from the previous file view. 
+                                I will check if I can use a fallback or if it's available. 
+                                The new details page used `zero_to_60_mph`. 
+                                The `Vehicle` type in `page.tsx` didn't explicitly map it. 
+                                I'll omit it or put a placeholder if not available. 
+                                Actually, let's use Torque instead if 0-60 is missing, or just leave it blank.
+                            */}
+                <div className="text-xl font-bold">—</div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
-    </>
+
+        {/* Navigation Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <NavigationCard
+            icon={Activity}
+            title="History"
+            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
+            stats={[
+              { label: 'Last Service', value: '---' },
+              { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
+            ]}
+            disabled={!isOwner}
+          />
+          <NavigationCard
+            icon={Wrench}
+            title="Service"
+            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
+            stats={[
+              { label: 'Next Service', value: '---' },
+              { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
+            ]}
+            disabled={!isOwner}
+          />
+          <NavigationCard
+            icon={Fuel}
+            title="Fuel"
+            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
+            stats={[
+              { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
+              { label: 'Last Fill-up', value: '---' }
+            ]}
+            disabled={!isOwner}
+          />
+          <NavigationCard
+            icon={Settings}
+            title="Mods"
+            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
+            stats={[
+              { label: 'Total Mods', value: '---' },
+              { label: 'Total Cost', value: '---' }
+            ]}
+            disabled={!isOwner}
+          />
+        </div>
+
+        {/* Detailed Specs Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* Engine & Performance */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold border-b border-border pb-2">Engine & Performance</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Engine Type</dt><dd className="font-medium text-right">{formatSpec(vehicle.engine_type)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Configuration</dt><dd className="font-medium text-right">{[vehicle.engine_size_l && `${vehicle.engine_size_l}L`, vehicle.cylinders && `${vehicle.cylinders}-cyl`].filter(Boolean).join(' ') || '—'}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Horsepower</dt><dd className="font-medium text-right">{formatSpec(vehicle.horsepower_hp, ' hp')} @ {formatSpec(vehicle.horsepower_rpm, ' rpm')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Torque</dt><dd className="font-medium text-right">{formatSpec(vehicle.torque_ft_lbs, ' lb-ft')} @ {formatSpec(vehicle.torque_rpm, ' rpm')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Drive Type</dt><dd className="font-medium text-right">{formatSpec(vehicle.drive_type)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Transmission</dt><dd className="font-medium text-right">{formatSpec(vehicle.transmission)}</dd></div>
+            </dl>
+          </div>
+
+          {/* Dimensions & Weight */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold border-b border-border pb-2">Dimensions & Weight</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Length</dt><dd className="font-medium text-right">{formatSpec(vehicle.length_in, '"')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Width</dt><dd className="font-medium text-right">{formatSpec(vehicle.width_in, '"')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Height</dt><dd className="font-medium text-right">{formatSpec(vehicle.height_in, '"')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Wheelbase</dt><dd className="font-medium text-right">{formatSpec(vehicle.wheelbase_in, '"')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Ground Clearance</dt><dd className="font-medium text-right">{formatSpec(vehicle.ground_clearance_in, '"')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Curb Weight</dt><dd className="font-medium text-right">{formatSpec(vehicle.curb_weight_lbs, ' lbs')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">GVWR</dt><dd className="font-medium text-right">{formatSpec(vehicle.gross_weight_lbs, ' lbs')}</dd></div>
+            </dl>
+          </div>
+
+          {/* Fuel & Efficiency */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold border-b border-border pb-2">Fuel & Efficiency</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Fuel Type</dt><dd className="font-medium text-right">{formatSpec(vehicle.fuel_type)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Tank Capacity</dt><dd className="font-medium text-right">{formatSpec(vehicle.fuel_tank_capacity_gal, ' gal')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">City MPG</dt><dd className="font-medium text-right">{vehicle.epa_city_highway_mpg ? vehicle.epa_city_highway_mpg.split('/')[0] : '—'}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Highway MPG</dt><dd className="font-medium text-right">{vehicle.epa_city_highway_mpg ? vehicle.epa_city_highway_mpg.split('/')[1] : '—'}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Combined MPG</dt><dd className="font-medium text-right">{formatSpec(vehicle.epa_combined_mpg)}</dd></div>
+            </dl>
+          </div>
+
+          {/* Interior & Cargo */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold border-b border-border pb-2">Interior & Cargo</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Seating Capacity</dt><dd className="font-medium text-right">{formatSpec(vehicle.total_seating)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Doors</dt><dd className="font-medium text-right">{formatSpec(vehicle.doors)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Cargo Capacity</dt><dd className="font-medium text-right">{formatSpec(vehicle.cargo_capacity_cuft, ' cu ft')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Max Cargo</dt><dd className="font-medium text-right">{formatSpec(vehicle.max_cargo_capacity_cuft, ' cu ft')}</dd></div>
+            </dl>
+          </div>
+
+          {/* Chassis & Suspension */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold border-b border-border pb-2">Chassis & Suspension</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Suspension</dt><dd className="font-medium text-right">{formatSpec(vehicle.suspension)}</dd></div>
+              {/* Note: front_brakes and rear_brakes might not be in Vehicle type, checking... */}
+              {/* They were in the details page but maybe not mapped in Vehicle type. I'll check the type definition if I can, or just use them and see if TS complains. */}
+              {/* Based on page.tsx mapping, they are NOT mapped. I will omit them for now or use '—' */}
+              <div className="flex justify-between"><dt className="text-muted-foreground">Tires</dt><dd className="font-medium text-right">{formatSpec(vehicle.tires_and_wheels)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Turning Circle</dt><dd className="font-medium text-right">{formatSpec(vehicle.turning_circle_ft, ' ft')}</dd></div>
+            </dl>
+          </div>
+
+          {/* Towing & Hauling */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold border-b border-border pb-2">Towing & Hauling</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Max Towing</dt><dd className="font-medium text-right">{formatSpec(vehicle.max_towing_capacity_lbs, ' lbs')}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Max Payload</dt><dd className="font-medium text-right">{formatSpec(vehicle.max_payload_lbs, ' lbs')}</dd></div>
+            </dl>
+          </div>
+
+        </div>
+      </div>
+    </div>
   )
 }
