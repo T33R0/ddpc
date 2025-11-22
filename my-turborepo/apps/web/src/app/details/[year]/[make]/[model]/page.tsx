@@ -26,6 +26,10 @@ export default async function VehicleDetailsPage(props: {
     // Fetch all trims for this vehicle
     const { data: vehicles, error } = await supabase
         .from('vehicle_data')
+        .select('*')
+        .eq('year', year)
+        .eq('make', decodedMake)
+        .eq('model', decodedModel);
 
     if (error || !vehicles || vehicles.length === 0) {
         console.error('Error fetching vehicle:', error);
