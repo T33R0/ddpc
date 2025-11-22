@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@repo/ui/button';
-import { useAuth } from '@repo/ui/auth-context';
+import { useAuth } from '@/lib/auth';
 import { AuthModal } from '@/features/auth/AuthModal';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';

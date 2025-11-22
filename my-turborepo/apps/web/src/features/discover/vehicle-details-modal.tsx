@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
-import { useAuth } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@repo/ui/dialog';
 import { Button } from '@repo/ui/button';

@@ -11,7 +11,7 @@ import {
   ModalFooter,
   ModalClose,
 } from '@repo/ui/modal';
-import { useAuth } from '../lib/auth';
+import { useAuth } from '@/lib/auth';
 
 export function LogoutModal() {
   const { showLogoutModal, setShowLogoutModal } = useAuth();
