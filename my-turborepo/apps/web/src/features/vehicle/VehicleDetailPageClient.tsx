@@ -169,7 +169,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
 
   return (
     <Card
-      className={`col-span-1 md:col-span-2 lg:col-span-2 row-span-1 md:row-span-2 lg:row-span-2 bg-card rounded-2xl overflow-hidden h-full relative border border-border ${isOwner ? 'cursor-pointer' : ''}`}
+      className={`bg-card rounded-2xl overflow-hidden h-full relative border border-border ${isOwner ? 'cursor-pointer' : ''}`}
       onMouseEnter={isOwner ? () => setIsHovered(true) : undefined}
       onMouseLeave={isOwner ? () => setIsHovered(false) : undefined}
     >
@@ -733,73 +733,85 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
             isOwner={isOwner}
           />
 
-          {/* Grid container - Responsive layout using Tailwind classes */}
+          {/* Grid container - Fixed 4x3 grid for desktop */}
           <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-3 min-h-[600px]">
-            {/* Row 1 */}
-            {/* Slot 1: Build Specs */}
-            <BuildSpecsCard vehicle={vehicle} />
+            {/* Row 1, Col 1 */}
+            <div className="lg:col-start-1 lg:row-start-1">
+              <BuildSpecsCard vehicle={vehicle} />
+            </div>
 
-            {/* Slots 2-3, 6-7: Vehicle Image (spanning 2 columns and 2 rows) */}
-            <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
+            {/* Row 1-2, Col 2-3 (Center Image) */}
+            <div className="lg:col-start-2 lg:col-span-2 lg:row-start-1 lg:row-span-2 h-full">
+              <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
+            </div>
 
-            {/* Slot 4: Engine Specs */}
-            <EngineSpecsCard vehicle={vehicle} />
+            {/* Row 1, Col 4 */}
+            <div className="lg:col-start-4 lg:row-start-1">
+              <EngineSpecsCard vehicle={vehicle} />
+            </div>
 
-            {/* Row 2 */}
-            {/* Slot 5: Dimensions */}
-            <DimensionsCard vehicle={vehicle} />
+            {/* Row 2, Col 1 */}
+            <div className="lg:col-start-1 lg:row-start-2">
+              <DimensionsCard vehicle={vehicle} />
+            </div>
 
-            {/* Slot 8: Drivetrain */}
-            <DrivetrainCard vehicle={vehicle} />
+            {/* Row 2, Col 4 */}
+            <div className="lg:col-start-4 lg:row-start-2">
+              <DrivetrainCard vehicle={vehicle} />
+            </div>
 
             {/* Row 3 */}
-            {/* Slot 9: History */}
-            <NavigationCard
-              icon={Activity}
-              title="History"
-              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
-              stats={[
-                { label: 'Last Service', value: '---' },
-                { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
-              ]}
-              disabled={!isOwner}
-            />
+            <div className="lg:col-start-1 lg:row-start-3">
+              <NavigationCard
+                icon={Activity}
+                title="History"
+                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
+                stats={[
+                  { label: 'Last Service', value: '---' },
+                  { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
+                ]}
+                disabled={!isOwner}
+              />
+            </div>
 
-            {/* Slot 10: Service */}
-            <NavigationCard
-              icon={Wrench}
-              title="Service"
-              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
-              stats={[
-                { label: 'Next Service', value: '---' },
-                { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
-              ]}
-              disabled={!isOwner}
-            />
+            <div className="lg:col-start-2 lg:row-start-3">
+              <NavigationCard
+                icon={Wrench}
+                title="Service"
+                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
+                stats={[
+                  { label: 'Next Service', value: '---' },
+                  { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
+                ]}
+                disabled={!isOwner}
+              />
+            </div>
 
-            {/* Slot 11: Fuel */}
-            <NavigationCard
-              icon={Fuel}
-              title="Fuel"
-              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
-              stats={[
-                { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
-                { label: 'Last Fill-up', value: '---' }
-              ]}
-              disabled={!isOwner}
-            />
+            <div className="lg:col-start-3 lg:row-start-3">
+              <NavigationCard
+                icon={Fuel}
+                title="Fuel"
+                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
+                stats={[
+                  { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
+                  { label: 'Last Fill-up', value: '---' }
+                ]}
+                disabled={!isOwner}
+              />
+            </div>
 
-            {/* Slot 12: Mods */}
-            <NavigationCard
-              icon={Settings}
-              title="Mods"
-              onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
-              stats={[
-                { label: 'Total Mods', value: '0' },
-                { label: 'Total Cost', value: '$0' }
-              ]}
-              disabled={!isOwner}
-            />
+            <div className="lg:col-start-4 lg:row-start-3">
+              <NavigationCard
+                icon={Settings}
+                title="Mods"
+                onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
+                stats={[
+                  { label: 'Total Mods', value: '0' },
+                  { label: 'Total Cost', value: '$0' }
+                ]}
+                disabled={!isOwner}
+              />
+            </div>
           </div>
         </div>
       </section>
