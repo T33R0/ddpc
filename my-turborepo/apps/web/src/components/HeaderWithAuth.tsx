@@ -10,7 +10,7 @@ export function HeaderWithAuth() {
   const { user, signOut, signUp, signIn, signInWithGoogle } = useAuth();
   const { data: vehiclesData } = useVehicles();
 
-  if (pathname === '/') {
+  if (pathname === '/' || pathname === '/dashboard') {
     return null;
   }
 

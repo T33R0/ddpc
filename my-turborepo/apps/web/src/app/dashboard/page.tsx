@@ -8,6 +8,24 @@ import { useRouter } from 'next/navigation';
 import { Car, Settings, Users, Plus, X, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+const UserAvatarIcon = ({ size }: { size?: number }) => {
+  const { user } = useAuth();
+  const avatarUrl = user?.user_metadata?.avatar_url;
+
+  if (avatarUrl) {
+    return (
+      <img 
+        src={avatarUrl} 
+        alt="Profile" 
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} 
+      />
+    );
+  }
+  
+  // Fallback to first letter or Settings icon
+  return <Settings size={size} />;
+};
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -48,10 +66,10 @@ export default function DashboardPage() {
   const dashboardNodes = [
     {
       id: 1,
-      title: "Account Settings",
+      title: "Account",
       route: "/account",
       description: "Manage your profile, security settings, and account preferences. Update your personal information and customize your DDPC experience.",
-      icon: Settings,
+      icon: UserAvatarIcon,
       category: "Account",
       relatedIds: [2, 3],
       status: "available" as const,
@@ -59,7 +77,7 @@ export default function DashboardPage() {
     },
     {
       id: 2,
-      title: "Vehicle Explore",
+      title: "Explore",
       route: "/explore",
       description: "Browse and research vehicles in our comprehensive database. Find your next project or learn about different models.",
       icon: Car,
@@ -81,8 +99,8 @@ export default function DashboardPage() {
     },
     {
       id: 4,
-      title: "Community",
-      route: "/community",
+      title: "Console",
+      route: "/console",
       description: "Connect with other enthusiasts and share builds. Join discussions, get advice, and showcase your projects.",
       icon: Users,
       category: "Social",
