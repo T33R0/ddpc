@@ -37,8 +37,6 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
   const range = maxMpg - minMpg // Should be 10
 
   // Calculate the position of the needle (0-180 degrees for semicircle)
-  // 0 degrees = minMpg (left), 180 degrees = maxMpg (right)
-  // 90 degrees = factoryMpg (center)
   const normalizedValue = Math.max(minMpg, Math.min(maxMpg, averageMpg))
   const percentage = ((normalizedValue - minMpg) / range) * 100
   const angle = (percentage / 100) * 180 // 0 to 180 degrees
@@ -62,9 +60,36 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
   const radius = 100
   const needleLength = 80
 
+  // Helper function to calculate point on semicircle arc
+  const getArcPoint = (angleDeg: number) => {
+    // Convert angle to radians (0° = left, 180° = right)
+    // In SVG, 0 is Right, PI is Left. We want to go from Left (PI) to Right (2PI) clockwise.
+    const angleRad = Math.PI + (angleDeg * Math.PI) / 180
+    // Semicircle center is at (150, 150), radius 100
+    const arcCenterX = 150
+    const arcCenterY = 150
+    const x = arcCenterX + radius * Math.cos(angleRad)
+    const y = arcCenterY + radius * Math.sin(angleRad)
+    return { x, y }
+  }
+
+  // Calculate arc endpoints for each zone
+  // Red zone: 0° to 54° (0% to 30% of 180°)
+  const redStart = getArcPoint(0)
+  const redEnd = getArcPoint(54)
+  // Yellow zone: 54° to 90° (30% to 50% of 180°)
+  const yellowStart = redEnd
+  const yellowEnd = getArcPoint(90)
+  // Blue zone: 90° to 126° (50% to 70% of 180°)
+  const blueStart = yellowEnd
+  const blueEnd = getArcPoint(126)
+  // Green zone: 126° to 180° (70% to 100% of 180°)
+  const greenStart = blueEnd
+  const greenEnd = getArcPoint(180)
+
   // Convert angle to radians and adjust for SVG coordinate system
-  // SVG: 0° is right, 90° is down, so we need to adjust
-  const angleRad = ((angle - 90) * Math.PI) / 180
+  // angle is 0..180. We want PI..2PI.
+  const angleRad = Math.PI + (angle * Math.PI) / 180
   const needleEndX = centerX + Math.cos(angleRad) * needleLength
   const needleEndY = centerY + Math.sin(angleRad) * needleLength
 
@@ -87,34 +112,34 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
                 strokeLinecap="round"
               />
 
-              {/* Colored segments */}
-              {/* Red zone: -5 to -2 */}
+              {/* Colored segments - properly following the arc */}
+              {/* Red zone: -5 to -2 (0° to 54°) */}
               <path
-                d={`M 50 150 A 100 100 0 0 1 ${50 + (3 / 10) * 200} 150`}
+                d={`M ${redStart.x} ${redStart.y} A 100 100 0 0 1 ${redEnd.x} ${redEnd.y}`}
                 fill="none"
                 stroke="#EF4444"
                 strokeWidth="20"
                 strokeLinecap="round"
               />
-              {/* Yellow zone: -2 to 0 */}
+              {/* Yellow zone: -2 to 0 (54° to 90°) */}
               <path
-                d={`M ${50 + (3 / 10) * 200} 150 A 100 100 0 0 1 ${50 + (5 / 10) * 200} 150`}
+                d={`M ${yellowStart.x} ${yellowStart.y} A 100 100 0 0 1 ${yellowEnd.x} ${yellowEnd.y}`}
                 fill="none"
                 stroke="#F59E0B"
                 strokeWidth="20"
                 strokeLinecap="round"
               />
-              {/* Blue zone: 0 to +2 */}
+              {/* Blue zone: 0 to +2 (90° to 126°) */}
               <path
-                d={`M ${50 + (5 / 10) * 200} 150 A 100 100 0 0 1 ${50 + (7 / 10) * 200} 150`}
+                d={`M ${blueStart.x} ${blueStart.y} A 100 100 0 0 1 ${blueEnd.x} ${blueEnd.y}`}
                 fill="none"
                 stroke="#3B82F6"
                 strokeWidth="20"
                 strokeLinecap="round"
               />
-              {/* Green zone: +2 to +5 */}
+              {/* Green zone: +2 to +5 (126° to 180°) */}
               <path
-                d={`M ${50 + (7 / 10) * 200} 150 A 100 100 0 0 1 250 150`}
+                d={`M ${greenStart.x} ${greenStart.y} A 100 100 0 0 1 ${greenEnd.x} ${greenEnd.y}`}
                 fill="none"
                 stroke="#10B981"
                 strokeWidth="20"

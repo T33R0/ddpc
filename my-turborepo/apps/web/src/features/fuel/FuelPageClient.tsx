@@ -76,10 +76,11 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   // Helper function to calculate point on semicircle arc
   const getArcPoint = (angleDeg: number) => {
     // Convert angle to radians (0° = left, 180° = right)
-    const angleRad = (angleDeg * Math.PI) / 180
-    // Semicircle center is at (150, 50), radius 100
+    // In SVG, 0 is Right, PI is Left. We want to go from Left (PI) to Right (2PI) clockwise.
+    const angleRad = Math.PI + (angleDeg * Math.PI) / 180
+    // Semicircle center is at (150, 150), radius 100
     const arcCenterX = 150
-    const arcCenterY = 50
+    const arcCenterY = 150
     const x = arcCenterX + radius * Math.cos(angleRad)
     const y = arcCenterY + radius * Math.sin(angleRad)
     return { x, y }
@@ -100,7 +101,8 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   const greenEnd = getArcPoint(180)
 
   // Convert angle to radians and adjust for SVG coordinate system
-  const angleRad = ((angle - 90) * Math.PI) / 180
+  // angle is 0..180. We want PI..2PI.
+  const angleRad = Math.PI + (angle * Math.PI) / 180
   const needleEndX = centerX + Math.cos(angleRad) * needleLength
   const needleEndY = centerY + Math.sin(angleRad) * needleLength
 

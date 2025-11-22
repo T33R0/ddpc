@@ -853,35 +853,12 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
             isOwner={isOwner}
           />
 
-          {/* Grid container - Fixed 4x3 grid for desktop */}
-          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[200px_200px_200px]">
-            {/* Row 1, Col 1 */}
-            <div className="lg:col-start-1 lg:row-start-1 h-full">
+          {/* Grid container - 3 column layout: left sidebar, center image, right sidebar */}
+          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {/* Left Column - Stacked vertically */}
+            <div className="flex flex-col gap-4">
               <BuildSpecsCard vehicle={vehicle} />
-            </div>
-
-            {/* Row 1-2, Col 2-3 (Center Image) */}
-            <div className="lg:col-start-2 lg:col-span-2 lg:row-start-1 lg:row-span-2 h-full">
-              <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
-            </div>
-
-            {/* Row 1, Col 4 */}
-            <div className="lg:col-start-4 lg:row-start-1 h-full">
-              <EngineSpecsCard vehicle={vehicle} />
-            </div>
-
-            {/* Row 2, Col 1 */}
-            <div className="lg:col-start-1 lg:row-start-2 h-full">
               <DimensionsCard vehicle={vehicle} />
-            </div>
-
-            {/* Row 2, Col 4 */}
-            <div className="lg:col-start-4 lg:row-start-2 h-full">
-              <DrivetrainCard vehicle={vehicle} />
-            </div>
-
-            {/* Row 3 */}
-            <div className="lg:col-start-1 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Activity}
                 title="History"
@@ -894,7 +871,15 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               />
             </div>
 
-            <div className="lg:col-start-2 lg:row-start-3 h-full">
+            {/* Center Column - Large Image */}
+            <div className="w-full min-h-[600px]">
+              <VehicleImageCard vehicle={vehicle} vehicleId={vehicle.id} isOwner={isOwner} />
+            </div>
+
+            {/* Right Column - Stacked vertically */}
+            <div className="flex flex-col gap-4">
+              <EngineSpecsCard vehicle={vehicle} />
+              <DrivetrainCard vehicle={vehicle} />
               <NavigationCard
                 icon={Wrench}
                 title="Service"
@@ -905,9 +890,6 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
                 ]}
                 disabled={!isOwner}
               />
-            </div>
-
-            <div className="lg:col-start-3 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Fuel}
                 title="Fuel"
@@ -918,16 +900,13 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
                 ]}
                 disabled={!isOwner}
               />
-            </div>
-
-            <div className="lg:col-start-4 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Settings}
                 title="Mods"
                 onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
                 stats={[
-                  { label: 'Total Mods', value: '0' },
-                  { label: 'Total Cost', value: '$0' }
+                  { label: 'Total Mods', value: '---' },
+                  { label: 'Total Cost', value: '---' }
                 ]}
                 disabled={!isOwner}
               />
