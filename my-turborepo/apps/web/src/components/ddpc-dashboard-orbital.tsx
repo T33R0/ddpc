@@ -134,32 +134,6 @@ export default function DDPCDashboardOrbital({
     return relatedItems.includes(itemId);
   };
 
-  const getStatusStyles = (status: DashboardNode["status"]): string => {
-    switch (status) {
-      case "available":
-        return "text-white bg-gray-600 border-gray-500";
-      case "featured":
-        return "text-white bg-blue-600 border-blue-500";
-      case "new":
-        return "text-white bg-green-600 border-green-500";
-      default:
-        return "text-white bg-gray-600 border-gray-500";
-    }
-  };
-
-  const getStatusLabel = (status: DashboardNode["status"]): string => {
-    switch (status) {
-      case "available":
-        return "AVAILABLE";
-      case "featured":
-        return "FEATURED";
-      case "new":
-        return "NEW";
-      default:
-        return "AVAILABLE";
-    }
-  };
-  
   const nodeSize = 75;
   const logoSize = 75;
 
@@ -265,25 +239,27 @@ export default function DDPCDashboardOrbital({
                     style={{ top: 120 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <Badge
-                          className={`px-2 text-xs ${getStatusStyles(node.status)}`}
+                    
+                    {/* Scrutineer Coming Soon Badge - overlaying modal */}
+                    {node.title === "Scrutineer" && (
+                      <div className="absolute -top-3 -right-3 z-50">
+                        <Badge 
+                          className="px-3 py-1 text-sm font-bold animate-pulse shadow-[0_0_10px_theme(colors.green.500)] border-green-400 text-green-400 bg-black/80 dark:text-green-400 dark:border-green-400 dark:shadow-[0_0_10px_theme(colors.green.500)] light:text-blue-500 light:border-blue-500 light:shadow-[0_0_10px_theme(colors.blue.500)]"
                         >
-                          {getStatusLabel(node.status)}
+                          Coming Soon
                         </Badge>
-                        <span className="text-xs font-mono text-gray-400">
-                          {node.category}
-                        </span>
                       </div>
-                      <CardTitle className="text-sm mt-2 text-white">
+                    )}
+
+                    <CardHeader className="pb-2 pt-4">
+                      <CardTitle className="text-lg text-white text-center">
                         {node.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-xs text-gray-300">
-                      <p className="mb-4">{node.description}</p>
+                    <CardContent className="text-sm text-gray-300 text-center pb-4">
+                      <p className="mb-4 leading-relaxed">{node.description}</p>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 justify-center">
                         <Button
                           variant="outline"
                           size="sm"
@@ -294,12 +270,12 @@ export default function DDPCDashboardOrbital({
                           }}
                         >
                           Visit Page
-                          <ArrowRight size={12} className="ml-1" />
+                          <ArrowRight size={14} className="ml-2" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="px-2 hover:bg-gray-800"
+                          className="px-3 hover:bg-gray-800"
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleItem(node.id);

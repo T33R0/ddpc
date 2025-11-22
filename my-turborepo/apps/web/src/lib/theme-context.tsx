@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 type Theme = 'light' | 'dark' | 'auto';
 
@@ -17,6 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setThemeState] = useState<Theme>('dark');
     const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
     const [mounted, setMounted] = useState(false);
+    const pathname = usePathname();
 
     // Load theme from localStorage on mount
     useEffect(() => {
@@ -32,6 +34,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         const updateResolvedTheme = () => {
+            // Force dark mode for specific pages
+            if (pathname === '/') {
+                setResolvedTheme('dark');
+                return;
+            }
+
             if (theme === 'auto') {
                 const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 setResolvedTheme(systemPrefersDark ? 'dark' : 'light');
@@ -43,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         updateResolvedTheme();
 
         // Listen for system theme changes when in auto mode
-        if (theme === 'auto') {
+        if (theme === 'auto' && pathname !== '/') {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             const handler = (e: MediaQueryListEvent) => {
                 setResolvedTheme(e.matches ? 'dark' : 'light');
@@ -52,7 +60,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             mediaQuery.addEventListener('change', handler);
             return () => mediaQuery.removeEventListener('change', handler);
         }
-    }, [theme, mounted]);
+    }, [theme, mounted, pathname]);
 
     // Apply theme class to html element
     useEffect(() => {

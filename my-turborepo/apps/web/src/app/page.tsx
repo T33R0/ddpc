@@ -1,15 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LandingLayout from './landing-layout';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
 import { AuthModal } from '@repo/ui/auth-modal';
 import { useAuth } from '../lib/auth';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { user, loading, signUp, signIn, signInWithGoogle } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
 
   const handleGoogleSignIn = () => {
     signInWithGoogle();
@@ -22,6 +30,11 @@ export default function Home() {
   const handleEmailSignIn = async (email: string, password: string) => {
     return await signIn(email, password);
   };
+
+  // If checking auth status or user is logged in (will redirect), don't show landing content
+  if (loading || user) {
+    return null; // Or a loading spinner if desired
+  }
 
   return (
     <LandingLayout>
