@@ -119,16 +119,60 @@ BEGIN
   -- However, separate queries for each distinct column is usually faster than one giant group by
   -- The previous implementation was fine, let's just ensure it's robust.
   
-  SELECT json_build_object(
-    'years', ARRAY(SELECT DISTINCT year::integer FROM vehicle_data WHERE year IS NOT NULL ORDER BY year::integer DESC),
-    'makes', ARRAY(SELECT DISTINCT make FROM vehicle_data WHERE make IS NOT NULL ORDER BY make ASC),
-    'models', ARRAY(SELECT DISTINCT model FROM vehicle_data WHERE model IS NOT NULL ORDER BY model ASC),
-    'engineTypes', ARRAY(SELECT DISTINCT cylinders FROM vehicle_data WHERE cylinders IS NOT NULL ORDER BY cylinders ASC),
-    'fuelTypes', ARRAY(SELECT DISTINCT fuel_type FROM vehicle_data WHERE fuel_type IS NOT NULL ORDER BY fuel_type ASC),
-    'drivetrains', ARRAY(SELECT DISTINCT drive_type FROM vehicle_data WHERE drive_type IS NOT NULL ORDER BY drive_type ASC),
-    'bodyTypes', ARRAY(SELECT DISTINCT body_type FROM vehicle_data WHERE body_type IS NOT NULL ORDER BY body_type ASC)
-  ) INTO result;
+SELECT json_build_object(
+  'years', ARRAY(
+    SELECT DISTINCT year
+    FROM vehicle_data
+    WHERE year IS NOT NULL
+    ORDER BY year DESC
+  ),
+  'makes', ARRAY(
+    SELECT DISTINCT make
+    FROM vehicle_data
+    WHERE make IS NOT NULL
+    ORDER BY make ASC
+  ),
+  'models', ARRAY(
+    SELECT DISTINCT model
+    FROM vehicle_data
+    WHERE model IS NOT NULL
+    ORDER BY model ASC
+  ),
+  'engineTypes', ARRAY(
+    SELECT DISTINCT cylinders
+    FROM vehicle_data
+    WHERE cylinders IS NOT NULL
+    ORDER BY cylinders ASC
+  ),
+  'fuelTypes', ARRAY(
+    SELECT DISTINCT fuel_type
+    FROM vehicle_data
+    WHERE fuel_type IS NOT NULL
+    ORDER BY fuel_type ASC
+  ),
+  'drivetrains', ARRAY(
+    SELECT DISTINCT drive_type
+    FROM vehicle_data
+    WHERE drive_type IS NOT NULL
+    ORDER BY drive_type ASC
+  ),
+  'bodyTypes', ARRAY(
+    SELECT DISTINCT body_type
+    FROM vehicle_data
+    WHERE body_type IS NOT NULL
+    ORDER BY body_type ASC
+  )
+) INTO result;
 
   RETURN result;
 END;
 $$;
+
+-- 3. Add supporting indexes to speed up the filter option query
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_year ON public.vehicle_data (year);
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_make ON public.vehicle_data (make);
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_model ON public.vehicle_data (model);
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_cylinders ON public.vehicle_data (cylinders);
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_fuel_type ON public.vehicle_data (fuel_type);
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_drive_type ON public.vehicle_data (drive_type);
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_body_type ON public.vehicle_data (body_type);

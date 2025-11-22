@@ -25,6 +25,10 @@ type FilterOptionsResponse = {
   bodyTypes: string[];
 };
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+};
+
 const emptyResponse: FilterOptionsResponse = {
   years: [],
   makes: [],
@@ -35,40 +39,112 @@ const emptyResponse: FilterOptionsResponse = {
   bodyTypes: [],
 };
 
+const CACHE_DURATION_MS = 1000 * 60 * 30; // 30 minutes
+let cachedFilters: FilterOptionsResponse | null = null;
+let cachedAt = 0;
+
+const sanitizeStrings = (values: unknown[]) => {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  values.forEach((value) => {
+    if (typeof value !== 'string') {
+      return;
+    }
+    const cleaned = value.trim();
+    if (!cleaned || seen.has(cleaned)) {
+      return;
+    }
+    seen.add(cleaned);
+    normalized.push(cleaned);
+  });
+
+  return normalized;
+};
+
+const sanitizeYears = (values: unknown[]) => {
+  const normalized: number[] = [];
+  const seen = new Set<number>();
+
+  values.forEach((value) => {
+    const parsed = typeof value === 'number' ? value : parseInt(String(value), 10);
+    if (!Number.isFinite(parsed) || seen.has(parsed)) {
+      return;
+    }
+    seen.add(parsed);
+    normalized.push(parsed);
+  });
+
+  return normalized.sort((a, b) => b - a);
+};
+
 export async function GET() {
+  const now = Date.now();
+
+  if (cachedFilters && now - cachedAt < CACHE_DURATION_MS) {
+    return NextResponse.json(cachedFilters, {
+      headers: {
+        ...CACHE_HEADERS,
+        'X-Discover-Filters-Cache': 'HIT',
+      },
+    });
+  }
+
   try {
     const { data, error } = await supabase.rpc('get_vehicle_filter_options');
 
     if (error) {
       console.error('Failed to fetch filter options', error);
-      return NextResponse.json({ error: 'Failed to fetch filter options' }, { status: 500 });
+
+      if (cachedFilters) {
+        return NextResponse.json(cachedFilters, {
+          headers: {
+            ...CACHE_HEADERS,
+            'X-Discover-Filters-Cache': 'STALE',
+          },
+        });
+      }
+
+      return NextResponse.json(emptyResponse, { status: 503 });
     }
 
     if (!data) {
       return NextResponse.json(emptyResponse, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-        },
+        headers: CACHE_HEADERS,
       });
     }
 
     const response: FilterOptionsResponse = {
-      years: Array.isArray(data.years) ? data.years : [],
-      makes: Array.isArray(data.makes) ? data.makes : [],
-      models: Array.isArray(data.models) ? data.models : [],
-      engineTypes: Array.isArray(data.engineTypes) ? data.engineTypes : [],
-      fuelTypes: Array.isArray(data.fuelTypes) ? data.fuelTypes : [],
-      drivetrains: Array.isArray(data.drivetrains) ? data.drivetrains : [],
-      bodyTypes: Array.isArray(data.bodyTypes) ? data.bodyTypes : [],
+      years: sanitizeYears(Array.isArray(data.years) ? data.years : []),
+      makes: sanitizeStrings(Array.isArray(data.makes) ? data.makes : []),
+      models: sanitizeStrings(Array.isArray(data.models) ? data.models : []),
+      engineTypes: sanitizeStrings(Array.isArray(data.engineTypes) ? data.engineTypes : []),
+      fuelTypes: sanitizeStrings(Array.isArray(data.fuelTypes) ? data.fuelTypes : []),
+      drivetrains: sanitizeStrings(Array.isArray(data.drivetrains) ? data.drivetrains : []),
+      bodyTypes: sanitizeStrings(Array.isArray(data.bodyTypes) ? data.bodyTypes : []),
     };
+
+    cachedFilters = response;
+    cachedAt = now;
 
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        ...CACHE_HEADERS,
+        'X-Discover-Filters-Cache': 'MISS',
       },
     });
   } catch (error) {
     console.error('Unexpected error fetching filter options', error);
-    return NextResponse.json({ error: 'Failed to fetch filter options' }, { status: 500 });
+
+    if (cachedFilters) {
+      return NextResponse.json(cachedFilters, {
+        headers: {
+          ...CACHE_HEADERS,
+          'X-Discover-Filters-Cache': 'STALE',
+        },
+      });
+    }
+
+    return NextResponse.json(emptyResponse, { status: 503 });
   }
 }
