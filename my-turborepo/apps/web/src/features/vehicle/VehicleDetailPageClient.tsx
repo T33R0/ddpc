@@ -87,6 +87,48 @@ function ImageWithTimeoutFallback({
   )
 }
 
+// Helper function to format specs with proper units
+const formatSpec = (value: string | number | undefined | null, unit: string = ''): string => {
+  if (!value || value === 'null' || value === 'undefined') return '—';
+  return unit ? `${value}${unit}` : String(value);
+};
+
+// Calculate power-to-weight ratio
+const calculatePowerToWeight = (hp: string | number | undefined, weight: string | number | undefined): string => {
+  if (!hp || !weight) return '—';
+  const hpNum = typeof hp === 'string' ? parseFloat(hp) : hp;
+  const weightNum = typeof weight === 'string' ? parseFloat(weight) : weight;
+  if (isNaN(hpNum) || isNaN(weightNum) || hpNum === 0) return '—';
+
+  const lbPerHp = (weightNum / hpNum).toFixed(2);
+  return `${lbPerHp} lb/hp`;
+};
+
+// Calculate specific output
+const calculateSpecificOutput = (hp: string | number | undefined, displacement: string | number | undefined): string => {
+  if (!hp || !displacement) return '—';
+  const hpNum = typeof hp === 'string' ? parseFloat(hp) : hp;
+  const dispNum = typeof displacement === 'string' ? parseFloat(displacement) : displacement;
+  if (isNaN(hpNum) || isNaN(dispNum) || dispNum === 0) return '—';
+
+  const hpPerLiter = (hpNum / dispNum).toFixed(0);
+  return `${hpPerLiter} hp/L`;
+};
+
+// Format engine configuration
+const formatEngine = (vehicle: Vehicle): string => {
+  const parts: string[] = [];
+
+  if (vehicle.engine_size_l) parts.push(`${vehicle.engine_size_l}L`);
+  if (vehicle.cylinders) {
+    const cyl = String(vehicle.cylinders);
+    parts.push(cyl.includes('cylinder') ? cyl : `${cyl}-cyl`);
+  }
+  if (vehicle.engine_type) parts.push(vehicle.engine_type.toUpperCase());
+
+  return parts.length > 0 ? parts.join(' ') : '—';
+};
+
 function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; vehicleId: string; isOwner: boolean }) {
   const [isUploading, setIsUploading] = useState(false)
   const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || vehicle.image_url || null)
@@ -529,44 +571,95 @@ function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
         <Wrench className="h-5 w-5 text-accent" />
         Build Specs
       </h3>
-      <div className="space-y-4 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
         <div className="flex justify-between border-b border-border pb-2">
           <span className="text-muted-foreground shrink-0 mr-2">Trim</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.trim || '-'}</span>
+          <span className="text-foreground font-medium text-right truncate">{vehicle.trim || '—'}</span>
         </div>
+        {vehicle.body_type && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Body Type</span>
+            <span className="text-foreground font-medium text-right truncate">{vehicle.body_type}</span>
+          </div>
+        )}
+        {vehicle.doors && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Doors</span>
+            <span className="text-foreground font-medium text-right truncate">{vehicle.doors}</span>
+          </div>
+        )}
+        {vehicle.total_seating && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Seating</span>
+            <span className="text-foreground font-medium text-right truncate">{vehicle.total_seating} passengers</span>
+          </div>
+        )}
         <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Color</span>
-          <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.colors_exterior || ''}>{vehicle.colors_exterior || '-'}</span>
+          <span className="text-muted-foreground shrink-0 mr-2">Exterior</span>
+          <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.colors_exterior || ''}>{vehicle.colors_exterior || '—'}</span>
         </div>
+        {vehicle.colors_interior && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground shrink-0 mr-2">Interior</span>
+            <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.colors_interior}>{vehicle.colors_interior}</span>
+          </div>
+        )}
       </div>
     </Card>
   )
 }
 
 function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
+  const powerToWeight = calculatePowerToWeight(vehicle.horsepower_hp, vehicle.curb_weight_lbs);
+  const specificOutput = calculateSpecificOutput(vehicle.horsepower_hp, vehicle.engine_size_l);
+
   return (
     <Card className="bg-card rounded-2xl p-6 h-full border border-border overflow-hidden flex flex-col">
       <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 shrink-0">
         <Gauge className="h-5 w-5 text-accent" />
         Engine & Power
       </h3>
-      <div className="space-y-4 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
         <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Engine Type</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.engine_type || '-'}</span>
+          <span className="text-muted-foreground shrink-0 mr-2">Engine</span>
+          <span className="text-foreground font-medium text-right truncate">{formatEngine(vehicle)}</span>
         </div>
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Displacement</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.engine_size_l || '-'}</span>
-        </div>
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Horsepower</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.horsepower_hp ? `${vehicle.horsepower_hp} hp` : '-'}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground shrink-0 mr-2">Torque</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.torque_ft_lbs ? `${vehicle.torque_ft_lbs} lb-ft` : '-'}</span>
-        </div>
+        {vehicle.fuel_type && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Fuel Type</span>
+            <span className="text-foreground font-medium text-right truncate">{vehicle.fuel_type}</span>
+          </div>
+        )}
+        {vehicle.horsepower_hp && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Horsepower</span>
+            <span className="text-foreground font-medium text-right truncate">
+              {vehicle.horsepower_hp} hp
+              {vehicle.horsepower_rpm && ` @ ${vehicle.horsepower_rpm} rpm`}
+            </span>
+          </div>
+        )}
+        {vehicle.torque_ft_lbs && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Torque</span>
+            <span className="text-foreground font-medium text-right truncate">
+              {vehicle.torque_ft_lbs} lb-ft
+              {vehicle.torque_rpm && ` @ ${vehicle.torque_rpm} rpm`}
+            </span>
+          </div>
+        )}
+        {powerToWeight !== '—' && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Power/Weight</span>
+            <span className="text-foreground font-medium text-right truncate">{powerToWeight}</span>
+          </div>
+        )}
+        {specificOutput !== '—' && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground shrink-0 mr-2">Specific Output</span>
+            <span className="text-foreground font-medium text-right truncate">{specificOutput}</span>
+          </div>
+        )}
       </div>
     </Card>
   )
@@ -579,23 +672,52 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
         <Scale className="h-5 w-5 text-accent" />
         Dimensions & Weight
       </h3>
-      <div className="space-y-4 overflow-y-auto pr-1 custom-scrollbar">
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Curb Weight</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.curb_weight_lbs ? `${vehicle.curb_weight_lbs} lbs` : '-'}</span>
-        </div>
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Length</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.length_in ? `${vehicle.length_in}"` : '-'}</span>
-        </div>
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Width</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.width_in ? `${vehicle.width_in}"` : '-'}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground shrink-0 mr-2">Height</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.height_in ? `${vehicle.height_in}"` : '-'}</span>
-        </div>
+      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+        {vehicle.curb_weight_lbs && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Curb Weight</span>
+            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.curb_weight_lbs, ' lb')}</span>
+          </div>
+        )}
+        {vehicle.length_in && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Length</span>
+            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.length_in, '"')}</span>
+          </div>
+        )}
+        {vehicle.width_in && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Width</span>
+            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.width_in, '"')}</span>
+          </div>
+        )}
+        {vehicle.height_in && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Height</span>
+            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.height_in, '"')}</span>
+          </div>
+        )}
+        {vehicle.ground_clearance_in && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Ground Clearance</span>
+            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.ground_clearance_in, ' in')}</span>
+          </div>
+        )}
+        {vehicle.cargo_capacity_cuft && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Cargo Capacity</span>
+            <span className="text-foreground font-medium text-right truncate">
+              {formatSpec(vehicle.cargo_capacity_cuft, ' cu ft')}
+              {vehicle.max_cargo_capacity_cuft && ` (${formatSpec(vehicle.max_cargo_capacity_cuft, ' cu ft')} max)`}
+            </span>
+          </div>
+        )}
+        {vehicle.max_towing_capacity_lbs && vehicle.max_towing_capacity_lbs !== '0' && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground shrink-0 mr-2">Max Towing</span>
+            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.max_towing_capacity_lbs, ' lb')}</span>
+          </div>
+        )}
       </div>
     </Card>
   )
@@ -608,23 +730,31 @@ function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
         <Cog className="h-5 w-5 text-accent" />
         Drivetrain & Chassis
       </h3>
-      <div className="space-y-4 overflow-y-auto pr-1 custom-scrollbar">
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Transmission</span>
-          <span className="text-foreground font-medium text-right truncate" title={vehicle.transmission || ''}>{vehicle.transmission || '-'}</span>
-        </div>
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Drivetrain</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.drive_type || '-'}</span>
-        </div>
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Brake System</span>
-          <span className="text-foreground font-medium text-right truncate">{'Unknown'}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground shrink-0 mr-2">Wheel Size</span>
-          <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.tires_and_wheels || ''}>{vehicle.tires_and_wheels || '-'}</span>
-        </div>
+      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+        {vehicle.transmission && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Transmission</span>
+            <span className="text-foreground font-medium text-right truncate" title={vehicle.transmission}>{vehicle.transmission}</span>
+          </div>
+        )}
+        {vehicle.drive_type && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Drivetrain</span>
+            <span className="text-foreground font-medium text-right truncate">{vehicle.drive_type}</span>
+          </div>
+        )}
+        {vehicle.suspension && (
+          <div className="flex justify-between border-b border-border pb-2">
+            <span className="text-muted-foreground shrink-0 mr-2">Suspension</span>
+            <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.suspension}>{vehicle.suspension}</span>
+          </div>
+        )}
+        {vehicle.tires_and_wheels && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground shrink-0 mr-2">Wheels/Tires</span>
+            <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.tires_and_wheels}>{vehicle.tires_and_wheels}</span>
+          </div>
+        )}
       </div>
     </Card>
   )
