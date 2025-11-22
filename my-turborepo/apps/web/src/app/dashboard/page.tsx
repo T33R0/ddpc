@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { Button } from '@repo/ui/button';
 import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
 import { useRouter } from 'next/navigation';
-import { Car, Settings, Users, Plus, X, Zap } from 'lucide-react';
+import { Car, Settings, Users, Plus, X, Zap, Warehouse, Terminal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const UserAvatarIcon = ({ size }: { size?: number }) => {
@@ -17,12 +17,13 @@ const UserAvatarIcon = ({ size }: { size?: number }) => {
       <img 
         src={avatarUrl} 
         alt="Profile" 
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} 
+        className="w-full h-full object-cover rounded-full"
+        style={{ borderRadius: '50%' }} 
       />
     );
   }
   
-  // Fallback to first letter or Settings icon
+  // Fallback to Settings icon with original size
   return <Settings size={size} />;
 };
 
@@ -51,8 +52,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-foreground">Loading...</div>
       </div>
     );
   }
@@ -88,10 +89,10 @@ export default function DashboardPage() {
     },
     {
       id: 3,
-      title: "My Collection",
+      title: "Garage",
       route: "/garage",
       description: "View and manage your personal vehicle collection. Track maintenance, modifications, and build progress for each vehicle.",
-      icon: Car,
+      icon: Warehouse,
       category: "Garage",
       relatedIds: [1, 2, 4],
       status: "available" as const,
@@ -102,7 +103,7 @@ export default function DashboardPage() {
       title: "Console",
       route: "/console",
       description: "Connect with other enthusiasts and share builds. Join discussions, get advice, and showcase your projects.",
-      icon: Users,
+      icon: Terminal,
       category: "Social",
       relatedIds: [3, 5],
       status: "available" as const,
@@ -122,14 +123,14 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 flex flex-col">
+    <div className="min-h-screen p-4 flex flex-col">
       <div className="max-w-6xl w-full mx-auto pt-24">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-4xl font-bold mb-2 text-foreground">
             Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-muted-foreground text-lg">
             Here&apos;s your DDPC dashboard - manage your vehicles and track your builds.
           </p>
         </div>
