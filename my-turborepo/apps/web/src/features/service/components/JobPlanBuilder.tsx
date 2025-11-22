@@ -384,12 +384,12 @@ export function JobPlanBuilder({
           value={stepInput}
           onChange={(e) => setStepInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40"
+          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent"
         />
         <Button
           onClick={handleAddStep}
           disabled={!stepInput.trim()}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Step

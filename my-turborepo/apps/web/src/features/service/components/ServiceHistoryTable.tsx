@@ -12,15 +12,12 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
   if (serviceHistory.length === 0) {
     return (
       <Card 
-        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
+        className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
       >
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <Wrench className="h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-400 mb-2">No Service History</h3>
-          <p className="text-sm text-gray-400 text-center max-w-md">
+          <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">No Service History</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-md">
             Service records will appear here once maintenance work has been logged for this vehicle.
           </p>
         </CardContent>
@@ -30,13 +27,10 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
 
   return (
     <Card 
-      className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-      style={{
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-      }}
+      className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
     >
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <Wrench className="h-5 w-5" />
           Service History
         </CardTitle>
@@ -45,14 +39,14 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
         {serviceHistory.map((service) => (
           <div
             key={service.id}
-            className="bg-black/30 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:border-white/30 transition-colors"
+            className="bg-muted/50 backdrop-blur-sm rounded-lg p-4 border border-border hover:border-accent transition-colors"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h4 className="text-lg font-medium text-white mb-1">
+                <h4 className="text-lg font-medium text-foreground mb-1">
                   {service.description}
                 </h4>
-                <div className="flex items-center gap-4 text-sm text-gray-400">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     {format(service.event_date, 'MMM dd, yyyy')}
@@ -81,8 +75,8 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
 
             {service.notes && (
               <div className="flex items-start gap-2 mt-3">
-                <FileText className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-gray-300 leading-relaxed">
+                <FileText className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {service.notes}
                 </p>
               </div>

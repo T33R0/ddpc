@@ -45,7 +45,7 @@ export function JobDetailsPageClient({
   }
 
   return (
-    <section className="relative py-12 bg-black min-h-screen">
+    <section className="relative py-12 bg-background min-h-screen">
       <div
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -59,25 +59,25 @@ export function JobDetailsPageClient({
           <Button
             onClick={handleBack}
             variant="outline"
-            className="mb-4 border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
+            className="mb-4 border-border text-muted-foreground hover:bg-muted hover:border-accent"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Service
           </Button>
-          <h1 className="text-4xl font-bold text-white">Job Details</h1>
-          <p className="text-lg text-gray-400 mt-2">
+          <h1 className="text-4xl font-bold text-foreground">Job Details</h1>
+          <p className="text-lg text-muted-foreground mt-2">
             {jobTitle}
           </p>
         </div>
 
-        <Tabs defaultValue="plan" className="w-full text-white">
+        <Tabs defaultValue="plan" className="w-full text-foreground">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="plan">Job Plan</TabsTrigger>
             <TabsTrigger value="parts">Parts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="plan" className="mt-6">
-            <Card className="bg-black/30 backdrop-blur-sm border-white/20">
+            <Card className="bg-card backdrop-blur-sm border-border">
               <CardContent className="p-6">
                 {userId && jobLog?.id ? (
                   <JobPlanBuilder
@@ -86,16 +86,16 @@ export function JobDetailsPageClient({
                     jobTitle={jobTitle}
                   />
                 ) : (
-                  <div className="text-gray-400">Loading...</div>
+                  <div className="text-muted-foreground">Loading...</div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="parts" className="mt-6">
-            <Card className="bg-black/30 backdrop-blur-sm border-white/20">
+            <Card className="bg-card backdrop-blur-sm border-border">
               <CardContent className="p-6">
-                <p className="text-gray-400">
+                <p className="text-muted-foreground">
                   Parts content will be displayed here. This section will show the parts list, quantities, and related information for this service job.
                 </p>
               </CardContent>

@@ -275,7 +275,7 @@ export default function AccountPage() {
                   <Button
                     onClick={handleGoBack}
                     variant="ghost"
-                    className="w-full text-gray-400 hover:text-white hover:bg-gray-800"
+                    className="w-full text-muted-foreground hover:text-foreground hover:bg-muted"
                   >
                     Go Back
                   </Button>
@@ -339,13 +339,13 @@ export default function AccountPage() {
             <Button
               onClick={() => router.push('/dashboard')}
               variant="ghost"
-              className="mb-4 text-gray-400 hover:text-white"
+              className="mb-4 text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
-            <h1 className="text-4xl font-bold text-white mb-2">Account Management</h1>
-            <p className="text-lg text-gray-400">Manage your account settings and preferences</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Account Management</h1>
+            <p className="text-lg text-muted-foreground">Manage your account settings and preferences</p>
 
             {/* Member info bar */}
             <div className="mt-4 p-4 bg-card border border-border rounded-2xl">
@@ -423,57 +423,57 @@ export default function AccountPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username" className="text-gray-300">Username *</Label>
+                      <Label htmlFor="username" className="text-foreground">Username *</Label>
                       <Input
                         id="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                         placeholder="your_username"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>
+                      <Label htmlFor="displayName" className="text-foreground">Display Name</Label>
                       <Input
                         id="displayName"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
-                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                         placeholder="Your Display Name"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="location" className="text-gray-300">Location</Label>
+                      <Label htmlFor="location" className="text-foreground">Location</Label>
                       <Input
                         id="location"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                         placeholder="City, Country"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="website" className="text-gray-300">Website</Label>
+                      <Label htmlFor="website" className="text-foreground">Website</Label>
                       <Input
                         id="website"
                         type="url"
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
-                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                         placeholder="https://yourwebsite.com"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="bio" className="text-gray-300">Bio</Label>
+                      <Label htmlFor="bio" className="text-foreground">Bio</Label>
                       <Textarea
                         id="bio"
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
-                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                         placeholder="Tell us about yourself..."
                         rows={3}
                       />
@@ -502,13 +502,13 @@ export default function AccountPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="avatarUrl" className="text-gray-300">Avatar URL</Label>
+                      <Label htmlFor="avatarUrl" className="text-foreground">Avatar URL</Label>
                       <Input
                         id="avatarUrl"
                         type="url"
                         value={avatarUrl}
                         onChange={(e) => setAvatarUrl(e.target.value)}
-                        className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                         placeholder="https://example.com/avatar.jpg"
                       />
                     </div>
@@ -571,37 +571,37 @@ export default function AccountPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="text-gray-300">Current Password</Label>
+                    <Label htmlFor="currentPassword" className="text-foreground">Current Password</Label>
                     <Input
                       id="currentPassword"
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                      className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                       placeholder="Enter your current password"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-gray-300">New Password</Label>
+                    <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
                     <Input
                       id="newPassword"
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                      className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                       placeholder="Enter your new password"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-gray-300">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 px-3 py-2"
+                      className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
                       placeholder="Confirm your new password"
                     />
                   </div>
@@ -729,27 +729,24 @@ export default function AccountPage() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div
-                        className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                        style={{
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                        }}
+                        className="p-4 bg-card backdrop-blur-sm rounded-lg border border-border"
                       >
-                        <h4 className="font-medium mb-2 text-white">Account Information</h4>
+                        <h4 className="font-medium mb-2 text-foreground">Account Information</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-400">User ID:</span>
-                            <span className="font-mono text-xs text-white">{user.id.slice(0, 8)}...</span>
+                            <span className="text-muted-foreground">User ID:</span>
+                            <span className="font-mono text-xs text-foreground">{user.id.slice(0, 8)}...</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Email:</span>
-                            <span className="text-white">{user.email}</span>
+                            <span className="text-muted-foreground">Email:</span>
+                            <span className="text-foreground">{user.email}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Role:</span>
-                            <span className="capitalize text-white">{user.role}</span>
+                            <span className="text-muted-foreground">Role:</span>
+                            <span className="capitalize text-foreground">{user.role}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Status:</span>
+                            <span className="text-muted-foreground">Status:</span>
                             <span className={user.banned ? 'text-red-400' : 'text-green-400'}>
                               {user.banned ? 'Banned' : 'Active'}
                             </span>
@@ -758,20 +755,17 @@ export default function AccountPage() {
                       </div>
 
                       <div
-                        className="p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                        style={{
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                        }}
+                        className="p-4 bg-card backdrop-blur-sm rounded-lg border border-border"
                       >
-                        <h4 className="font-medium mb-2 text-white">Privacy Settings</h4>
+                        <h4 className="font-medium mb-2 text-foreground">Privacy Settings</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Profile Visibility:</span>
-                            <span className="text-white">{isPublic ? 'Public' : 'Private'}</span>
+                            <span className="text-muted-foreground">Profile Visibility:</span>
+                            <span className="text-foreground">{isPublic ? 'Public' : 'Private'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Last Updated:</span>
-                            <span className="text-white">{new Date(user.updatedAt).toLocaleDateString()}</span>
+                            <span className="text-muted-foreground">Last Updated:</span>
+                            <span className="text-foreground">{new Date(user.updatedAt).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </div>
@@ -780,14 +774,11 @@ export default function AccountPage() {
                 </Card>
 
                 <Card
-                  className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-                  style={{
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}
+                  className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
                 >
                   <CardHeader>
-                    <CardTitle>Account Actions</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-foreground">Account Actions</CardTitle>
+                    <CardDescription className="text-muted-foreground">
                       Manage your account status and data
                     </CardDescription>
                   </CardHeader>
@@ -797,7 +788,7 @@ export default function AccountPage() {
                         onClick={handleSignOut}
                         disabled={isSigningOut}
                         variant="outline"
-                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                        className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                       >
                         {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                       </Button>
@@ -848,40 +839,40 @@ export default function AccountPage() {
                         value="light"
                         checked={theme === 'light'}
                         onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                        className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                        className="w-4 h-4 text-primary bg-background border-border focus:ring-2 focus:ring-primary focus:ring-offset-0"
                       />
                       <div className="flex-1">
-                        <div className="font-medium">Light</div>
+                        <div className="font-medium text-foreground">Light</div>
                         <div className="text-sm text-muted-foreground">Use light theme</div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-card backdrop-blur-sm border border-border hover:border-accent hover:bg-muted/50">
                       <input
                         type="radio"
                         name="theme"
                         value="dark"
                         checked={theme === 'dark'}
                         onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                        className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                        className="w-4 h-4 text-primary bg-background border-border focus:ring-2 focus:ring-primary focus:ring-offset-0"
                       />
                       <div className="flex-1">
-                        <div className="font-medium">Dark</div>
+                        <div className="font-medium text-foreground">Dark</div>
                         <div className="text-sm text-muted-foreground">Use dark theme</div>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-black/30 backdrop-blur-sm border border-white/20 hover:border-white/30 hover:bg-black/40">
+                    <label className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-card backdrop-blur-sm border border-border hover:border-accent hover:bg-muted/50">
                       <input
                         type="radio"
                         name="theme"
                         value="auto"
                         checked={theme === 'auto'}
                         onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                        className="w-4 h-4 text-blue-600 bg-black/30 border-white/30 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                        className="w-4 h-4 text-primary bg-background border-border focus:ring-2 focus:ring-primary focus:ring-offset-0"
                       />
                       <div className="flex-1">
-                        <div className="font-medium">Auto</div>
+                        <div className="font-medium text-foreground">Auto</div>
                         <div className="text-sm text-muted-foreground">Follow system preference</div>
                       </div>
                     </label>
@@ -893,7 +884,7 @@ export default function AccountPage() {
                         saveTheme(theme);
                         toast.success('Theme preference saved!');
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       Save Theme Preference
                     </Button>

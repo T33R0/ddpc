@@ -25,16 +25,13 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   if (!factoryMpg || !averageMpg) {
     return (
       <Card
-        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
+        className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
       >
         <CardHeader>
-          <CardTitle className="text-white text-lg">MPG Health</CardTitle>
+          <CardTitle className="text-foreground text-lg">MPG Health</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64 text-gray-400">
+          <div className="flex items-center justify-center h-64 text-muted-foreground">
             <div className="text-center">
               <p className="text-sm">No MPG data available</p>
             </div>

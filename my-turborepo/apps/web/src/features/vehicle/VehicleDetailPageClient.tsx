@@ -188,7 +188,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
       />
       {isOwner && (
         <div
-          className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isHovered ? 'bg-black/60 opacity-100' : 'bg-black/0 opacity-0'
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isHovered ? 'bg-background/60 opacity-100' : 'bg-background/0 opacity-0'
             }`}
           onClick={(e) => {
             e.stopPropagation()
@@ -210,7 +210,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
               fileInputRef.current?.click()
             }}
             disabled={isUploading}
-            className={`bg-black/80 hover:bg-black/95 text-white border border-white/40 px-4 py-2 transition-all ${isHovered ? 'scale-100' : 'scale-0'
+            className={`bg-card/80 hover:bg-card/95 text-foreground border border-border px-4 py-2 transition-all ${isHovered ? 'scale-100' : 'scale-0'
               }`}
           >
             <Upload className="w-4 h-4 mr-2" />

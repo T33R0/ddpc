@@ -17,16 +17,13 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
   if (fuelEntries.length === 0) {
     return (
       <Card
-        className="bg-black/50 backdrop-blur-lg rounded-2xl text-white"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
+        className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
       >
         <CardHeader>
-          <CardTitle className="text-white text-lg">Fuel Log Entries</CardTitle>
+          <CardTitle className="text-foreground text-lg">Fuel Log Entries</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-8 text-muted-foreground">
             <p className="text-sm">No fuel entries yet. Log your first fill-up to get started.</p>
           </div>
         </CardContent>

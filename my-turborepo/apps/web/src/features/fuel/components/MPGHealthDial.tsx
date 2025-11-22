@@ -16,12 +16,12 @@ interface MpgHealthDialProps {
 export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
   if (!factoryMpg || !averageMpg) {
     return (
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white text-lg">MPG Health</CardTitle>
+          <CardTitle className="text-foreground text-lg">MPG Health</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64 text-gray-400">
+          <div className="flex items-center justify-center h-64 text-muted-foreground">
             <div className="text-center">
               <p className="text-sm">No MPG data available</p>
             </div>
@@ -133,9 +133,9 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
   const hash100Line = getHashLine(hash100, getAngleForMpg(factoryMpg * 1.00))
 
   return (
-    <Card className="bg-gray-900/50 border-gray-700">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white text-lg">MPG Health</CardTitle>
+        <CardTitle className="text-foreground text-lg">MPG Health</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center justify-center">
@@ -145,7 +145,7 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
               <path
                 d={`M 50 150 A 100 100 0 0 1 250 150`}
                 fill="none"
-                stroke="#374151"
+                stroke="hsl(var(--muted))"
                 strokeWidth={strokeWidth}
                 strokeLinecap="round"
                 opacity="0.2"
@@ -182,16 +182,16 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
               />
 
               {/* Hash marks */}
-              <line x1={hash80Line.x1} y1={hash80Line.y1} x2={hash80Line.x2} y2={hash80Line.y2} stroke="white" strokeWidth="2" />
-              <line x1={hash90Line.x1} y1={hash90Line.y1} x2={hash90Line.x2} y2={hash90Line.y2} stroke="white" strokeWidth="2" />
-              <line x1={hash100Line.x1} y1={hash100Line.y1} x2={hash100Line.x2} y2={hash100Line.y2} stroke="white" strokeWidth="2" />
+              <line x1={hash80Line.x1} y1={hash80Line.y1} x2={hash80Line.x2} y2={hash80Line.y2} stroke="hsl(var(--foreground))" strokeWidth="2" />
+              <line x1={hash90Line.x1} y1={hash90Line.y1} x2={hash90Line.x2} y2={hash90Line.y2} stroke="hsl(var(--foreground))" strokeWidth="2" />
+              <line x1={hash100Line.x1} y1={hash100Line.y1} x2={hash100Line.x2} y2={hash100Line.y2} stroke="hsl(var(--foreground))" strokeWidth="2" />
 
               {/* Labels */}
-              <text x={label75.x} y={label75.y} textAnchor="start" dominantBaseline="middle" className="text-[10px] fill-gray-400 font-medium">75%</text>
-              <text x={label80.x} y={label80.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-gray-400 font-medium" transform={`rotate(-54, ${label80.x}, ${label80.y}) translate(0, -5)`}>80%</text>
-              <text x={label90.x} y={label90.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-gray-400 font-medium" transform={`rotate(-18, ${label90.x}, ${label90.y}) translate(0, -5)`}>90%</text>
-              <text x={label100.x} y={label100.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-blue-400 font-bold" transform={`rotate(18, ${label100.x}, ${label100.y}) translate(0, -5)`}>Factory</text>
-              <text x={label110.x} y={label110.y} textAnchor="end" dominantBaseline="middle" className="text-[10px] fill-gray-400 font-medium">110%</text>
+              <text x={label75.x} y={label75.y} textAnchor="start" dominantBaseline="middle" className="text-[10px] fill-muted-foreground font-medium">75%</text>
+              <text x={label80.x} y={label80.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-54, ${label80.x}, ${label80.y}) translate(0, -5)`}>80%</text>
+              <text x={label90.x} y={label90.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-18, ${label90.x}, ${label90.y}) translate(0, -5)`}>90%</text>
+              <text x={label100.x} y={label100.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-blue-500 font-bold" transform={`rotate(18, ${label100.x}, ${label100.y}) translate(0, -5)`}>Factory</text>
+              <text x={label110.x} y={label110.y} textAnchor="end" dominantBaseline="middle" className="text-[10px] fill-muted-foreground font-medium">110%</text>
 
               {/* Needle */}
               <line
@@ -209,12 +209,12 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
 
           {/* Current MPG Display */}
           <div className="mt-2 text-center">
-            <p className="text-sm text-gray-400 mb-1">Your Average MPG</p>
+            <p className="text-sm text-muted-foreground mb-1">Your Average MPG</p>
             <p className="text-3xl font-bold" style={{ color: needleColor }}>
               {averageMpg.toFixed(1)}
             </p>
             {difference !== 0 && (
-              <p className={`text-sm mt-2 ${difference > 0 ? 'text-blue-400' : 'text-red-400'}`}>
+              <p className={`text-sm mt-2 ${difference > 0 ? 'text-blue-500' : 'text-red-500'}`}>
                 {difference > 0 ? '+' : ''}{difference.toFixed(1)} MPG vs Factory
               </p>
             )}
