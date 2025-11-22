@@ -34,6 +34,7 @@ export async function getVehicleSummaries(
     fuelType?: string | null;
     drivetrain?: string | null;
     vehicleType?: string | null;
+    search?: string | null;
   }
 ): Promise<VehicleSummary[]> {
   const searchParams = new URLSearchParams({
@@ -43,6 +44,9 @@ export async function getVehicleSummaries(
 
   // Add filter parameters if provided
   if (filters) {
+    if (filters.search) {
+      searchParams.set('search', filters.search);
+    }
     if (filters.minYear !== null && filters.minYear !== undefined) {
       searchParams.set('minYear', filters.minYear.toString());
     }

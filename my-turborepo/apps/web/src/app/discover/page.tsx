@@ -10,8 +10,7 @@ import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import type { FilterState } from '../../features/discover/vehicle-filters-modal';
-import { useSearch } from '../../lib/hooks/useSearch';
-import { searchVehicleSummary } from '../../lib/search';
+import { useDebounce } from '../../lib/hooks/useDebounce';
 
 type FilterOptions = {
   years: number[];
@@ -25,12 +24,12 @@ type FilterOptions = {
 
 function DiscoverContent() {
   const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
-  const {
-    searchQuery,
-    setSearchQuery,
-    filteredItems: vehicles,
-    handleClearSearch
-  } = useSearch(allVehicles, searchVehicleSummary);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  // We no longer use client-side filtering
+  const vehicles = allVehicles;
 
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +60,7 @@ function DiscoverContent() {
         setError(null); // Clear previous errors when starting a new load
       }
 
-      const vehicleData = await getVehicleSummaries(page, 24, filters);
+      const vehicleData = await getVehicleSummaries(page, 24, { ...filters, search: debouncedSearch });
 
       if (append) {
         setAllVehicles(prev => [...prev, ...vehicleData]);
@@ -92,16 +91,15 @@ function DiscoverContent() {
     }
   }, [currentPage, loadingMore, hasMore, loadVehicles]);
 
-  // Effect to reload vehicles when filters change (after initial load)
+  // Effect to reload vehicles when filters or search changes
   useEffect(() => {
     // Only reload if initial load is complete
     if (!isInitialLoadRef.current) {
       loadVehicles(1, false);
       setCurrentPage(1);
-      setSearchQuery(''); // Clear search when filters change
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]); // Only depend on filters - loadVehicles is stable and depends on filters anyway
+  }, [filters, debouncedSearch]); // Reload when filters or search query changes
 
   // Load filter options immediately (doesn't block UI)
   useEffect(() => {
@@ -189,13 +187,16 @@ function DiscoverContent() {
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-  }, [setSearchQuery]);
+    // Reset to page 1 is handled by the effect on debouncedSearch
+  }, []);
 
   const handleClearFilter = useCallback((key: keyof FilterState) => {
     setFilters(prev => ({ ...prev, [key]: null }));
   }, []);
 
-  // handleClearSearch is provided by useSearch
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
 
   return (
     <section className="relative py-12 min-h-screen">

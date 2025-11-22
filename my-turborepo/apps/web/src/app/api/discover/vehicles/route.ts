@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
     const fuelType = searchParams.get('fuelType') || null;
     const drivetrain = searchParams.get('drivetrain') || null;
     const vehicleType = searchParams.get('vehicleType') || null;
+    const searchQuery = searchParams.get('search') || null;
 
     // Use the SQL function to get unique vehicles with all their trims (with filtering)
     const { data, error } = await supabase.rpc('get_unique_vehicles_with_trims', {
@@ -46,20 +47,21 @@ export async function GET(request: NextRequest) {
       fuel_type_param: fuelType,
       drivetrain_param: drivetrain,
       vehicle_type_param: vehicleType,
+      search_query: searchQuery,
     });
 
     if (error) {
       // Check for timeout-related errors
       const errorMessage = error.message || 'Unknown error';
-      const isTimeout = errorMessage.includes('timeout') || 
-                       errorMessage.includes('canceling statement') ||
-                       errorMessage.includes('statement timeout');
-      
+      const isTimeout = errorMessage.includes('timeout') ||
+        errorMessage.includes('canceling statement') ||
+        errorMessage.includes('statement timeout');
+
       return NextResponse.json(
-        { 
-          error: isTimeout 
+        {
+          error: isTimeout
             ? 'The query is taking too long. Try adding more specific filters (e.g., make, model) to narrow down the results.'
-            : errorMessage 
+            : errorMessage
         },
         { status: isTimeout ? 504 : 500 },
       );
@@ -93,10 +95,10 @@ export async function GET(request: NextRequest) {
     // Handle timeout or other errors
     const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
     const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('Request timeout');
-    
+
     return NextResponse.json(
-      { 
-        error: isTimeout 
+      {
+        error: isTimeout
           ? 'The query is taking too long. Try adding more specific filters (e.g., make, model) to narrow down the results.'
           : `Failed to fetch vehicles: ${errorMessage}`
       },
