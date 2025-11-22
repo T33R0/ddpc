@@ -78,7 +78,7 @@ const calculatePowerToWeight = (hp: string | undefined, weight: string | undefin
   const hpNum = parseFloat(hp);
   const weightNum = parseFloat(weight);
   if (isNaN(hpNum) || isNaN(weightNum) || hpNum === 0) return '—';
-  
+
   const lbPerHp = (weightNum / hpNum).toFixed(2);
   const hpPerTon = ((hpNum / weightNum) * 2000).toFixed(0);
   return `${lbPerHp} lb/hp (≈${hpPerTon} hp/ton)`;
@@ -90,7 +90,7 @@ const calculateSpecificOutput = (hp: string | undefined, displacement: string | 
   const hpNum = parseFloat(hp);
   const dispNum = parseFloat(displacement);
   if (isNaN(hpNum) || isNaN(dispNum) || dispNum === 0) return '—';
-  
+
   const hpPerLiter = (hpNum / dispNum).toFixed(0);
   return `${hpPerLiter} hp/L`;
 };
@@ -98,32 +98,32 @@ const calculateSpecificOutput = (hp: string | undefined, displacement: string | 
 // Format engine configuration
 const formatEngine = (trim: TrimVariant): string => {
   const parts: string[] = [];
-  
+
   if (trim.engine_size_l) parts.push(`${trim.engine_size_l}L`);
   if (trim.cylinders) {
     const cyl = trim.cylinders;
     parts.push(cyl.includes('cylinder') ? cyl : `${cyl}-cyl`);
   }
   if (trim.engine_type) parts.push(trim.engine_type.toUpperCase());
-  
+
   return parts.length > 0 ? parts.join(' ') : '—';
 };
 
 // Format fuel economy and range
 const formatFuelEconomy = (trim: TrimVariant): string => {
   const parts: string[] = [];
-  
+
   if (trim.epa_combined_mpg) {
     parts.push(`${trim.epa_combined_mpg} mpg`);
-    
+
     if (trim.epa_city_highway_mpg) {
       parts.push(`(${trim.epa_city_highway_mpg.replace('/', '/')} city/hwy)`);
     }
   }
-  
+
   if (trim.fuel_tank_capacity_gal) {
     parts.push(`• ${trim.fuel_tank_capacity_gal}-gal tank`);
-    
+
     // Calculate range if we have mpg and tank size
     if (trim.epa_city_highway_mpg) {
       const mpgValues = trim.epa_city_highway_mpg.split('/').map(v => parseFloat(v));
@@ -137,7 +137,7 @@ const formatFuelEconomy = (trim: TrimVariant): string => {
       }
     }
   }
-  
+
   return parts.length > 0 ? parts.join(' ') : '—';
 };
 
@@ -188,11 +188,11 @@ const VehicleDetailsModal = ({
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
-    
+
     if (isLeftSwipe && canNavigateNext && onNavigate) {
       onNavigate('next');
     } else if (isRightSwipe && canNavigatePrev && onNavigate) {
@@ -256,14 +256,14 @@ const VehicleDetailsModal = ({
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0"
+        className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0 bg-background border-border"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-black/50 backdrop-blur-lg border-b border-white/30 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
-          <DialogTitle className="text-2xl font-bold text-white">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             {summary.year} {summary.make} {summary.model}
           </DialogTitle>
           <DialogDescription className="sr-only">
@@ -279,9 +279,9 @@ const VehicleDetailsModal = ({
               onNavigate?.('prev');
             }}
             aria-label="Previous vehicle"
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-black/50 backdrop-blur-lg border border-white/30 rounded-full hover:bg-gray-700/50 transition-colors"
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg"
           >
-            <ChevronLeft className="w-8 h-8 text-white" />
+            <ChevronLeft className="w-8 h-8 text-foreground" />
           </button>
         )}
 
@@ -292,9 +292,9 @@ const VehicleDetailsModal = ({
               onNavigate?.('next');
             }}
             aria-label="Next vehicle"
-            className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-black/50 backdrop-blur-lg border border-white/30 rounded-full hover:bg-gray-700/50 transition-colors"
+            className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg"
           >
-            <ChevronRight className="w-8 h-8 text-white" />
+            <ChevronRight className="w-8 h-8 text-foreground" />
           </button>
         )}
 
@@ -303,7 +303,7 @@ const VehicleDetailsModal = ({
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left Column - Image and Trim Selector */}
             <div className="space-y-4">
-              <div className="w-full aspect-video overflow-hidden rounded-lg bg-gray-800">
+              <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10">
                 <ImageWithTimeoutFallback
                   src={primaryImageUrl}
                   fallbackSrc="/branding/fallback-logo.png"
@@ -311,20 +311,20 @@ const VehicleDetailsModal = ({
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               {/* Trim Selector */}
               <div className="space-y-2">
-                <label htmlFor="trim-select" className="text-sm text-gray-300 block">
+                <label htmlFor="trim-select" className="text-sm text-muted-foreground block">
                   Select Trim:
                 </label>
                 <select
                   id="trim-select"
                   value={selectedTrimId}
                   onChange={handleTrimChange}
-                  className="max-w-xs bg-black/30 backdrop-blur-sm border-white/20 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-white/40"
+                  className="max-w-xs bg-background border border-border text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
                 >
                   {summary.trims.map((trim) => (
-                    <option key={trim.id} value={trim.id} className="bg-black/50 text-white">
+                    <option key={trim.id} value={trim.id} className="bg-background text-foreground">
                       {trim.trim || trim.trim_description || trim.model}
                     </option>
                   ))}
@@ -336,7 +336,7 @@ const VehicleDetailsModal = ({
             <div className="space-y-4">
               {/* Vehicle Type */}
               {(selectedTrim.body_type || selectedTrim.drive_type) && (
-                <div className="text-gray-300">
+                <div className="text-muted-foreground">
                   <span className="text-lg">
                     {[selectedTrim.body_type, selectedTrim.drive_type].filter(Boolean).join(', ')}
                   </span>
@@ -346,8 +346,8 @@ const VehicleDetailsModal = ({
               {/* Engine */}
               {selectedTrim.engine_size_l && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Engine:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Engine:</div>
+                  <div className="text-foreground">
                     {formatEngine(selectedTrim)}
                     {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type}`}
                   </div>
@@ -357,8 +357,8 @@ const VehicleDetailsModal = ({
               {/* Output */}
               {(selectedTrim.horsepower_hp || selectedTrim.torque_ft_lbs) && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Output:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Output:</div>
+                  <div className="text-foreground">
                     {selectedTrim.horsepower_hp && (
                       <>
                         {selectedTrim.horsepower_hp} hp
@@ -379,27 +379,27 @@ const VehicleDetailsModal = ({
               {/* Transmission */}
               {selectedTrim.transmission && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Transmission:</div>
-                  <div className="text-white">{selectedTrim.transmission}</div>
+                  <div className="text-muted-foreground text-sm">Transmission:</div>
+                  <div className="text-foreground">{selectedTrim.transmission}</div>
                 </div>
               )}
 
               {/* Curb Weight */}
               {selectedTrim.curb_weight_lbs && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Curb Weight:</div>
-                  <div className="text-white">{formatSpec(selectedTrim.curb_weight_lbs, ' lb')}</div>
+                  <div className="text-muted-foreground text-sm">Curb Weight:</div>
+                  <div className="text-foreground">{formatSpec(selectedTrim.curb_weight_lbs, ' lb')}</div>
                 </div>
               )}
 
               {/* Power-to-Weight Ratio */}
               {selectedTrim.horsepower_hp && selectedTrim.curb_weight_lbs && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Power-to-Weight:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Power-to-Weight:</div>
+                  <div className="text-foreground">
                     {calculatePowerToWeight(selectedTrim.horsepower_hp, selectedTrim.curb_weight_lbs)}
                     {' • '}
-                    <span className="text-gray-400">Specific Output:</span>
+                    <span className="text-muted-foreground">Specific Output:</span>
                     {' '}
                     {calculateSpecificOutput(selectedTrim.horsepower_hp, selectedTrim.engine_size_l)}
                   </div>
@@ -409,58 +409,58 @@ const VehicleDetailsModal = ({
               {/* Suspension */}
               {selectedTrim.suspension && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Suspension:</div>
-                  <div className="text-white">{selectedTrim.suspension}</div>
+                  <div className="text-muted-foreground text-sm">Suspension:</div>
+                  <div className="text-foreground">{selectedTrim.suspension}</div>
                 </div>
               )}
 
               {/* Drivetrain */}
               {selectedTrim.drive_type && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Drivetrain:</div>
-                  <div className="text-white">{selectedTrim.drive_type}</div>
+                  <div className="text-muted-foreground text-sm">Drivetrain:</div>
+                  <div className="text-foreground">{selectedTrim.drive_type}</div>
                 </div>
               )}
 
               {/* Fuel Economy/Range */}
               {selectedTrim.epa_combined_mpg && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Fuel Economy/Range:</div>
-                  <div className="text-white">{formatFuelEconomy(selectedTrim)}</div>
+                  <div className="text-muted-foreground text-sm">Fuel Economy/Range:</div>
+                  <div className="text-foreground">{formatFuelEconomy(selectedTrim)}</div>
                 </div>
               )}
 
               {/* Ground Clearance */}
               {selectedTrim.ground_clearance_in && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Ground Clearance:</div>
-                  <div className="text-white">{formatSpec(selectedTrim.ground_clearance_in, ' in.')}</div>
+                  <div className="text-muted-foreground text-sm">Ground Clearance:</div>
+                  <div className="text-foreground">{formatSpec(selectedTrim.ground_clearance_in, ' in.')}</div>
                 </div>
               )}
 
               {/* Towing Capacity (if available) */}
               {selectedTrim.max_towing_capacity_lbs && selectedTrim.max_towing_capacity_lbs !== '0' && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Max Towing Capacity:</div>
-                  <div className="text-white">{formatSpec(selectedTrim.max_towing_capacity_lbs, ' lb')}</div>
+                  <div className="text-muted-foreground text-sm">Max Towing Capacity:</div>
+                  <div className="text-foreground">{formatSpec(selectedTrim.max_towing_capacity_lbs, ' lb')}</div>
                 </div>
               )}
 
               {/* Seating */}
               {selectedTrim.total_seating && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Seating:</div>
-                  <div className="text-white">{selectedTrim.total_seating} passengers</div>
+                  <div className="text-muted-foreground text-sm">Seating:</div>
+                  <div className="text-foreground">{selectedTrim.total_seating} passengers</div>
                 </div>
               )}
 
               {/* Cargo Capacity */}
               {selectedTrim.cargo_capacity_cuft && (
                 <div className="space-y-1">
-                  <div className="text-gray-400 text-sm">Cargo Capacity:</div>
-                  <div className="text-white">
+                  <div className="text-muted-foreground text-sm">Cargo Capacity:</div>
+                  <div className="text-foreground">
                     {formatSpec(selectedTrim.cargo_capacity_cuft, ' cu ft')}
-                    {selectedTrim.max_cargo_capacity_cuft && 
+                    {selectedTrim.max_cargo_capacity_cuft &&
                       ` (${formatSpec(selectedTrim.max_cargo_capacity_cuft, ' cu ft')} max)`
                     }
                   </div>
@@ -470,31 +470,27 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 pt-8 border-t border-white/30 pb-2">
+          <div className="mt-6 pt-8 border-t border-border pb-2">
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleAddToGarage}
                 disabled={isAddingToGarage || isAddedToGarage}
-                className={`py-3 px-8 rounded-lg font-semibold transition-colors ${
-                  isAddedToGarage
+                className={`py-3 px-8 rounded-lg font-semibold transition-colors ${isAddedToGarage
                     ? 'bg-green-600 hover:bg-green-700 text-white'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
-                } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
               >
                 {isAddingToGarage
                   ? 'Adding to Garage...'
                   : isAddedToGarage
-                  ? '✓ Added to Garage'
-                  : 'Add to Garage'
+                    ? '✓ Added to Garage'
+                    : 'Add to Garage'
                 }
               </button>
 
               <button
                 onClick={() => setShowComingSoon(true)}
-                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-black/30 backdrop-blur-sm border-white/20 hover:bg-black/40 hover:border-white/30 text-white min-w-[200px]"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                }}
+                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-background border border-border hover:bg-muted text-foreground min-w-[200px]"
               >
                 More Details
               </button>
@@ -505,18 +501,15 @@ const VehicleDetailsModal = ({
         {/* Coming Soon Popup */}
         {showComingSoon && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
             onClick={() => setShowComingSoon(false)}
           >
             <div
-              className="bg-black/50 backdrop-blur-lg text-white rounded-2xl p-8 max-w-md"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
+              className="bg-card text-card-foreground rounded-2xl p-8 max-w-md border border-border shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-2xl font-bold mb-4 text-white">Coming Soon</h3>
-              <p className="text-gray-300 mb-6">
+              <h3 className="text-2xl font-bold mb-4 text-foreground">Coming Soon</h3>
+              <p className="text-muted-foreground mb-6">
                 This feature is currently under development and will be available soon!
               </p>
               <button

@@ -542,14 +542,6 @@ function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
           <span className="text-muted-foreground">Color</span>
           <span className="text-foreground font-medium">{vehicle.colors_exterior || '-'}</span>
         </div>
-        {/* <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground">VIN</span>
-          <span className="text-foreground font-medium font-mono text-sm">{vehicle.vin || '-'}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">License Plate</span>
-          <span className="text-foreground font-medium font-mono text-sm">{vehicle.license_plate || '-'}</span>
-        </div> */}
       </div>
     </Card>
   )
@@ -745,13 +737,8 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
             isOwner={isOwner}
           />
 
-          {/* Grid container - 4x3 layout */}
-          <div className="grid w-full max-w-7xl mx-auto gap-4 min-h-[600px]"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gridTemplateRows: 'repeat(3, 1fr)',
-            }}>
+          {/* Grid container - Responsive layout using Tailwind classes */}
+          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 auto-rows-min">
             {/* Row 1 */}
             {/* Slot 1: Build Specs */}
             <BuildSpecsCard vehicle={vehicle} />
@@ -801,7 +788,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
               stats={[
                 { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
-                { label: 'Total Cost', value: '---' }
+                { label: 'Last Fill-up', value: '---' }
               ]}
               disabled={!isOwner}
             />
@@ -812,8 +799,8 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               title="Mods"
               onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
               stats={[
-                { label: 'Total Mods', value: '---' },
-                { label: 'Total Cost', value: '---' }
+                { label: 'Total Mods', value: '0' },
+                { label: 'Total Cost', value: '$0' }
               ]}
               disabled={!isOwner}
             />

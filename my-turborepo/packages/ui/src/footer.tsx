@@ -48,14 +48,14 @@ const legalLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-black border-t border-slate-800 text-white">
+    <footer className="bg-background border-t border-border text-foreground">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="md:col-span-2 lg:col-span-1">
             <Link href="/" className="text-2xl font-bold">
               ddpc
             </Link>
-            <p className="text-slate-400 mt-4 text-sm">
+            <p className="text-muted-foreground mt-4 text-sm">
               The complete vehicle management platform for enthusiasts and professionals.
             </p>
           </div>
@@ -65,7 +65,7 @@ export function Footer() {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <Link href={link.href} className="text-slate-400 hover:text-white text-sm">
+                    <Link href={link.href} className="text-muted-foreground hover:text-foreground text-sm">
                       {link.name}
                     </Link>
                   </li>
@@ -74,20 +74,20 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center">
-          <div className="text-sm text-slate-500">
+        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center">
+          <div className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} DDPC. All rights reserved.
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             {socialLinks.map((social) => (
-              <Link key={social.label} href={social.href} aria-label={social.label} className="text-slate-400 hover:text-white">
+              <Link key={social.label} href={social.href} aria-label={social.label} className="text-muted-foreground hover:text-foreground">
                 {social.icon}
               </Link>
             ))}
           </div>
           <div className="flex gap-4 mt-4 md:mt-0">
             {legalLinks.map((link) => (
-              <Link key={link.name} href={link.href} className="text-sm text-slate-500 hover:text-white">
+              <Link key={link.name} href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
                 {link.name}
               </Link>
             ))}
