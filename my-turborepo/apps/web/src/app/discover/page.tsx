@@ -201,7 +201,7 @@ function DiscoverContent() {
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <h1 className="text-4xl font-bold text-white mb-8">Discover</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-8">Discover</h1>
 
         {/* Action Buttons - Always show immediately */}
         <DiscoverActionButtons

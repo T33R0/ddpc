@@ -169,11 +169,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
 
   return (
     <Card
-      className={`col-span-2 row-span-2 bg-card rounded-2xl overflow-hidden h-full relative border border-border ${isOwner ? 'cursor-pointer' : ''}`}
-      style={{
-        gridColumn: 'span 2',
-        gridRow: 'span 2',
-      }}
+      className={`col-span-1 md:col-span-2 lg:col-span-2 row-span-1 md:row-span-2 lg:row-span-2 bg-card rounded-2xl overflow-hidden h-full relative border border-border ${isOwner ? 'cursor-pointer' : ''}`}
       onMouseEnter={isOwner ? () => setIsHovered(true) : undefined}
       onMouseLeave={isOwner ? () => setIsHovered(false) : undefined}
     >
@@ -738,7 +734,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
           />
 
           {/* Grid container - Responsive layout using Tailwind classes */}
-          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 auto-rows-min">
+          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-3 min-h-[600px]">
             {/* Row 1 */}
             {/* Slot 1: Build Specs */}
             <BuildSpecsCard vehicle={vehicle} />

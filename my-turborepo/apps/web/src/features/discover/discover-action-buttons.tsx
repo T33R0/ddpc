@@ -13,11 +13,11 @@ type DiscoverActionButtonsProps = {
   onSearch: (query: string) => void;
 };
 
-export function DiscoverActionButtons({ 
-  filters, 
-  onFilterChange, 
+export function DiscoverActionButtons({
+  filters,
+  onFilterChange,
   filterOptions,
-  onSearch 
+  onSearch
 }: DiscoverActionButtonsProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -41,26 +41,26 @@ export function DiscoverActionButtons({
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-white text-lg font-medium">Find your next vehicle:</span>
+          <span className="text-foreground text-lg font-medium">Find your next vehicle:</span>
           <Button
             onClick={() => setShowSearch(true)}
             variant="outline"
-            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[150px]"
+            className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground w-[150px]"
           >
             <Search className="w-4 h-4" />
             Search
           </Button>
-          
+
           <Button
             onClick={() => setShowFilter(true)}
             variant="outline"
-            className="flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white w-[150px]"
+            className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground w-[150px]"
           >
             <Filter className="w-4 h-4" />
             Filter
           </Button>
         </div>
-        
+
         <button
           onClick={handleReset}
           className="text-red-500 hover:text-red-400 transition-colors text-sm font-medium"
@@ -69,8 +69,8 @@ export function DiscoverActionButtons({
         </button>
       </div>
 
-      <SearchModal 
-        open={showSearch} 
+      <SearchModal
+        open={showSearch}
         onOpenChange={setShowSearch}
         onSearch={onSearch}
       />

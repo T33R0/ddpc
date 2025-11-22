@@ -11,11 +11,11 @@ type ActiveFiltersDisplayProps = {
   onClearSearch?: () => void;
 };
 
-export function ActiveFiltersDisplay({ 
-  filters, 
-  searchQuery, 
+export function ActiveFiltersDisplay({
+  filters,
+  searchQuery,
   onClearFilter,
-  onClearSearch 
+  onClearSearch
 }: ActiveFiltersDisplayProps) {
   const activeFilters: Array<{ key: keyof FilterState; label: string; value: string }> = [];
 
@@ -52,25 +52,22 @@ export function ActiveFiltersDisplay({
 
   return (
     <div className="mb-6">
-      <div 
-        className="bg-black/50 backdrop-blur-lg rounded-2xl p-4"
-        style={{
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-        }}
+      <div
+        className="bg-card/50 backdrop-blur-lg rounded-2xl p-4 border border-border"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-gray-300 text-sm font-medium mr-2">Active:</span>
-          
+          <span className="text-muted-foreground text-sm font-medium mr-2">Active:</span>
+
           {/* Search Query Badge */}
           {searchQuery && (
-            <div 
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 text-sm"
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/20 border border-accent/30 text-accent-foreground text-sm"
             >
               <span>Search: &quot;{searchQuery}&quot;</span>
               {onClearSearch && (
                 <button
                   onClick={onClearSearch}
-                  className="hover:text-blue-200 transition-colors"
+                  className="hover:text-accent-foreground/80 transition-colors"
                   aria-label="Clear search"
                 >
                   <X className="w-4 h-4" />
@@ -83,14 +80,14 @@ export function ActiveFiltersDisplay({
           {activeFilters.map((filter) => (
             <div
               key={filter.key}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20 text-white text-sm"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/30 backdrop-blur-sm border border-border text-foreground text-sm"
             >
-              <span className="text-gray-300">{filter.label}:</span>
+              <span className="text-muted-foreground">{filter.label}:</span>
               <span>{filter.value}</span>
               {onClearFilter && (
                 <button
                   onClick={() => onClearFilter(filter.key)}
-                  className="hover:text-gray-300 transition-colors"
+                  className="hover:text-foreground/80 transition-colors"
                   aria-label={`Clear ${filter.label}`}
                 >
                   <X className="w-4 h-4" />
