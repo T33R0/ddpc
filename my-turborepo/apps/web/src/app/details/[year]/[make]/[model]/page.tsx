@@ -24,9 +24,10 @@ export default async function VehicleDetailsPage(props: {
     const supabase = await createClient();
 
     // Fetch all trims for this vehicle
+    // Fetch all trims for this vehicle
     const { data: vehicles, error } = await supabase
         .from('vehicle_data')
-        .select('*')
+        .select('*, vehicle_primary_image(url)')
         .eq('year', year)
         .eq('make', decodedMake)
         .eq('model', decodedModel);
@@ -45,9 +46,13 @@ export default async function VehicleDetailsPage(props: {
         notFound();
     }
 
-    // Image logic: Use the selected trim's image, or fallback to a generic one
-    // The discover page uses a hero image logic, but here we'll stick to the specific trim's image if available.
-    const imageUrl = selectedVehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
+    // Image logic: Use the selected trim's image, or fallback to the first trim's image, or generic
+    // @ts-ignore - Supabase types might not automatically infer the joined table structure without explicit types
+    const primaryImage = selectedVehicle.vehicle_primary_image?.url || (Array.isArray(selectedVehicle.vehicle_primary_image) ? selectedVehicle.vehicle_primary_image[0]?.url : null);
+    // @ts-ignore
+    const firstTrimImage = vehicles[0].vehicle_primary_image?.url || (Array.isArray(vehicles[0].vehicle_primary_image) ? vehicles[0].vehicle_primary_image[0]?.url : null);
+
+    const imageUrl = primaryImage || firstTrimImage || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
@@ -63,7 +68,7 @@ export default async function VehicleDetailsPage(props: {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8 space-y-8">
+            <div className="container mx-auto px-4 py-8 space-y-8 pt-24">
                 {/* Hero Section */}
                 <div className="grid md:grid-cols-2 gap-8">
                     <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/20 shadow-lg">
@@ -103,26 +108,26 @@ export default async function VehicleDetailsPage(props: {
                                 ))}
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 rounded-xl bg-card border border-border">
-                                <div className="text-sm text-muted-foreground">MSRP</div>
-                                <div className="text-xl font-bold">{selectedVehicle.base_msrp ? `$${parseInt(selectedVehicle.base_msrp).toLocaleString()}` : '—'}</div>
-                            </div>
-                            <div className="p-4 rounded-xl bg-card border border-border">
-                                <div className="text-sm text-muted-foreground">MPG (Combined)</div>
-                                <div className="text-xl font-bold">{formatSpec(selectedVehicle.epa_combined_mpg)}</div>
-                            </div>
-                            <div className="p-4 rounded-xl bg-card border border-border">
-                                <div className="text-sm text-muted-foreground">Horsepower</div>
-                                <div className="text-xl font-bold">{formatSpec(selectedVehicle.horsepower_hp, ' hp')}</div>
-                            </div>
-                            <div className="p-4 rounded-xl bg-card border border-border">
-                                <div className="text-sm text-muted-foreground">0-60 mph</div>
-                                <div className="text-xl font-bold">{formatSpec(selectedVehicle.zero_to_60_mph, ' s')}</div>
-                            </div>
-                        </div>
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-xl bg-card border border-border">
+                        <div className="text-sm text-muted-foreground">MSRP</div>
+                        <div className="text-xl font-bold">{selectedVehicle.base_msrp ? `$${parseInt(selectedVehicle.base_msrp).toLocaleString()}` : '—'}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card border border-border">
+                        <div className="text-sm text-muted-foreground">MPG (Combined)</div>
+                        <div className="text-xl font-bold">{formatSpec(selectedVehicle.epa_combined_mpg)}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card border border-border">
+                        <div className="text-sm text-muted-foreground">Horsepower</div>
+                        <div className="text-xl font-bold">{formatSpec(selectedVehicle.horsepower_hp, ' hp')}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card border border-border">
+                        <div className="text-sm text-muted-foreground">0-60 mph</div>
+                        <div className="text-xl font-bold">{formatSpec(selectedVehicle.zero_to_60_mph, ' s')}</div>
                     </div>
                 </div>
 

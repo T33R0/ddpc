@@ -60,7 +60,6 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   const angle = getAngleForMpg(averageMpg)
 
   // Determine color based on position relative to factory MPG
-  // 75-80% Red, 80-90% Yellow, 90-100% Green, 100-110% Blue
   const pctOfFactory = averageMpg / factoryMpg
   let needleColor = '#9CA3AF' // gray fallback
   if (pctOfFactory >= 1.0) {
@@ -75,58 +74,58 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
 
   const difference = averageMpg - factoryMpg
 
-  // Calculate needle position (centered at bottom, rotating around center)
+  // Dimensions
   const centerX = 150
   const centerY = 150
   const radius = 100
-  const needleLength = 80
+  const strokeWidth = 12 // Thinner for less cartoony look
+  const needleLength = 85
+  const labelRadius = 125 // Radius for text labels
 
   // Helper function to calculate point on semicircle arc
-  const getArcPoint = (angleDeg: number) => {
+  const getArcPoint = (angleDeg: number, r: number = radius) => {
     // Convert angle to radians (0° = left, 180° = right)
     // In SVG, 0 is Right, PI is Left. We want to go from Left (PI) to Right (2PI) clockwise.
     const angleRad = Math.PI + (angleDeg * Math.PI) / 180
-    // Semicircle center is at (150, 150), radius 100
-    const arcCenterX = 150
-    const arcCenterY = 150
-    const x = arcCenterX + radius * Math.cos(angleRad)
-    const y = arcCenterY + radius * Math.sin(angleRad)
+    const x = centerX + r * Math.cos(angleRad)
+    const y = centerY + r * Math.sin(angleRad)
     return { x, y }
   }
 
   // Calculate arc endpoints for each zone
-  // Red zone: 75% to 80%
   const redStartAngle = getAngleForMpg(factoryMpg * 0.75)
   const redEndAngle = getAngleForMpg(factoryMpg * 0.80)
   const redStart = getArcPoint(redStartAngle)
   const redEnd = getArcPoint(redEndAngle)
 
-  // Yellow zone: 80% to 90%
   const yellowStartAngle = redEndAngle
   const yellowEndAngle = getAngleForMpg(factoryMpg * 0.90)
   const yellowStart = redEnd
   const yellowEnd = getArcPoint(yellowEndAngle)
 
-  // Green zone: 90% to 100%
   const greenStartAngle = yellowEndAngle
   const greenEndAngle = getAngleForMpg(factoryMpg * 1.00)
   const greenStart = yellowEnd
   const greenEnd = getArcPoint(greenEndAngle)
 
-  // Blue zone: 100% to 110%
   const blueStartAngle = greenEndAngle
   const blueEndAngle = getAngleForMpg(factoryMpg * 1.10)
   const blueStart = greenEnd
   const blueEnd = getArcPoint(blueEndAngle)
 
-  // Hash marks at 80% and 90%
+  // Hash marks positions
   const hash80 = getArcPoint(getAngleForMpg(factoryMpg * 0.80))
   const hash90 = getArcPoint(getAngleForMpg(factoryMpg * 0.90))
-  // Also add hash at 100% (Factory)
   const hash100 = getArcPoint(getAngleForMpg(factoryMpg * 1.00))
 
-  // Convert angle to radians and adjust for SVG coordinate system
-  // angle is 0..180. We want PI..2PI.
+  // Label positions
+  const label75 = getArcPoint(getAngleForMpg(factoryMpg * 0.75), labelRadius)
+  const label80 = getArcPoint(getAngleForMpg(factoryMpg * 0.80), labelRadius)
+  const label90 = getArcPoint(getAngleForMpg(factoryMpg * 0.90), labelRadius)
+  const label100 = getArcPoint(getAngleForMpg(factoryMpg * 1.00), labelRadius)
+  const label110 = getArcPoint(getAngleForMpg(factoryMpg * 1.10), labelRadius)
+
+  // Needle endpoint
   const angleRad = Math.PI + (angle * Math.PI) / 180
   const needleEndX = centerX + Math.cos(angleRad) * needleLength
   const needleEndY = centerY + Math.sin(angleRad) * needleLength
@@ -134,10 +133,12 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   // Helper for hash lines
   const getHashLine = (point: { x: number, y: number }, angleDeg: number) => {
     const angleRad = Math.PI + (angleDeg * Math.PI) / 180
-    // Inner point (slightly closer to center)
-    const innerX = centerX + (radius - 10) * Math.cos(angleRad)
-    const innerY = centerY + (radius - 10) * Math.sin(angleRad)
-    return { x1: innerX, y1: innerY, x2: point.x, y2: point.y }
+    const innerX = centerX + (radius - strokeWidth / 2) * Math.cos(angleRad)
+    const innerY = centerY + (radius - strokeWidth / 2) * Math.sin(angleRad)
+    // Extend slightly outward
+    const outerX = centerX + (radius + strokeWidth / 2 + 2) * Math.cos(angleRad)
+    const outerY = centerY + (radius + strokeWidth / 2 + 2) * Math.sin(angleRad)
+    return { x1: innerX, y1: innerY, x2: outerX, y2: outerY }
   }
 
   const hash80Line = getHashLine(hash80, getAngleForMpg(factoryMpg * 0.80))
@@ -153,58 +154,59 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center justify-center">
-          {/* Dial SVG */}
           <div className="relative w-full max-w-sm">
-            <svg viewBox="0 0 300 200" className="w-full h-auto">
-              {/* Background semicircle */}
+            <svg viewBox="0 0 300 180" className="w-full h-auto">
+              {/* Background Arc */}
               <path
                 d={`M 50 150 A 100 100 0 0 1 250 150`}
                 fill="none"
-                stroke="hsl(var(--border))"
-                strokeWidth="20"
+                stroke="hsl(var(--muted))"
+                strokeWidth={strokeWidth}
                 strokeLinecap="round"
+                opacity="0.2"
               />
 
               {/* Colored segments */}
-              {/* Red zone */}
               <path
                 d={`M ${redStart.x} ${redStart.y} A 100 100 0 0 1 ${redEnd.x} ${redEnd.y}`}
                 fill="none"
                 stroke="#EF4444"
-                strokeWidth="20"
-                strokeLinecap="round"
+                strokeWidth={strokeWidth}
+                strokeLinecap="butt"
               />
-              {/* Yellow zone */}
               <path
                 d={`M ${yellowStart.x} ${yellowStart.y} A 100 100 0 0 1 ${yellowEnd.x} ${yellowEnd.y}`}
                 fill="none"
                 stroke="#F59E0B"
-                strokeWidth="20"
-                strokeLinecap="round"
+                strokeWidth={strokeWidth}
+                strokeLinecap="butt"
               />
-              {/* Green zone */}
               <path
                 d={`M ${greenStart.x} ${greenStart.y} A 100 100 0 0 1 ${greenEnd.x} ${greenEnd.y}`}
                 fill="none"
                 stroke="#10B981"
-                strokeWidth="20"
-                strokeLinecap="round"
+                strokeWidth={strokeWidth}
+                strokeLinecap="butt"
               />
-              {/* Blue zone */}
               <path
                 d={`M ${blueStart.x} ${blueStart.y} A 100 100 0 0 1 ${blueEnd.x} ${blueEnd.y}`}
                 fill="none"
                 stroke="#3B82F6"
-                strokeWidth="20"
-                strokeLinecap="round"
+                strokeWidth={strokeWidth}
+                strokeLinecap="butt"
               />
 
               {/* Hash marks */}
-              <line x1={hash80Line.x1} y1={hash80Line.y1} x2={hash80Line.x2} y2={hash80Line.y2} stroke="white" strokeWidth="2" />
-              <line x1={hash90Line.x1} y1={hash90Line.y1} x2={hash90Line.x2} y2={hash90Line.y2} stroke="white" strokeWidth="2" />
+              <line x1={hash80Line.x1} y1={hash80Line.y1} x2={hash80Line.x2} y2={hash80Line.y2} stroke="currentColor" className="text-background" strokeWidth="2" />
+              <line x1={hash90Line.x1} y1={hash90Line.y1} x2={hash90Line.x2} y2={hash90Line.y2} stroke="currentColor" className="text-background" strokeWidth="2" />
+              <line x1={hash100Line.x1} y1={hash100Line.y1} x2={hash100Line.x2} y2={hash100Line.y2} stroke="currentColor" className="text-background" strokeWidth="2" />
 
-              {/* Factory MPG marker (100%) - make it distinct */}
-              <line x1={hash100Line.x1} y1={hash100Line.y1} x2={hash100Line.x2} y2={hash100Line.y2} stroke="white" strokeWidth="3" />
+              {/* Labels */}
+              <text x={label75.x} y={label75.y} textAnchor="start" dominantBaseline="middle" className="text-[10px] fill-muted-foreground font-medium">75%</text>
+              <text x={label80.x} y={label80.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-54, ${label80.x}, ${label80.y}) translate(0, -5)`}>80%</text>
+              <text x={label90.x} y={label90.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-18, ${label90.x}, ${label90.y}) translate(0, -5)`}>90%</text>
+              <text x={label100.x} y={label100.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-blue-500 font-bold" transform={`rotate(18, ${label100.x}, ${label100.y}) translate(0, -5)`}>Factory</text>
+              <text x={label110.x} y={label110.y} textAnchor="end" dominantBaseline="middle" className="text-[10px] fill-muted-foreground font-medium">110%</text>
 
               {/* Needle */}
               <line
@@ -213,30 +215,15 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
                 x2={needleEndX}
                 y2={needleEndY}
                 stroke={needleColor}
-                strokeWidth="4"
+                strokeWidth="3"
                 strokeLinecap="round"
               />
-
-              {/* Needle center point */}
-              <circle cx={centerX} cy={centerY} r="6" fill={needleColor} />
+              <circle cx={centerX} cy={centerY} r="4" fill={needleColor} />
             </svg>
-
-            {/* Labels */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-2">
-              <div className="text-left">
-                <p className="text-xs text-muted-foreground">{minMpg.toFixed(0)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground">Factory: {factoryMpg.toFixed(0)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">{maxMpg.toFixed(0)}</p>
-              </div>
-            </div>
           </div>
 
           {/* Current MPG Display */}
-          <div className="mt-6 text-center">
+          <div className="mt-2 text-center">
             <p className="text-sm text-muted-foreground mb-1">Your Average MPG</p>
             <p className="text-3xl font-bold" style={{ color: needleColor }}>
               {averageMpg.toFixed(1)}
@@ -299,4 +286,3 @@ export function FuelPageClient({ fuelData }: FuelPageClientProps) {
     </>
   )
 }
-
