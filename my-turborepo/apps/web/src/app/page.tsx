@@ -4,44 +4,61 @@ import React, { useState } from 'react';
 import LandingLayout from './landing-layout';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
-import { AuthModal } from '../features/auth/AuthModal';
+import { AuthModal } from '@repo/ui/auth-modal';
+import { useAuth } from '../lib/auth';
 
 export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { signUp, signIn, signInWithGoogle } = useAuth();
+
+  const handleGoogleSignIn = () => {
+    signInWithGoogle();
+  };
+
+  const handleEmailSignUp = async (email: string, password: string) => {
+    return await signUp(email, password);
+  };
+
+  const handleEmailSignIn = async (email: string, password: string) => {
+    return await signIn(email, password);
+  };
 
   return (
     <LandingLayout>
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] gap-8 p-4 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] gap-8 p-4 text-center lowercase">
         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
-          Welcome to DDPC
+          welcome to ddpc
         </h1>
         <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-          Your digital platform for car enthusiasts.
+          the digital platform for auto enthusiasts
         </p>
         <div className="flex flex-col gap-4 min-[400px]:flex-row">
           <Button 
             size="lg" 
             onClick={() => setIsAuthModalOpen(true)}
-            className="px-8"
+            className="px-8 lowercase"
           >
-            Enter
+            enter
           </Button>
           <Button 
             asChild 
             variant="outline" 
             size="lg"
-            className="px-8"
+            className="px-8 lowercase"
           >
             <Link href="/more">
-              Learn More
+              learn more
             </Link>
           </Button>
         </div>
       </div>
 
       <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        open={isAuthModalOpen}
+        onOpenChange={setIsAuthModalOpen}
+        onGoogleSignIn={handleGoogleSignIn}
+        onEmailSignUp={handleEmailSignUp}
+        onEmailSignIn={handleEmailSignIn}
       />
     </LandingLayout>
   );

@@ -1,7 +1,3 @@
-# Current RLS Policies
-
-**Last Updated**: Most current database state
-
 | schemaname | tablename             | policyname                                                | permissive | cmd    | qual                                                                                                                                                                                                                | with_check                                                                                                                                                                                                          |
 | ---------- | --------------------- | --------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | public     | fuel_log              | Enable all access for authenticated users (own fuel logs) | PERMISSIVE | ALL    | (auth.uid() = user_id)                                                                                                                                                                                              | (auth.uid() = user_id)                                                                                                                                                                                              |
@@ -84,20 +80,3 @@
 | public     | vehicle_primary_image | vpi_select_public                                         | PERMISSIVE | SELECT | true                                                                                                                                                                                                                | null                                                                                                                                                                                                                |
 | public     | vehicle_primary_image | vpi_update_service_only                                   | PERMISSIVE | UPDATE | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
 | public     | vehicle_url_queue     | vuq_service_only_all                                      | PERMISSIVE | ALL    | (auth.role() = 'service_role'::text)                                                                                                                                                                                | (auth.role() = 'service_role'::text)                                                                                                                                                                                |
-
-## Notes
-- **FUEL_LOG**: Users can only access their own fuel logs
-- **JOB_PLANS**: Users can only access their own job plans
-- **JOB_STEPS**: Users can only access steps for job plans they own (via job_plan ownership check)
-- **JOB_TEMPLATES**: Users can manage their own templates; public templates are viewable by all
-- **JOB_TEMPLATE_STEPS**: Public template steps are viewable; users can manage steps for their own templates
-- **MAINTENANCE_LOG**: Users can only access maintenance logs for vehicles they own
-- **MASTER TABLES**: Public read access for parts list, mod categories, mod items, service categories, and service items
-- **MOD_OUTCOME**: Users can only access outcomes for mods on vehicles they own
-- **MOD_PARTS**: Users can only access parts for mods on vehicles they own
-- **ODOMETER_LOG**: Users can only access odometer logs for vehicles they own
-- **PART_INVENTORY**: Users can only access their own parts inventory
-- **SERVICE_INTERVALS**: Users can only access their own service intervals
-- **USER VEHICLES**: Direct ownership-based access (owner_id = auth.uid())
-- **PUBLIC ACCESS**: Vehicles with privacy='public' can be viewed by anyone
-- **SERVICE OPERATIONS**: Service role has full access to system tables

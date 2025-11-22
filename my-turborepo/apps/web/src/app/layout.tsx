@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { HeaderWithAuth } from '../components/HeaderWithAuth';
 import { Toaster } from 'react-hot-toast';
-import { Footer } from '@repo/ui/footer';
+import { FooterWrapper } from '../components/FooterWrapper';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '../lib/auth';
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <main className="flex-grow relative z-10">
                 {children}
               </main>
-              <Footer />
+              <FooterWrapper />
             </div>
             <LogoutModal />
             <ScrutineerButton />

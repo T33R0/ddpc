@@ -3,10 +3,16 @@
 import { Header } from '@repo/ui/header';
 import { useAuth } from '../lib/auth';
 import { useVehicles } from '../lib/hooks/useVehicles';
+import { usePathname } from 'next/navigation';
 
 export function HeaderWithAuth() {
+  const pathname = usePathname();
   const { user, signOut, signUp, signIn, signInWithGoogle } = useAuth();
   const { data: vehiclesData } = useVehicles();
+
+  if (pathname === '/') {
+    return null;
+  }
 
   const allVehicles = vehiclesData?.vehicles || [];
   const activeVehiclesCount = allVehicles.filter(vehicle => vehicle.current_status === 'daily_driver').length;
