@@ -566,42 +566,32 @@ function VehicleHeader({
 
 function BuildSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-card rounded-2xl p-6 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 shrink-0">
-        <Wrench className="h-5 w-5 text-accent" />
+    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
+      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
+        <Wrench className="h-4 w-4 text-accent" />
         Build Specs
       </h3>
-      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Trim</span>
-          <span className="text-foreground font-medium text-right truncate">{vehicle.trim || '—'}</span>
+      <div className="space-y-2 overflow-hidden">
+        <div className="flex justify-between border-b border-border pb-1.5">
+          <span className="text-sm text-muted-foreground shrink-0 mr-2">Trim</span>
+          <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.trim || '—'}</span>
         </div>
         {vehicle.body_type && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Body Type</span>
-            <span className="text-foreground font-medium text-right truncate">{vehicle.body_type}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Body Type</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.body_type}</span>
           </div>
         )}
         {vehicle.doors && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Doors</span>
-            <span className="text-foreground font-medium text-right truncate">{vehicle.doors}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Doors</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.doors}</span>
           </div>
         )}
         {vehicle.total_seating && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Seating</span>
-            <span className="text-foreground font-medium text-right truncate">{vehicle.total_seating} passengers</span>
-          </div>
-        )}
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Exterior</span>
-          <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.colors_exterior || ''}>{vehicle.colors_exterior || '—'}</span>
-        </div>
-        {vehicle.colors_interior && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground shrink-0 mr-2">Interior</span>
-            <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.colors_interior}>{vehicle.colors_interior}</span>
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Seating</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.total_seating} passengers</span>
           </div>
         )}
       </div>
@@ -614,50 +604,50 @@ function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
   const specificOutput = calculateSpecificOutput(vehicle.horsepower_hp, vehicle.engine_size_l);
 
   return (
-    <Card className="bg-card rounded-2xl p-6 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 shrink-0">
-        <Gauge className="h-5 w-5 text-accent" />
+    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
+      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
+        <Gauge className="h-4 w-4 text-accent" />
         Engine & Power
       </h3>
-      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
-        <div className="flex justify-between border-b border-border pb-2">
-          <span className="text-muted-foreground shrink-0 mr-2">Engine</span>
-          <span className="text-foreground font-medium text-right truncate">{formatEngine(vehicle)}</span>
+      <div className="space-y-2 overflow-hidden">
+        <div className="flex justify-between border-b border-border pb-1.5">
+          <span className="text-sm text-muted-foreground shrink-0 mr-2">Engine</span>
+          <span className="text-sm text-foreground font-medium text-right truncate">{formatEngine(vehicle)}</span>
         </div>
         {vehicle.fuel_type && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Fuel Type</span>
-            <span className="text-foreground font-medium text-right truncate">{vehicle.fuel_type}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Fuel Type</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.fuel_type}</span>
           </div>
         )}
         {vehicle.horsepower_hp && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Horsepower</span>
-            <span className="text-foreground font-medium text-right truncate">
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Horsepower</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">
               {vehicle.horsepower_hp} hp
               {vehicle.horsepower_rpm && ` @ ${vehicle.horsepower_rpm} rpm`}
             </span>
           </div>
         )}
         {vehicle.torque_ft_lbs && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Torque</span>
-            <span className="text-foreground font-medium text-right truncate">
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Torque</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">
               {vehicle.torque_ft_lbs} lb-ft
               {vehicle.torque_rpm && ` @ ${vehicle.torque_rpm} rpm`}
             </span>
           </div>
         )}
         {powerToWeight !== '—' && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Power/Weight</span>
-            <span className="text-foreground font-medium text-right truncate">{powerToWeight}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Power/Weight</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{powerToWeight}</span>
           </div>
         )}
         {specificOutput !== '—' && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground shrink-0 mr-2">Specific Output</span>
-            <span className="text-foreground font-medium text-right truncate">{specificOutput}</span>
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Specific Output</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{specificOutput}</span>
           </div>
         )}
       </div>
@@ -667,46 +657,46 @@ function EngineSpecsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-card rounded-2xl p-6 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 shrink-0">
-        <Scale className="h-5 w-5 text-accent" />
+    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
+      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
+        <Scale className="h-4 w-4 text-accent" />
         Dimensions & Weight
       </h3>
-      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-2 overflow-hidden">
         {vehicle.curb_weight_lbs && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Curb Weight</span>
-            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.curb_weight_lbs, ' lb')}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Curb Weight</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.curb_weight_lbs, ' lb')}</span>
           </div>
         )}
         {vehicle.length_in && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Length</span>
-            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.length_in, '"')}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Length</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.length_in, '"')}</span>
           </div>
         )}
         {vehicle.width_in && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Width</span>
-            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.width_in, '"')}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Width</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.width_in, '"')}</span>
           </div>
         )}
         {vehicle.height_in && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Height</span>
-            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.height_in, '"')}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Height</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.height_in, '"')}</span>
           </div>
         )}
         {vehicle.ground_clearance_in && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Ground Clearance</span>
-            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.ground_clearance_in, ' in')}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Ground Clearance</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.ground_clearance_in, ' in')}</span>
           </div>
         )}
         {vehicle.cargo_capacity_cuft && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Cargo Capacity</span>
-            <span className="text-foreground font-medium text-right truncate">
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Cargo Capacity</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">
               {formatSpec(vehicle.cargo_capacity_cuft, ' cu ft')}
               {vehicle.max_cargo_capacity_cuft && ` (${formatSpec(vehicle.max_cargo_capacity_cuft, ' cu ft')} max)`}
             </span>
@@ -714,8 +704,8 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
         )}
         {vehicle.max_towing_capacity_lbs && vehicle.max_towing_capacity_lbs !== '0' && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground shrink-0 mr-2">Max Towing</span>
-            <span className="text-foreground font-medium text-right truncate">{formatSpec(vehicle.max_towing_capacity_lbs, ' lb')}</span>
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Max Towing</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{formatSpec(vehicle.max_towing_capacity_lbs, ' lb')}</span>
           </div>
         )}
       </div>
@@ -725,34 +715,34 @@ function DimensionsCard({ vehicle }: { vehicle: Vehicle }) {
 
 function DrivetrainCard({ vehicle }: { vehicle: Vehicle }) {
   return (
-    <Card className="bg-card rounded-2xl p-6 h-full border border-border overflow-hidden flex flex-col">
-      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 shrink-0">
-        <Cog className="h-5 w-5 text-accent" />
+    <Card className="bg-card rounded-2xl p-5 h-full border border-border overflow-hidden flex flex-col">
+      <h3 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2 shrink-0">
+        <Cog className="h-4 w-4 text-accent" />
         Drivetrain & Chassis
       </h3>
-      <div className="space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+      <div className="space-y-2 overflow-hidden">
         {vehicle.transmission && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Transmission</span>
-            <span className="text-foreground font-medium text-right truncate" title={vehicle.transmission}>{vehicle.transmission}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Transmission</span>
+            <span className="text-sm text-foreground font-medium text-right truncate" title={vehicle.transmission}>{vehicle.transmission}</span>
           </div>
         )}
         {vehicle.drive_type && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Drivetrain</span>
-            <span className="text-foreground font-medium text-right truncate">{vehicle.drive_type}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Drivetrain</span>
+            <span className="text-sm text-foreground font-medium text-right truncate">{vehicle.drive_type}</span>
           </div>
         )}
         {vehicle.suspension && (
-          <div className="flex justify-between border-b border-border pb-2">
-            <span className="text-muted-foreground shrink-0 mr-2">Suspension</span>
-            <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.suspension}>{vehicle.suspension}</span>
+          <div className="flex justify-between border-b border-border pb-1.5">
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Suspension</span>
+            <span className="text-sm text-foreground font-medium text-right truncate" title={vehicle.suspension}>{vehicle.suspension}</span>
           </div>
         )}
         {vehicle.tires_and_wheels && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground shrink-0 mr-2">Wheels/Tires</span>
-            <span className="text-foreground font-medium text-right line-clamp-2" title={vehicle.tires_and_wheels}>{vehicle.tires_and_wheels}</span>
+            <span className="text-sm text-muted-foreground shrink-0 mr-2">Wheels/Tires</span>
+            <span className="text-sm text-foreground font-medium text-right truncate" title={vehicle.tires_and_wheels}>{vehicle.tires_and_wheels}</span>
           </div>
         )}
       </div>
@@ -864,7 +854,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
           />
 
           {/* Grid container - Fixed 4x3 grid for desktop */}
-          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[repeat(3,minmax(0,1fr))] min-h-[600px]">
+          <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[200px_200px_200px]">
             {/* Row 1, Col 1 */}
             <div className="lg:col-start-1 lg:row-start-1 h-full">
               <BuildSpecsCard vehicle={vehicle} />
