@@ -736,7 +736,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
           {/* Grid container - Fixed 4x3 grid for desktop */}
           <div className="grid w-full max-w-7xl mx-auto gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[repeat(3,minmax(0,1fr))] min-h-[600px]">
             {/* Row 1, Col 1 */}
-            <div className="lg:col-start-1 lg:row-start-1">
+            <div className="lg:col-start-1 lg:row-start-1 h-full">
               <BuildSpecsCard vehicle={vehicle} />
             </div>
 
@@ -746,22 +746,22 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
             </div>
 
             {/* Row 1, Col 4 */}
-            <div className="lg:col-start-4 lg:row-start-1">
+            <div className="lg:col-start-4 lg:row-start-1 h-full">
               <EngineSpecsCard vehicle={vehicle} />
             </div>
 
             {/* Row 2, Col 1 */}
-            <div className="lg:col-start-1 lg:row-start-2">
+            <div className="lg:col-start-1 lg:row-start-2 h-full">
               <DimensionsCard vehicle={vehicle} />
             </div>
 
             {/* Row 2, Col 4 */}
-            <div className="lg:col-start-4 lg:row-start-2">
+            <div className="lg:col-start-4 lg:row-start-2 h-full">
               <DrivetrainCard vehicle={vehicle} />
             </div>
 
             {/* Row 3 */}
-            <div className="lg:col-start-1 lg:row-start-3">
+            <div className="lg:col-start-1 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Activity}
                 title="History"
@@ -774,7 +774,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               />
             </div>
 
-            <div className="lg:col-start-2 lg:row-start-3">
+            <div className="lg:col-start-2 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Wrench}
                 title="Service"
@@ -787,7 +787,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               />
             </div>
 
-            <div className="lg:col-start-3 lg:row-start-3">
+            <div className="lg:col-start-3 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Fuel}
                 title="Fuel"
@@ -800,7 +800,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               />
             </div>
 
-            <div className="lg:col-start-4 lg:row-start-3">
+            <div className="lg:col-start-4 lg:row-start-3 h-full">
               <NavigationCard
                 icon={Settings}
                 title="Mods"
