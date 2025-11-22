@@ -55,9 +55,9 @@ export default async function VehicleDetailsPage(props: {
     const imageUrl = primaryImage || firstTrimImage || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
 
     return (
-        <div className="min-h-screen bg-background text-foreground pb-20">
+        <div className="min-h-screen bg-background text-foreground pb-20 pt-16">
             {/* Header / Nav */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
+            <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
                 <div className="container mx-auto px-4 py-4 flex items-center gap-4">
                     <Link href="/discover" className="p-2 hover:bg-muted rounded-full transition-colors">
                         <ChevronLeft className="w-6 h-6" />
@@ -68,7 +68,7 @@ export default async function VehicleDetailsPage(props: {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8 space-y-8 pt-24">
+            <div className="container mx-auto px-4 py-8 space-y-8">
                 {/* Hero Section */}
                 <div className="grid md:grid-cols-2 gap-8">
                     <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/20 shadow-lg">
