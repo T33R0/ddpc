@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft } from 'lucide-react';
 
+import { AddToGarageButton } from '@/features/garage/AddToGarageButton';
+
 // Helper to format specs
 const formatSpec = (value: string | number | null | undefined, unit: string = ''): string => {
     if (value === null || value === undefined || value === 'null' || value === '') return '—';
@@ -91,22 +93,29 @@ export default async function VehicleDetailsPage(props: {
                         </div>
 
                         {/* Trim Selector */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-muted-foreground">Select Trim</label>
-                            <div className="flex flex-wrap gap-2">
-                                {vehicles.map((v) => (
-                                    <Link
-                                        key={v.id}
-                                        href={`/details/${year}/${make}/${model}?trim=${v.id}`}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${v.id === selectedVehicle.id
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-card text-card-foreground border-border hover:bg-muted'
-                                            }`}
-                                    >
-                                        {v.trim || v.trim_description || 'Base'}
-                                    </Link>
-                                ))}
+                        <div className="space-y-4">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-muted-foreground">Select Trim</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {vehicles.map((v) => (
+                                        <Link
+                                            key={v.id}
+                                            href={`/details/${year}/${make}/${model}?trim=${v.id}`}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${v.id === selectedVehicle.id
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-card text-card-foreground border-border hover:bg-muted'
+                                                }`}
+                                        >
+                                            {v.trim || v.trim_description || 'Base'}
+                                        </Link>
+                                    ))}
+                                </div>
                             </div>
+
+                            <AddToGarageButton 
+                                vehicleId={selectedVehicle.id} 
+                                vehicleName={`${year} ${decodedMake} ${decodedModel} ${selectedVehicle.trim || ''}`} 
+                            />
                         </div>
                     </div>
                 </div>

@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@repo/ui/dialog';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
+import { AuthModal } from '@/features/auth/AuthModal';
 
 // Simple image component that matches the gallery card behavior
 type ImageWithTimeoutFallbackProps = {
@@ -158,10 +159,23 @@ const VehicleDetailsModal = ({
   const [isAddedToGarage, setIsAddedToGarage] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingAdd, setPendingAdd] = useState(false);
 
   useEffect(() => {
     setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
   }, [summary, initialTrimId]);
+
+  // Auto-trigger add to garage when user signs in if pending
+  useEffect(() => {
+    if (user && pendingAdd) {
+      setPendingAdd(false);
+      // Small timeout to ensure auth state is fully propagated
+      setTimeout(() => {
+        handleAddToGarage();
+      }, 500);
+    }
+  }, [user, pendingAdd]);
 
   const selectedTrim = useMemo<TrimVariant | null>(() => {
     return summary.trims.find((trim) => trim.id === selectedTrimId) ?? summary.trims[0] ?? null;
@@ -208,7 +222,8 @@ const VehicleDetailsModal = ({
     }
 
     if (!user) {
-      toast.error('You must be signed in to add a vehicle to your garage.');
+      setShowAuthModal(true);
+      setPendingAdd(true);
       return;
     }
     setIsAddingToGarage(true);
@@ -239,6 +254,12 @@ const VehicleDetailsModal = ({
 
       setIsAddedToGarage(true);
       toast.success('Vehicle successfully added to your garage!');
+
+      // Redirect to vehicle page after a short delay if this was a pending add (meaning user just signed up/in)
+      if (pendingAdd && data.id) {
+         window.location.href = `/vehicle/${data.id}`;
+         return;
+      }
 
       setTimeout(() => {
         onClose();
@@ -501,6 +522,14 @@ const VehicleDetailsModal = ({
           </DialogFooter>
         </div>
       </DialogContent>
+
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Add to Your Garage"
+        description="Sign up or sign in to add this vehicle to your garage and track its history."
+        onSuccess={() => setShowAuthModal(false)}
+      />
     </Dialog>
   );
 };
