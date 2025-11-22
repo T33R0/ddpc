@@ -20,7 +20,7 @@ CREATE POLICY up_insert_self ON public.user_profile
 ALTER TABLE public.user_profile
 ADD COLUMN IF NOT EXISTS preferred_vehicle_id UUID REFERENCES public.user_vehicle(id);
 
--- Vehicle aggregation functions for DDPC discover page
+-- Vehicle aggregation functions for DDPC explore page
 -- These functions need to be created in Supabase SQL editor
 
 -- Function to get unique vehicles with all their trims (with filtering)

@@ -7,9 +7,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export const Discover = {
+export const Explore = {
   searchVehicles: {
-    name: "discover.searchVehicles",
+    name: "explore.searchVehicles",
     schema: z.object({
       make: z.string().optional(),
       model: z.string().optional(),
@@ -22,7 +22,7 @@ export const Discover = {
       q: z.string().max(64).optional()
     }),
     impl: async (args: any) => {
-      const a = Discover.searchVehicles.schema.parse(args);
+      const a = Explore.searchVehicles.schema.parse(args);
       let q = supabase.from("vehicle_data").select(`
         id,make,model,year,trim,body_type,cylinders,engine_size_l,fuel_type,drive_type,horsepower_hp,torque_ft_lbs
       `).limit(50);
@@ -92,7 +92,7 @@ export const Performance = {
 };
 
 export const SkillTools = {
-  discover: [Discover.searchVehicles],
+  explore: [Explore.searchVehicles],
   maintenance: [Maintenance.generateSchedule],
   performance: [Performance.suggestStages]
 } as const;

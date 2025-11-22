@@ -1,7 +1,7 @@
 # Database Performance Fix - Deployment Guide
 
 ## Overview
-This guide walks you through deploying the database performance optimization to fix the `/discover` page timeout issue when filtering by year range.
+This guide walks you through deploying the database performance optimization to fix the `/explore` page timeout issue when filtering by year range.
 
 ## Prerequisites
 - Access to your Supabase project dashboard
@@ -59,7 +59,7 @@ SELECT * FROM get_unique_vehicles_with_trims(
 This query should complete in **under 3 seconds** (previously it would timeout).
 
 ### Step 5: Test in the Application
-1. Navigate to `/discover` in your application
+1. Navigate to `/explore` in your application
 2. Click the **Filter** button
 3. Set **Min Year: 2018** and **Max Year: 2019**
 4. Click **Apply**

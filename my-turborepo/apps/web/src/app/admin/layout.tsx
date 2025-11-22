@@ -12,8 +12,10 @@ export default async function AdminLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
+  const EXTERNAL_REDIRECT = 'https://myddpc.com'
+
   if (!user) {
-    redirect('/auth/signin')
+    redirect(EXTERNAL_REDIRECT)
   }
 
   const isBreakglass = user.email === 'myddpc@gmail.com'
@@ -27,13 +29,13 @@ export default async function AdminLayout({
       .single()
 
     if (profile?.role !== 'admin') {
-      redirect('/')
+      redirect(EXTERNAL_REDIRECT)
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white shadow dark:bg-gray-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between">
             <div className="flex">
@@ -71,7 +73,7 @@ export default async function AdminLayout({
           </div>
         </div>
       </nav>
-      <div className="py-10">
+      <div className="pt-24 pb-10">
         <main>
           <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">{children}</div>
         </main>
@@ -79,4 +81,3 @@ export default async function AdminLayout({
     </div>
   )
 }
-

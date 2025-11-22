@@ -15,7 +15,7 @@ export function ScrutineerModal({ open, onOpenChange }: ScrutineerModalProps) {
       <DialogContent className="sm:max-w-5xl max-h-[90vh] p-0">
         <DialogTitle className="sr-only">Scrutineer AI Assistant</DialogTitle>
         <DialogDescription className="sr-only">
-          Chat with Scrutineer AI to discover vehicles and get recommendations
+          Chat with Scrutineer AI to explore vehicles and get recommendations
         </DialogDescription>
         <ChatWindow onClose={() => onOpenChange(false)} />
       </DialogContent>

@@ -183,7 +183,7 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                   <h3 className="font-bold text-lg text-foreground">
                     {summary.year} {summary.make} {summary.model}
                   </h3>
-                  {/* Discover cards don't have nickname/YMMT separation in the same way, 
+                  {/* Explore cards don't have nickname/YMMT separation in the same way, 
                     but we align the style. We could add trim info here if available. */}
                   {summary.trims && summary.trims.length > 0 && (
                     <div className="text-sm text-muted-foreground">

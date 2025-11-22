@@ -25,8 +25,8 @@ const features = [
   },
   {
     icon: Search,
-    title: 'Vehicle Discovery',
-    description: 'Thinking of the next project but haven\'t decided on a platform? Research, compare specs, and scout your next vehicle with a dedicated discovery tool.',
+    title: 'Vehicle Explore',
+    description: 'Thinking of the next project but haven\'t decided on a platform? Research, compare specs, and scout your next vehicle with a dedicated explore tool.',
     image: '/images/samuel-girven-7ObtefNEkpU-unsplash.jpg',
   },
   {

@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { DiscoverActionButtons } from "../../features/discover/discover-action-buttons";
-import { VehicleGallery } from "../../features/discover/vehicle-gallery";
+import { ExploreActionButtons } from "../../features/explore/explore-action-buttons";
+import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
-import { ActiveFiltersDisplay } from "../../features/discover/active-filters-display";
+import { ActiveFiltersDisplay } from "../../features/explore/active-filters-display";
 import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
 import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
-import type { FilterState } from '../../features/discover/vehicle-filters-modal';
+import type { FilterState } from '../../features/explore/vehicle-filters-modal';
 import { useDebounce } from '../../lib/hooks/useDebounce';
 
 type FilterOptions = {
@@ -24,7 +24,7 @@ type FilterOptions = {
 
 const PAGE_SIZE = 24;
 
-function DiscoverContent() {
+function ExploreContent() {
   const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -167,10 +167,10 @@ function DiscoverContent() {
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <h1 className="text-4xl font-bold text-foreground mb-8">Discover</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-8">Explore</h1>
 
         {/* Action Buttons - Always show immediately */}
-        <DiscoverActionButtons
+        <ExploreActionButtons
           filters={filters}
           onFilterChange={setFilters}
           filterOptions={filterOptions || { years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: [] }}
@@ -205,10 +205,10 @@ function DiscoverContent() {
   );
 }
 
-export default function Discover() {
+export default function Explore() {
   return (
     <AuthProvider supabase={supabase}>
-      <DiscoverContent />
+      <ExploreContent />
     </AuthProvider>
   );
 }

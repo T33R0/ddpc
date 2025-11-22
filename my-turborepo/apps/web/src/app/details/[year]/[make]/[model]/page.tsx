@@ -61,7 +61,7 @@ export default async function VehicleDetailsPage(props: {
             {/* Header / Nav */}
             <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
                 <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-                    <Link href="/discover" className="p-2 hover:bg-muted rounded-full transition-colors">
+                    <Link href="/explore" className="p-2 hover:bg-muted rounded-full transition-colors">
                         <ChevronLeft className="w-6 h-6" />
                     </Link>
                     <h1 className="text-xl font-bold">

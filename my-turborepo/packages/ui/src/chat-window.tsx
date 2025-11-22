@@ -39,7 +39,7 @@ interface ChatWindowProps {
     chatName?: string;
     messages?: Message[];
     onClose?: () => void;
-    skill?: "discover" | "maintenance" | "performance";
+    skill?: "explore" | "maintenance" | "performance";
 }
 
 export function ChatWindow({
@@ -58,7 +58,7 @@ export function ChatWindow({
         },
     ],
     onClose,
-    skill = "discover",
+    skill = "explore",
 }: ChatWindowProps) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [inputValue, setInputValue] = useState("");
@@ -275,7 +275,7 @@ export function ChatWindow({
                                     Welcome to Scrutineer
                                 </h3>
                                 <p className="text-white/60 max-w-md">
-                                    I'm your AI assistant here to help you discover, research, and make informed decisions about vehicles. How can I assist you today?
+                                    I'm your AI assistant here to help you explore, research, and make informed decisions about vehicles. How can I assist you today?
                                 </p>
                             </div>
                             <div className="grid grid-cols-1 gap-3 max-w-lg">
@@ -306,7 +306,7 @@ export function ChatWindow({
                                     className="p-3 bg-white/10 hover:bg-white/20 rounded-lg text-left transition-colors border border-white/20"
                                 >
                                     <div className="font-medium text-white text-sm">
-                                        🚗 Let's discover my next vehicle
+                                        🚗 Let's explore my next vehicle
                                     </div>
                                     <div className="text-xs text-white/60 mt-1">
                                         Find the perfect car for your needs

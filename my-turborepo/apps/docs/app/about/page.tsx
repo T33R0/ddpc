@@ -12,7 +12,7 @@ export default function About() {
 
             <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
             <p className="text-gray-300 mb-6">
-              We're building the world's most comprehensive platform for car enthusiasts, collectors, and builders. Whether you're looking to discover rare vehicles, connect with fellow enthusiasts, or showcase your own collection, DDPC is your home.
+              We're building the world's most comprehensive platform for car enthusiasts, collectors, and builders. Whether you're looking to explore rare vehicles, connect with fellow enthusiasts, or showcase your own collection, DDPC is your home.
             </p>
 
             <h2 className="text-2xl font-semibold mb-4">What We Offer</h2>
@@ -26,7 +26,7 @@ export default function About() {
 
             <h2 className="text-2xl font-semibold mb-4">Join Our Community</h2>
             <p className="text-gray-300 mb-6">
-              Become part of a passionate community of automotive enthusiasts. Share your knowledge, discover new vehicles, and connect with like-minded individuals who share your passion for exceptional automobiles.
+              Become part of a passionate community of automotive enthusiasts. Share your knowledge, explore new vehicles, and connect with like-minded individuals who share your passion for exceptional automobiles.
             </p>
           </div>
         </div>

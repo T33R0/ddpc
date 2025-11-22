@@ -6,19 +6,19 @@ import { Button } from '@repo/ui/button';
 import { VehicleFiltersModal, type FilterState } from './vehicle-filters-modal';
 import { SearchModal } from './search-modal';
 
-type DiscoverActionButtonsProps = {
+type ExploreActionButtonsProps = {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
   filterOptions: any;
   onSearch: (query: string) => void;
 };
 
-export function DiscoverActionButtons({
+export function ExploreActionButtons({
   filters,
   onFilterChange,
   filterOptions,
   onSearch
-}: DiscoverActionButtonsProps) {
+}: ExploreActionButtonsProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
 

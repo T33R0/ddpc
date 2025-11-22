@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (matchedVehicle) {
       // Match found! Return our rich vehicle data
       const { data: vehicleSummaries } = await supabase
-        .from('v_vehicle_discovery')
+        .from('v_vehicle_explore')
         .select('*')
         .eq('make', make)
         .eq('model', model)

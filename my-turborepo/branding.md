@@ -95,7 +95,7 @@ Maintain **½ symbol width** padding on all sides.
 
 ### Website / Landing Page
 - **Hero**: Dark background, central logo, tagline *“Document the Drive.”*  
-- **Copy**: Modular (*Discover. Clone. Document. Share.*).  
+- **Copy**: Modular (*Explore. Clone. Document. Share.*).  
 - **Screenshots**: Timeline, Garage, Task board.  
 - **CTA**: Red button, *“Start Your Build Log.”*
 

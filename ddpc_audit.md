@@ -55,7 +55,7 @@
 | `/apps/web/src/features/service/` | Service tracking feature | ServiceHistoryTable, UpcomingServices |
 | `/apps/web/src/features/mods/` | Modifications feature | ModCard, ModsPlanner, AddModDialog |
 | `/apps/web/src/features/fuel/` | Fuel tracking feature | FuelHistoryChart, FuelStatsCard |
-| `/apps/web/src/features/discover/` | Vehicle discovery/browse | vehicle-gallery.tsx, vehicle-filters.tsx |
+| `/apps/web/src/features/explore/` | Vehicle explore/browse | vehicle-gallery.tsx, vehicle-filters.tsx |
 | `/apps/web/src/features/scrutineer/` | AI chatbot feature | scrutineer-admin.tsx |
 | `/apps/web/src/lib/` | Core utilities | supabase clients, hooks, types |
 | `/apps/web/src/lib/supabase/` | Supabase utilities | server.ts (SSR client), client.ts |
@@ -105,23 +105,23 @@
 
 | Function Name | Purpose | Parameters | Returns |
 |---------------|---------|------------|---------|
-| **get_unique_vehicles_with_trims** | Aggregate vehicle data for discover page | limit, offset, filters (year, make, model, engine, fuel, drivetrain, body type) | Table of vehicles with trims as JSONB |
+| **get_unique_vehicles_with_trims** | Aggregate vehicle data for explore page | limit, offset, filters (year, make, model, engine, fuel, drivetrain, body type) | Table of vehicles with trims as JSONB |
 | **get_vehicle_filter_options** | Get all available filter values | None | JSON with years, makes, models, engineTypes, fuelTypes, drivetrains, bodyTypes |
 
 ---
 
 ## 3. Core Logic Trace ("User Story to DB")
 
-### Core Loop 1: User Adds a New Vehicle (From Discovery)
+### Core Loop 1: User Adds a New Vehicle (From Explore)
 
 **User Story**: User browses vehicle catalog, selects a vehicle, and adds it to their garage.
 
 | Step | File / Component / Table | What Happens? (The "What") | Notes / Discrepancy Found |
 |------|-------------------------|----------------------------|---------------------------|
-| 1. Browse | `/app/discover/page.tsx` | User views vehicle discovery page | Server Component |
-| 2. Data Fetch | `/features/discover/vehicle-gallery.tsx` | Client component calls `getVehicleSummaries()` from `/lib/supabase.ts` | Uses browser client |
-| 3. API Call | `/api/discover/vehicles/route.ts` | API route calls `get_unique_vehicles_with_trims()` PostgreSQL function | Server-side, no auth required (public data) |
-| 4. Display | `<VehicleDetailsModal>` | User clicks vehicle card, modal opens with trim options | Modal in `/features/discover/vehicle-details-modal.tsx` |
+| 1. Browse | `/app/explore/page.tsx` | User views vehicle explore page | Server Component |
+| 2. Data Fetch | `/features/explore/vehicle-gallery.tsx` | Client component calls `getVehicleSummaries()` from `/lib/supabase.ts` | Uses browser client |
+| 3. API Call | `/api/explore/vehicles/route.ts` | API route calls `get_unique_vehicles_with_trims()` PostgreSQL function | Server-side, no auth required (public data) |
+| 4. Display | `<VehicleDetailsModal>` | User clicks vehicle card, modal opens with trim options | Modal in `/features/explore/vehicle-details-modal.tsx` |
 | 5. Select Trim | `<VehicleDetailsModal>` | User selects specific trim variant and clicks "Add to Collection" | `vehicleDataId` (trim ID) is captured |
 | 6. Auth Check | `add-vehicle-modal.tsx` or direct API call | Client gets user's auth token via `supabase.auth.getSession()` | Client-side auth check |
 | 7. API Request | `/api/garage/add-vehicle/route.ts` (POST) | Client POSTs `{ vehicleDataId }` with `Authorization: Bearer {token}` header | ✅ Auth via Bearer token |
@@ -284,7 +284,7 @@
 
 **Client-Side (React Components)**:
 - Use `createBrowserClient()` from `/lib/supabase.ts`
-- Browser client for public data (discover page)
+- Browser client for public data (explore page)
 - For authenticated requests, client components fetch from `/api/*` routes which handle auth server-side
 - **✅ CORRECT**: Auth is always verified server-side
 
@@ -404,7 +404,7 @@ if (!vehicle) return 404  // Prevents info leak (looks like not found instead of
 
 **Status**: ✅ **RESOLVED** - Username uniqueness conflict handling implemented with retry logic
 
-### 8.3. Vehicle Discovery to Garage
+### 8.3. Vehicle Explore to Garage
 
 **Flow**: Public browse → Select vehicle → Add to collection
 
@@ -446,7 +446,7 @@ if (!vehicle) return 404  // Prevents info leak (looks like not found instead of
 
 8. **Performance Optimization**: 
    - Add database indexes on frequently queried columns
-   - Implement caching for vehicle discovery
+   - Implement caching for vehicle explore
    - Optimize large queries (vehicle_data has 100+ columns)
 
 9. **Monitoring & Observability**:

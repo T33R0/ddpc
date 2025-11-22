@@ -143,7 +143,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     if (activeTab === 'manual' && !filterOptions) {
       const loadFilters = async () => {
         try {
-          const response = await fetch('/api/discover/filters');
+          const response = await fetch('/api/explore/filters');
           if (response.ok) {
             const data = await response.json();
             setFilterOptions(data);
@@ -165,7 +165,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     if (selectedYear) {
       const loadMakes = async () => {
         try {
-          const response = await fetch(`/api/discover/vehicle-options?type=makes&year=${selectedYear}`);
+          const response = await fetch(`/api/explore/vehicle-options?type=makes&year=${selectedYear}`);
           if (response.ok) {
             const makes = await response.json();
             setAvailableMakes(makes);
@@ -189,7 +189,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     if (selectedYear && selectedMake) {
       const loadModels = async () => {
         try {
-          const response = await fetch(`/api/discover/vehicle-options?type=models&year=${selectedYear}&make=${encodeURIComponent(selectedMake)}`);
+          const response = await fetch(`/api/explore/vehicle-options?type=models&year=${selectedYear}&make=${encodeURIComponent(selectedMake)}`);
           if (response.ok) {
             const models = await response.json();
             setAvailableModels(models);
@@ -268,7 +268,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
         model: selectedModel,
       };
 
-      const response = await fetch('/api/discover/vehicles?page=1&pageSize=1&' +
+      const response = await fetch('/api/explore/vehicles?page=1&pageSize=1&' +
         new URLSearchParams({
           minYear: filters.minYear.toString(),
           maxYear: filters.maxYear.toString(),
@@ -360,9 +360,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     }
   };
 
-  const handleDiscoverClick = () => {
+  const handleExploreClick = () => {
     onOpenChange(false);
-    router.push('/discover');
+    router.push('/explore');
   };
 
   const imageSources = selectedTrim ? getVehicleImageSources(
@@ -634,7 +634,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-between items-center">
             <div className="hidden sm:block">
               <Button
-                onClick={handleDiscoverClick}
+                onClick={handleExploreClick}
                 variant="ghost"
               >
                 Need help finding a vehicle?

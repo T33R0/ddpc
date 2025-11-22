@@ -59,9 +59,23 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated users (or service role only? 
--- The logic will be called by server action which uses service role or authenticated user if they are admin.
--- For safety, let's allow authenticated but we will check role in the wrapper or middleware).
 GRANT EXECUTE ON FUNCTION get_admin_users_stats TO authenticated;
 GRANT EXECUTE ON FUNCTION get_admin_users_stats TO service_role;
 
+-- Fix for 500 Error: Create missing activity_log table
+-- This table is likely referenced by a trigger on user_profile or auth.users
+CREATE TABLE IF NOT EXISTS public.activity_log (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id),
+    action text,
+    entity_type text,
+    entity_id text,
+    details jsonb,
+    ip_address text,
+    created_at timestamptz DEFAULT now()
+);
+
+-- Grant permissions
+GRANT ALL ON public.activity_log TO service_role;
+GRANT ALL ON public.activity_log TO postgres;
+GRANT INSERT ON public.activity_log TO authenticated; 

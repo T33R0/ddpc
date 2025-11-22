@@ -73,7 +73,7 @@ export async function getVehicleSummaries(
     }
   }
 
-  const response = await fetch(`/api/discover/vehicles?${searchParams.toString()}`, {
+  const response = await fetch(`/api/explore/vehicles?${searchParams.toString()}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export async function getVehicleSummaries(
 }
 
 export async function getVehicleFilterOptions(): Promise<FilterOptions> {
-  const response = await fetch('/api/discover/filters', {
+  const response = await fetch('/api/explore/filters', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export async function getVehicleFilterOptions(): Promise<FilterOptions> {
 
 export async function getVehicleById(id: string): Promise<Vehicle | null> {
   const { data, error } = await supabase
-    .from('v_vehicle_discovery')
+    .from('v_vehicle_explore')
     .select('*')
     .eq('id', id)
     .single()

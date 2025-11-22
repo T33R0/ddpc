@@ -39,8 +39,8 @@ export function Header({ user, activeVehiclesCount, onSignOut, onGoogleSignIn, o
           </div>
 
           <nav className="flex items-center gap-8">
-            <Link href="/discover" className="text-white hover:text-gray-300 transition-colors">
-              Discover
+            <Link href="/explore" className="text-white hover:text-gray-300 transition-colors">
+              Explore
             </Link>
             <Link href="/community" className="text-white hover:text-gray-300 transition-colors">
               Community

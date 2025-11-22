@@ -30,7 +30,7 @@ The Scrutineer AI follows a tiered approach:
 
 ### Skills
 
-- **Discover**: Vehicle search and filtering
+- **Explore**: Vehicle search and filtering
 - **Maintenance**: Scheduled maintenance generation
 - **Performance**: Stage upgrade suggestions
 
@@ -41,7 +41,7 @@ POST /api/scrutineer/message
 
 {
   "text": "Find me red BMW M3s from 2015-2020",
-  "skill": "discover", // optional hint
+  "skill": "explore", // optional hint
   "sessionId": "uuid" // optional for conversation continuity
 }
 ```

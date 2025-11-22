@@ -85,7 +85,7 @@ export async function GET() {
     return NextResponse.json(cachedFilters, {
       headers: {
         ...CACHE_HEADERS,
-        'X-Discover-Filters-Cache': 'HIT',
+        'X-Explore-Filters-Cache': 'HIT',
       },
     });
   }
@@ -100,7 +100,7 @@ export async function GET() {
         return NextResponse.json(cachedFilters, {
           headers: {
             ...CACHE_HEADERS,
-            'X-Discover-Filters-Cache': 'STALE',
+            'X-Explore-Filters-Cache': 'STALE',
           },
         });
       }
@@ -130,7 +130,7 @@ export async function GET() {
     return NextResponse.json(response, {
       headers: {
         ...CACHE_HEADERS,
-        'X-Discover-Filters-Cache': 'MISS',
+        'X-Explore-Filters-Cache': 'MISS',
       },
     });
   } catch (error) {
@@ -140,7 +140,7 @@ export async function GET() {
       return NextResponse.json(cachedFilters, {
         headers: {
           ...CACHE_HEADERS,
-          'X-Discover-Filters-Cache': 'STALE',
+          'X-Explore-Filters-Cache': 'STALE',
         },
       });
     }

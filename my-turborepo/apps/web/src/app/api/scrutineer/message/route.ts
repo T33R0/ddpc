@@ -17,9 +17,9 @@ interface SearchVehicleArgs {
   q?: string;
 }
 
-const Discover = {
+const Explore = {
   searchVehicles: {
-    name: "discover.searchVehicles",
+    name: "explore.searchVehicles",
     impl: async (args: SearchVehicleArgs) => {
       const supabaseService = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,7 +47,7 @@ const Discover = {
 };
 
 const SkillTools = {
-  discover: [Discover.searchVehicles],
+  explore: [Explore.searchVehicles],
   maintenance: [],
   performance: []
 };
@@ -57,7 +57,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 interface InputType {
   text: string;
-  skill?: "discover" | "maintenance" | "performance";
+  skill?: "explore" | "maintenance" | "performance";
   sessionId?: string;
 }
 
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     // For now, just handle vehicle search directly
-    if (hint === "discover" || text.toLowerCase().includes("find") || text.toLowerCase().includes("search")) {
+    if (hint === "explore" || text.toLowerCase().includes("find") || text.toLowerCase().includes("search")) {
       try {
         // Simple parsing - extract make and model from text
         const make = extractMake(text);
@@ -114,14 +114,14 @@ export async function POST(req: NextRequest) {
         const yearMatch = text.match(/(\d{4})/);
         const yearMin = yearMatch && yearMatch[1] ? parseInt(yearMatch[1]) : undefined;
 
-        const result = await Discover.searchVehicles.impl({
+        const result = await Explore.searchVehicles.impl({
           make,
           model,
           yearMin,
           yearMax: yearMin ? yearMin + 2 : undefined
         });
 
-        const reply = formatToolResultAsAssistantText(result, "discover");
+        const reply = formatToolResultAsAssistantText(result, "explore");
         return NextResponse.json({ reply });
       } catch (error) {
         return NextResponse.json({
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
     // Default response
     return NextResponse.json({
-      reply: "I'm Scrutineer, your automotive AI assistant. I can help you discover vehicles, plan maintenance, or suggest performance upgrades. What would you like to know?"
+      reply: "I'm Scrutineer, your automotive AI assistant. I can help you explore vehicles, plan maintenance, or suggest performance upgrades. What would you like to know?"
     });
 
   } catch (error) {
@@ -167,7 +167,7 @@ function extractModel(text: string): string | undefined {
 }
 
 function formatToolResultAsAssistantText(result: any, skill?: string) {
-  if (skill === "discover") {
+  if (skill === "explore") {
     if (!result.results || result.results.length === 0) {
       return "I couldn't find any vehicles matching your criteria. Try adjusting your search parameters.";
     }

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 interface PromptTemplate {
   id: string;
   name: string;
-  skill: 'discover' | 'maintenance' | 'performance';
+  skill: 'explore' | 'maintenance' | 'performance';
   systemPrompt: string;
   userPrompt?: string;
   createdAt: Date;

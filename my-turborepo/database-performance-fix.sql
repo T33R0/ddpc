@@ -1,4 +1,4 @@
--- Database Performance Optimization for /discover page
+-- Database Performance Optimization for /explore page
 -- This migration adds indexes and optimizes the get_unique_vehicles_with_trims function
 -- to prevent timeouts when filtering by year range
 

@@ -10,7 +10,7 @@ const sections = [
     links: [
       { name: 'Features', href: '#' },
       { name: 'Pricing', href: '#' },
-      { name: 'Vehicle Discovery', href: '/discover' },
+      { name: 'Vehicle Explore', href: '/explore' },
       { name: 'API', href: '/docs' },
     ],
   },

@@ -59,11 +59,11 @@ export default function DashboardPage() {
     },
     {
       id: 2,
-      title: "Vehicle Discovery",
-      route: "/discover",
+      title: "Vehicle Explore",
+      route: "/explore",
       description: "Browse and research vehicles in our comprehensive database. Find your next project or learn about different models.",
       icon: Car,
-      category: "Discovery",
+      category: "Explore",
       relatedIds: [1, 3, 5],
       status: "featured" as const,
       color: "#10b981"

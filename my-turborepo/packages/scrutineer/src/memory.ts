@@ -9,13 +9,13 @@ const supabase = createClient(
 export interface SessionContext {
   sessionId: string;
   history: Array<{ role: "user" | "assistant"; text: string; model?: string }>;
-  skillHint?: "discover" | "maintenance" | "performance";
+  skillHint?: "explore" | "maintenance" | "performance";
 }
 
 export async function loadSessionContext(params: {
   userId: string;
   sessionId?: string;
-  skillHint?: "discover" | "maintenance" | "performance";
+  skillHint?: "explore" | "maintenance" | "performance";
 }): Promise<SessionContext> {
   const { userId, sessionId, skillHint } = params;
 

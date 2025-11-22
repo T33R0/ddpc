@@ -267,7 +267,7 @@ CREATE TABLE public.vehicle_data (
 ## Perfect Flow Architecture
 
 ### 🎯 **Core User Journey**
-1. **Browse**: User explores `vehicle_data` via `/discover` page
+1. **Browse**: User explores `vehicle_data` via `/explore` page
 2. **Select**: User clicks vehicle → sees specs from `vehicle_data`
 3. **Add**: User clicks "Add to Collection" → creates `user_vehicle` record
 4. **Manage**: User views personal collection at `/garage`
