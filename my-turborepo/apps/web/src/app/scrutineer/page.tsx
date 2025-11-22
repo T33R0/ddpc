@@ -35,7 +35,7 @@ export default function ScrutineerPage() {
   };
 
   return (
-    <section className="relative py-12 min-h-screen bg-background">
+    <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24 mx-auto">
         <div className="max-w-3xl mx-auto space-y-12">
           
@@ -45,7 +45,7 @@ export default function ScrutineerPage() {
             <div className="p-6 bg-card rounded-lg border border-border">
               <h2 className="text-xl font-semibold mb-2 text-card-foreground">Definition</h2>
               <p className="text-lg text-muted-foreground italic">
-                "A scrutineer in motorsport is an official responsible for checking that race vehicles comply with the technical regulations of the event to ensure safety and fair play."
+                "In motorsport, the Scrutineer is the ultimate authority on technical integrity—the eyes that see what others miss, ensuring a machine is truly ready for the limit."
               </p>
             </div>
           </div>
@@ -53,10 +53,12 @@ export default function ScrutineerPage() {
           {/* Coming Soon */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">Coming Soon</h2>
-            <p className="text-muted-foreground">
-              We are currently building a comprehensive AI-powered Scrutineer for your digital garage. 
-              This feature will help you ensure your builds are compliant, safe, and optimized for your specific racing goals.
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-foreground">Your Digital Crew Chief</h3>
+              <p className="text-muted-foreground">
+                We are training an AI model that doesn't just read manuals—it remembers your specific build. The Scrutineer is designed to be the second set of eyes on your project. From diagnosing weird noises based on your service history to validating that your new downpipe fits your current turbo setup, the Scrutineer provides personalized, context-aware guidance to keep your project on the road and out of the shop.
+              </p>
+            </div>
           </div>
 
           {/* Interest Check & CTA */}
@@ -75,7 +77,7 @@ export default function ScrutineerPage() {
                     onClick={handleInterestClick}
                     className="px-8 py-6 text-lg"
                 >
-                    I'm Interested +1
+                    Keep me posted
                 </Button>
             </div>
           </div>
