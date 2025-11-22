@@ -31,28 +31,36 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
     )
   }
 
-  // Calculate the range: -5 below factory to +5 above factory
-  const minMpg = factoryMpg - 5
-  const maxMpg = factoryMpg + 5
-  const range = maxMpg - minMpg // Should be 10
+  // Calculate the range: 75% to 110% of factory MPG
+  const minMpg = factoryMpg * 0.75
+  const maxMpg = factoryMpg * 1.10
+  const range = maxMpg - minMpg
 
-  // Calculate the position of the needle (0-180 degrees for semicircle)
-  const normalizedValue = Math.max(minMpg, Math.min(maxMpg, averageMpg))
-  const percentage = ((normalizedValue - minMpg) / range) * 100
-  const angle = (percentage / 100) * 180 // 0 to 180 degrees
+  // Helper to calculate angle (0-180) for a given MPG value
+  const getAngleForMpg = (mpg: number) => {
+    const clampedMpg = Math.max(minMpg, Math.min(maxMpg, mpg))
+    const percentage = (clampedMpg - minMpg) / range
+    return percentage * 180
+  }
+
+  // Calculate the position of the needle
+  const angle = getAngleForMpg(averageMpg)
 
   // Determine color based on position relative to factory MPG
-  const difference = averageMpg - factoryMpg
-  let needleColor = '#9CA3AF' // gray (neutral)
-  if (difference > 2) {
-    needleColor = '#10B981' // green (excellent)
-  } else if (difference > 0) {
-    needleColor = '#3B82F6' // blue (good)
-  } else if (difference > -2) {
-    needleColor = '#F59E0B' // yellow (fair)
+  // 75-80% Red, 80-90% Yellow, 90-100% Green, 100-110% Blue
+  const pctOfFactory = averageMpg / factoryMpg
+  let needleColor = '#9CA3AF' // gray fallback
+  if (pctOfFactory >= 1.0) {
+    needleColor = '#3B82F6' // Blue
+  } else if (pctOfFactory >= 0.9) {
+    needleColor = '#10B981' // Green
+  } else if (pctOfFactory >= 0.8) {
+    needleColor = '#F59E0B' // Yellow
   } else {
-    needleColor = '#EF4444' // red (poor)
+    needleColor = '#EF4444' // Red
   }
+
+  const difference = averageMpg - factoryMpg
 
   // Calculate needle position (centered at bottom, rotating around center)
   const centerX = 150
@@ -74,24 +82,54 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
   }
 
   // Calculate arc endpoints for each zone
-  // Red zone: 0° to 54° (0% to 30% of 180°)
-  const redStart = getArcPoint(0)
-  const redEnd = getArcPoint(54)
-  // Yellow zone: 54° to 90° (30% to 50% of 180°)
+  // Red zone: 75% to 80%
+  const redStartAngle = getAngleForMpg(factoryMpg * 0.75)
+  const redEndAngle = getAngleForMpg(factoryMpg * 0.80)
+  const redStart = getArcPoint(redStartAngle)
+  const redEnd = getArcPoint(redEndAngle)
+
+  // Yellow zone: 80% to 90%
+  const yellowStartAngle = redEndAngle
+  const yellowEndAngle = getAngleForMpg(factoryMpg * 0.90)
   const yellowStart = redEnd
-  const yellowEnd = getArcPoint(90)
-  // Blue zone: 90° to 126° (50% to 70% of 180°)
-  const blueStart = yellowEnd
-  const blueEnd = getArcPoint(126)
-  // Green zone: 126° to 180° (70% to 100% of 180°)
-  const greenStart = blueEnd
-  const greenEnd = getArcPoint(180)
+  const yellowEnd = getArcPoint(yellowEndAngle)
+
+  // Green zone: 90% to 100%
+  const greenStartAngle = yellowEndAngle
+  const greenEndAngle = getAngleForMpg(factoryMpg * 1.00)
+  const greenStart = yellowEnd
+  const greenEnd = getArcPoint(greenEndAngle)
+
+  // Blue zone: 100% to 110%
+  const blueStartAngle = greenEndAngle
+  const blueEndAngle = getAngleForMpg(factoryMpg * 1.10)
+  const blueStart = greenEnd
+  const blueEnd = getArcPoint(blueEndAngle)
+
+  // Hash marks at 80% and 90%
+  const hash80 = getArcPoint(getAngleForMpg(factoryMpg * 0.80))
+  const hash90 = getArcPoint(getAngleForMpg(factoryMpg * 0.90))
+  // Also add hash at 100% (Factory)
+  const hash100 = getArcPoint(getAngleForMpg(factoryMpg * 1.00))
 
   // Convert angle to radians and adjust for SVG coordinate system
   // angle is 0..180. We want PI..2PI.
   const angleRad = Math.PI + (angle * Math.PI) / 180
   const needleEndX = centerX + Math.cos(angleRad) * needleLength
   const needleEndY = centerY + Math.sin(angleRad) * needleLength
+
+  // Helper for hash lines
+  const getHashLine = (point: { x: number, y: number }, angleDeg: number) => {
+    const angleRad = Math.PI + (angleDeg * Math.PI) / 180
+    // Inner point (slightly closer to center)
+    const innerX = centerX + (radius - 10) * Math.cos(angleRad)
+    const innerY = centerY + (radius - 10) * Math.sin(angleRad)
+    return { x1: innerX, y1: innerY, x2: point.x, y2: point.y }
+  }
+
+  const hash80Line = getHashLine(hash80, getAngleForMpg(factoryMpg * 0.80))
+  const hash90Line = getHashLine(hash90, getAngleForMpg(factoryMpg * 0.90))
+  const hash100Line = getHashLine(hash100, getAngleForMpg(factoryMpg * 1.00))
 
   return (
     <Card className="bg-gray-900/50 border-gray-700">
@@ -112,8 +150,8 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
                 strokeLinecap="round"
               />
 
-              {/* Colored segments - properly following the arc */}
-              {/* Red zone: -5 to -2 (0° to 54°) */}
+              {/* Colored segments */}
+              {/* Red zone */}
               <path
                 d={`M ${redStart.x} ${redStart.y} A 100 100 0 0 1 ${redEnd.x} ${redEnd.y}`}
                 fill="none"
@@ -121,7 +159,7 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
                 strokeWidth="20"
                 strokeLinecap="round"
               />
-              {/* Yellow zone: -2 to 0 (54° to 90°) */}
+              {/* Yellow zone */}
               <path
                 d={`M ${yellowStart.x} ${yellowStart.y} A 100 100 0 0 1 ${yellowEnd.x} ${yellowEnd.y}`}
                 fill="none"
@@ -129,15 +167,7 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
                 strokeWidth="20"
                 strokeLinecap="round"
               />
-              {/* Blue zone: 0 to +2 (90° to 126°) */}
-              <path
-                d={`M ${blueStart.x} ${blueStart.y} A 100 100 0 0 1 ${blueEnd.x} ${blueEnd.y}`}
-                fill="none"
-                stroke="#3B82F6"
-                strokeWidth="20"
-                strokeLinecap="round"
-              />
-              {/* Green zone: +2 to +5 (126° to 180°) */}
+              {/* Green zone */}
               <path
                 d={`M ${greenStart.x} ${greenStart.y} A 100 100 0 0 1 ${greenEnd.x} ${greenEnd.y}`}
                 fill="none"
@@ -145,17 +175,21 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
                 strokeWidth="20"
                 strokeLinecap="round"
               />
-
-              {/* Factory MPG marker (center) */}
-              <line
-                x1={centerX - 10}
-                y1={centerY}
-                x2={centerX + 10}
-                y2={centerY}
+              {/* Blue zone */}
+              <path
+                d={`M ${blueStart.x} ${blueStart.y} A 100 100 0 0 1 ${blueEnd.x} ${blueEnd.y}`}
+                fill="none"
                 stroke="#3B82F6"
-                strokeWidth="3"
-                strokeDasharray="5,5"
+                strokeWidth="20"
+                strokeLinecap="round"
               />
+
+              {/* Hash marks */}
+              <line x1={hash80Line.x1} y1={hash80Line.y1} x2={hash80Line.x2} y2={hash80Line.y2} stroke="white" strokeWidth="2" />
+              <line x1={hash90Line.x1} y1={hash90Line.y1} x2={hash90Line.x2} y2={hash90Line.y2} stroke="white" strokeWidth="2" />
+
+              {/* Factory MPG marker (100%) - make it distinct */}
+              <line x1={hash100Line.x1} y1={hash100Line.y1} x2={hash100Line.x2} y2={hash100Line.y2} stroke="white" strokeWidth="3" />
 
               {/* Needle */}
               <line
@@ -178,7 +212,7 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
                 <p className="text-xs text-gray-400">{minMpg.toFixed(0)}</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-blue-400 font-semibold">Factory: {factoryMpg.toFixed(0)}</p>
+                <p className="text-xs text-gray-400">Factory: {factoryMpg.toFixed(0)}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-400">{maxMpg.toFixed(0)}</p>
@@ -193,7 +227,7 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
               {averageMpg.toFixed(1)}
             </p>
             {difference !== 0 && (
-              <p className={`text-sm mt-2 ${difference > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-sm mt-2 ${difference > 0 ? 'text-blue-400' : 'text-red-400'}`}>
                 {difference > 0 ? '+' : ''}{difference.toFixed(1)} MPG vs Factory
               </p>
             )}
@@ -203,4 +237,3 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
     </Card>
   )
 }
-

@@ -5,6 +5,7 @@ import { useAuth } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@repo/ui/dialog';
+import Link from 'next/link';
 
 // Simple image component that matches the gallery card behavior
 type ImageWithTimeoutFallbackProps = {
@@ -154,7 +155,6 @@ const VehicleDetailsModal = ({
   const [selectedTrimId, setSelectedTrimId] = useState<string>(initialTrimId ?? summary.trims[0]?.id ?? '');
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
   const [isAddedToGarage, setIsAddedToGarage] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -476,8 +476,8 @@ const VehicleDetailsModal = ({
                 onClick={handleAddToGarage}
                 disabled={isAddingToGarage || isAddedToGarage}
                 className={`py-3 px-8 rounded-lg font-semibold transition-colors ${isAddedToGarage
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px]`}
               >
                 {isAddingToGarage
@@ -488,39 +488,17 @@ const VehicleDetailsModal = ({
                 }
               </button>
 
-              <button
-                onClick={() => setShowComingSoon(true)}
-                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-background border border-border hover:bg-muted text-foreground min-w-[200px]"
+              <Link
+                href={`/details/${summary.year}/${encodeURIComponent(summary.make)}/${encodeURIComponent(summary.model)}?trim=${selectedTrimId}`}
+                className="py-3 px-8 rounded-lg font-semibold transition-colors bg-background border border-border hover:bg-muted text-foreground min-w-[200px] text-center flex items-center justify-center"
               >
                 More Details
-              </button>
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Coming Soon Popup */}
-        {showComingSoon && (
-          <div
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
-            onClick={() => setShowComingSoon(false)}
-          >
-            <div
-              className="bg-card text-card-foreground rounded-2xl p-8 max-w-md border border-border shadow-xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-2xl font-bold mb-4 text-foreground">Coming Soon</h3>
-              <p className="text-muted-foreground mb-6">
-                This feature is currently under development and will be available soon!
-              </p>
-              <button
-                onClick={() => setShowComingSoon(false)}
-                className="w-full py-3 px-6 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Coming Soon Popup - Removed */}
       </DialogContent>
     </Dialog>
   );
