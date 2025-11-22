@@ -17,8 +17,8 @@ function IssuePageContent() {
   const defaultUrl = ref || (typeof window !== 'undefined' ? window.location.origin : '');
 
   return (
-    <div className="container max-w-2xl mx-auto py-10 px-4">
-      <Card>
+    <div className="container max-w-2xl mx-auto py-20 px-4">
+      <Card className="mt-8">
         <CardHeader>
           <CardTitle>Report a Problem</CardTitle>
           <CardDescription>

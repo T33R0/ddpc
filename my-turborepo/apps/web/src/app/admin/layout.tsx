@@ -63,6 +63,12 @@ export default async function AdminLayout({
                 >
                   Issues
                 </Link>
+                <Link
+                  href="/admin/structure"
+                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+                >
+                  Structure
+                </Link>
               </div>
             </div>
             <div className="flex items-center">
@@ -73,9 +79,9 @@ export default async function AdminLayout({
           </div>
         </div>
       </nav>
-      <div className="pt-24 pb-10">
+      <div className="pt-20 pb-10">
         <main>
-          <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">{children}</div>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

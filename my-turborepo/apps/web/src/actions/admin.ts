@@ -140,12 +140,30 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
 
   const adminClient = createAdminClient()
   
-  const { error } = await adminClient
-    .from('user_profile')
-    .update({ role: makeAdmin ? 'admin' : 'user' })
-    .eq('user_id', userId)
+  // Use RPC function with proper enum casting to avoid trigger type issues
+  const roleValue = makeAdmin ? 'admin' : 'user'
+  const { error: rpcError } = await adminClient.rpc('update_user_role', {
+    p_user_id: userId,
+    p_role: roleValue
+  })
 
-  if (error) throw error
+  if (rpcError) {
+    // Fallback to direct update if RPC doesn't exist yet
+    if (rpcError.message?.includes('function update_user_role')) {
+      const { error: updateError } = await adminClient
+        .from('user_profile')
+        .update({ role: roleValue as any })
+        .eq('user_id', userId)
+
+      if (updateError) {
+        console.error('Update error:', updateError)
+        throw new Error(`Failed to update admin role: ${updateError.message}`)
+      }
+    } else {
+      console.error('RPC error:', rpcError)
+      throw new Error(`Failed to update admin role: ${rpcError.message}`)
+    }
+  }
   
   revalidatePath('/admin/users')
 }

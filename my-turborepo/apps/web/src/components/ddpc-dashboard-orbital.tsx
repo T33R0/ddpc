@@ -44,10 +44,12 @@ export default function DDPCDashboardOrbital({
   const { resolvedTheme } = useTheme();
   const { user } = useAuth();
 
-  // Determine glow colors based on theme
-  const glowColor = resolvedTheme === 'dark' ? 'border-green-500' : 'border-blue-500';
-  const ringColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
-  const pingColor = resolvedTheme === 'dark' ? 'border-green-500/30' : 'border-blue-500/30';
+  // Determine theme colors
+  const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_20px_theme(colors.green.500)]' : 'shadow-[0_0_20px_theme(colors.blue.500)]';
+  const ringColor = resolvedTheme === 'dark' ? 'border-green-500' : 'border-blue-500';
+  const pingColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
+  const bgColor = resolvedTheme === 'dark' ? 'bg-black' : 'bg-white';
+  const iconColor = resolvedTheme === 'dark' ? 'text-white' : 'text-black';
 
   // Admin check logic
   const isAdmin = user?.app_metadata?.role === 'admin' || user?.user_metadata?.role === 'admin';
@@ -175,11 +177,13 @@ export default function DDPCDashboardOrbital({
         >
           {/* DDPC Logo Center */}
           <div
-            className={`absolute rounded-full bg-black border-2 ${ringColor} flex items-center justify-center z-10 shadow-lg transition-colors duration-300 ${canAccessAdmin ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+            className={`absolute rounded-full border-2 ${bgColor} ${ringColor} ${glowColor} flex items-center justify-center z-10 transition-colors duration-300 ${canAccessAdmin ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
             style={{ width: 150, height: 150 }}
             onClick={handleLogoClick}
           >
-            <Logo size={100} />
+            <div className={iconColor}>
+              <Logo size={100} />
+            </div>
             <div
               className={`absolute rounded-full border ${pingColor} animate-ping opacity-50`}
               style={{ width: 170, height: 170 }}

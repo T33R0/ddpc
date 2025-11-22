@@ -34,11 +34,11 @@ export function ReportProblem() {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[9999] rounded-full w-14 h-14 p-0 shadow-2xl hover:shadow-3xl transition-all duration-200 bg-red-600 hover:bg-red-700 text-white border-2 border-white/20"
+        className="fixed bottom-6 right-6 z-[9999] rounded-full w-14 h-14 p-0 shadow-2xl hover:shadow-3xl transition-all duration-200 bg-red-600 hover:bg-red-700 text-white border-2 border-white/20 flex items-center justify-center"
         aria-label="Report a Problem"
         title="Report a Problem"
       >
-        <AlertCircle className="w-8 h-8" />
+        <AlertCircle className="w-8 h-8" strokeWidth={2.5} />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
