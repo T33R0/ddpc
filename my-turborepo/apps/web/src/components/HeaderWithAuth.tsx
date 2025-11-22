@@ -4,14 +4,17 @@ import { Header } from '@repo/ui/header';
 import { useAuth } from '../lib/auth';
 import { useVehicles } from '../lib/hooks/useVehicles';
 import { usePathname } from 'next/navigation';
+import { ReportProblem } from './ReportProblem';
 
 export function HeaderWithAuth() {
   const pathname = usePathname();
   const { user, signOut, signUp, signIn, signInWithGoogle } = useAuth();
-  const { data: vehiclesData } = useVehicles();
+  
+  const isHeaderHidden = pathname === '/' || pathname === '/dashboard';
+  const { data: vehiclesData } = useVehicles({ enabled: !isHeaderHidden });
 
-  if (pathname === '/' || pathname === '/dashboard') {
-    return null;
+  if (isHeaderHidden) {
+    return <ReportProblem variant="fixed-top-left" />;
   }
 
   const allVehicles = vehiclesData?.vehicles || [];
@@ -37,6 +40,7 @@ export function HeaderWithAuth() {
       onGoogleSignIn={handleGoogleSignIn}
       onEmailSignUp={handleEmailSignUp}
       onEmailSignIn={handleEmailSignIn}
+      reportProblem={<ReportProblem variant="inline" />}
     />
   );
 }

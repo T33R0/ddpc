@@ -15,12 +15,15 @@ export interface VehiclesData {
   preferredVehicleId?: string;
 }
 
-export function useVehicles() {
+export function useVehicles(options: { enabled?: boolean } = {}) {
   const [data, setData] = useState<VehiclesData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { enabled = true } = options;
 
   const fetchVehicles = async () => {
+    if (!enabled) return;
+
     try {
       setIsLoading(true);
 
@@ -48,8 +51,10 @@ export function useVehicles() {
   };
 
   useEffect(() => {
-    fetchVehicles();
-  }, []);
+    if (enabled) {
+      fetchVehicles();
+    }
+  }, [enabled]);
 
   return { data, isLoading, error, refetch: fetchVehicles };
 }

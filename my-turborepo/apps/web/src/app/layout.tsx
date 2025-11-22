@@ -8,7 +8,6 @@ import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '../lib/auth';
 import { ThemeProvider } from '../lib/theme-context';
 import { ScrutineerButton } from '../components/ScrutineerButton';
-import { ReportProblem } from '../components/ReportProblem';
 import { LogoutModal } from '../components/LogoutModal';
 import './globals.css';
 
@@ -45,7 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <LogoutModal />
             <ScrutineerButton />
-            <ReportProblem />
           </AuthProvider>
         </ThemeProvider>
         <SpeedInsights />
