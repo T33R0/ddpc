@@ -45,11 +45,22 @@ export default function DDPCDashboardOrbital({
   const { user } = useAuth();
 
   // Determine theme colors
-  const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_20px_theme(colors.green.500)]' : 'shadow-[0_0_20px_theme(colors.blue.500)]';
+  const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_20px_#22c55e]' : 'shadow-[0_0_20px_#3b82f6]';
   const ringColor = resolvedTheme === 'dark' ? 'border-green-500' : 'border-blue-500';
   const pingColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
   const bgColor = resolvedTheme === 'dark' ? 'bg-black' : 'bg-white';
   const iconColor = resolvedTheme === 'dark' ? 'text-white' : 'text-black';
+  
+  // Node text colors
+  const nodeTextColor = resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-600';
+  const nodeTextActiveColor = resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900';
+
+  // Card colors for light theme
+  const cardBg = resolvedTheme === 'dark' ? 'bg-gray-900/95' : 'bg-white/95';
+  const cardBorder = resolvedTheme === 'dark' ? 'border-gray-600' : 'border-gray-200';
+  const cardText = resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900';
+  const cardDesc = resolvedTheme === 'dark' ? 'text-gray-300' : 'text-gray-600';
+  const cardGlow = resolvedTheme === 'dark' ? '' : 'shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-200';
 
   // Admin check logic
   const isAdmin = user?.app_metadata?.role === 'admin' || user?.user_metadata?.role === 'admin';
@@ -256,7 +267,7 @@ export default function DDPCDashboardOrbital({
                   text-lg font-semibold tracking-wider
                   transition-all duration-300
                   left-1/2 -translate-x-1/2
-                  ${isExpanded ? "text-white scale-110" : "text-gray-400"}
+                  ${isExpanded ? nodeTextActiveColor + " scale-110" : nodeTextColor}
                 `}
                   style={{ 
                     top: 90,
@@ -265,12 +276,12 @@ export default function DDPCDashboardOrbital({
                     MozOsxFontSmoothing: "grayscale"
                   }}
                 >
-                  {node.title}
+                  {node.title.toLowerCase()}
                 </div>
 
                 {isExpanded && (
                   <Card 
-                    className="absolute left-1/2 -translate-x-1/2 w-72 bg-gray-900/95 backdrop-blur-lg border-gray-600 shadow-xl shadow-black/50 overflow-visible"
+                    className={`absolute left-1/2 -translate-x-1/2 w-72 ${cardBg} backdrop-blur-lg ${cardBorder} ${cardGlow} shadow-xl overflow-visible`}
                     style={{ top: 120 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
@@ -287,18 +298,18 @@ export default function DDPCDashboardOrbital({
                     )}
 
                     <CardHeader className="pb-2 pt-4">
-                      <CardTitle className="text-lg text-white text-center">
+                      <CardTitle className={`text-lg ${cardText} text-center`}>
                         {node.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-sm text-gray-300 text-center pb-4">
+                    <CardContent className={`text-sm ${cardDesc} text-center pb-4`}>
                       <p className="mb-4 leading-relaxed">{node.description}</p>
 
                       <div className="flex gap-2 justify-center">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 border-gray-600 bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white transition-all"
+                          className={`flex-1 border-gray-600 bg-transparent hover:bg-gray-800 hover:text-white transition-all ${cardDesc}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(node.route);

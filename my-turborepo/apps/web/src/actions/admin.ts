@@ -139,30 +139,65 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
   }
 
   const adminClient = createAdminClient()
-  
-  // Use RPC function with proper enum casting to avoid trigger type issues
   const roleValue = makeAdmin ? 'admin' : 'user'
-  const { error: rpcError } = await adminClient.rpc('update_user_role', {
-    p_user_id: userId,
-    p_role: roleValue
-  })
+  
+  try {
+    // Try RPC function first
+    const { data: rpcData, error: rpcError } = await adminClient.rpc('update_user_role', {
+      p_user_id: userId,
+      p_role: roleValue
+    })
 
-  if (rpcError) {
-    // Fallback to direct update if RPC doesn't exist yet
-    if (rpcError.message?.includes('function update_user_role')) {
-      const { error: updateError } = await adminClient
-        .from('user_profile')
-        .update({ role: roleValue as any })
-        .eq('user_id', userId)
+    if (rpcError) {
+      console.error('RPC error details:', {
+        message: rpcError.message,
+        details: rpcError.details,
+        hint: rpcError.hint,
+        code: rpcError.code
+      })
+      
+      // Check if RPC function doesn't exist
+      if (rpcError.code === '42883' || rpcError.message?.includes('function update_user_role')) {
+        console.log('RPC function not found, trying direct update...')
+        
+        // Fallback to direct update
+        const { data: updateData, error: updateError } = await adminClient
+          .from('user_profile')
+          .update({ role: roleValue as any })
+          .eq('user_id', userId)
+          .select()
 
-      if (updateError) {
-        console.error('Update error:', updateError)
-        throw new Error(`Failed to update admin role: ${updateError.message}`)
+        if (updateError) {
+          console.error('Direct update error:', {
+            message: updateError.message,
+            details: updateError.details,
+            hint: updateError.hint,
+            code: updateError.code
+          })
+          throw new Error(`Failed to update admin role: ${updateError.message || updateError.code}`)
+        }
+        
+        console.log('Direct update succeeded:', updateData)
+      } else {
+        // RPC function exists but failed - check if it returned an error in the data
+        const errorMsg = rpcError.message || rpcError.code || 'Unknown RPC error'
+        throw new Error(`Failed to update admin role via RPC: ${errorMsg}`)
       }
     } else {
-      console.error('RPC error:', rpcError)
-      throw new Error(`Failed to update admin role: ${rpcError.message}`)
+      // Check if RPC returned an error in the response data
+      if (rpcData && typeof rpcData === 'object' && 'success' in rpcData && !rpcData.success) {
+        const errorMsg = rpcData.error || rpcData.error_code || 'Unknown error from RPC'
+        throw new Error(`Failed to update admin role: ${errorMsg}`)
+      }
+      console.log('RPC succeeded:', rpcData)
     }
+  } catch (error: any) {
+    console.error('Unexpected error in toggleAdminRole:', error)
+    // Re-throw if it's already our formatted error
+    if (error.message && error.message.includes('Failed to update admin role')) {
+      throw error
+    }
+    throw new Error(`Failed to update admin role: ${error.message || 'Unknown error'}`)
   }
   
   revalidatePath('/admin/users')

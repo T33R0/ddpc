@@ -122,16 +122,18 @@ export default function DashboardPage() {
     },
   ];
 
+  const displayName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
+
   return (
     <div className="min-h-screen p-4 flex flex-col">
       <div className="max-w-6xl w-full mx-auto pt-24">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-foreground">
-            Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
+          <h1 className="text-4xl font-bold mb-2 text-foreground lowercase">
+            welcome back, {displayName}!
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Here&apos;s your DDPC dashboard - manage your vehicles and track your builds.
+          <p className="text-muted-foreground text-lg lowercase">
+            manage your vehicles and track your builds.
           </p>
         </div>
       </div>
