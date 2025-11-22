@@ -6,6 +6,8 @@ import { Button } from "@repo/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Logo } from "@repo/ui/logo";
 import { useRouter } from "next/navigation";
+import { useTheme } from "../lib/theme-context";
+import { useAuth } from "../lib/auth";
 
 interface DashboardNode {
   id: number;
@@ -39,6 +41,25 @@ export default function DDPCDashboardOrbital({
   const orbitRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const { user } = useAuth();
+
+  // Determine glow colors based on theme
+  const glowColor = resolvedTheme === 'dark' ? 'border-green-500' : 'border-blue-500';
+  const ringColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
+  const pingColor = resolvedTheme === 'dark' ? 'border-green-500/30' : 'border-blue-500/30';
+
+  // Admin check logic
+  const isAdmin = user?.app_metadata?.role === 'admin' || user?.user_metadata?.role === 'admin';
+  const isBreakGlassUser = user?.email === 'myddpc@gmail.com';
+  const canAccessAdmin = isAdmin || isBreakGlassUser;
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (canAccessAdmin) {
+      router.push('/admin');
+    }
+  };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current || e.target === orbitRef.current) {
@@ -154,12 +175,13 @@ export default function DDPCDashboardOrbital({
         >
           {/* DDPC Logo Center */}
           <div
-            className="absolute rounded-full bg-black border-2 border-red-500/50 flex items-center justify-center z-10 shadow-lg"
+            className={`absolute rounded-full bg-black border-2 ${ringColor} flex items-center justify-center z-10 shadow-lg transition-colors duration-300 ${canAccessAdmin ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
             style={{ width: 150, height: 150 }}
+            onClick={handleLogoClick}
           >
             <Logo size={100} />
             <div
-              className="absolute rounded-full border border-red-500/30 animate-ping opacity-50"
+              className={`absolute rounded-full border ${pingColor} animate-ping opacity-50`}
               style={{ width: 170, height: 170 }}
             ></div>
           </div>
@@ -175,6 +197,8 @@ export default function DDPCDashboardOrbital({
               transform: `translate(${position.x}px, ${position.y}px)`,
               zIndex: isExpanded ? 200 : position.zIndex,
               opacity: isExpanded ? 1 : position.opacity,
+              willChange: "transform", // Hint to browser for optimization to reduce softening
+              backfaceVisibility: "hidden" as const, // Improve rendering crispness
             };
 
             return (
@@ -215,6 +239,8 @@ export default function DDPCDashboardOrbital({
                     backgroundColor: isExpanded ? 'white' : node.color,
                     width: 75,
                     height: 75,
+                    // Ensuring crisp borders
+                    boxShadow: isExpanded ? '0 0 0 1px rgba(255,255,255,0.1)' : 'none'
                   }}
                 >
                   <Icon size={40} />
@@ -228,7 +254,12 @@ export default function DDPCDashboardOrbital({
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? "text-white scale-110" : "text-gray-400"}
                 `}
-                  style={{ top: 90 }}
+                  style={{ 
+                    top: 90,
+                    // Subpixel antialiasing for text
+                    WebkitFontSmoothing: "antialiased",
+                    MozOsxFontSmoothing: "grayscale"
+                  }}
                 >
                   {node.title}
                 </div>

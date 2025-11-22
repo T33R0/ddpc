@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { Button } from '@repo/ui/button';
 import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
 import { useRouter } from 'next/navigation';
-import { Car, Settings, Users, Plus, X, Zap, Warehouse, Terminal } from 'lucide-react';
+import { Car, Settings, Users, Plus, X, Zap, Warehouse, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const UserAvatarIcon = ({ size }: { size?: number }) => {
@@ -103,7 +103,7 @@ export default function DashboardPage() {
       title: "Console",
       route: "/console",
       description: "Connect with other enthusiasts and share builds. Join discussions, get advice, and showcase your projects.",
-      icon: Terminal,
+      icon: SlidersHorizontal,
       category: "Social",
       relatedIds: [3, 5],
       status: "available" as const,
