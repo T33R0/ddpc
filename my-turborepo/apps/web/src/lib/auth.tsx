@@ -187,7 +187,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
-    router.push('/');
     setShowLogoutModal(true);
   };
 
@@ -224,10 +223,10 @@ export function useAuth() {
         signUp: async () => ({ error: null }),
         signIn: async () => ({ error: null }),
         signInWithGoogle: async () => ({ error: null }),
-        signOut: async () => {},
-        refreshProfile: async () => {},
+        signOut: async () => { },
+        refreshProfile: async () => { },
         showLogoutModal: false,
-        setShowLogoutModal: () => {},
+        setShowLogoutModal: () => { },
       };
     }
     // Client-side but no provider - this is an error
