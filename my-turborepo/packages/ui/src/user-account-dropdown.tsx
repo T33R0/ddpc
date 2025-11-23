@@ -15,11 +15,26 @@ interface UserAccountDropdownProps {
     };
   };
   onSignOut?: () => void;
+  userBasePath?: string;
 }
 
-export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProps) {
+export function UserAccountDropdown({ user, onSignOut, userBasePath }: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useClickOutside(() => setIsOpen(false));
+
+  const getScopedHref = (path: string) => {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+
+    if (!userBasePath) {
+      return normalized;
+    }
+
+    if (normalized === '/') {
+      return userBasePath;
+    }
+
+    return `${userBasePath}${normalized}`;
+  };
 
   const getInitials = () => {
     if (user?.user_metadata?.full_name) {
@@ -56,7 +71,7 @@ export function UserAccountDropdown({ user, onSignOut }: UserAccountDropdownProp
             className="absolute z-10 right-0 w-48 mt-2 p-1 bg-black/80 backdrop-blur-md rounded-md shadow-lg flex flex-col gap-1"
           >
             <Link
-              href="/account"
+              href={getScopedHref('/account')}
               className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full block"
               onClick={() => setIsOpen(false)}
             >

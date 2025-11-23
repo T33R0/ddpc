@@ -14,11 +14,7 @@ import {
 import { Button } from '@repo/ui/button';
 import { IssueReportForm } from './IssueReportForm';
 
-interface ReportProblemProps {
-  variant?: 'fixed-top-left' | 'inline';
-}
-
-export function ReportProblem({ variant = 'fixed-top-left' }: ReportProblemProps) {
+export function ReportProblem() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
   const pathname = usePathname();
@@ -34,36 +30,16 @@ export function ReportProblem({ variant = 'fixed-top-left' }: ReportProblemProps
     return null;
   }
 
-  const iconSize = variant === 'inline' ? "w-5 h-5" : "w-6 h-6";
-  
-  // Base classes for the button appearance
-  const baseButtonClasses = "rounded-full p-0 bg-red-600 hover:bg-red-700 text-white border-white/20 flex items-center justify-center transition-all duration-200 cursor-pointer pointer-events-auto";
-  
-  // Variant specific classes
-  const variantClasses = variant === 'inline'
-    ? "w-8 h-8 border shadow-sm"
-    : "w-10 h-10 border-2 shadow-xl hover:shadow-2xl";
-
-  const TriggerButton = (
-    <Button
-      onClick={() => setIsOpen(true)}
-      className={`${baseButtonClasses} ${variantClasses}`}
-      aria-label="Report a Problem"
-      title="Report a Problem"
-    >
-      <AlertCircle className={iconSize} strokeWidth={2.5} />
-    </Button>
-  );
-
   return (
     <>
-      {variant === 'fixed-top-left' ? (
-        <div className="fixed top-4 left-4 z-[9999]">
-          {TriggerButton}
-        </div>
-      ) : (
-        TriggerButton
-      )}
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="w-8 h-8 rounded-full p-0 bg-red-600 hover:bg-red-700 text-white border border-white/20 flex items-center justify-center shadow-sm cursor-pointer pointer-events-auto"
+        aria-label="Report a Problem"
+        title="Report a Problem"
+      >
+        <AlertCircle className="w-5 h-5" strokeWidth={2.5} />
+      </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md text-left">

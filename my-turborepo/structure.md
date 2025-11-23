@@ -33,6 +33,16 @@ CREATE TABLE public.fuel_log (
   CONSTRAINT fuel_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT fuel_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
+CREATE TABLE public.issue_reports (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_email text,
+  page_url text NOT NULL,
+  description text,
+  screenshot_url text,
+  resolved boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT issue_reports_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.job_plans (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,

@@ -15,11 +15,37 @@ interface HeaderProps {
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
   reportProblem?: React.ReactNode;
+  userBasePath?: string;
 }
 
-export function Header({ user, activeVehiclesCount, onSignOut, onGoogleSignIn, onEmailSignUp, onEmailSignIn, reportProblem }: HeaderProps) {
+export function Header({
+  user,
+  activeVehiclesCount,
+  onSignOut,
+  onGoogleSignIn,
+  onEmailSignUp,
+  onEmailSignIn,
+  reportProblem,
+  userBasePath,
+}: HeaderProps) {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
 
+  const buildHref = React.useCallback(
+    (path: string) => {
+      const normalized = path.startsWith('/') ? path : `/${path}`;
+
+      if (!userBasePath) {
+        return normalized;
+      }
+
+      if (normalized === '/') {
+        return userBasePath;
+      }
+
+      return `${userBasePath}${normalized}`;
+    },
+    [userBasePath]
+  );
 
   return (
     <>
@@ -34,25 +60,25 @@ export function Header({ user, activeVehiclesCount, onSignOut, onGoogleSignIn, o
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-neutral-800">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between text-white">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
+            <Link href={buildHref('/dashboard')}>
               <Logo />
             </Link>
             {reportProblem}
           </div>
 
           <nav className="flex items-center gap-8">
-            <Link href="/explore" className="text-white hover:text-gray-300 transition-colors">
+            <Link href={buildHref('/explore')} className="text-white hover:text-gray-300 transition-colors">
               Explore
             </Link>
-            <Link href="/community" className="text-white hover:text-gray-300 transition-colors">
+            <Link href={buildHref('/community')} className="text-white hover:text-gray-300 transition-colors">
               Community
             </Link>
             {user ? (
               <>
-                <Link href="/console" className="text-white hover:text-gray-300 transition-colors">
+                <Link href={buildHref('/console')} className="text-white hover:text-gray-300 transition-colors">
                   Console
                 </Link>
-                <Link href="/garage" className="text-white hover:text-gray-300 transition-colors">
+                <Link href={buildHref('/garage')} className="text-white hover:text-gray-300 transition-colors">
                   Garage
                 </Link>
               </>
@@ -72,7 +98,7 @@ export function Header({ user, activeVehiclesCount, onSignOut, onGoogleSignIn, o
             )}
 
             {user ? (
-              <UserAccountDropdown user={user} onSignOut={onSignOut} />
+              <UserAccountDropdown user={user} onSignOut={onSignOut} userBasePath={userBasePath} />
             ) : (
               <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>
             )}

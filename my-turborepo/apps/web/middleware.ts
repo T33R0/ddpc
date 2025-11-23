@@ -1,43 +1,112 @@
+import type { User } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { createClient } from '@/lib/supabase/middleware'
-
 import { apiRateLimiter } from '@/lib/rate-limiter'
+import { createClient } from '@/lib/supabase/middleware'
+import {
+  shouldSkipUsernameRouting,
+  stripUsernamePrefixFromPathname,
+  toUsernameSlug,
+} from '@/lib/user-routing'
+
+const DASHBOARD_PATH = '/dashboard'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // --- 1. API RATE LIMITING (NEW) ---
-  // Run rate limiter for all API routes
   if (pathname.startsWith('/api/')) {
     try {
-      const res = await apiRateLimiter.check(request, 1) // '1' is the cost of the request
+      const res = await apiRateLimiter.check(request, 1)
       if (!res.ok) {
-        // IP is over the limit
-        return new NextResponse(
-          JSON.stringify({ error: 'Too many requests' }),
-          {
-            status: 429,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
+        return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        })
       }
-    } catch (e) {
-      // Failed to check rate limit (e.g., KV store down)
-      console.error('Rate limiter error:', e)
-      // Fail open or closed? Failing open for now.
+    } catch (error) {
+      console.error('Rate limiter error:', error)
     }
   }
 
-  // --- 2. SUPABASE AUTH (EXISTING) ---
-  // This is your existing Supabase auth logic, unchanged.
-  const { supabase, response } = createClient(request)
+  const { supabase, applyPendingCookies } = createClient(request)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
-  await supabase.auth.getSession()
+  const username = getUsernameFromSession(session?.user)
 
-  return response
+  if (username) {
+    const scopedResponse = handleUserScopedRouting(request, username)
+    if (scopedResponse) {
+      return applyPendingCookies(scopedResponse)
+    }
+  } else if (!shouldSkipUsernameRouting(pathname)) {
+    const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
+    if (stripped) {
+      const rewriteUrl = request.nextUrl.clone()
+      rewriteUrl.pathname = strippedPathname
+      return applyPendingCookies(NextResponse.rewrite(rewriteUrl))
+    }
+  }
+
+  return applyPendingCookies(NextResponse.next())
+}
+
+const handleUserScopedRouting = (request: NextRequest, username: string) => {
+  const { pathname } = request.nextUrl
+
+  if (shouldSkipUsernameRouting(pathname)) {
+    return null
+  }
+
+  const segments = pathname.split('/').filter(Boolean)
+
+  if (segments.length === 0) {
+    return NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
+  }
+
+  const firstSegmentMatchesUser = segments[0]?.toLowerCase() === username
+
+  if (firstSegmentMatchesUser) {
+    if (segments.length === 1) {
+      return NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
+    }
+
+    const remainder = segments.slice(1).join('/')
+    const rewritePath = remainder ? `/${remainder}` : '/'
+    const rewriteUrl = buildUrl(request, rewritePath)
+    return NextResponse.rewrite(rewriteUrl)
+  }
+
+  const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
+  const effectivePath = stripped ? strippedPathname : pathname
+  const targetPath =
+    effectivePath === '/'
+      ? `/${username}${DASHBOARD_PATH}`
+      : `/${username}${effectivePath}`
+
+  return NextResponse.redirect(buildUrl(request, targetPath))
+}
+
+const buildUrl = (request: NextRequest, pathname: string) => {
+  const url = request.nextUrl.clone()
+  url.pathname = pathname
+  return url
+}
+
+const getUsernameFromSession = (user?: User | null) => {
+  if (!user) {
+    return null
+  }
+
+  const metadata = user.user_metadata ?? {}
+  const candidate =
+    metadata.username ??
+    metadata.preferred_username ??
+    metadata.user_name ??
+    (user.email ? user.email.split('@')[0] : null)
+
+  return toUsernameSlug(candidate)
 }
 
 export const config = {
