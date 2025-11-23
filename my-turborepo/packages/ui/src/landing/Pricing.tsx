@@ -4,6 +4,13 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import Link from 'next/link';
 
+interface PricingProps {
+  /**
+   * Return true to prevent the default CTA navigation and handle the action yourself.
+   */
+  onPlanCtaClick?: (planId: string) => boolean | void;
+}
+
 const plans = [
   {
     id: 'driver',
@@ -114,7 +121,16 @@ export function PricingDropdown() {
   );
 }
 
-export function Pricing() {
+export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
+  const handlePlanCtaClick = React.useCallback(
+    (planId: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (onPlanCtaClick?.(planId)) {
+        event.preventDefault();
+      }
+    },
+    [onPlanCtaClick]
+  );
+
   return (
     <section className="py-20 bg-background text-foreground relative overflow-hidden">
       {/* Gradient background */}
@@ -172,6 +188,7 @@ export function Pricing() {
               ) : (
                 <Link
                   href={plan.href}
+                  onClick={onPlanCtaClick ? handlePlanCtaClick(plan.id) : undefined}
                   className="block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-secondary text-secondary-foreground hover:bg-secondary/80 text-center"
                 >
                   {plan.cta}
