@@ -187,7 +187,7 @@ function VehicleCard({
         </div>
         <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
           <ImageWithTimeoutFallback
-            src={(vehicle as any).vehicle_image || vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+            src={vehicle.vehicle_image || vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
             fallbackSrc="/branding/fallback-logo.png"
             alt={`${vehicle.name} vehicle`}
             className="w-full h-full object-cover"

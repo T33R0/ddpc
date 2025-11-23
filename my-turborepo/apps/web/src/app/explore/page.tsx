@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@repo/ui/button';
 import { ExploreActionButtons } from "../../features/explore/explore-action-buttons";
 import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
@@ -167,7 +170,15 @@ function ExploreContent() {
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <h1 className="text-4xl font-bold text-foreground mb-8">Explore</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold text-foreground">Explore</h1>
+          <Link href="/community">
+            <Button variant="outline" className="gap-2">
+              Community Builds
+              <ArrowRight size={16} />
+            </Button>
+          </Link>
+        </div>
 
         {/* Action Buttons - Always show immediately */}
         <ExploreActionButtons

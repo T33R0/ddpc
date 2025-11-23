@@ -4,6 +4,7 @@ import { Header } from '@repo/ui/header';
 import { usePathname } from 'next/navigation';
 
 import { useAuth } from '../lib/auth';
+import { useTheme } from '../lib/theme-context';
 import { useVehicles } from '../lib/hooks/useVehicles';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../lib/user-routing';
 import { ReportProblem } from './ReportProblem';
@@ -11,6 +12,7 @@ import { ReportProblem } from './ReportProblem';
 export function HeaderWithAuth() {
   const pathname = usePathname() || '/';
   const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const normalizedPathname = stripUsernamePrefixFromPathname(pathname).pathname || '/';
   const isHeaderHidden = normalizedPathname === '/' || normalizedPathname === '/dashboard';
@@ -55,6 +57,8 @@ export function HeaderWithAuth() {
       onEmailSignIn={handleEmailSignIn}
       reportProblem={<ReportProblem />}
       userBasePath={userBasePath}
+      theme={theme}
+      onThemeChange={(newTheme) => setTheme(newTheme as any)}
     />
   );
 }

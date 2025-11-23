@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Fetch user's vehicles with pagination
     let query = supabase
       .from('user_vehicle')
-      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url')
+      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url, vehicle_image')
       .eq('owner_id', user.id);
 
     // Filter for stored vehicles if requested
@@ -107,7 +107,8 @@ export async function GET(request: NextRequest) {
         ymmt: `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim(),
         odometer: latestMileage,
         current_status: uv.current_status || 'parked',
-        image_url: uv.photo_url
+        image_url: uv.vehicle_image || uv.photo_url,
+        vehicle_image: uv.vehicle_image
       }
     })
 

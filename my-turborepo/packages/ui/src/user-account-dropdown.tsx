@@ -1,10 +1,18 @@
-'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useClickOutside } from './hooks/use-click-outside';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from './avatar';
+import {
+  User,
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  Moon,
+  Sun,
+  Sparkles
+} from 'lucide-react';
+import { Switch } from './switch';
 
 interface UserAccountDropdownProps {
   user?: {
@@ -12,13 +20,24 @@ interface UserAccountDropdownProps {
     user_metadata?: {
       avatar_url?: string;
       full_name?: string;
+      username?: string;
+      preferred_username?: string;
+      user_name?: string;
     };
   };
   onSignOut?: () => void;
   userBasePath?: string;
+  theme?: string;
+  onThemeChange?: (theme: string) => void;
 }
 
-export function UserAccountDropdown({ user, onSignOut, userBasePath }: UserAccountDropdownProps) {
+export function UserAccountDropdown({
+  user,
+  onSignOut,
+  userBasePath,
+  theme,
+  onThemeChange
+}: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useClickOutside(() => setIsOpen(false));
 
@@ -52,6 +71,21 @@ export function UserAccountDropdown({ user, onSignOut, userBasePath }: UserAccou
     return 'U';
   };
 
+  const getDisplayName = () => {
+    return user?.user_metadata?.full_name ||
+      user?.user_metadata?.username ||
+      user?.user_metadata?.preferred_username ||
+      user?.user_metadata?.user_name ||
+      user?.email?.split('@')[0] ||
+      'User';
+  };
+
+  const toggleTheme = () => {
+    if (onThemeChange) {
+      onThemeChange(theme === 'dark' ? 'light' : 'dark');
+    }
+  };
+
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setIsOpen(!isOpen)} className="focus:outline-none">
@@ -68,24 +102,72 @@ export function UserAccountDropdown({ user, onSignOut, userBasePath }: UserAccou
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-10 right-0 w-48 mt-2 p-1 bg-black/80 backdrop-blur-md rounded-md shadow-lg flex flex-col gap-1"
+            className="absolute z-10 right-0 w-64 mt-2 bg-black/90 backdrop-blur-md rounded-xl shadow-xl border border-neutral-800 overflow-hidden"
           >
-            <Link
-              href={getScopedHref('/account')}
-              className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full block"
-              onClick={() => setIsOpen(false)}
-            >
-              Account
-            </Link>
-            <button
-              onClick={() => {
-                onSignOut?.();
-                setIsOpen(false);
-              }}
-              className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full"
-            >
-              Logout
-            </button>
+            {/* User Info Header */}
+            <div className="px-4 py-3 border-b border-neutral-800">
+              <p className="text-sm font-medium text-white truncate">{getDisplayName()}</p>
+              <p className="text-xs text-neutral-400 truncate">{user?.email}</p>
+            </div>
+
+            <div className="p-1">
+              {/* Dashboard / Console */}
+              <Link
+                href={getScopedHref('/dashboard')}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <LayoutDashboard size={16} />
+                <span>Console</span>
+              </Link>
+
+              {/* Account Settings */}
+              <Link
+                href={getScopedHref('/account')}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Settings size={16} />
+                <span>Account</span>
+              </Link>
+
+              {/* Theme Switcher */}
+              <div className="flex items-center justify-between px-3 py-2 text-sm text-neutral-300 hover:bg-white/10 rounded-md transition-colors cursor-pointer" onClick={toggleTheme}>
+                <div className="flex items-center gap-2">
+                  {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+                  <span>Theme</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-500 capitalize">{theme}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px bg-neutral-800 mx-1 my-1" />
+
+            <div className="p-1">
+              {/* Upgrade to Pro */}
+              <Link
+                href="/pricing"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Sparkles size={16} />
+                <span>Upgrade to Pro</span>
+              </Link>
+
+              {/* Logout */}
+              <button
+                onClick={() => {
+                  onSignOut?.();
+                  setIsOpen(false);
+                }}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors w-full text-left"
+              >
+                <LogOut size={16} />
+                <span>Log out</span>
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

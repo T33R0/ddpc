@@ -26,6 +26,8 @@ interface HeaderProps {
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
   reportProblem?: React.ReactNode;
   userBasePath?: string;
+  theme?: string;
+  onThemeChange?: (theme: string) => void;
 }
 
 export function Header({
@@ -37,6 +39,8 @@ export function Header({
   onEmailSignIn,
   reportProblem,
   userBasePath,
+  theme,
+  onThemeChange,
 }: HeaderProps) {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
 
@@ -66,7 +70,7 @@ export function Header({
         onEmailSignUp={onEmailSignUp}
         onEmailSignIn={onEmailSignIn}
       />
-      
+
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-neutral-800">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between text-white">
           <div className="flex items-center gap-4">
@@ -80,14 +84,8 @@ export function Header({
             <Link href={buildHref('/explore')} className="text-white hover:text-gray-300 transition-colors">
               Explore
             </Link>
-            <Link href={buildHref('/community')} className="text-white hover:text-gray-300 transition-colors">
-              Community
-            </Link>
             {user ? (
               <>
-                <Link href={buildHref('/console')} className="text-white hover:text-gray-300 transition-colors">
-                  Console
-                </Link>
                 <Link href={buildHref('/garage')} className="text-white hover:text-gray-300 transition-colors">
                   Garage
                 </Link>
@@ -100,15 +98,14 @@ export function Header({
           </nav>
 
           <div className="flex items-center gap-4">
-            {user && activeVehiclesCount !== undefined && (
-              <div className="text-xs text-gray-300 flex items-center gap-1">
-                <span>Active</span>
-                <span className="font-medium">{activeVehiclesCount}/3</span>
-              </div>
-            )}
-
             {user ? (
-              <UserAccountDropdown user={user} onSignOut={onSignOut} userBasePath={userBasePath} />
+              <UserAccountDropdown
+                user={user}
+                onSignOut={onSignOut}
+                userBasePath={userBasePath}
+                theme={theme}
+                onThemeChange={onThemeChange}
+              />
             ) : (
               <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>
             )}
