@@ -44,6 +44,22 @@ export function Header({
 }: HeaderProps) {
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
 
+  // Check for auth query parameter and open modal if present
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const authParam = params.get('auth');
+
+      if (authParam === 'signup' || authParam === 'signin') {
+        setAuthModalOpen(true);
+        // Clean up the URL by removing the auth parameter
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('auth');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+  }, []);
+
   const buildHref = React.useCallback(
     (path: string) => {
       const normalized = path.startsWith('/') ? path : `/${path}`;

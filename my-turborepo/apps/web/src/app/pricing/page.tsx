@@ -1,10 +1,10 @@
-import { PricingPage } from '@repo/ui/pricing-page';
+import { Pricing } from '@repo/ui/landing';
 import LandingLayout from '../landing-layout';
 
-export default function Pricing() {
+export default function PricingPage() {
   return (
     <LandingLayout>
-      <PricingPage />
+      <Pricing />
     </LandingLayout>
   );
 }

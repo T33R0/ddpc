@@ -47,54 +47,44 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     `
 
   let isOwner = false
-
-  const baseQuery = () =>
-    supabase
-      .from('user_vehicle')
-      .select(selectClause)
-
-  const fetchVehicle = async (
-    buildQuery: (builder: ReturnType<typeof baseQuery>) => ReturnType<typeof baseQuery>
-  ) => {
-    const { data, error } = await buildQuery(baseQuery()).maybeSingle()
-
-    return { data, error }
-  }
-
-  // Declare vehicle variables at top level
   let vehicle: any = null
   let vehicleError: any = null
 
-  // First, try to find vehicle owned by current user (if logged in)
+  // Helper to fetch vehicle by ID
+  const fetchVehicleById = async (id: string) => {
+    return supabase
+      .from('user_vehicle')
+      .select(selectClause)
+      .eq('id', id)
+      .maybeSingle()
+  }
+
+  // 1. Try to resolve as a User Vehicle (if logged in)
   if (userId) {
-    const nicknameResult = await fetchVehicle(query =>
-      query.eq('owner_id', userId).eq('nickname', vehicleSlug)
-    )
+    // Use the robust slug resolution logic (handles Nickname, YMMT, and ID)
+    const { resolveVehicleSlug } = await import('@/lib/vehicle-utils')
+    const resolved = await resolveVehicleSlug(vehicleSlug)
 
-    vehicle = nicknameResult.data
-    vehicleError = nicknameResult.error
-    console.log('VehicleDetailPage: Nickname search result:', { vehicle: !!vehicle, error: vehicleError })
+    if (resolved) {
+      const { data, error } = await fetchVehicleById(resolved.vehicleId)
 
-    if (vehicle) {
-      isOwner = true
-    }
-
-    if (!vehicle) {
-      const idResult = await fetchVehicle(query =>
-        query.eq('owner_id', userId).eq('id', vehicleSlug)
-      )
-
-      vehicle = idResult.data
-      vehicleError = idResult.error
-      console.log('VehicleDetailPage: ID search result:', { vehicle: !!vehicle, error: vehicleError })
-
-      if (vehicle) {
-        isOwner = true
+      if (data) {
+        // Verify ownership (resolveVehicleSlug checks owner_id, but double check doesn't hurt)
+        if (data.owner_id === userId) {
+          vehicle = data
+          isOwner = true
+          vehicleError = error
+          console.log('VehicleDetailPage: Resolved via smart slug:', {
+            slug: vehicleSlug,
+            resolvedId: resolved.vehicleId,
+            method: resolved.nickname === vehicleSlug ? 'nickname' : 'ymmt/id'
+          })
+        }
       }
     }
   }
 
-  // If not found as owned vehicle, try to find as public vehicle
+  // 2. If not found as owned vehicle, try to find as public vehicle
   // Note: RLS policy has a case sensitivity issue - it checks for 'public' but DB stores 'PUBLIC'
   // Use service role client to bypass RLS and fetch public vehicles
   const slugIsUUID = isUUID(vehicleSlug)

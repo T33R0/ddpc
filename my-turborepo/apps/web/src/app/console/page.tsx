@@ -13,6 +13,7 @@ import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleto
 import { useSearch } from '../../lib/hooks/useSearch';
 import { searchConsoleVehicle } from '../../lib/search';
 import { useConsoleStats } from '../../lib/hooks/useConsoleStats';
+import { getVehicleSlug } from '../../lib/vehicle-utils';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
@@ -166,14 +167,14 @@ export default function ConsolePage() {
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 {filteredVehicles.map((vehicle) => {
                   const status = getVehicleStatus(vehicle) || 'Active';
-                  // Use nickname for URL consistency with garage page
-                  const nickname = vehicle.nickname || vehicle.id;
+                  // Use the smart slug generation (nickname if unique, YMMT otherwise, ID as fallback)
+                  const slug = getVehicleSlug(vehicle, vehicles);
 
                   return (
                     <div
                       key={vehicle.id}
                       className="group transition-all duration-300 cursor-pointer"
-                      onClick={() => router.push(`/vehicle/${encodeURIComponent(nickname)}`)}
+                      onClick={() => router.push(`/vehicle/${encodeURIComponent(slug)}`)}
                     >
                       <div
                         className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-4"
@@ -234,7 +235,7 @@ export default function ConsolePage() {
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/vehicle/${encodeURIComponent(nickname)}/history`);
+                              router.push(`/vehicle/${encodeURIComponent(slug)}/history`);
                             }}
                           >
                             <Activity className="w-3 h-3 mr-1" />
@@ -246,7 +247,7 @@ export default function ConsolePage() {
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/vehicle/${encodeURIComponent(nickname)}/service`);
+                              router.push(`/vehicle/${encodeURIComponent(slug)}/service`);
                             }}
                           >
                             <Wrench className="w-3 h-3 mr-1" />
@@ -258,7 +259,7 @@ export default function ConsolePage() {
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/vehicle/${encodeURIComponent(nickname)}/fuel`);
+                              router.push(`/vehicle/${encodeURIComponent(slug)}/fuel`);
                             }}
                           >
                             <Fuel className="w-3 h-3 mr-1" />
@@ -270,7 +271,7 @@ export default function ConsolePage() {
                             className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/vehicle/${encodeURIComponent(nickname)}/mods`);
+                              router.push(`/vehicle/${encodeURIComponent(slug)}/mods`);
                             }}
                           >
                             <Settings className="w-3 h-3 mr-1" />

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Check, Star } from 'lucide-react';
+import { Check } from 'lucide-react';
+import Link from 'next/link';
 
 const plans = [
   {
@@ -20,14 +21,16 @@ const plans = [
     ],
     popular: false,
     cta: 'Get Started Free',
+    href: '?auth=signup',
+    disabled: false,
   },
   {
-    id: 'builder',
-    name: 'Builder',
+    id: 'maintainer',
+    name: 'Maintainer',
     subtitle: 'Workshop',
     price: '$12.99',
     period: 'month',
-    description: 'This is where your vision becomes a tactical plan. The Builder tier provides the structure to turn a parts list into a cohesive project.',
+    description: 'This is where your vision becomes a tactical plan. The Maintainer tier provides the structure to turn a parts list into a cohesive project.',
     features: [
       'Everything in Driver plus:',
       'Advanced project management for builds',
@@ -36,18 +39,20 @@ const plans = [
       'Cost analysis per vehicle',
       'Private group collaboration',
     ],
-    popular: true,
-    cta: 'Start Building',
+    popular: false,
+    cta: 'Coming Soon',
+    href: '#',
+    disabled: true,
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: 'builder',
+    name: 'Builder',
     subtitle: 'Command Center',
     price: '$24.99',
     period: 'month',
     description: 'For those who treat their project with operational precision. This tier is your command center, leveraging advanced analytics and AI to optimize every decision.',
     features: [
-      'Everything in Builder plus:',
+      'Everything in Maintainer plus:',
       'Advanced analytics dashboard',
       'Shop AI assistant for maintenance and logistics',
       'Comprehensive budget tracking',
@@ -55,7 +60,9 @@ const plans = [
       'Priority support and API access',
     ],
     popular: false,
-    cta: 'Go Pro',
+    cta: 'Coming Soon',
+    href: '#',
+    disabled: true,
   },
 ];
 
@@ -72,16 +79,8 @@ export function PricingDropdown() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className={`relative bg-card rounded-xl p-4 border transition-all duration-300 ${plan.popular ? 'border-red-500 shadow-lg shadow-red-500/20' : 'border-border'}`}
+            className={`relative bg-card rounded-xl p-4 border transition-all duration-300 border-border`}
           >
-            {plan.popular && (
-              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium">
-                  Most Popular
-                </div>
-              </div>
-            )}
-
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h4 className="font-semibold text-foreground">{plan.name}</h4>
@@ -117,8 +116,17 @@ export function PricingDropdown() {
 
 export function Pricing() {
   return (
-    <section className="py-20 bg-background text-foreground">
-      <div className="container mx-auto px-4">
+    <section className="py-20 bg-background text-foreground relative overflow-hidden">
+      {/* Gradient background */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none"
+      >
+        <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+        <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <div className="inline-block border border-border py-1 px-4 rounded-lg mb-6 text-sm text-muted-foreground">Pricing</div>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6">
@@ -133,16 +141,8 @@ export function Pricing() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative bg-card rounded-3xl p-8 border-2 transition-all duration-300 ${plan.popular ? 'border-red-500 shadow-lg shadow-red-500/20 scale-105' : 'border-border hover:border-red-500/50'}`}>
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                    <Star className="w-4 h-4" />
-                    Most Popular
-                  </div>
-                </div>
-              )}
-
+              className={`relative bg-card rounded-3xl p-8 border-2 transition-all duration-300 border-border hover:border-red-500/50`}
+            >
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold mb-1 text-foreground">{plan.name}</h3>
                 <div className="text-sm font-medium text-muted-foreground mb-2">{plan.subtitle}</div>
@@ -162,10 +162,21 @@ export function Pricing() {
                 ))}
               </ul>
 
-              <button
-                className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${plan.popular ? 'bg-red-500 text-white hover:bg-red-500/90 shadow-lg' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
-                {plan.cta}
-              </button>
+              {plan.disabled ? (
+                <button
+                  disabled
+                  className="w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-secondary text-secondary-foreground opacity-50 cursor-not-allowed"
+                >
+                  {plan.cta}
+                </button>
+              ) : (
+                <Link
+                  href={plan.href}
+                  className="block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-secondary text-secondary-foreground hover:bg-secondary/80 text-center"
+                >
+                  {plan.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>

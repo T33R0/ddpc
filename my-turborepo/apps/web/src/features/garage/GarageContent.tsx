@@ -67,13 +67,17 @@ function ImageWithTimeoutFallback({
   )
 }
 
+import { getVehicleSlug } from '@/lib/vehicle-utils'
+
 function VehicleCard({
   vehicle,
+  allVehicles,
   onDragStart,
   onDragEnd,
   isDragging
 }: {
   vehicle: VehicleWithOdometer
+  allVehicles: VehicleWithOdometer[]
   onDragStart?: () => void
   onDragEnd?: () => void
   isDragging?: boolean
@@ -143,9 +147,8 @@ function VehicleCard({
   }
 
   const handleClick = () => {
-    // Use nickname for URL
-    // Next.js handles URL encoding automatically
-    const urlSlug = vehicle.nickname || vehicle.id
+    // Use smart slug generation
+    const urlSlug = getVehicleSlug(vehicle, allVehicles)
     router.push(`/vehicle/${urlSlug}`)
   }
 
@@ -231,6 +234,7 @@ function AddVehicleCard({ onClick }: { onClick: () => void }) {
 function VehicleGallery({
   title,
   vehicles,
+  allVehicles,
   showAddCard,
   onAddClick,
   onLoadMore,
@@ -241,6 +245,7 @@ function VehicleGallery({
 }: {
   title: string
   vehicles: VehicleWithOdometer[]
+  allVehicles: VehicleWithOdometer[]
   showAddCard?: boolean
   onAddClick?: () => void
   onLoadMore?: () => void
@@ -320,6 +325,7 @@ function VehicleGallery({
           <VehicleCard
             key={vehicle.id}
             vehicle={vehicle}
+            allVehicles={allVehicles}
             onDragStart={() => setDraggingVehicleId(vehicle.id)}
             onDragEnd={() => setDraggingVehicleId(null)}
             isDragging={draggingVehicleId === vehicle.id}
@@ -364,6 +370,22 @@ export function GarageContent({
 
   // Show add vehicle card only if active vehicles < 3
   const canAddVehicle = activeVehicles.length < 3
+
+  // Combined stored vehicles (local + hook), excluding active vehicles and duplicates
+  const allStoredVehicles = [
+    ...storedVehiclesLocal.filter(v =>
+      v.current_status !== 'daily_driver' &&
+      !activeVehicles.find(av => av.id === v.id)
+    ),
+    ...storedVehicles.filter(v =>
+      v.current_status !== 'daily_driver' &&
+      !storedVehiclesLocal.find(lv => lv.id === v.id) &&
+      !activeVehicles.find(av => av.id === v.id)
+    )
+  ]
+
+  // All known vehicles for slug generation context
+  const allKnownVehicles = [...activeVehicles, ...allStoredVehicles]
 
   // Sync stored vehicles from hook, filtering out any that are active
   // Merge with existing local vehicles to preserve optimistically added ones
@@ -552,19 +574,6 @@ export function GarageContent({
     window.location.reload()
   }
 
-  // Combined stored vehicles (local + hook), excluding active vehicles and duplicates
-  const allStoredVehicles = [
-    ...storedVehiclesLocal.filter(v =>
-      v.current_status !== 'daily_driver' &&
-      !activeVehicles.find(av => av.id === v.id)
-    ),
-    ...storedVehicles.filter(v =>
-      v.current_status !== 'daily_driver' &&
-      !storedVehiclesLocal.find(lv => lv.id === v.id) &&
-      !activeVehicles.find(av => av.id === v.id)
-    )
-  ]
-
   // Remove duplicates from active vehicles (safety check)
   const uniqueActiveVehicles = activeVehicles.filter((v, index, self) =>
     index === self.findIndex((t) => t.id === v.id)
@@ -648,6 +657,7 @@ export function GarageContent({
           <VehicleGallery
             title="Active Vehicles"
             vehicles={uniqueActiveVehicles}
+            allVehicles={allKnownVehicles}
             showAddCard={canAddVehicle}
             onAddClick={() => setAddVehicleModalOpen(true)}
             onDrop={handleVehicleStatusChange}
@@ -658,6 +668,7 @@ export function GarageContent({
           <VehicleGallery
             title="Stored Vehicles"
             vehicles={allStoredVehicles}
+            allVehicles={allKnownVehicles}
             onLoadMore={loadMore}
             loadingMore={loadingMore}
             hasMore={hasMore}
