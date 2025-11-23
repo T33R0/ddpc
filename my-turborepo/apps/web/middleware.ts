@@ -38,11 +38,9 @@ export async function middleware(request: NextRequest) {
   const { supabase, applyPendingCookies } = createClient(request)
   
   // 3. Check for scoped path (e.g. /teehanrh/dashboard)
-  // We check this BEFORE auth because we want to support structural rewrites even if auth is lagging
   const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
 
   if (stripped) {
-    // We found a valid app segment after a prefix (e.g. /user/dashboard -> /dashboard)
     // Rewrite internal request to the app route
     const rewriteUrl = request.nextUrl.clone()
     rewriteUrl.pathname = strippedPathname
@@ -50,7 +48,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // 4. Auth Check & Redirects
-  // If we are here, the path is NOT scoped (e.g. /dashboard) OR it is a root user path (e.g. /teehanrh)
+  // Only redirect if the path is NOT scoped (e.g. /garage) and NOT a root username path (handled below)
+  // AND if the user is logged in.
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -68,16 +67,16 @@ export async function middleware(request: NextRequest) {
         )
       }
 
-      // Case B: User visiting /dashboard -> redirect to /username/dashboard
-      // (Only if it's a known app segment)
+      // Case B: User visiting /dashboard (or other known segment) -> redirect to /username/dashboard
       if (segments.length > 0 && isKnownAppSegment(segments[0])) {
          return applyPendingCookies(
            NextResponse.redirect(buildUrl(request, `/${username}${pathname}`))
          )
       }
 
-      // Case C: User visiting /teehanrh -> redirect to /teehanrh/dashboard
-      if (segments.length === 1 && segments[0]?.toLowerCase() === username) {
+      // Case C: User visiting /teehanrh (root username path) -> redirect to /teehanrh/dashboard
+      // This handles the "stripped: false" case where segments.length === 1
+      if (segments.length === 1 && segments[0].toLowerCase() === username) {
          return applyPendingCookies(
            NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
          )
@@ -110,7 +109,7 @@ const getUsernameForRequest = async (supabase: SupabaseClient, session: Session 
     .maybeSingle()
 
   if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching username from profile:', error)
+    // console.error('Error fetching username from profile:', error)
   }
 
   if (data?.username) {
