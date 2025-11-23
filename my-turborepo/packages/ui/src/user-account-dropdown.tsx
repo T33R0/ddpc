@@ -28,7 +28,7 @@ interface UserAccountDropdownProps {
       user_name?: string;
     };
   };
-  onSignOut?: () => void;
+  onSignOut?: () => Promise<void> | void;
   userBasePath?: string;
   theme?: string;
   onThemeChange?: (theme: string) => void;
@@ -44,7 +44,25 @@ export function UserAccountDropdown({
   onReportProblem
 }: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const ref = useClickOutside(() => setIsOpen(false));
+
+  const handleSignOut = async () => {
+    if (!onSignOut || isSigningOut) {
+      setIsOpen(false);
+      return;
+    }
+
+    setIsSigningOut(true);
+    try {
+      await Promise.resolve(onSignOut());
+    } catch (error) {
+      console.error('Error while signing out:', error);
+    } finally {
+      setIsSigningOut(false);
+      setIsOpen(false);
+    }
+  };
 
   const getScopedHref = (path: string) => {
     const normalized = path.startsWith('/') ? path : `/${path}`;
@@ -177,14 +195,12 @@ export function UserAccountDropdown({
 
               {/* Logout */}
               <button
-                onClick={() => {
-                  onSignOut?.();
-                  setIsOpen(false);
-                }}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors w-full text-left"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors w-full text-left disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <LogOut size={16} />
-                <span>Log out</span>
+                <span>{isSigningOut ? 'Logging out...' : 'Log out'}</span>
               </button>
             </div>
           </motion.div>

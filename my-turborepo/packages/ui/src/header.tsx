@@ -20,7 +20,7 @@ interface HeaderProps {
     };
   } | null;
   activeVehiclesCount?: number;
-  onSignOut?: () => void;
+  onSignOut?: () => Promise<void> | void;
   onGoogleSignIn?: () => void;
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;

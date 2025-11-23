@@ -185,9 +185,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Immediately reflect the logged-out state so the UI/responders update without waiting on Supabase
+    setSession(null);
+    setUser(null);
     setProfile(null);
+    router.push('/');
+    router.refresh();
     setShowLogoutModal(true);
+
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const value = {
