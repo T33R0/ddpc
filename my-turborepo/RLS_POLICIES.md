@@ -1,8 +1,3 @@
-> **Note:** Run the remediation script at `database-rls-performance.sql` to align
-> the database with the consolidated policies described below. Re-export this
-> table from `pg_policies` after applying the script so the definitions stay in
-> sync with the source of truth.
-
 | schemaname | tablename             | policyname                                                | permissive | cmd    | qual                                                                                                                                                                                   | with_check                                                                                                                                                                             |
 | ---------- | --------------------- | --------------------------------------------------------- | ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | public     | activity_log          | activity_log_insert_own                                   | PERMISSIVE | INSERT | null                                                                                                                                                                                   | (user_id = ( SELECT auth.uid() AS uid))                                                                                                                                                |

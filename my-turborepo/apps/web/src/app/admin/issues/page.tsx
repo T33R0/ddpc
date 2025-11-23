@@ -33,6 +33,10 @@ export default function IssuesPage() {
   const [filter, setFilter] = useState<'all' | 'unresolved'>('unresolved');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastLoaded, setLastLoaded] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+
+  const PAGE_SIZE = 50;
 
   const fetchIssues = useCallback(async () => {
     try {
@@ -40,14 +44,17 @@ export default function IssuesPage() {
       setErrorMessage(null);
       let query = supabase
         .from('issue_reports')
-        .select('id, user_email, page_url, description, screenshot_url, resolved, created_at')
-        .order('created_at', { ascending: false });
+        .select('id, user_email, page_url, description, screenshot_url, resolved, created_at', {
+          count: 'exact',
+        })
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
       if (filter === 'unresolved') {
         query = query.eq('resolved', false);
       }
 
-      const { data, error } = await withTimeout(
+      const { data, error, count } = await withTimeout(
         query,
         15000,
         'Fetching issue reports exceeded the 15s timeout.'
@@ -55,6 +62,9 @@ export default function IssuesPage() {
 
       if (error) throw error;
       setIssues(data || []);
+      if (typeof count === 'number') {
+        setTotalCount(count);
+      }
       setLastLoaded(new Date().toISOString());
     } catch (error) {
       console.error('Error fetching issues:', error);
@@ -67,6 +77,10 @@ export default function IssuesPage() {
     } finally {
       setLoading(false);
     }
+  }, [filter, page]);
+
+  useEffect(() => {
+    setPage(0);
   }, [filter]);
 
   useEffect(() => {
@@ -157,7 +171,7 @@ export default function IssuesPage() {
         <CardHeader>
           <CardTitle>Reports</CardTitle>
           <CardDescription>
-            {issues.length} {filter} issue{issues.length !== 1 ? 's' : ''} found
+            {(totalCount ?? issues.length)} {filter} issue{(totalCount ?? issues.length) !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -256,6 +270,32 @@ export default function IssuesPage() {
                   ))}
                 </tbody>
               </table>
+              {totalCount && totalCount > PAGE_SIZE && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+                  <span className="text-sm text-muted-foreground">
+                    Showing {page * PAGE_SIZE + 1}-
+                    {page * PAGE_SIZE + issues.length} of {totalCount}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+                      disabled={page === 0 || loading}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((prev) => prev + 1)}
+                      disabled={(page + 1) * PAGE_SIZE >= totalCount || loading}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
