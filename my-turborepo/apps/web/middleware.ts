@@ -48,8 +48,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // 4. Auth Check & Redirects
-  // Only redirect if the path is NOT scoped (e.g. /garage) and NOT a root username path (handled below)
-  // AND if the user is logged in.
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -68,7 +66,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // Case B: User visiting /dashboard (or other known segment) -> redirect to /username/dashboard
-      if (segments.length > 0 && isKnownAppSegment(segments[0])) {
+      if (segments.length > 0 && segments[0] && isKnownAppSegment(segments[0])) {
          return applyPendingCookies(
            NextResponse.redirect(buildUrl(request, `/${username}${pathname}`))
          )
@@ -76,7 +74,7 @@ export async function middleware(request: NextRequest) {
 
       // Case C: User visiting /teehanrh (root username path) -> redirect to /teehanrh/dashboard
       // This handles the "stripped: false" case where segments.length === 1
-      if (segments.length === 1 && segments[0].toLowerCase() === username) {
+      if (segments.length === 1 && segments[0] && segments[0].toLowerCase() === username) {
          return applyPendingCookies(
            NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
          )
