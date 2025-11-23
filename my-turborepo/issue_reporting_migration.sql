@@ -46,3 +46,4 @@ CREATE POLICY "Give public access to issue-attachments" ON storage.objects
 CREATE POLICY "Enable upload for all users to issue-attachments" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'issue-attachments');
 
+

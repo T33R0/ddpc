@@ -11,6 +11,7 @@ import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../lib/user-rou
 import { ReportProblemModal } from './ReportProblem';
 
 export function HeaderWithAuth() {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const pathname = usePathname() || '/';
   const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -48,7 +49,7 @@ export function HeaderWithAuth() {
     return await signIn(email, password);
   };
 
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
 
   return (
     <>
