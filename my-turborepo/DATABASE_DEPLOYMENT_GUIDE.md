@@ -20,6 +20,14 @@ This guide walks you through deploying the database performance optimization to 
 3. Paste it into the Supabase SQL Editor
 4. Click **Run** (or press `Ctrl+Enter` / `Cmd+Enter`)
 
+### Step 2b: Apply the Admin/Service Index Patch
+1. Open `database-performance-admin-service.sql`
+2. Copy the contents into a **new** SQL Editor tab
+3. Run the script — it is idempotent thanks to `CREATE INDEX IF NOT EXISTS`
+4. This patch adds the indexes requested by Supabase Performance Advisor for:
+   - `issue_reports` (admin console stuck loader)
+   - `maintenance_log`, `service_intervals`, `part_inventory`, and related tables that power `/vehicle/[id]/service`
+
 ### Step 3: Verify the Migration
 After running the migration, verify it was successful:
 
@@ -32,6 +40,17 @@ SELECT
 FROM pg_indexes
 WHERE tablename = 'vehicle_data'
 ORDER BY indexname;
+```
+
+Then verify the new service/admin indexes:
+
+```sql
+SELECT 
+    tablename,
+    indexname
+FROM pg_indexes
+WHERE tablename IN ('issue_reports', 'maintenance_log', 'service_intervals')
+ORDER BY tablename, indexname;
 ```
 
 You should see the following indexes:
@@ -64,6 +83,7 @@ This query should complete in **under 3 seconds** (previously it would timeout).
 3. Set **Min Year: 2018** and **Max Year: 2019**
 4. Click **Apply**
 5. The page should load vehicles without timing out
+6. Additionally, visit `/admin/issues` and `/vehicle/<your vehicle>/service` to confirm the new indexes eliminated the loading spinners
 
 ## Expected Results
 
@@ -77,6 +97,8 @@ This query should complete in **under 3 seconds** (previously it would timeout).
 - ✅ Vehicles from 2018-2019 displayed
 - ✅ Pagination works correctly
 - ✅ No timeout errors
+- ✅ Admin issue report table responds within a few seconds
+- ✅ Vehicle service plan/history loads reliably even on mobile
 
 ## Performance Improvements
 
@@ -85,6 +107,7 @@ The optimization provides:
 - **5-10x faster** queries with make/model filters
 - **Reduced database load** through better indexing
 - **Better query planning** with STABLE function volatility
+- **Consistent admin/service views** by indexing frequently filtered foreign keys
 
 ## Rollback (If Needed)
 

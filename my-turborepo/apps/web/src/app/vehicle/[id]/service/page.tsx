@@ -57,39 +57,42 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     notFound() // Triggers 404 page
   }
 
-  // --- 3. Fetch the "Plan" (from service_intervals) ---
-  const { data: plan, error: planError } = await supabase
-    .from('service_intervals')
-    .select('*')
-    .eq('user_vehicle_id', vehicleId) // Use resolved UUID
-    .order('interval_miles', { ascending: true })
+  // --- 3-5. Fetch plan, history, and scheduled entries in parallel ---
+  const [
+    planResult,
+    historyResult,
+    scheduledResult,
+  ] = await Promise.all([
+    supabase
+      .from('service_intervals')
+      .select('*')
+      .eq('user_vehicle_id', vehicleId)
+      .order('interval_miles', { ascending: true }),
+    supabase
+      .from('maintenance_log')
+      .select('*')
+      .eq('user_vehicle_id', vehicleId)
+      .lte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: false }),
+    supabase
+      .from('maintenance_log')
+      .select('*')
+      .eq('user_vehicle_id', vehicleId)
+      .gt('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true }),
+  ])
+
+  const { data: plan, error: planError } = planResult
+  const { data: history, error: historyError } = historyResult
+  const { data: scheduled, error: scheduledError } = scheduledResult
 
   if (planError) {
     console.error('Error fetching service plan:', planError)
-    // We can still render the page, just with an empty plan
   }
-
-  // --- 4. Fetch the "History" (from maintenance_log) ---
-  // We'll fix the "future date" bug here.
-  const { data: history, error: historyError } = await supabase
-    .from('maintenance_log')
-    .select('*')
-    .eq('user_vehicle_id', vehicleId) // Use resolved UUID
-    .lte('event_date', new Date().toISOString()) // Only show items from today or the past
-    .order('event_date', { ascending: false })
 
   if (historyError) {
     console.error('Error fetching service history:', historyError)
   }
-
-  // --- 5. Fetch "Scheduled" (Future items from maintenance_log) ---
-  // This separates future items and adds them to the "Plan" view
-  const { data: scheduled, error: scheduledError } = await supabase
-    .from('maintenance_log')
-    .select('*')
-    .eq('user_vehicle_id', vehicleId) // Use resolved UUID
-    .gt('event_date', new Date().toISOString()) // Only show future items
-    .order('event_date', { ascending: true })
 
   if (scheduledError) {
     console.error('Error fetching scheduled services:', scheduledError)

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import { TimeoutError, withTimeout } from '@/lib/with-timeout'
+import { Button } from '@repo/ui/button'
 
 interface HistoryLog {
   id: string
@@ -37,6 +39,7 @@ interface ServiceHistoryListProps {
 export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
   const [groupedLogs, setGroupedLogs] = useState<GroupedLogs[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     fetchHistoryLogs()
@@ -45,16 +48,22 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
 
   const fetchHistoryLogs = async () => {
     setIsLoading(true)
+    setErrorMessage(null)
     try {
-      // First fetch the logs
-      const { data: logsData, error: logsError } = await supabase
-        .from('maintenance_log')
-        .select('id, event_date, odometer, notes, service_item_id')
-        .eq('user_vehicle_id', vehicleId)
-        .eq('status', 'History')
-        .order('event_date', { ascending: false })
+      const logsResponse = await withTimeout(
+        supabase
+          .from('maintenance_log')
+          .select('id, event_date, odometer, notes, service_item_id')
+          .eq('user_vehicle_id', vehicleId)
+          .eq('status', 'History')
+          .order('event_date', { ascending: false }),
+        15000,
+        'Loading service history timed out.'
+      )
 
-      if (logsError) throw logsError
+      if (logsResponse.error) throw logsResponse.error
+
+      const logsData = logsResponse.data
 
       if (!logsData || logsData.length === 0) {
         setGroupedLogs([])
@@ -75,30 +84,40 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
 
       if (serviceItemIds.length > 0) {
         // Fetch service items
-        const { data: itemsData, error: itemsError } = await supabase
-          .from('service_items')
-          .select('id, name, category_id')
-          .in('id', serviceItemIds)
+        const itemsResponse = await withTimeout(
+          supabase
+            .from('service_items')
+            .select('id, name, category_id')
+            .in('id', serviceItemIds),
+          15000,
+          'Loading service item metadata timed out.'
+        )
 
-        if (!itemsError && itemsData) {
+        if (!itemsResponse.error && itemsResponse.data) {
           // Get unique category IDs
-          const categoryIds = [...new Set(itemsData.map((item) => item.category_id))]
+          const categoryIds = [...new Set(itemsResponse.data.map((item) => item.category_id))]
 
-          // Fetch categories
-          const { data: categoriesData, error: categoriesError } = await supabase
-            .from('service_categories')
-            .select('id, name')
-            .in('id', categoryIds)
+          let categoriesMap: Record<string, string> = {}
+          if (categoryIds.length > 0) {
+            const categoriesResponse = await withTimeout(
+              supabase
+                .from('service_categories')
+                .select('id, name')
+                .in('id', categoryIds),
+              15000,
+              'Loading service categories timed out.'
+            )
 
-          const categoriesMap: Record<string, string> = {}
-          if (!categoriesError && categoriesData) {
-            categoriesData.forEach((cat) => {
-              categoriesMap[cat.id] = cat.name
-            })
+            if (!categoriesResponse.error && categoriesResponse.data) {
+              categoriesMap = categoriesResponse.data.reduce<Record<string, string>>((acc, cat) => {
+                acc[cat.id] = cat.name
+                return acc
+              }, {})
+            }
           }
 
           // Build map of service items with category info
-          itemsData.forEach((item) => {
+          itemsResponse.data.forEach((item) => {
             serviceItemsMap[item.id] = {
               id: item.id,
               name: item.name,
@@ -163,6 +182,11 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
       setGroupedLogs(sortedGroups)
     } catch (err) {
       console.error('Error fetching history logs:', err)
+      setErrorMessage(
+        err instanceof TimeoutError
+          ? 'Supabase timed out while loading your history.'
+          : 'Failed to load service history. Please try again.'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -178,6 +202,24 @@ export function ServiceHistoryList({ vehicleId }: ServiceHistoryListProps) {
   if (isLoading) {
     return (
       <div className="text-center py-8 text-muted-foreground">Loading service history...</div>
+    )
+  }
+  if (errorMessage) {
+    return (
+      <Card className="bg-card border-border">
+        <CardContent className="p-6">
+          <p className="text-destructive text-sm">{errorMessage}</p>
+          <Button
+            className="mt-4"
+            variant="outline"
+            size="sm"
+            onClick={fetchHistoryLogs}
+            disabled={isLoading}
+          >
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
     )
   }
 

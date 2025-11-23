@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { TimeoutError, withTimeout } from '@/lib/with-timeout'
 
 interface PlannedServiceLog {
   id: string
@@ -54,6 +55,8 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     const [isLoadingPlanned, setIsLoadingPlanned] = useState(false)
     const [isLoadingChecklist, setIsLoadingChecklist] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [plannedError, setPlannedError] = useState<string | null>(null)
+    const [checklistError, setChecklistError] = useState<string | null>(null)
     // Default all categories to collapsed
     const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
       // We'll initialize this after categories are loaded
@@ -62,8 +65,9 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
 
     const fetchPlannedLogs = async () => {
       setIsLoadingPlanned(true)
+      setPlannedError(null)
       try {
-        const { data, error } = await supabase
+        const plannedQuery = supabase
           .from('maintenance_log')
           .select(`
           id,
@@ -79,11 +83,17 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
           .eq('status', 'Plan')
           .order('event_date', { ascending: true })
 
-        if (error) throw error
+        const response = await withTimeout(
+          plannedQuery,
+          15000,
+          'Loading planned services took too long.'
+        )
+
+        if (response.error) throw response.error
 
         // Transform the data to match the interface
         // PostgREST returns service_item as an array, but we need a single object
-        const transformedData = (data || []).map((log: any) => ({
+        const transformedData = (response.data || []).map((log: any) => ({
           ...log,
           service_item: Array.isArray(log.service_item)
             ? log.service_item[0] || null
@@ -93,6 +103,11 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         setPlannedLogs(transformedData)
       } catch (err) {
         console.error('Error fetching planned logs:', err)
+        setPlannedError(
+          err instanceof TimeoutError
+            ? 'Supabase timed out while loading your active plan.'
+            : 'Failed to load active plan. Please try again.'
+        )
       } finally {
         setIsLoadingPlanned(false)
       }
@@ -116,33 +131,40 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
 
     const fetchServiceChecklist = async () => {
       setIsLoadingChecklist(true)
+      setChecklistError(null)
       try {
-        // Fetch categories
-        const { data: categories, error: categoriesError } = await supabase
-          .from('service_categories')
-          .select('id, name')
-          .order('name', { ascending: true })
+        const categoryResponse = await withTimeout(
+          supabase
+            .from('service_categories')
+            .select('id, name')
+            .order('name', { ascending: true }),
+          15000,
+          'Loading service categories timed out.'
+        )
 
-        if (categoriesError) throw categoriesError
+        if (categoryResponse.error) throw categoryResponse.error
 
-        setServiceCategories(categories || [])
+        const categories = categoryResponse.data || []
+        setServiceCategories(categories)
 
-        // Default all categories to collapsed
-        if (categories && categories.length > 0) {
+        if (categories.length > 0) {
           setCollapsedCategories(new Set(categories.map(cat => cat.id)))
         }
 
-        // Fetch all service items
-        const { data: items, error: itemsError } = await supabase
-          .from('service_items')
-          .select('id, name, description, category_id')
-          .order('name', { ascending: true })
+        const itemsResponse = await withTimeout(
+          supabase
+            .from('service_items')
+            .select('id, name, description, category_id')
+            .order('name', { ascending: true }),
+          15000,
+          'Loading service checklist timed out.'
+        )
 
-        if (itemsError) throw itemsError
+        if (itemsResponse.error) throw itemsResponse.error
 
         // Group items by category
         const grouped: Record<string, ServiceItem[]> = {}
-          ; (items || []).forEach((item) => {
+          ; (itemsResponse.data || []).forEach((item) => {
             if (!grouped[item.category_id]) {
               grouped[item.category_id] = []
             }
@@ -154,6 +176,11 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         setServiceItemsByCategory(grouped)
       } catch (err) {
         console.error('Error fetching service checklist:', err)
+        setChecklistError(
+          err instanceof TimeoutError
+            ? 'Supabase timed out while loading the suggested checklist.'
+            : 'Failed to load the service checklist. Please retry.'
+        )
       } finally {
         setIsLoadingChecklist(false)
       }
@@ -219,7 +246,20 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">Your Active Plan</h2>
 
-          {isLoadingPlanned ? (
+          {plannedError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+              <p>{plannedError}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={fetchPlannedLogs}
+                disabled={isLoadingPlanned}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : isLoadingPlanned ? (
             <div className="text-center py-8 text-muted-foreground">Loading planned services...</div>
           ) : plannedLogs.length === 0 ? (
             <Card className="bg-card border-border">
@@ -292,7 +332,20 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">Suggested Service Checklist</h2>
 
-          {isLoadingChecklist ? (
+          {checklistError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+              <p>{checklistError}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={fetchServiceChecklist}
+                disabled={isLoadingChecklist}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : isLoadingChecklist ? (
             <div className="text-center py-8 text-muted-foreground">Loading checklist...</div>
           ) : (
             <div className="space-y-4">

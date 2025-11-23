@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { Loader2, ExternalLink, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@repo/ui/card';
 import { Label } from '@repo/ui/label';
+import { TimeoutError, withTimeout } from '@/lib/with-timeout';
 
 // Define interface for IssueReport
 interface IssueReport {
@@ -30,34 +31,47 @@ export default function IssuesPage() {
   const [issues, setIssues] = useState<IssueReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unresolved'>('unresolved');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastLoaded, setLastLoaded] = useState<string | null>(null);
 
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     try {
       setLoading(true);
+      setErrorMessage(null);
       let query = supabase
         .from('issue_reports')
-        .select('*')
+        .select('id, user_email, page_url, description, screenshot_url, resolved, created_at')
         .order('created_at', { ascending: false });
 
       if (filter === 'unresolved') {
         query = query.eq('resolved', false);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await withTimeout(
+        query,
+        15000,
+        'Fetching issue reports exceeded the 15s timeout.'
+      );
 
       if (error) throw error;
       setIssues(data || []);
+      setLastLoaded(new Date().toISOString());
     } catch (error) {
       console.error('Error fetching issues:', error);
-      toast.error('Failed to load issues');
+      const message =
+        error instanceof TimeoutError
+          ? 'Supabase timed out while loading issue reports. Please try again.'
+          : 'Failed to load issues';
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
   useEffect(() => {
     fetchIssues();
-  }, [filter]);
+  }, [fetchIssues]);
 
   const toggleResolved = async (id: string, currentStatus: boolean) => {
     try {
@@ -96,6 +110,11 @@ export default function IssuesPage() {
           <p className="text-muted-foreground">
             Manage reported problems and feedback.
           </p>
+          {lastLoaded && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Last updated {new Date(lastLoaded).toLocaleTimeString()}
+            </p>
+          )}
         </div>
         
         <div className="flex items-center space-x-4 bg-white dark:bg-gray-800 p-2 rounded-lg border">
@@ -123,6 +142,14 @@ export default function IssuesPage() {
             />
             <Label htmlFor="filter-unresolved" className="cursor-pointer">Unresolved</Label>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchIssues}
+            disabled={loading}
+          >
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </Button>
         </div>
       </div>
 
@@ -134,6 +161,19 @@ export default function IssuesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {errorMessage && (
+            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+              <div className="flex items-center gap-2">
+                <XCircle className="h-4 w-4" />
+                <span>{errorMessage}</span>
+              </div>
+              <div>
+                <Button size="sm" variant="outline" onClick={fetchIssues} disabled={loading}>
+                  Try again
+                </Button>
+              </div>
+            </div>
+          )}
           {loading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
