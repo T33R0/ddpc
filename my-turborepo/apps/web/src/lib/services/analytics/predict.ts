@@ -1,5 +1,13 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
+interface Mod {
+  id: string;
+  title: string;
+  status: string;
+  event_date: string;
+  user_vehicle_id: string;
+}
+
 export interface PredictionResult {
   category: string
   risk: number
@@ -54,7 +62,7 @@ export async function predictUpcomingNeeds(
   }
 
   // Filter installed mods with required data
-  const installedMods = vehicle.mods?.filter((mod: any) =>
+  const installedMods = vehicle.mods?.filter((mod: Mod) =>
     mod.status === 'installed' &&
     mod.event_date &&
     vehicle.odometer !== null &&

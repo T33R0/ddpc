@@ -8,7 +8,17 @@ import { Button } from './button';
 import { UserAccountDropdown } from './user-account-dropdown';
 
 interface HeaderProps {
-  user?: any;
+  user?: {
+    id: string;
+    email?: string;
+    user_metadata?: {
+      username?: string;
+      preferred_username?: string;
+      user_name?: string;
+      full_name?: string;
+      avatar_url?: string;
+    };
+  } | null;
   activeVehiclesCount?: number;
   onSignOut?: () => void;
   onGoogleSignIn?: () => void;
