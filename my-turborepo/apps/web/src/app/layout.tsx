@@ -7,11 +7,8 @@ import { AuthProvider } from '../lib/auth';
 import { ThemeProvider } from '../lib/theme-context';
 import { ScrutineerButton } from '../components/ScrutineerButton';
 import { LogoutModal } from '../components/LogoutModal';
-import dynamic from 'next/dynamic';
+import { HeaderWithAuth, FooterWrapper } from '../components/DynamicLayout';
 import './globals.css';
-
-const HeaderWithAuth = dynamic(() => import('../components/HeaderWithAuth').then(mod => mod.HeaderWithAuth), { ssr: false });
-const FooterWrapper = dynamic(() => import('../components/FooterWrapper').then(mod => mod.FooterWrapper), { ssr: false });
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
