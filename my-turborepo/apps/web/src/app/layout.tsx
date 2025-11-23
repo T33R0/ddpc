@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { HeaderWithAuth } from '../components/HeaderWithAuth';
 import { Toaster } from 'react-hot-toast';
-import { FooterWrapper } from '../components/FooterWrapper';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '../lib/auth';
 import { ThemeProvider } from '../lib/theme-context';
 import { ScrutineerButton } from '../components/ScrutineerButton';
 import { LogoutModal } from '../components/LogoutModal';
+import dynamic from 'next/dynamic';
 import './globals.css';
+
+const HeaderWithAuth = dynamic(() => import('../components/HeaderWithAuth').then(mod => mod.HeaderWithAuth), { ssr: false });
+const FooterWrapper = dynamic(() => import('../components/FooterWrapper').then(mod => mod.FooterWrapper), { ssr: false });
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
