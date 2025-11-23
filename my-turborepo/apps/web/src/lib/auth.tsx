@@ -5,14 +5,32 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { useRouter } from 'next/navigation';
 
+interface UserProfile {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  role: string | null;
+}
+
+interface UserProfileRow {
+  user_id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   loading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   showLogoutModal: boolean;
   setShowLogoutModal: (show: boolean) => void;
 }
@@ -22,9 +40,49 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const router = useRouter();
+
+  const mapProfileRow = (row: UserProfileRow): UserProfile => ({
+    id: row.user_id,
+    username: row.username,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    role: row.role ?? null,
+  });
+
+  const fetchProfile = React.useCallback(
+    async (userId: string | undefined | null) => {
+      if (!userId) {
+        setProfile(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_profile')
+        .select('user_id, username, display_name, avatar_url, role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading user profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile(mapProfileRow(data));
+      } else {
+        setProfile(null);
+      }
+    },
+    []
+  );
+
+  const refreshProfile = React.useCallback(async () => {
+    await fetchProfile(user?.id ?? null);
+  }, [fetchProfile, user?.id]);
 
   useEffect(() => {
     // Get initial session
@@ -33,6 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user?.id) {
+        await fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
     };
 
     getInitialSession();
@@ -43,11 +106,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        if (session?.user?.id) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfile]);
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
@@ -118,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setProfile(null);
     router.push('/');
     setShowLogoutModal(true);
   };
@@ -125,11 +194,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     session,
+    profile,
     loading,
     signUp,
     signIn,
     signInWithGoogle,
     signOut,
+    refreshProfile,
     showLogoutModal,
     setShowLogoutModal,
   };
@@ -148,11 +219,13 @@ export function useAuth() {
       return {
         user: null,
         session: null,
+        profile: null,
         loading: true,
         signUp: async () => ({ error: null }),
         signIn: async () => ({ error: null }),
         signInWithGoogle: async () => ({ error: null }),
         signOut: async () => {},
+        refreshProfile: async () => {},
         showLogoutModal: false,
         setShowLogoutModal: () => {},
       };

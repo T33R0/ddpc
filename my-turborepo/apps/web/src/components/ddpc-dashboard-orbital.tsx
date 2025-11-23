@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowRight } from "lucide-react";
 import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
@@ -8,6 +8,7 @@ import { Logo } from "@repo/ui/logo";
 import { useRouter } from "next/navigation";
 import { useTheme } from "../lib/theme-context";
 import { useAuth } from "../lib/auth";
+import { toUsernameSlug } from "../lib/user-routing";
 
 interface DashboardNode {
   id: number;
@@ -42,7 +43,8 @@ export default function DDPCDashboardOrbital({
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const router = useRouter();
   const { resolvedTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const usernameSlug = profile?.username ? toUsernameSlug(profile.username) : null;
 
   // Determine theme colors
   const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_20px_#22c55e]' : 'shadow-[0_0_20px_#3b82f6]';
@@ -67,10 +69,25 @@ export default function DDPCDashboardOrbital({
   const isBreakGlassUser = user?.email === 'myddpc@gmail.com';
   const canAccessAdmin = isAdmin || isBreakGlassUser;
 
+  const buildScopedRoute = useCallback(
+    (path: string) => {
+      if (!path) return path;
+      const normalized = path.startsWith("/") ? path : `/${path}`;
+      if (!usernameSlug) {
+        return normalized;
+      }
+      if (normalized === "/") {
+        return `/${usernameSlug}`;
+      }
+      return `/${usernameSlug}${normalized}`;
+    },
+    [usernameSlug]
+  );
+
   const handleLogoClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (canAccessAdmin) {
-      router.push('/admin');
+      router.push(buildScopedRoute('/admin'));
     }
   };
 
@@ -312,7 +329,7 @@ export default function DDPCDashboardOrbital({
                           className={`flex-1 border-gray-600 bg-transparent hover:bg-gray-800 hover:text-white transition-all ${cardDesc}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(node.route);
+                            router.push(buildScopedRoute(node.route));
                           }}
                         >
                           Visit Page

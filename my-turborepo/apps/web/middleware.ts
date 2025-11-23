@@ -1,4 +1,4 @@
-import type { User } from '@supabase/supabase-js'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { apiRateLimiter } from '@/lib/rate-limiter'
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const username = getUsernameFromSession(session?.user)
+  const username = await getUsernameForRequest(supabase, session)
 
   if (username) {
     const scopedResponse = handleUserScopedRouting(request, username)
@@ -94,19 +94,44 @@ const buildUrl = (request: NextRequest, pathname: string) => {
   return url
 }
 
-const getUsernameFromSession = (user?: User | null) => {
+const getUsernameForRequest = async (supabase: SupabaseClient, session: Session | null) => {
+  const fallback = deriveMetadataUsername(session)
+  const userId = session?.user?.id
+
+  if (!userId) {
+    return fallback ? toUsernameSlug(fallback) : null
+  }
+
+  const { data, error } = await supabase
+    .from('user_profile')
+    .select('username')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching username from profile:', error)
+  }
+
+  if (data?.username) {
+    return toUsernameSlug(data.username)
+  }
+
+  return fallback ? toUsernameSlug(fallback) : null
+}
+
+const deriveMetadataUsername = (session: Session | null) => {
+  const user = session?.user
   if (!user) {
     return null
   }
 
   const metadata = user.user_metadata ?? {}
-  const candidate =
+  return (
     metadata.username ??
     metadata.preferred_username ??
     metadata.user_name ??
     (user.email ? user.email.split('@')[0] : null)
-
-  return toUsernameSlug(candidate)
+  )
 }
 
 export const config = {

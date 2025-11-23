@@ -33,7 +33,7 @@ import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../../lib/user-
 type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme';
 
 export default function AccountPage() {
-  const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle } = useAuth();
+const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle, refreshProfile } = useAuth();
   const { theme, setTheme, saveTheme } = useTheme();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
@@ -189,6 +189,7 @@ export default function AccountPage() {
 
         const syncedSlug = await syncAuthMetadata(username, displayName, avatarUrl);
         updateScopedUrl(syncedSlug);
+        await refreshProfile();
       } else {
         toast.error(data.error || 'Failed to update profile');
       }

@@ -10,7 +10,7 @@ import { ReportProblem } from './ReportProblem';
 
 export function HeaderWithAuth() {
   const pathname = usePathname() || '/';
-  const { user, signOut, signUp, signIn, signInWithGoogle } = useAuth();
+  const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
 
   const normalizedPathname = stripUsernamePrefixFromPathname(pathname).pathname || '/';
   const isHeaderHidden = normalizedPathname === '/' || normalizedPathname === '/dashboard';
@@ -24,12 +24,13 @@ export function HeaderWithAuth() {
   const activeVehiclesCount = allVehicles.filter(vehicle => vehicle.current_status === 'daily_driver').length;
 
   const rawUsername =
+    profile?.username ??
     (user?.user_metadata?.username as string | undefined) ??
     (user?.user_metadata?.preferred_username as string | undefined) ??
     (user?.user_metadata?.user_name as string | undefined) ??
     (user?.email ? user.email.split('@')[0] : undefined);
 
-  const usernameSlug = toUsernameSlug(rawUsername);
+  const usernameSlug = rawUsername ? toUsernameSlug(rawUsername) : null;
   const userBasePath = usernameSlug ? `/${usernameSlug}` : undefined;
 
   const handleGoogleSignIn = () => {

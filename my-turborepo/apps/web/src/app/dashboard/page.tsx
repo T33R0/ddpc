@@ -1,12 +1,9 @@
 'use client';
 
 import { useAuth } from '../../lib/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
-import { Button } from '@repo/ui/button';
 import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
 import { useRouter } from 'next/navigation';
-import { Car, Settings, Users, Plus, X, Zap, Warehouse, SlidersHorizontal } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Car, Settings, Zap, Warehouse, SlidersHorizontal } from 'lucide-react';
 
 const UserAvatarIcon = ({ size }: { size?: number }) => {
   const { user } = useAuth();
@@ -28,27 +25,8 @@ const UserAvatarIcon = ({ size }: { size?: number }) => {
 };
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
-  const [showGetStarted, setShowGetStarted] = useState(true);
-
-  // Check localStorage for dismissed state
-  useEffect(() => {
-    const dismissed = localStorage.getItem('ddpc-get-started-dismissed');
-    if (dismissed === 'true') {
-      setShowGetStarted(false);
-    }
-  }, []);
-
-  const handleDismissGetStarted = () => {
-    setShowGetStarted(false);
-    localStorage.setItem('ddpc-get-started-dismissed', 'true');
-  };
-
-  const handleNeverShowAgain = () => {
-    setShowGetStarted(false);
-    localStorage.setItem('ddpc-get-started-dismissed', 'true');
-  };
 
   if (loading) {
     return (
@@ -122,7 +100,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const displayName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
+  const displayName = profile?.username || user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
