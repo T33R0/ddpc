@@ -13,7 +13,7 @@ import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleto
 import { useSearch } from '../../lib/hooks/useSearch';
 import { searchConsoleVehicle } from '../../lib/search';
 import { useConsoleStats } from '../../lib/hooks/useConsoleStats';
-import { getVehicleSlug } from '../../lib/vehicle-utils';
+import { getVehicleSlug } from '../../lib/vehicle-utils-client';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();

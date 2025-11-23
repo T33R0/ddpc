@@ -1,88 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-
-// Helper function to check if a string is a UUID
-export function isUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
-
-/**
- * Resolves a vehicle slug (nickname or UUID) to a vehicle UUID and nickname
- * @param vehicleSlug - The vehicle slug from the URL (can be nickname or UUID)
- * @returns Object with vehicle UUID and nickname, or null if not found
- */
-/**
- * Creates a URL-friendly slug from a string
- */
-export function slugify(text: string): string {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')     // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-')   // Replace multiple - with single -
-    .replace(/^-+/, '')       // Trim - from start of text
-    .replace(/-+$/, '')       // Trim - from end of text
-}
-
-/**
- * Determines the best slug for a vehicle
- * Priority:
- * 1. Nickname (if unique among user's vehicles)
- * 2. YMMT (Year-Make-Model-Trim) (if unique among user's vehicles)
- * 3. ID (fallback)
- */
-export function getVehicleSlug(vehicle: { id: string, nickname?: string | null, year?: number | string, make?: string, model?: string, trim?: string }, allVehicles: { id: string, nickname?: string | null, year?: number | string, make?: string, model?: string, trim?: string }[]): string {
-  // 1. Check Nickname
-  if (vehicle.nickname) {
-    const isNicknameUnique = !allVehicles.some(v =>
-      v.id !== vehicle.id &&
-      v.nickname?.toLowerCase() === vehicle.nickname?.toLowerCase()
-    )
-
-    if (isNicknameUnique) {
-      return vehicle.nickname
-    }
-  }
-
-  // 2. Check YMMT
-  // Construct YMMT string
-  const ymmtParts = [
-    vehicle.year,
-    vehicle.make,
-    vehicle.model,
-    vehicle.trim
-  ].filter(Boolean).join(' ')
-
-  const ymmtSlug = slugify(ymmtParts)
-
-  if (ymmtSlug) {
-    // Check if any other vehicle generates the same YMMT slug
-    const isYmmtUnique = !allVehicles.some(v => {
-      if (v.id === vehicle.id) return false
-
-      const otherParts = [
-        v.year,
-        v.make,
-        v.model,
-        v.trim
-      ].filter(Boolean).join(' ')
-
-      return slugify(otherParts) === ymmtSlug
-    })
-
-    if (isYmmtUnique) {
-      return ymmtSlug
-    }
-  }
-
-  // 3. Fallback to ID
-  return vehicle.id
-}
+// Import client-safe utilities
+export { isUUID, slugify, getVehicleSlug } from './vehicle-utils-client'
 
 /**
  * Resolves a vehicle slug (nickname, YMMT slug, or UUID) to a vehicle UUID and nickname
+ * SERVER ONLY - Uses Supabase server client
  * @param vehicleSlug - The vehicle slug from the URL
  * @returns Object with vehicle UUID and nickname, or null if not found
  */
@@ -90,6 +12,7 @@ export async function resolveVehicleSlug(vehicleSlug: string): Promise<{
   vehicleId: string
   nickname: string | null
 } | null> {
+  const { isUUID, getVehicleSlug } = await import('./vehicle-utils-client')
   const supabase = await createClient()
 
   // Get authenticated user

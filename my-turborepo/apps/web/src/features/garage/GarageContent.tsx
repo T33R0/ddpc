@@ -67,7 +67,7 @@ function ImageWithTimeoutFallback({
   )
 }
 
-import { getVehicleSlug } from '@/lib/vehicle-utils'
+import { getVehicleSlug } from '@/lib/vehicle-utils-client'
 
 function VehicleCard({
   vehicle,
