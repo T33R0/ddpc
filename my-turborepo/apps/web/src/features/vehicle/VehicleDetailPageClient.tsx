@@ -99,6 +99,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
   const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || vehicle.image_url || null)
   const [isHovered, setIsHovered] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isOwner) return
@@ -158,6 +159,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
         // Force a small delay to ensure state updates
         setTimeout(() => {
           console.log('Image URL state updated')
+          router.refresh()
         }, 100)
       } else {
         alert('Upload succeeded but failed to get image URL')
@@ -181,6 +183,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
       onMouseLeave={isOwner ? () => setIsHovered(false) : undefined}
     >
       <ImageWithTimeoutFallback
+        key={imageUrl || 'default'}
         src={imageUrl || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
         fallbackSrc="/branding/fallback-logo.png"
         alt={`${vehicle.name || 'Vehicle'} vehicle`}
@@ -615,7 +618,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 pt-16">
+    <div className="min-h-screen bg-background text-foreground pb-20 pt-16 dark:bg-gradient-to-b dark:from-background dark:to-background/80">
       {/* Sticky Header */}
       <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <VehicleHeader
@@ -643,7 +646,9 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
 
           <div className="space-y-6">
             <div>
-              <h2 className="text-3xl font-bold mb-2">{vehicle.trim || vehicle.trim_description || 'Base'}</h2>
+              <h2 className="text-3xl font-bold mb-2">
+                {vehicle.year} {vehicle.make} {vehicle.model} {vehicle.trim || vehicle.trim_description || 'Base'}
+              </h2>
               <p className="text-muted-foreground text-lg">
                 {[vehicle.body_type, vehicle.drive_type, vehicle.transmission].filter(Boolean).join(' • ')}
               </p>
