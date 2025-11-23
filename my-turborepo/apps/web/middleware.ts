@@ -77,7 +77,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // Case C: User visiting /teehanrh -> redirect to /teehanrh/dashboard
-      if (segments.length === 1 && segments[0].toLowerCase() === username) {
+      if (segments.length === 1 && segments[0]?.toLowerCase() === username) {
          return applyPendingCookies(
            NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
          )

@@ -31,8 +31,11 @@ export function parseImageUrls(imageUrlString?: string | null): string[] {
  */
 export function getVehicleImageSources(
   imageUrlString?: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _make?: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _model?: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _year?: string
 ): string[] {
   // If the input is already a proxied URL, return it directly
