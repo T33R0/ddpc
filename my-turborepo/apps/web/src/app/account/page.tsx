@@ -27,6 +27,8 @@ import {
   Palette
 } from 'lucide-react';
 import { User as UserType } from '@repo/types';
+import { supabase } from '../../lib/supabase';
+import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../../lib/user-routing';
 
 type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme';
 
@@ -100,6 +102,63 @@ export default function AccountPage() {
     }
   }, [session?.access_token]);
 
+  const syncAuthMetadata = useCallback(
+    async (nextUsername: string, nextDisplayName?: string, nextAvatarUrl?: string) => {
+      const normalizedUsername = nextUsername.trim();
+      if (!normalizedUsername) {
+        return null;
+      }
+
+      const usernameSlug = toUsernameSlug(normalizedUsername) ?? normalizedUsername.toLowerCase();
+
+      try {
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: {
+            username: usernameSlug,
+            preferred_username: normalizedUsername,
+            display_name: nextDisplayName?.trim() || null,
+            avatar_url: nextAvatarUrl?.trim() || null,
+          },
+        });
+
+        if (metadataError) {
+          console.error('Error updating auth metadata:', metadataError);
+          return usernameSlug;
+        }
+
+        await supabase.auth.refreshSession();
+        return usernameSlug;
+      } catch (metadataException) {
+        console.error('Auth metadata sync failed:', metadataException);
+        return usernameSlug;
+      }
+    },
+    []
+  );
+
+  const updateScopedUrl = useCallback(
+    (nextSlug: string | null) => {
+      if (!nextSlug || typeof window === 'undefined') {
+        return;
+      }
+
+      const currentPath = window.location.pathname;
+      const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(currentPath);
+
+      if (!stripped) {
+        return;
+      }
+
+      const suffix = strippedPathname === '/' ? '' : strippedPathname;
+      const nextPath = `/${nextSlug}${suffix}`;
+
+      if (nextPath !== currentPath) {
+        router.replace(nextPath);
+      }
+    },
+    [router]
+  );
+
   const handleUpdateProfile = async () => {
     if (!session?.access_token || !user) return;
 
@@ -127,6 +186,9 @@ export default function AccountPage() {
       if (response.ok) {
         setUser(data.user);
         toast.success('Profile updated successfully!');
+
+        const syncedSlug = await syncAuthMetadata(username, displayName, avatarUrl);
+        updateScopedUrl(syncedSlug);
       } else {
         toast.error(data.error || 'Failed to update profile');
       }

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { toUsernameSlug } from '@/lib/user-routing';
 
 export async function GET(request: NextRequest) {
   try {
@@ -222,6 +223,22 @@ export async function PUT(request: NextRequest) {
     if (updateError) {
       console.error('Error updating profile:', updateError);
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+    }
+
+    const sanitizedUsername = username.trim();
+    const usernameSlug = toUsernameSlug(sanitizedUsername) ?? sanitizedUsername.toLowerCase();
+
+    const { error: metadataSyncError } = await supabase.auth.admin.updateUserById(user.id, {
+      user_metadata: {
+        username: usernameSlug,
+        preferred_username: sanitizedUsername,
+        display_name: displayName?.trim() || null,
+        avatar_url: avatarUrl?.trim() || null,
+      },
+    });
+
+    if (metadataSyncError) {
+      console.error('Error syncing auth metadata:', metadataSyncError);
     }
 
     // Return the updated user data
