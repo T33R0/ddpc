@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { apiRateLimiter } from '@/lib/rate-limiter'
 import { createClient } from '@/lib/supabase/middleware'
 import {
+  isKnownAppSegment,
   shouldSkipUsernameRouting,
   stripUsernamePrefixFromPathname,
   toUsernameSlug,
@@ -14,6 +15,7 @@ const DASHBOARD_PATH = '/dashboard'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // 1. Rate Limiter for API
   if (pathname.startsWith('/api/')) {
     try {
       const res = await apiRateLimiter.check(request, 1)
@@ -28,64 +30,62 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 2. Skip static assets and API routes from routing logic
+  if (shouldSkipUsernameRouting(pathname)) {
+    return NextResponse.next()
+  }
+
   const { supabase, applyPendingCookies } = createClient(request)
+  
+  // 3. Check for scoped path (e.g. /teehanrh/dashboard)
+  // We check this BEFORE auth because we want to support structural rewrites even if auth is lagging
+  const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
+
+  if (stripped) {
+    // We found a valid app segment after a prefix (e.g. /user/dashboard -> /dashboard)
+    // Rewrite internal request to the app route
+    const rewriteUrl = request.nextUrl.clone()
+    rewriteUrl.pathname = strippedPathname
+    return applyPendingCookies(NextResponse.rewrite(rewriteUrl))
+  }
+
+  // 4. Auth Check & Redirects
+  // If we are here, the path is NOT scoped (e.g. /dashboard) OR it is a root user path (e.g. /teehanrh)
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const username = await getUsernameForRequest(supabase, session)
+  if (session) {
+    const username = await getUsernameForRequest(supabase, session)
+    
+    if (username) {
+      const segments = pathname.split('/').filter(Boolean)
+      
+      // Case A: User visiting root / -> redirect to /username/dashboard
+      if (pathname === '/') {
+        return applyPendingCookies(
+          NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
+        )
+      }
 
-  if (username) {
-    const scopedResponse = handleUserScopedRouting(request, username)
-    if (scopedResponse) {
-      return applyPendingCookies(scopedResponse)
-    }
-  } else if (!shouldSkipUsernameRouting(pathname)) {
-    const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
-    if (stripped) {
-      const rewriteUrl = request.nextUrl.clone()
-      rewriteUrl.pathname = strippedPathname
-      return applyPendingCookies(NextResponse.rewrite(rewriteUrl))
+      // Case B: User visiting /dashboard -> redirect to /username/dashboard
+      // (Only if it's a known app segment)
+      if (segments.length > 0 && isKnownAppSegment(segments[0])) {
+         return applyPendingCookies(
+           NextResponse.redirect(buildUrl(request, `/${username}${pathname}`))
+         )
+      }
+
+      // Case C: User visiting /teehanrh -> redirect to /teehanrh/dashboard
+      if (segments.length === 1 && segments[0].toLowerCase() === username) {
+         return applyPendingCookies(
+           NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
+         )
+      }
     }
   }
 
   return applyPendingCookies(NextResponse.next())
-}
-
-const handleUserScopedRouting = (request: NextRequest, username: string) => {
-  const { pathname } = request.nextUrl
-
-  if (shouldSkipUsernameRouting(pathname)) {
-    return null
-  }
-
-  const segments = pathname.split('/').filter(Boolean)
-
-  if (segments.length === 0) {
-    return NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
-  }
-
-  const firstSegmentMatchesUser = segments[0]?.toLowerCase() === username
-
-  if (firstSegmentMatchesUser) {
-    if (segments.length === 1) {
-      return NextResponse.redirect(buildUrl(request, `/${username}${DASHBOARD_PATH}`))
-    }
-
-    const remainder = segments.slice(1).join('/')
-    const rewritePath = remainder ? `/${remainder}` : '/'
-    const rewriteUrl = buildUrl(request, rewritePath)
-    return NextResponse.rewrite(rewriteUrl)
-  }
-
-  const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
-  const effectivePath = stripped ? strippedPathname : pathname
-  const targetPath =
-    effectivePath === '/'
-      ? `/${username}${DASHBOARD_PATH}`
-      : `/${username}${effectivePath}`
-
-  return NextResponse.redirect(buildUrl(request, targetPath))
 }
 
 const buildUrl = (request: NextRequest, pathname: string) => {
@@ -102,6 +102,7 @@ const getUsernameForRequest = async (supabase: SupabaseClient, session: Session 
     return fallback ? toUsernameSlug(fallback) : null
   }
 
+  // Attempt to get profile username
   const { data, error } = await supabase
     .from('user_profile')
     .select('username')
