@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Toaster } from 'react-hot-toast';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '../lib/auth';
 import { ThemeProvider } from '../lib/theme-context';
-import { ScrutineerButton } from '../components/ScrutineerButton';
-import { LogoutModal } from '../components/LogoutModal';
-import { HeaderWithAuth, FooterWrapper } from '../components/DynamicLayout';
+import {
+  HeaderWithAuth,
+  FooterWrapper,
+  LogoutModal,
+  ScrutineerButton,
+  Toaster
+} from '../components/DynamicLayout';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });

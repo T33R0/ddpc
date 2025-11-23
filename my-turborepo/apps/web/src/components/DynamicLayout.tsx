@@ -11,3 +11,18 @@ export const FooterWrapper = dynamic(
     () => import('./FooterWrapper').then((mod) => mod.FooterWrapper),
     { ssr: false }
 );
+
+export const LogoutModal = dynamic(
+    () => import('./LogoutModal').then((mod) => mod.LogoutModal),
+    { ssr: false }
+);
+
+export const ScrutineerButton = dynamic(
+    () => import('./ScrutineerButton').then((mod) => mod.ScrutineerButton),
+    { ssr: false }
+);
+
+export const Toaster = dynamic(
+    () => import('react-hot-toast').then((mod) => mod.Toaster),
+    { ssr: false }
+);

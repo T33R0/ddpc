@@ -3,8 +3,20 @@
 
 ALTER FUNCTION public.activity_log_write SET search_path = public, extensions, pg_temp;
 
--- Specify arguments for get_unique_vehicles_with_trims to avoid ambiguity
-ALTER FUNCTION public.get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text) SET search_path = public, extensions, pg_temp;
+-- Handle get_unique_vehicles_with_trims dynamically to cover all overloads (10 and 11 args)
+DO $$
+DECLARE
+    func_record RECORD;
+BEGIN
+    FOR func_record IN 
+        SELECT oid::regprocedure::text as func_signature 
+        FROM pg_proc 
+        WHERE proname = 'get_unique_vehicles_with_trims' 
+        AND pronamespace = 'public'::regnamespace
+    LOOP
+        EXECUTE format('ALTER FUNCTION %s SET search_path = public, extensions, pg_temp', func_record.func_signature);
+    END LOOP;
+END $$;
 
 ALTER FUNCTION public.cleanup_old_bot_sessions SET search_path = public, extensions, pg_temp;
 ALTER FUNCTION public.enforce_preferred_vehicle_ownership SET search_path = public, extensions, pg_temp;
