@@ -618,7 +618,7 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 pt-16 dark:bg-gradient-to-b dark:from-background dark:to-background/80">
+    <div className="min-h-screen text-foreground pb-20 pt-16">
       {/* Sticky Header */}
       <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <VehicleHeader

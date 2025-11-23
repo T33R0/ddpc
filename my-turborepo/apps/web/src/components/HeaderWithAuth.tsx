@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Header } from '@repo/ui/header';
 import { usePathname } from 'next/navigation';
 
@@ -7,7 +8,7 @@ import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme-context';
 import { useVehicles } from '../lib/hooks/useVehicles';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../lib/user-routing';
-import { ReportProblem } from './ReportProblem';
+import { ReportProblemModal } from './ReportProblem';
 
 export function HeaderWithAuth() {
   const pathname = usePathname() || '/';
@@ -47,18 +48,26 @@ export function HeaderWithAuth() {
     return await signIn(email, password);
   };
 
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
   return (
-    <Header
-      user={user}
-      activeVehiclesCount={activeVehiclesCount}
-      onSignOut={signOut}
-      onGoogleSignIn={handleGoogleSignIn}
-      onEmailSignUp={handleEmailSignUp}
-      onEmailSignIn={handleEmailSignIn}
-      reportProblem={<ReportProblem />}
-      userBasePath={userBasePath}
-      theme={theme}
-      onThemeChange={(newTheme) => setTheme(newTheme as any)}
-    />
+    <>
+      <Header
+        user={user}
+        activeVehiclesCount={activeVehiclesCount}
+        onSignOut={signOut}
+        onGoogleSignIn={handleGoogleSignIn}
+        onEmailSignUp={handleEmailSignUp}
+        onEmailSignIn={handleEmailSignIn}
+        onReportProblem={() => setIsReportModalOpen(true)}
+        userBasePath={userBasePath}
+        theme={theme}
+        onThemeChange={(newTheme) => setTheme(newTheme as any)}
+      />
+      <ReportProblemModal
+        isOpen={isReportModalOpen}
+        onOpenChange={setIsReportModalOpen}
+      />
+    </>
   );
 }

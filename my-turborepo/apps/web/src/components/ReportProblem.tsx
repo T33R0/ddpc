@@ -14,8 +14,12 @@ import {
 import { Button } from '@repo/ui/button';
 import { IssueReportForm } from './IssueReportForm';
 
-export function ReportProblem() {
-  const [isOpen, setIsOpen] = useState(false);
+export interface ReportProblemModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ReportProblemModal({ isOpen, onOpenChange }: ReportProblemModalProps) {
   const [currentUrl, setCurrentUrl] = useState('');
   const pathname = usePathname();
 
@@ -24,6 +28,33 @@ export function ReportProblem() {
       setCurrentUrl(window.location.href);
     }
   }, [pathname, isOpen]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md text-left">
+        <DialogHeader>
+          <DialogTitle>Report a Problem</DialogTitle>
+          <DialogDescription>
+            Help us improve by reporting issues you encounter.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogBody>
+          <IssueReportForm
+            defaultUrl={currentUrl}
+            onSuccess={() => onOpenChange(false)}
+            onCancel={() => onOpenChange(false)}
+            isModal={true}
+          />
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ReportProblem() {
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   // Don't show the button on the /issues page itself to avoid redundancy
   if (pathname === '/issues') {
@@ -41,25 +72,7 @@ export function ReportProblem() {
         <AlertCircle className="w-5 h-5" strokeWidth={2.5} />
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md text-left">
-          <DialogHeader>
-            <DialogTitle>Report a Problem</DialogTitle>
-            <DialogDescription>
-              Help us improve by reporting issues you encounter.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogBody>
-            <IssueReportForm 
-              defaultUrl={currentUrl} 
-              onSuccess={() => setIsOpen(false)}
-              onCancel={() => setIsOpen(false)}
-              isModal={true}
-            />
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
+      <ReportProblemModal isOpen={isOpen} onOpenChange={setIsOpen} />
     </>
   );
 }

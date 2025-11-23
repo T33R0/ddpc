@@ -24,7 +24,7 @@ interface HeaderProps {
   onGoogleSignIn?: () => void;
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
-  reportProblem?: React.ReactNode;
+  onReportProblem?: () => void;
   userBasePath?: string;
   theme?: string;
   onThemeChange?: (theme: string) => void;
@@ -37,7 +37,7 @@ export function Header({
   onGoogleSignIn,
   onEmailSignUp,
   onEmailSignIn,
-  reportProblem,
+  onReportProblem,
   userBasePath,
   theme,
   onThemeChange,
@@ -77,7 +77,6 @@ export function Header({
             <Link href={buildHref('/dashboard')}>
               <Logo />
             </Link>
-            {reportProblem}
           </div>
 
           <nav className="flex items-center gap-8">
@@ -105,6 +104,7 @@ export function Header({
                 userBasePath={userBasePath}
                 theme={theme}
                 onThemeChange={onThemeChange}
+                onReportProblem={onReportProblem}
               />
             ) : (
               <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>

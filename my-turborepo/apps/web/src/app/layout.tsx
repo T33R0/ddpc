@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider>
           <AuthProvider>
-            <div className="relative flex flex-col min-h-screen bg-background">
+            <div className="relative flex flex-col min-h-screen">
               <div
                 aria-hidden="true"
                 className="fixed inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none z-0"

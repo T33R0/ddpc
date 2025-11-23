@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useClickOutside } from './hooks/use-click-outside';
@@ -10,7 +12,8 @@ import {
   LogOut,
   Moon,
   Sun,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { Switch } from './switch';
 
@@ -29,6 +32,7 @@ interface UserAccountDropdownProps {
   userBasePath?: string;
   theme?: string;
   onThemeChange?: (theme: string) => void;
+  onReportProblem?: () => void;
 }
 
 export function UserAccountDropdown({
@@ -36,7 +40,8 @@ export function UserAccountDropdown({
   onSignOut,
   userBasePath,
   theme,
-  onThemeChange
+  onThemeChange,
+  onReportProblem
 }: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useClickOutside(() => setIsOpen(false));
@@ -111,14 +116,14 @@ export function UserAccountDropdown({
             </div>
 
             <div className="p-1">
-              {/* Dashboard / Console */}
+              {/* Dashboard */}
               <Link
                 href={getScopedHref('/dashboard')}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <LayoutDashboard size={16} />
-                <span>Console</span>
+                <span>Dashboard</span>
               </Link>
 
               {/* Account Settings */}
@@ -141,6 +146,20 @@ export function UserAccountDropdown({
                   <span className="text-xs text-neutral-500 capitalize">{theme}</span>
                 </div>
               </div>
+
+              {/* Report a Problem */}
+              {onReportProblem && (
+                <button
+                  onClick={() => {
+                    onReportProblem();
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors w-full text-left"
+                >
+                  <AlertCircle size={16} />
+                  <span>Report</span>
+                </button>
+              )}
             </div>
 
             <div className="h-px bg-neutral-800 mx-1 my-1" />
