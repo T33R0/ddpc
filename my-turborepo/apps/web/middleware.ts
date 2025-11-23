@@ -15,7 +15,17 @@ const DASHBOARD_PATH = '/dashboard'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 1. Rate Limiter for API
+  // 1. Handle username-prefixed routes first
+  const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
+
+  if (stripped) {
+    // Rewrite internal request to the app route
+    const rewriteUrl = request.nextUrl.clone()
+    rewriteUrl.pathname = strippedPathname
+    return NextResponse.rewrite(rewriteUrl)
+  }
+
+  // 2. Rate Limiter for API
   if (pathname.startsWith('/api/')) {
     try {
       const res = await apiRateLimiter.check(request, 1)
@@ -30,34 +40,24 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Skip static assets and API routes from routing logic
+  // 3. Skip static assets from routing logic
   if (shouldSkipUsernameRouting(pathname)) {
     return NextResponse.next()
   }
 
-  const { supabase, applyPendingCookies } = createClient(request)
-  
-  // 3. Check for scoped path (e.g. /teehanrh/dashboard)
-  const { pathname: strippedPathname, stripped } = stripUsernamePrefixFromPathname(pathname)
-
-  if (stripped) {
-    // Rewrite internal request to the app route
-    const rewriteUrl = request.nextUrl.clone()
-    rewriteUrl.pathname = strippedPathname
-    return applyPendingCookies(NextResponse.rewrite(rewriteUrl))
-  }
-
   // 4. Auth Check & Redirects
+  const { supabase, applyPendingCookies } = createClient(request)
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
   if (session) {
     const username = await getUsernameForRequest(supabase, session)
-    
+
     if (username) {
       const segments = pathname.split('/').filter(Boolean)
-      
+
       // Case A: User visiting root / -> redirect to /username/dashboard
       if (pathname === '/') {
         return applyPendingCookies(
@@ -139,8 +139,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - api (API routes)
      * Feel free to modify this pattern to extend or restrict
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api).*)',
   ],
 }
