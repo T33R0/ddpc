@@ -18,7 +18,7 @@ interface PlannedServiceLog {
   service_item?: {
     id: string
     name: string
-  }
+  } | null
 }
 
 interface ServiceCategory {
