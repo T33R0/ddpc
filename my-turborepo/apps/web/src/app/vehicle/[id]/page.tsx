@@ -60,6 +60,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   }
 
   // 1. Try to resolve as a User Vehicle (if logged in)
+  let canonicalSlug: string | null = null
+
   if (userId) {
     // Use the robust slug resolution logic (handles Nickname, YMMT, and ID)
     const { resolveVehicleSlug } = await import('@/lib/vehicle-utils')
@@ -74,9 +76,11 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
           vehicle = data
           isOwner = true
           vehicleError = error
+          canonicalSlug = resolved.canonicalSlug  // Determine the canonical slug
           console.log('VehicleDetailPage: Resolved via smart slug:', {
             slug: vehicleSlug,
             resolvedId: resolved.vehicleId,
+            canonicalSlug,
             method: resolved.nickname === vehicleSlug ? 'nickname' : 'ymmt/id'
           })
         }
@@ -295,18 +299,20 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.privacy = vehicle.privacy || 'PRIVATE'
   vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 
-  // --- 4. Redirect to nickname URL if accessed via UUID and nickname exists ---
-  // Also redirect if the URL slug doesn't match the current nickname (handles nickname changes)
-  const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)
-  const slugMatchesNickname = vehicleNickname && vehicleSlug === vehicleNickname
+  // --- 4. Redirect to canonical URL if needed ---
+  // Use the canonical slug resolved by resolveVehicleSlug (or public utils)
+  // This handles nickname changes, duplicate nicknames (forcing YMMT), etc.
 
-  if (vehicleNickname && (isLikelyUUID || !slugMatchesNickname)) {
-    // Redirect to nickname URL if accessed via UUID, or if URL doesn't match current nickname
-    redirect(`/vehicle/${encodeURIComponent(vehicleNickname)}`)
-  } else if (!vehicleNickname && !isLikelyUUID && vehicleSlug !== vehicle.id) {
-    // If no nickname exists and URL is not the UUID, redirect to UUID
+  if (isOwner && canonicalSlug && vehicleSlug !== canonicalSlug) {
+    console.log('VehicleDetailPage: Redirecting to canonical slug:', canonicalSlug)
+    redirect(`/vehicle/${encodeURIComponent(canonicalSlug)}`)
+  } else if (!isOwner && !vehicleNickname && !isLikelyUUID && vehicleSlug !== vehicle.id) {
+    // Public view fallback: If no nickname exists and URL is not the UUID, redirect to UUID
     redirect(`/vehicle/${encodeURIComponent(vehicle.id)}`)
   }
+
+  // REFACTORING STEP 1 to capture canonicalSlug
+  // (See next tool call for the actual refactor of the whole file or block)
 
   // --- 5. Pass Data to Client Component ---
   return (

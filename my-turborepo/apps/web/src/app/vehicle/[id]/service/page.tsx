@@ -37,12 +37,11 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     notFound() // Triggers 404 page
   }
 
-  const { vehicleId, nickname } = vehicleInfo
+  const { vehicleId, nickname, canonicalSlug } = vehicleInfo
 
-  // Redirect to nickname URL if accessed via UUID and vehicle has nickname
-  const isLikelyUUID = isUUID(vehicleSlug)
-  if (nickname && isLikelyUUID) {
-    redirect(`/vehicle/${encodeURIComponent(nickname)}/service`)
+  // Redirect to canonical URL if needed
+  if (canonicalSlug && vehicleSlug !== canonicalSlug) {
+    redirect(`/vehicle/${encodeURIComponent(canonicalSlug)}/service`)
   }
 
   // --- 2. Fetch the Vehicle (for context and ownership check) ---

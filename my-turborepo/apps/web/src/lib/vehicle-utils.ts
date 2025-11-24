@@ -18,6 +18,7 @@ export async function resolveVehicleSlug(
 ): Promise<{
   vehicleId: string
   nickname: string | null
+  canonicalSlug: string
 } | null> {
   const { isUUID, getVehicleSlug } = await import('./vehicle-utils-client')
 
@@ -38,7 +39,7 @@ export async function resolveVehicleSlug(
     // For this utility which assumes user context, we might just return null or throw
     // But let's check if it's a UUID and return it if so, assuming caller handles auth check
     if (isUUID(vehicleSlug)) {
-      return { vehicleId: vehicleSlug, nickname: null }
+      return { vehicleId: vehicleSlug, nickname: null, canonicalSlug: vehicleSlug }
     }
     return null
   }
@@ -58,33 +59,41 @@ export async function resolveVehicleSlug(
     return null
   }
 
+  // Helper to calculate canonical slug
+  const getCanonicalSlug = (vehicle: any) => {
+    return getVehicleSlug(vehicle, vehicles)
+  }
+
   // 1. Try Exact ID Match
   const idMatch = vehicles.find(v => v.id === decodedSlug)
   if (idMatch) {
-    return { vehicleId: idMatch.id, nickname: idMatch.nickname }
+    return {
+      vehicleId: idMatch.id,
+      nickname: idMatch.nickname,
+      canonicalSlug: getCanonicalSlug(idMatch)
+    }
   }
 
   // 2. Try Nickname Match (Case Insensitive)
-  // Note: If multiple vehicles have same nickname, we need to see if this slug matches the *unique* one
-  // But wait, if they have duplicate nicknames, getVehicleSlug wouldn't have used the nickname.
-  // However, if the user types it in manually, we should probably still try to find it.
-  // If there are duplicates, it's ambiguous. Let's pick the first one or strict match.
-  // Let's stick to the reverse logic of getVehicleSlug.
-
   for (const vehicle of vehicles) {
     const calculatedSlug = getVehicleSlug(vehicle, vehicles)
     if (calculatedSlug.toLowerCase() === decodedSlug.toLowerCase()) {
-      return { vehicleId: vehicle.id, nickname: vehicle.nickname }
+      return {
+        vehicleId: vehicle.id,
+        nickname: vehicle.nickname,
+        canonicalSlug: calculatedSlug
+      }
     }
   }
 
   // 3. Legacy/Loose Nickname Match
-  // If we haven't found it via strict slug matching, try a direct nickname match
-  // This handles cases where maybe the logic changed but old links exist, 
-  // or if the user manually typed a shared nickname.
   const nicknameMatch = vehicles.find(v => v.nickname?.toLowerCase() === decodedSlug.toLowerCase())
   if (nicknameMatch) {
-    return { vehicleId: nicknameMatch.id, nickname: nicknameMatch.nickname }
+    return {
+      vehicleId: nicknameMatch.id,
+      nickname: nicknameMatch.nickname,
+      canonicalSlug: getCanonicalSlug(nicknameMatch)
+    }
   }
 
   return null
