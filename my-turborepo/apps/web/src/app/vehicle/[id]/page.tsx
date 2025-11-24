@@ -23,6 +23,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   const supabase = await createClient()
   const resolvedParams = await params
   const vehicleSlug = decodeURIComponent(resolvedParams.id)
+  const isLikelyUUID = isUUID(vehicleSlug)
 
   const {
     data: { user },
@@ -91,7 +92,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // 2. If not found as owned vehicle, try to find as public vehicle
   // Note: RLS policy has a case sensitivity issue - it checks for 'public' but DB stores 'PUBLIC'
   // Use service role client to bypass RLS and fetch public vehicles
-  const slugIsUUID = isUUID(vehicleSlug)
+  // Use service role client to bypass RLS and fetch public vehicles
+  // const slugIsUUID = isUUID(vehicleSlug) // Use isLikelyUUID defined at top
 
   if (!vehicle) {
     // Use service role client to fetch public vehicle (bypasses RLS)
