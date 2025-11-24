@@ -15,6 +15,7 @@ import {
 } from '@repo/ui/card';
 import { Label } from '@repo/ui/label';
 import { TimeoutError, withTimeout } from '@/lib/with-timeout';
+import { useAuth } from '@/lib/auth';
 
 // Define interface for IssueReport
 interface IssueReport {
@@ -35,13 +36,19 @@ export default function IssuesPage() {
   const [lastLoaded, setLastLoaded] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const { loading: authLoading } = useAuth();
 
   const PAGE_SIZE = 50;
 
   const fetchIssues = useCallback(async () => {
+    if (authLoading) {
+      console.debug('fetchIssues skipped – auth loading')
+      return;
+    }
     try {
       setLoading(true);
       setErrorMessage(null);
+      console.debug('fetchIssues start', { filter, page });
       let query = supabase
         .from('issue_reports')
         .select('id, user_email, page_url, description, screenshot_url, resolved, created_at', {
@@ -54,11 +61,13 @@ export default function IssuesPage() {
         query = query.eq('resolved', false);
       }
 
+      console.time('issues-fetch');
       const { data, error, count } = await withTimeout(
         query,
         15000,
         'Fetching issue reports exceeded the 15s timeout.'
       );
+      console.timeEnd('issues-fetch');
 
       if (error) throw error;
       setIssues(data || []);
@@ -66,6 +75,7 @@ export default function IssuesPage() {
         setTotalCount(count);
       }
       setLastLoaded(new Date().toISOString());
+      console.debug('fetchIssues success', { rows: data?.length ?? 0, total: count });
     } catch (error) {
       console.error('Error fetching issues:', error);
       const message =
@@ -77,7 +87,7 @@ export default function IssuesPage() {
     } finally {
       setLoading(false);
     }
-  }, [filter, page]);
+  }, [filter, page, authLoading]);
 
   useEffect(() => {
     setPage(0);

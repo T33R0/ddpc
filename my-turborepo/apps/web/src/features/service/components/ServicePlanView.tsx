@@ -7,6 +7,7 @@ import { Button } from '@repo/ui/button'
 import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { TimeoutError, withTimeout } from '@/lib/with-timeout'
+import { useAuth } from '@/lib/auth'
 
 interface PlannedServiceLog {
   id: string
@@ -49,6 +50,7 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     const router = useRouter()
     const params = useParams()
     const vehicleSlug = params.id as string
+    const { loading: authLoading } = useAuth()
     const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>([])
     const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
     const [serviceItemsByCategory, setServiceItemsByCategory] = useState<Record<string, ServiceItem[]>>({})
@@ -64,9 +66,14 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     })
 
     const fetchPlannedLogs = async () => {
+      if (!vehicleId || authLoading) {
+        console.debug('fetchPlannedLogs skipped', { vehicleId, authLoading })
+        return
+      }
       setIsLoadingPlanned(true)
       setPlannedError(null)
       try {
+        console.debug('fetchPlannedLogs start', { vehicleId })
         const plannedQuery = supabase
           .from('maintenance_log')
           .select(`
@@ -83,11 +90,13 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
           .eq('status', 'Plan')
           .order('event_date', { ascending: true })
 
+        console.time('planned-fetch')
         const response = await withTimeout(
           plannedQuery,
           15000,
           'Loading planned services took too long.'
         )
+        console.timeEnd('planned-fetch')
 
         if (response.error) throw response.error
 
@@ -120,19 +129,31 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
 
     // Fetch planned service logs
     useEffect(() => {
+      if (authLoading || !vehicleId) {
+        return
+      }
       fetchPlannedLogs()
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [vehicleId])
+    }, [vehicleId, authLoading])
 
     // Fetch service categories and items for checklist
     useEffect(() => {
+      if (authLoading) {
+        return
+      }
       fetchServiceChecklist()
-    }, [])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authLoading])
 
     const fetchServiceChecklist = async () => {
+      if (authLoading) {
+        console.debug('fetchServiceChecklist skipped', { authLoading })
+        return
+      }
       setIsLoadingChecklist(true)
       setChecklistError(null)
       try {
+        console.debug('fetchServiceChecklist start')
         const categoryResponse = await withTimeout(
           supabase
             .from('service_categories')
@@ -161,6 +182,11 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         )
 
         if (itemsResponse.error) throw itemsResponse.error
+
+        console.debug('fetchServiceChecklist success', {
+          categories: categories.length,
+          items: itemsResponse.data?.length ?? 0,
+        })
 
         // Group items by category
         const grouped: Record<string, ServiceItem[]> = {}
