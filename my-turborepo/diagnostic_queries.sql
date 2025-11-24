@@ -6,13 +6,13 @@ SELECT
     action_statement as definition,
     action_timing as timing
 FROM information_schema.triggers
-WHERE event_object_table IN ('issue_reports', 'maintenance_log');
+WHERE event_object_table IN ('issue_reports', 'maintenance_log', 'user_vehicle', 'service_intervals');
 
 -- 2. Check Active Locks (waiting for lock)
 SELECT 
-    pid, 
+    a.pid, 
     usename, 
-    pg_blocking_pids(pid) as blocked_by, 
+    pg_blocking_pids(a.pid) as blocked_by, 
     query as blocked_query,
     mode
 FROM pg_locks l
