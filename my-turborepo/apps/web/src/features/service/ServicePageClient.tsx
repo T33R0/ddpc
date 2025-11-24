@@ -136,10 +136,10 @@ const PlanTabContent = React.forwardRef<ServicePlanViewRef, {
 PlanTabContent.displayName = 'PlanTabContent'
 
 // The "History" tab's content
-function HistoryTabContent({ vehicleId }: { vehicleId: string }) {
+function HistoryTabContent({ vehicleId, initialHistory }: { vehicleId: string, initialHistory: MaintenanceLog[] }) {
   return (
     <div className="space-y-8 mt-4">
-      <ServiceHistoryList vehicleId={vehicleId} />
+      <ServiceHistoryList vehicleId={vehicleId} initialHistory={initialHistory} />
     </div>
   )
 }
@@ -263,15 +263,15 @@ export function ServicePageClient({
                 vehicleId={vehicle.id}
                 onMarkComplete={handleMarkComplete}
                 onAddToPlan={handleAddToPlan}
-              initialPlannedLogs={initialPlannedLogs}
-              initialChecklistCategories={initialChecklistCategories}
-              initialChecklistItems={initialChecklistItems}
+                initialPlannedLogs={initialPlannedLogs}
+                initialChecklistCategories={initialChecklistCategories}
+                initialChecklistItems={initialChecklistItems}
                 ref={servicePlanViewRef}
               />
             </TabsContent>
 
             <TabsContent value="history">
-              <HistoryTabContent vehicleId={vehicle.id} />
+              <HistoryTabContent vehicleId={vehicle.id} initialHistory={initialHistory} />
             </TabsContent>
           </Tabs>
         </div>

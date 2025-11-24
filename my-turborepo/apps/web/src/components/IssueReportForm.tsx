@@ -23,7 +23,7 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [url, setUrl] = useState(defaultUrl);
-  
+
   const { user } = useAuth();
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
     try {
       let screenshotUrl = null;
 
-      // Upload screenshot if exists
+      // Upload screenshot if exists (keep client-side for now)
       if (screenshot) {
         const fileExt = screenshot.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -72,30 +72,32 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
         screenshotUrl = publicUrl;
       }
 
-      // Insert report
-      const { error: insertError } = await supabase
-        .from('issue_reports')
-        .insert({
-          user_email: email || (user?.email ?? 'anonymous'),
-          page_url: url,
-          description,
-          screenshot_url: screenshotUrl,
-          resolved: false,
-        });
+      // Use Server Action for DB insert
+      const formData = new FormData();
+      formData.append('description', description);
+      formData.append('url', url);
+      formData.append('email', email);
+      if (screenshotUrl) {
+        formData.append('screenshotUrl', screenshotUrl);
+      }
 
-      if (insertError) {
-        throw insertError;
+      // Dynamically import the action to avoid build issues if not fully set up
+      const { submitIssueReport } = await import('@/actions/issues');
+      const result = await submitIssueReport(null, formData);
+
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       toast.success('Report submitted successfully');
       setDescription('');
       setScreenshot(null);
       if (!user) setEmail('');
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
+
     } catch (error) {
       console.error('Error submitting report:', error);
       toast.error('Failed to submit report. Please try again.');
