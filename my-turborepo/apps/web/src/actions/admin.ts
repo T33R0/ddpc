@@ -8,7 +8,7 @@ const BREAKGLASS_EMAIL = 'myddpc@gmail.com'
 
 export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
   const supabase = await createClient()
-  
+
   // Check auth
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
@@ -39,7 +39,7 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
     // Note: This fallback won't have auth.users email data unless we use admin client
     // Use admin client for fallback to get emails
     const adminClient = createAdminClient()
-    
+
     const { data: profiles, error: profileError } = await adminClient
       .from('user_profile')
       .select('*')
@@ -51,39 +51,39 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
 
     // Enhance with auth data (slow N+1 but works for fallback)
     const users = await Promise.all(profiles.map(async (p: any) => {
-        const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(p.user_id)
-        
-        // Get vehicle stats
-        const { count } = await adminClient
-            .from('user_vehicle')
-            .select('*', { count: 'exact', head: true })
-            .eq('owner_id', p.user_id)
-            
-        // Get status counts
-        const { data: vehicles } = await adminClient
-            .from('user_vehicle')
-            .select('current_status')
-            .eq('owner_id', p.user_id)
-            
-        const statusCounts = vehicles?.reduce((acc: any, v: any) => {
-            const s = v.current_status || 'unknown'
-            acc[s] = (acc[s] || 0) + 1
-            return acc
-        }, {}) || {}
+      const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(p.user_id)
 
-        return {
-            user_id: p.user_id,
-            username: p.username,
-            join_date: p.created_at, // Profile creation approx join date
-            email: authUser?.email || 'N/A',
-            provider: authUser?.app_metadata?.provider || 'email',
-            vehicle_count: count || 0,
-            status_counts: statusCounts,
-            role: p.role,
-            banned: p.banned
-        }
+      // Get vehicle stats
+      const { count } = await adminClient
+        .from('user_vehicle')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', p.user_id)
+
+      // Get status counts
+      const { data: vehicles } = await adminClient
+        .from('user_vehicle')
+        .select('current_status')
+        .eq('owner_id', p.user_id)
+
+      const statusCounts = vehicles?.reduce((acc: any, v: any) => {
+        const s = v.current_status || 'unknown'
+        acc[s] = (acc[s] || 0) + 1
+        return acc
+      }, {}) || {}
+
+      return {
+        user_id: p.user_id,
+        username: p.username,
+        join_date: p.created_at, // Profile creation approx join date
+        email: authUser?.email || 'N/A',
+        provider: authUser?.app_metadata?.provider || 'email',
+        vehicle_count: count || 0,
+        status_counts: statusCounts,
+        role: p.role,
+        banned: p.banned
+      }
     }))
-    
+
     return users
   }
 
@@ -93,9 +93,9 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
 export async function toggleUserSuspension(userId: string, shouldSuspend: boolean) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) throw new Error('Unauthorized')
-  
+
   // Verify admin
   const { data: profile } = await supabase
     .from('user_profile')
@@ -108,13 +108,13 @@ export async function toggleUserSuspension(userId: string, shouldSuspend: boolea
   }
 
   const adminClient = createAdminClient()
-  
+
   // Update auth ban (ban duration in hours)
   // 876000 hours is ~100 years
   const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
     ban_duration: shouldSuspend ? '876000h' : '0h'
   })
-  
+
   if (authError) {
     console.error('Error suspending auth user:', authError)
     // Continue to update profile even if auth update fails (might be partial success)
@@ -133,14 +133,14 @@ export async function toggleUserSuspension(userId: string, shouldSuspend: boolea
 export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user || user.email !== BREAKGLASS_EMAIL) {
     throw new Error('Only the breakglass admin can manage administrators')
   }
 
   const adminClient = createAdminClient()
   const roleValue = makeAdmin ? 'admin' : 'user'
-  
+
   try {
     // Try RPC function first
     const { data: rpcData, error: rpcError } = await adminClient.rpc('update_user_role', {
@@ -155,11 +155,11 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
         hint: rpcError.hint,
         code: rpcError.code
       })
-      
+
       // Check if RPC function doesn't exist
       if (rpcError.code === '42883' || rpcError.message?.includes('function update_user_role')) {
         console.log('RPC function not found, trying direct update...')
-        
+
         // Fallback to direct update
         const { data: updateData, error: updateError } = await adminClient
           .from('user_profile')
@@ -176,7 +176,7 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
           })
           throw new Error(`Failed to update admin role: ${updateError.message || updateError.code}`)
         }
-        
+
         console.log('Direct update succeeded:', updateData)
       } else {
         // RPC function exists but failed - check if it returned an error in the data
@@ -199,8 +199,75 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
     }
     throw new Error(`Failed to update admin role: ${error.message || 'Unknown error'}`)
   }
-  
+
   revalidatePath('/admin/users')
+}
+
+export async function getIssueReports(page = 0, pageSize = 50, filter: 'all' | 'unresolved' = 'unresolved') {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Unauthorized')
+
+  // Verify admin
+  const { data: profile } = await supabase
+    .from('user_profile')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
+    throw new Error('Unauthorized')
+  }
+
+  const adminClient = createAdminClient()
+
+  let query = adminClient
+    .from('issue_reports')
+    .select('id, user_email, page_url, description, screenshot_url, resolved, created_at', {
+      count: 'exact',
+    })
+    .order('created_at', { ascending: false })
+    .range(page * pageSize, page * pageSize + pageSize - 1)
+
+  if (filter === 'unresolved') {
+    query = query.eq('resolved', false)
+  }
+
+  const { data, error, count } = await query
+
+  if (error) throw error
+
+  return { data, count }
+}
+
+export async function toggleIssueResolution(issueId: string, resolved: boolean) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Unauthorized')
+
+  // Verify admin
+  const { data: profile } = await supabase
+    .from('user_profile')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
+    throw new Error('Unauthorized')
+  }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .from('issue_reports')
+    .update({ resolved })
+    .eq('id', issueId)
+
+  if (error) throw error
+
+  revalidatePath('/admin/issues')
 }
 
 
