@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { TimeoutError, withTimeout } from '@/lib/with-timeout'
-import { useAuth } from '@/lib/auth'
 
 interface PlannedServiceLog {
   id: string
@@ -39,6 +37,9 @@ interface ServicePlanViewProps {
   vehicleId: string
   onMarkComplete: (log: PlannedServiceLog) => void
   onAddToPlan: (serviceItemId: string) => void
+  initialPlan: PlannedServiceLog[]
+  initialChecklistCategories: ServiceCategory[]
+  initialChecklistItems: ServiceItem[]
 }
 
 export interface ServicePlanViewRef {
@@ -46,171 +47,45 @@ export interface ServicePlanViewRef {
 }
 
 export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewProps>(
-  ({ vehicleId, onMarkComplete, onAddToPlan }, ref) => {
+  ({
+    vehicleId,
+    onMarkComplete,
+    onAddToPlan,
+    initialPlan,
+    initialChecklistCategories,
+    initialChecklistItems,
+  }, ref) => {
     const router = useRouter()
     const params = useParams()
     const vehicleSlug = params.id as string
-    const { loading: authLoading } = useAuth()
-    const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>([])
-    const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
+    const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>(initialPlan)
+    const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(initialChecklistCategories)
     const [serviceItemsByCategory, setServiceItemsByCategory] = useState<Record<string, ServiceItem[]>>({})
-    const [isLoadingPlanned, setIsLoadingPlanned] = useState(false)
-    const [isLoadingChecklist, setIsLoadingChecklist] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
-    const [plannedError, setPlannedError] = useState<string | null>(null)
-    const [checklistError, setChecklistError] = useState<string | null>(null)
-    // Default all categories to collapsed
-    const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
-      // We'll initialize this after categories are loaded
-      return new Set()
-    })
+    const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
+      () => new Set(initialChecklistCategories.map(cat => cat.id))
+    )
 
-    const fetchPlannedLogs = async () => {
-      if (!vehicleId || authLoading) {
-        console.debug('fetchPlannedLogs skipped', { vehicleId, authLoading })
-        return
-      }
-      setIsLoadingPlanned(true)
-      setPlannedError(null)
-      try {
-        console.debug('fetchPlannedLogs start', { vehicleId })
-        const plannedQuery = supabase
-          .from('maintenance_log')
-          .select(`
-          id,
-          event_date,
-          odometer,
-          service_item_id,
-          service_item:service_items (
-            id,
-            name
-          )
-        `)
-          .eq('user_vehicle_id', vehicleId)
-          .eq('status', 'Plan')
-          .order('event_date', { ascending: true })
-
-        console.time('planned-fetch')
-        const response = await withTimeout(
-          plannedQuery,
-          15000,
-          'Loading planned services took too long.'
-        )
-        console.timeEnd('planned-fetch')
-
-        if (response.error) throw response.error
-
-        // Transform the data to match the interface
-        // PostgREST returns service_item as an array, but we need a single object
-        const transformedData = (response.data || []).map((log: any) => ({
-          ...log,
-          service_item: Array.isArray(log.service_item)
-            ? log.service_item[0] || null
-            : log.service_item || null
-        })) as PlannedServiceLog[]
-
-        setPlannedLogs(transformedData)
-      } catch (err) {
-        console.error('Error fetching planned logs:', err)
-        setPlannedError(
-          err instanceof TimeoutError
-            ? 'Supabase timed out while loading your active plan.'
-            : 'Failed to load active plan. Please try again.'
-        )
-      } finally {
-        setIsLoadingPlanned(false)
-      }
-    }
-
-    // Expose refresh function to parent
-    useImperativeHandle(ref, () => ({
-      refresh: fetchPlannedLogs
-    }))
-
-    // Fetch planned service logs
     useEffect(() => {
-      if (authLoading || !vehicleId) {
-        return
-      }
-      fetchPlannedLogs()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [vehicleId, authLoading])
+      setPlannedLogs(initialPlan)
+    }, [initialPlan])
 
-    // Fetch service categories and items for checklist
     useEffect(() => {
-      if (authLoading) {
-        return
-      }
-      fetchServiceChecklist()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authLoading])
-
-    const fetchServiceChecklist = async () => {
-      if (authLoading) {
-        console.debug('fetchServiceChecklist skipped', { authLoading })
-        return
-      }
-      setIsLoadingChecklist(true)
-      setChecklistError(null)
-      try {
-        console.debug('fetchServiceChecklist start')
-        const categoryResponse = await withTimeout(
-          supabase
-            .from('service_categories')
-            .select('id, name')
-            .order('name', { ascending: true }),
-          15000,
-          'Loading service categories timed out.'
-        )
-
-        if (categoryResponse.error) throw categoryResponse.error
-
-        const categories = categoryResponse.data || []
-        setServiceCategories(categories)
-
-        if (categories.length > 0) {
-          setCollapsedCategories(new Set(categories.map(cat => cat.id)))
+      setServiceCategories(initialChecklistCategories)
+      const grouped: Record<string, ServiceItem[]> = {}
+      initialChecklistItems.forEach((item) => {
+        if (!grouped[item.category_id]) {
+          grouped[item.category_id] = []
         }
+        grouped[item.category_id]!.push(item)
+      })
+      setServiceItemsByCategory(grouped)
+      setCollapsedCategories(new Set(initialChecklistCategories.map(cat => cat.id)))
+    }, [initialChecklistCategories, initialChecklistItems])
 
-        const itemsResponse = await withTimeout(
-          supabase
-            .from('service_items')
-            .select('id, name, description, category_id')
-            .order('name', { ascending: true }),
-          15000,
-          'Loading service checklist timed out.'
-        )
-
-        if (itemsResponse.error) throw itemsResponse.error
-
-        console.debug('fetchServiceChecklist success', {
-          categories: categories.length,
-          items: itemsResponse.data?.length ?? 0,
-        })
-
-        // Group items by category
-        const grouped: Record<string, ServiceItem[]> = {}
-          ; (itemsResponse.data || []).forEach((item) => {
-            if (!grouped[item.category_id]) {
-              grouped[item.category_id] = []
-            }
-            // TypeScript doesn't narrow after the check, so we use non-null assertion
-            // since we know it exists after the check above
-            grouped[item.category_id]!.push(item)
-          })
-
-        setServiceItemsByCategory(grouped)
-      } catch (err) {
-        console.error('Error fetching service checklist:', err)
-        setChecklistError(
-          err instanceof TimeoutError
-            ? 'Supabase timed out while loading the suggested checklist.'
-            : 'Failed to load the service checklist. Please retry.'
-        )
-      } finally {
-        setIsLoadingChecklist(false)
-      }
-    }
+    useImperativeHandle(ref, () => ({
+      refresh: () => router.refresh(),
+    }))
 
     const handleDeletePlan = async (logId: string) => {
       if (!confirm('Are you sure you want to delete this planned service?')) {
@@ -226,8 +101,8 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
 
         if (error) throw error
 
-        // Refresh the list
-        await fetchPlannedLogs()
+        setPlannedLogs(prev => prev.filter((log) => log.id !== logId))
+        router.refresh()
       } catch (err) {
         console.error('Error deleting planned log:', err)
         alert('Failed to delete planned service. Please try again.')
@@ -272,22 +147,7 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">Your Active Plan</h2>
 
-          {plannedError ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-              <p>{plannedError}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={fetchPlannedLogs}
-                disabled={isLoadingPlanned}
-              >
-                Retry
-              </Button>
-            </div>
-          ) : isLoadingPlanned ? (
-            <div className="text-center py-8 text-muted-foreground">Loading planned services...</div>
-          ) : plannedLogs.length === 0 ? (
+          {plannedLogs.length === 0 ? (
             <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <p className="text-muted-foreground text-center">
@@ -358,21 +218,8 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">Suggested Service Checklist</h2>
 
-          {checklistError ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-              <p>{checklistError}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={fetchServiceChecklist}
-                disabled={isLoadingChecklist}
-              >
-                Retry
-              </Button>
-            </div>
-          ) : isLoadingChecklist ? (
-            <div className="text-center py-8 text-muted-foreground">Loading checklist...</div>
+          {serviceCategories.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No checklist items available.</div>
           ) : (
             <div className="space-y-4">
               {serviceCategories.map((category) => {

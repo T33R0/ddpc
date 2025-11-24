@@ -26,9 +26,24 @@ type ServicePageClientProps = {
     nickname?: string | null
     odometer?: number | null
   }
+  initialPlannedLogs: {
+    id: string
+    event_date: string
+    odometer: number | null
+    service_item_id: string | null
+    notes?: string | null
+    service_provider?: string | null
+    cost?: number | null
+    service_item?: {
+      id: string
+      name: string
+    } | null
+  }[]
   initialPlan: ServiceInterval[]
   initialHistory: MaintenanceLog[]
   initialScheduled: MaintenanceLog[]
+  initialChecklistCategories: { id: string; name: string }[]
+  initialChecklistItems: { id: string; name: string; description: string | null; category_id: string }[]
 }
 
 // -----------------
@@ -101,13 +116,19 @@ const PlanTabContent = React.forwardRef<ServicePlanViewRef, {
   vehicleId: string
   onMarkComplete: (log: any) => void
   onAddToPlan: (serviceItemId: string) => void
-}>(({ vehicleId, onMarkComplete, onAddToPlan }, ref) => {
+  initialPlan: ServiceInterval[]
+  initialChecklistCategories: { id: string; name: string }[]
+  initialChecklistItems: { id: string; name: string; description: string | null; category_id: string }[]
+}>(({ vehicleId, onMarkComplete, onAddToPlan, initialPlan, initialChecklistCategories, initialChecklistItems }, ref) => {
   return (
     <ServicePlanView
       ref={ref}
       vehicleId={vehicleId}
       onMarkComplete={onMarkComplete}
       onAddToPlan={onAddToPlan}
+      initialPlan={initialPlan}
+      initialChecklistCategories={initialChecklistCategories}
+      initialChecklistItems={initialChecklistItems}
     />
   )
 })
@@ -128,9 +149,12 @@ function HistoryTabContent({ vehicleId }: { vehicleId: string }) {
 // -----------------
 export function ServicePageClient({
   vehicle,
+  initialPlannedLogs,
   initialPlan,
   initialHistory,
   initialScheduled,
+  initialChecklistCategories,
+  initialChecklistItems,
 }: ServicePageClientProps) {
   const router = useRouter()
   const servicePlanViewRef = useRef<ServicePlanViewRef>(null)
@@ -239,6 +263,9 @@ export function ServicePageClient({
                 vehicleId={vehicle.id}
                 onMarkComplete={handleMarkComplete}
                 onAddToPlan={handleAddToPlan}
+              initialPlan={initialPlannedLogs}
+              initialChecklistCategories={initialChecklistCategories}
+              initialChecklistItems={initialChecklistItems}
                 ref={servicePlanViewRef}
               />
             </TabsContent>
