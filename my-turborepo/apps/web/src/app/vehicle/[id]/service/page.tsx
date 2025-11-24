@@ -60,8 +60,8 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
   const [
     planResult,
     historyResult,
-    scheduledResult,
     plannedLogsResult,
+    scheduledResult,
     serviceCategoriesResult,
     serviceItemsResult,
   ] = await Promise.all([
