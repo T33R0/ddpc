@@ -116,17 +116,17 @@ const PlanTabContent = React.forwardRef<ServicePlanViewRef, {
   vehicleId: string
   onMarkComplete: (log: any) => void
   onAddToPlan: (serviceItemId: string) => void
-  initialPlan: ServiceInterval[]
-  initialChecklistCategories: { id: string; name: string }[]
-  initialChecklistItems: { id: string; name: string; description: string | null; category_id: string }[]
-}>(({ vehicleId, onMarkComplete, onAddToPlan, initialPlan, initialChecklistCategories, initialChecklistItems }, ref) => {
+  initialPlannedLogs: ServicePageClientProps['initialPlannedLogs']
+  initialChecklistCategories: ServicePageClientProps['initialChecklistCategories']
+  initialChecklistItems: ServicePageClientProps['initialChecklistItems']
+}>(({ vehicleId, onMarkComplete, onAddToPlan, initialPlannedLogs, initialChecklistCategories, initialChecklistItems }, ref) => {
   return (
     <ServicePlanView
       ref={ref}
       vehicleId={vehicleId}
       onMarkComplete={onMarkComplete}
       onAddToPlan={onAddToPlan}
-      initialPlan={initialPlan}
+      initialPlannedLogs={initialPlannedLogs}
       initialChecklistCategories={initialChecklistCategories}
       initialChecklistItems={initialChecklistItems}
     />
@@ -263,7 +263,7 @@ export function ServicePageClient({
                 vehicleId={vehicle.id}
                 onMarkComplete={handleMarkComplete}
                 onAddToPlan={handleAddToPlan}
-              initialPlan={initialPlannedLogs}
+              initialPlannedLogs={initialPlannedLogs}
               initialChecklistCategories={initialChecklistCategories}
               initialChecklistItems={initialChecklistItems}
                 ref={servicePlanViewRef}

@@ -37,7 +37,7 @@ interface ServicePlanViewProps {
   vehicleId: string
   onMarkComplete: (log: PlannedServiceLog) => void
   onAddToPlan: (serviceItemId: string) => void
-  initialPlan: PlannedServiceLog[]
+  initialPlannedLogs: PlannedServiceLog[]
   initialChecklistCategories: ServiceCategory[]
   initialChecklistItems: ServiceItem[]
 }
@@ -51,14 +51,14 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     vehicleId,
     onMarkComplete,
     onAddToPlan,
-    initialPlan,
+    initialPlannedLogs,
     initialChecklistCategories,
     initialChecklistItems,
   }, ref) => {
     const router = useRouter()
     const params = useParams()
     const vehicleSlug = params.id as string
-    const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>(initialPlan)
+    const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>(initialPlannedLogs)
     const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(initialChecklistCategories)
     const [serviceItemsByCategory, setServiceItemsByCategory] = useState<Record<string, ServiceItem[]>>({})
     const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -67,8 +67,8 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     )
 
     useEffect(() => {
-      setPlannedLogs(initialPlan)
-    }, [initialPlan])
+      setPlannedLogs(initialPlannedLogs)
+    }, [initialPlannedLogs])
 
     useEffect(() => {
       setServiceCategories(initialChecklistCategories)
