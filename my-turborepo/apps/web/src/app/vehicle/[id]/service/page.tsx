@@ -32,7 +32,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
   }
 
   // --- 1. Resolve vehicle slug to UUID ---
-  const vehicleInfo = await resolveVehicleSlug(vehicleSlug)
+  const vehicleInfo = await resolveVehicleSlug(vehicleSlug, supabase, user)
   if (!vehicleInfo) {
     notFound() // Triggers 404 page
   }

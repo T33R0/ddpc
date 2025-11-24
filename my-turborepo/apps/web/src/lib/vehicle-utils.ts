@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { SupabaseClient, User } from '@supabase/supabase-js'
 // Import client-safe utilities
 export { isUUID, slugify, getVehicleSlug } from './vehicle-utils-client'
 
@@ -6,18 +7,33 @@ export { isUUID, slugify, getVehicleSlug } from './vehicle-utils-client'
  * Resolves a vehicle slug (nickname, YMMT slug, or UUID) to a vehicle UUID and nickname
  * SERVER ONLY - Uses Supabase server client
  * @param vehicleSlug - The vehicle slug from the URL
+ * @param existingClient - Optional existing Supabase client to reuse
+ * @param existingUser - Optional existing authenticated user to reuse
  * @returns Object with vehicle UUID and nickname, or null if not found
  */
-export async function resolveVehicleSlug(vehicleSlug: string): Promise<{
+export async function resolveVehicleSlug(
+  vehicleSlug: string,
+  existingClient?: SupabaseClient,
+  existingUser?: User | null
+): Promise<{
   vehicleId: string
   nickname: string | null
 } | null> {
   const { isUUID, getVehicleSlug } = await import('./vehicle-utils-client')
-  const supabase = await createClient()
+
+  const supabase = existingClient ?? await createClient()
 
   // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  let user = existingUser
+  if (user === undefined) {
+    const { data: { user: fetchedUser }, error: authError } = await supabase.auth.getUser()
+    user = fetchedUser
+    if (authError) {
+      // console.error('Error fetching user in resolveVehicleSlug:', authError)
+    }
+  }
+
+  if (!user) {
     // If no user, we can only resolve UUIDs or public slugs (which is handled in page.tsx)
     // For this utility which assumes user context, we might just return null or throw
     // But let's check if it's a UUID and return it if so, assuming caller handles auth check
@@ -38,6 +54,7 @@ export async function resolveVehicleSlug(vehicleSlug: string): Promise<{
     .eq('owner_id', user.id)
 
   if (error || !vehicles) {
+    console.error('Error fetching user vehicles for slug resolution:', error)
     return null
   }
 

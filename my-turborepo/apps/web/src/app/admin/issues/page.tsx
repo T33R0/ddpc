@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { Loader2, ExternalLink, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@repo/ui/button';
@@ -14,8 +13,8 @@ import {
   CardTitle,
 } from '@repo/ui/card';
 import { Label } from '@repo/ui/label';
-import { TimeoutError, withTimeout } from '@/lib/with-timeout';
 import { useAuth } from '@/lib/auth';
+import { getIssueReports, toggleIssueResolution } from '@/actions/admin';
 
 // Define interface for IssueReport
 interface IssueReport {
@@ -42,46 +41,22 @@ export default function IssuesPage() {
 
   const fetchIssues = useCallback(async () => {
     if (authLoading) {
-      console.debug('fetchIssues skipped – auth loading')
       return;
     }
     try {
       setLoading(true);
       setErrorMessage(null);
-      console.debug('fetchIssues start', { filter, page });
-      let query = supabase
-        .from('issue_reports')
-        .select('id, user_email, page_url, description, screenshot_url, resolved, created_at', {
-          count: 'exact',
-        })
-        .order('created_at', { ascending: false })
-        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
-      if (filter === 'unresolved') {
-        query = query.eq('resolved', false);
-      }
+      const { data, count } = await getIssueReports(page, PAGE_SIZE, filter);
 
-      console.time('issues-fetch');
-      const { data, error, count } = await withTimeout(
-        query,
-        15000,
-        'Fetching issue reports exceeded the 15s timeout.'
-      );
-      console.timeEnd('issues-fetch');
-
-      if (error) throw error;
       setIssues(data || []);
       if (typeof count === 'number') {
         setTotalCount(count);
       }
       setLastLoaded(new Date().toISOString());
-      console.debug('fetchIssues success', { rows: data?.length ?? 0, total: count });
     } catch (error) {
       console.error('Error fetching issues:', error);
-      const message =
-        error instanceof TimeoutError
-          ? 'Supabase timed out while loading issue reports. Please try again.'
-          : 'Failed to load issues';
+      const message = 'Failed to load issues';
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -99,23 +74,15 @@ export default function IssuesPage() {
 
   const toggleResolved = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('issue_reports')
-        .update({ resolved: !currentStatus })
-        .eq('id', id);
-
-      if (error) throw error;
+      await toggleIssueResolution(id, !currentStatus);
 
       toast.success(`Issue marked as ${!currentStatus ? 'resolved' : 'unresolved'}`);
-      
+
       // Update local state
-      setIssues(issues.map(issue => 
+      setIssues(issues.map(issue =>
         issue.id === id ? { ...issue, resolved: !currentStatus } : issue
       ));
-      
-      // If filtering by unresolved and we just resolved it, it should disappear from view
-      // but keeping it visible until refresh or filter change might be better UX, 
-      // strictly speaking "filters appropriately" implies it should disappear if filter is 'unresolved'.
+
       if (filter === 'unresolved' && !currentStatus === true) {
         setIssues(prev => prev.filter(i => i.id !== id));
       }
@@ -140,7 +107,7 @@ export default function IssuesPage() {
             </p>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-4 bg-white dark:bg-gray-800 p-2 rounded-lg border">
           <div className="flex items-center space-x-2">
             <input
@@ -246,9 +213,9 @@ export default function IssuesPage() {
                       </td>
                       <td className="px-6 py-4">
                         {issue.screenshot_url ? (
-                          <a 
-                            href={issue.screenshot_url} 
-                            target="_blank" 
+                          <a
+                            href={issue.screenshot_url}
+                            target="_blank"
                             rel="noreferrer"
                             className="text-blue-600 hover:underline flex items-center gap-1"
                           >

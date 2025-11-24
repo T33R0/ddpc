@@ -63,7 +63,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   if (userId) {
     // Use the robust slug resolution logic (handles Nickname, YMMT, and ID)
     const { resolveVehicleSlug } = await import('@/lib/vehicle-utils')
-    const resolved = await resolveVehicleSlug(vehicleSlug)
+    const resolved = await resolveVehicleSlug(vehicleSlug, supabase, user)
 
     if (resolved) {
       const { data, error } = await fetchVehicleById(resolved.vehicleId)
