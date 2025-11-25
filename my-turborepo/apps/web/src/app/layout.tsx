@@ -29,8 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} font-sans`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <ReportModalProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <ReportModalProvider>
               <div className="relative flex flex-col min-h-screen">
                 <div
                   aria-hidden="true"
@@ -48,8 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               <LogoutModal />
               <ScrutineerButton />
-            </AuthProvider>
-          </ReportModalProvider>
+            </ReportModalProvider>
+          </AuthProvider>
         </ThemeProvider>
         <SpeedInsights />
         <Analytics />

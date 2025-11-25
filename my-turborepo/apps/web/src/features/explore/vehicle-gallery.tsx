@@ -170,14 +170,22 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore = false, hasM
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10">
+                <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10 relative">
                   <ImageWithTimeoutFallback
-                    src={summary.heroImage || summary.trims[0]?.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+                    src={summary.heroImage || summary.trims[0]?.image_url || "/branding/fallback-logo.png"}
                     fallbackSrc="/branding/fallback-logo.png"
                     alt={`${summary.make} ${summary.model}`}
                     className="w-full h-full object-cover"
-                    showMissingText={true}
+                    showMissingText={false}
                   />
+                  {!summary.heroImage && !summary.trims[0]?.image_url && (
+                    <>
+                      <div className="absolute inset-0 bg-black/40" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-white text-lg font-semibold tracking-wide">Vehicle Image Missing</span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1 items-start">
                   <h3 className="font-bold text-lg text-foreground">
