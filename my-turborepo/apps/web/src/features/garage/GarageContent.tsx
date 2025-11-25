@@ -188,13 +188,21 @@ function VehicleCard({
         <div className="absolute top-2 left-2 z-10">
           <span className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.current_status)}`}></span>
         </div>
-        <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10">
+        <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10 relative">
           <ImageWithTimeoutFallback
-            src={vehicle.vehicle_image || vehicle.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+            src={vehicle.vehicle_image || vehicle.image_url || "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800&h=600&fit=crop"}
             fallbackSrc="/branding/fallback-logo.png"
             alt={`${vehicle.name} vehicle`}
             className="w-full h-full object-cover"
           />
+          {!vehicle.vehicle_image && !vehicle.image_url && (
+            <>
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-lg font-semibold tracking-wide">Vehicle Image Missing</span>
+              </div>
+            </>
+          )}
         </div>
         <div className="flex flex-col gap-1 items-start">
           <h3 className="font-bold text-lg text-foreground">{vehicle.nickname || vehicle.name}</h3>

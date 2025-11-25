@@ -165,17 +165,17 @@ export function UserAccountDropdown({
                 </div>
               </div>
 
-              {/* Report a Problem */}
+              {/* Report / Feedback */}
               {onReportProblem && (
                 <button
                   onClick={() => {
                     onReportProblem();
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors w-full text-left"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-all w-full text-left border border-transparent hover:border-[hsl(var(--accent))] hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
                 >
                   <AlertCircle size={16} />
-                  <span>Report</span>
+                  <span>Report / Feedback</span>
                 </button>
               )}
             </div>

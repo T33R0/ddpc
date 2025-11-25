@@ -46,7 +46,7 @@ const legalLinks = [
   { name: 'Privacy Policy', href: '/privacy' },
 ];
 
-export function Footer() {
+export function Footer({ onReportProblem }: { onReportProblem?: () => void }) {
   return (
     <footer className="bg-background border-t border-border text-foreground">
       <div className="container mx-auto px-4 py-12">
@@ -63,13 +63,28 @@ export function Footer() {
             <div key={section.title}>
               <h3 className="font-semibold mb-4">{section.title}</h3>
               <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Link href={link.href} className="text-muted-foreground hover:text-foreground text-sm">
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
+                {section.links.map((link) => {
+                  // Special handling for Help Center
+                  if (link.name === 'Help Center' && onReportProblem) {
+                    return (
+                      <li key={link.name}>
+                        <button
+                          onClick={onReportProblem}
+                          className="text-muted-foreground hover:text-foreground text-sm text-left"
+                        >
+                          {link.name}
+                        </button>
+                      </li>
+                    );
+                  }
+                  return (
+                    <li key={link.name}>
+                      <Link href={link.href} className="text-muted-foreground hover:text-foreground text-sm">
+                        {link.name}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

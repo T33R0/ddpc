@@ -8,13 +8,13 @@ import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme-context';
 import { useVehicles } from '../lib/hooks/useVehicles';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../lib/user-routing';
-import { ReportProblemModal } from './ReportProblem';
+import { useReportModal } from '../lib/report-modal-context';
 
 export function HeaderWithAuth() {
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const pathname = usePathname() || '/';
   const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { open: openReportModal } = useReportModal();
 
   const normalizedPathname = stripUsernamePrefixFromPathname(pathname).pathname || '/';
   const isHeaderHidden = normalizedPathname === '/' || normalizedPathname === '/dashboard';
@@ -49,26 +49,18 @@ export function HeaderWithAuth() {
     return await signIn(email, password);
   };
 
-
-
   return (
-    <>
-      <Header
-        user={user}
-        activeVehiclesCount={activeVehiclesCount}
-        onSignOut={signOut}
-        onGoogleSignIn={handleGoogleSignIn}
-        onEmailSignUp={handleEmailSignUp}
-        onEmailSignIn={handleEmailSignIn}
-        onReportProblem={() => setIsReportModalOpen(true)}
-        userBasePath={userBasePath}
-        theme={theme}
-        onThemeChange={(newTheme) => setTheme(newTheme as any)}
-      />
-      <ReportProblemModal
-        isOpen={isReportModalOpen}
-        onOpenChange={setIsReportModalOpen}
-      />
-    </>
+    <Header
+      user={user}
+      activeVehiclesCount={activeVehiclesCount}
+      onSignOut={signOut}
+      onGoogleSignIn={handleGoogleSignIn}
+      onEmailSignUp={handleEmailSignUp}
+      onEmailSignIn={handleEmailSignIn}
+      onReportProblem={openReportModal}
+      userBasePath={userBasePath}
+      theme={theme}
+      onThemeChange={(newTheme) => setTheme(newTheme as any)}
+    />
   );
 }
