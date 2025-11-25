@@ -15,7 +15,7 @@ type VehicleSummaryResponse = {
 type FilterOptions = {
   years: number[]
   makes: string[]
-  models: string[]
+  models: { make: string; model: string }[]
   engineTypes: string[]
   fuelTypes: string[]
   drivetrains: string[]

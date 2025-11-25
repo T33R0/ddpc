@@ -47,7 +47,7 @@ export function DropdownMenu({ options, children, className }: DropdownMenuProps
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-10 w-48 mt-2 p-1 bg-black/80 backdrop-blur-md rounded-md shadow-lg flex flex-col gap-1"
+            className="absolute z-10 w-48 mt-2 p-1 bg-black/80 backdrop-blur-md rounded-md shadow-lg flex flex-col gap-1 max-h-60 overflow-y-auto"
           >
             {options.map((option, index) => (
               <motion.button
@@ -56,7 +56,7 @@ export function DropdownMenu({ options, children, className }: DropdownMenuProps
                   option.onClick();
                   setIsOpen(false);
                 }}
-                className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full"
+                className="px-3 py-2 text-sm text-left text-white hover:bg-white/10 rounded-md transition-colors w-full shrink-0"
               >
                 {option.label}
               </motion.button>

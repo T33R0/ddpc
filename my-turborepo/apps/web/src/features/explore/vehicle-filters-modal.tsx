@@ -20,7 +20,7 @@ export type FilterState = {
 type FilterOptions = {
   years: number[];
   makes: string[];
-  models: string[];
+  models: { make: string; model: string }[];
   engineTypes: string[];
   fuelTypes: string[];
   drivetrains: string[];
@@ -43,17 +43,20 @@ export function VehicleFiltersModal({
   filterOptions
 }: VehicleFiltersModalProps) {
   const handleValueChange = (key: keyof FilterState) => (value: string | number | null) => {
-    onFilterChange({ ...filters, [key]: value });
+    // If make changes, reset model
+    if (key === 'make') {
+      onFilterChange({ ...filters, [key]: value as string | null, model: null });
+    } else {
+      onFilterChange({ ...filters, [key]: value } as FilterState);
+    }
   };
 
   // Filter models based on selected make
   const filteredModels = filters.make
-    ? filterOptions.models.filter((model: string) => {
-      // Note: This is a simplified approach. In a real app, you'd need to know which models belong to which makes
-      // For now, we'll show all models when a make is selected
-      return true;
-    })
-    : filterOptions.models;
+    ? filterOptions.models
+      .filter((m) => m.make === filters.make)
+      .map((m) => m.model)
+    : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,18 +108,20 @@ export function VehicleFiltersModal({
               <span className="text-foreground">{filters.make || 'Make'}</span>
             </DropdownMenu>
 
-            <DropdownMenu
-              className="w-full"
-              options={[
-                { label: 'All', onClick: () => handleValueChange('model')(null) },
-                ...filteredModels.map((m: string) => ({
-                  label: m,
-                  onClick: () => handleValueChange('model')(m)
-                }))
-              ]}
-            >
-              <span className="text-foreground">{filters.model || 'Model'}</span>
-            </DropdownMenu>
+            <div className={!filters.make ? "opacity-50 pointer-events-none" : ""}>
+              <DropdownMenu
+                className="w-full"
+                options={[
+                  { label: 'All', onClick: () => handleValueChange('model')(null) },
+                  ...filteredModels.map((m: string) => ({
+                    label: m,
+                    onClick: () => handleValueChange('model')(m)
+                  }))
+                ]}
+              >
+                <span className="text-foreground">{filters.model || 'Model'}</span>
+              </DropdownMenu>
+            </div>
 
             <DropdownMenu
               className="w-full"
