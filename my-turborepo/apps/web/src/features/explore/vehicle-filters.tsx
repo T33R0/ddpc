@@ -23,7 +23,7 @@ export type FilterState = {
 type FilterOptions = {
   years: number[];
   makes: string[];
-  models: string[];
+  models: { make: string; model: string }[];
   engineTypes: string[];
   fuelTypes: string[];
   drivetrains: string[];
@@ -49,12 +49,10 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
 
   // Filter models based on selected make
   const filteredModels = filters.make
-    ? filterOptions.models.filter((model: string) => {
-        // Note: This is a simplified approach. In a real app, you'd need to know which models belong to which makes
-        // For now, we'll show all models when a make is selected
-        return true;
-      })
-    : filterOptions.models;
+    ? filterOptions.models
+      .filter((m: { make: string; model: string }) => m.make === filters.make)
+      .map((m: { make: string; model: string }) => m.model)
+    : [];
 
   const handleVinAdd = async () => {
     if (!vin) {
@@ -68,7 +66,7 @@ export function VehicleFilters({ filters, onFilterChange, filterOptions }: Vehic
 
     setIsAdding(true);
     setAddError(null);
-    
+
     try {
       const response = await fetch('/api/garage/add-vehicle-by-vin', {
         method: 'POST',

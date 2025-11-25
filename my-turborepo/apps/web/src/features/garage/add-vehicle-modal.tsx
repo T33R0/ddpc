@@ -104,7 +104,7 @@ type TabType = 'vin' | 'manual';
 interface FilterOptions {
   years: number[];
   makes: string[];
-  models: string[];
+  models: { make: string; model: string }[];
   engineTypes: string[];
   fuelTypes: string[];
   drivetrains: string[];
@@ -375,8 +375,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
             <button
               onClick={() => setActiveTab('vin')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'vin'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                 }`}
             >
               VIN Decoder
@@ -384,8 +384,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
             <button
               onClick={() => setActiveTab('manual')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'manual'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                 }`}
             >
               Manual Entry
