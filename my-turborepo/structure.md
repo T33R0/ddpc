@@ -51,9 +51,9 @@ CREATE TABLE public.job_plans (
   name text NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT job_plans_pkey PRIMARY KEY (id),
-  CONSTRAINT job_plans_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT job_plans_maintenance_log_id_fkey FOREIGN KEY (maintenance_log_id) REFERENCES public.maintenance_log(id),
-  CONSTRAINT job_plans_mod_log_id_fkey FOREIGN KEY (mod_log_id) REFERENCES public.mods(id)
+  CONSTRAINT job_plans_mod_log_id_fkey FOREIGN KEY (mod_log_id) REFERENCES public.mods(id),
+  CONSTRAINT job_plans_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.job_steps (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -84,9 +84,9 @@ CREATE TABLE public.job_templates (
   is_public boolean NOT NULL DEFAULT false,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT job_templates_pkey PRIMARY KEY (id),
-  CONSTRAINT job_templates_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT job_templates_mod_item_id_fkey FOREIGN KEY (mod_item_id) REFERENCES public.mod_items(id),
   CONSTRAINT job_templates_service_item_id_fkey FOREIGN KEY (service_item_id) REFERENCES public.service_items(id),
-  CONSTRAINT job_templates_mod_item_id_fkey FOREIGN KEY (mod_item_id) REFERENCES public.mod_items(id)
+  CONSTRAINT job_templates_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.maintenance_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -101,9 +101,9 @@ CREATE TABLE public.maintenance_log (
   service_item_id uuid,
   status text DEFAULT 'History'::text CHECK (status = ANY (ARRAY['History'::text, 'Plan'::text])),
   CONSTRAINT maintenance_log_pkey PRIMARY KEY (id),
-  CONSTRAINT maintenance_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id),
   CONSTRAINT maintenance_log_service_interval_id_fkey FOREIGN KEY (service_interval_id) REFERENCES public.service_intervals(id),
-  CONSTRAINT maintenance_log_service_item_id_fkey FOREIGN KEY (service_item_id) REFERENCES public.service_items(id)
+  CONSTRAINT maintenance_log_service_item_id_fkey FOREIGN KEY (service_item_id) REFERENCES public.service_items(id),
+  CONSTRAINT maintenance_log_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
 CREATE TABLE public.maintenance_parts (
   maintenance_log_id uuid NOT NULL,
@@ -168,8 +168,8 @@ CREATE TABLE public.mods (
   mod_item_id uuid,
   notes text,
   CONSTRAINT mods_pkey PRIMARY KEY (id),
-  CONSTRAINT mods_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id),
-  CONSTRAINT mods_mod_item_id_fkey FOREIGN KEY (mod_item_id) REFERENCES public.mod_items(id)
+  CONSTRAINT mods_mod_item_id_fkey FOREIGN KEY (mod_item_id) REFERENCES public.mod_items(id),
+  CONSTRAINT mods_user_vehicle_id_fkey FOREIGN KEY (user_vehicle_id) REFERENCES public.user_vehicle(id)
 );
 CREATE TABLE public.odometer_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -238,8 +238,8 @@ CREATE TABLE public.user_profile (
   banned boolean NOT NULL DEFAULT false,
   preferred_vehicle_id uuid,
   CONSTRAINT user_profile_pkey PRIMARY KEY (user_id),
-  CONSTRAINT user_profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-  CONSTRAINT user_profile_preferred_vehicle_id_fkey FOREIGN KEY (preferred_vehicle_id) REFERENCES public.user_vehicle(id)
+  CONSTRAINT user_profile_preferred_vehicle_id_fkey FOREIGN KEY (preferred_vehicle_id) REFERENCES public.user_vehicle(id),
+  CONSTRAINT user_profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.user_vehicle (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -275,8 +275,8 @@ CREATE TABLE public.user_vehicle (
   avg_mpg numeric,
   vehicle_image text,
   CONSTRAINT user_vehicle_pkey PRIMARY KEY (id),
-  CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id),
-  CONSTRAINT user_vehicle_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+  CONSTRAINT user_vehicle_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id),
+  CONSTRAINT vehicle_stock_data_id_fkey FOREIGN KEY (stock_data_id) REFERENCES public.vehicle_data(id)
 );
 CREATE TABLE public.vehicle_data (
   id text NOT NULL,

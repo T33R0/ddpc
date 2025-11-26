@@ -90,15 +90,15 @@ export async function GET(request: NextRequest) {
     const summaries: VehicleSummary[] = (data as VehicleData[] | null)?.map((vehicle) => {
       const trims: TrimVariant[] = vehicle.trims.map((trimData: TrimData) => ({
         ...trimData,
-        year: trimData.year.toString(),
+        year: (trimData.year || vehicle.year || new Date().getFullYear()).toString(),
         primaryImage: trimData.image_url || undefined,
       }));
 
       return {
         id: vehicle.id,
-        year: vehicle.year.toString(),
-        make: vehicle.make,
-        model: vehicle.model,
+        year: (vehicle.year || new Date().getFullYear()).toString(),
+        make: vehicle.make || 'Unknown',
+        model: vehicle.model || 'Unknown',
         heroImage: vehicle.hero_image || undefined,
         trims,
       };
