@@ -1,3 +1,4 @@
+import Link from 'next/link';
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-black text-white p-4">
@@ -5,7 +6,7 @@ export default function ContactPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
           <p className="text-xl text-gray-300 mb-8">
-            Get in touch with the DDPC team. We're here to help with your vehicle management needs.
+            Get in touch with the DDPC team. We&apos;re here to help with your vehicle management needs.
           </p>
         </div>
 
@@ -13,11 +14,16 @@ export default function ContactPage() {
           <div className="bg-gray-900 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold mb-4">Support</h2>
             <p className="text-gray-300 mb-4">
-              Need help with your account or have questions about DDPC features?
+              We&apos;d love to hear from you! Whether you have a question about features,
+              pricing, need a demo, or anything else, our team is ready to answer all
+              your questions.
             </p>
-            <p className="text-gray-300">
-              Email: <a href="mailto:support@ddpc.com" className="text-blue-400 hover:text-blue-300">support@ddpc.com</a>
-            </p>
+
+            <div className="mt-8">
+              <Link href="/" className="text-primary hover:underline">
+                &larr; Back to Home
+              </Link>
+            </div>
           </div>
 
           <div className="bg-gray-900 p-6 rounded-lg">
@@ -37,22 +43,21 @@ export default function ContactPage() {
             Join our community of automotive enthusiasts to share builds, get advice, and connect with fellow vehicle owners.
           </p>
           <div className="flex gap-4">
-            <a
-              href="#"
-              className="text-blue-400 hover:text-blue-300 underline"
+            <span
+              className="text-gray-500 cursor-not-allowed"
             >
               Community Forum (Coming Soon)
-            </a>
+            </span>
           </div>
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Return Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

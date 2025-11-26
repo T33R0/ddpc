@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
     try {
         const supabase = await createClient()
 
@@ -69,10 +70,10 @@ export async function GET(request: NextRequest) {
         ])
 
         // Calculate vehicle stats
-        const vehicleStats: Record<string, any> = {}
+        const vehicleStats: Record<string, { latestFuelGallons: number | null; avgMpg: number | null; fuelPercentage: number | null }> = {}
 
         // Group fuel logs by vehicle and get latest
-        const latestFuelMap = new Map<string, any>()
+        const latestFuelMap = new Map<string, { user_vehicle_id: string; gallons: number; event_date: string; odometer: number }>()
         if (fuelLogs) {
             fuelLogs.forEach(log => {
                 if (!latestFuelMap.has(log.user_vehicle_id)) {

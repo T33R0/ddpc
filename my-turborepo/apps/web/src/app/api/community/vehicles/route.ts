@@ -16,6 +16,23 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
+interface CommunityVehicle {
+  id: string;
+  nickname: string | null;
+  title: string | null;
+  year: number | null;
+  make: string | null;
+  model: string | null;
+  trim: string | null;
+  odometer: number | null;
+  current_status: string | null;
+  vehicle_image: string | null;
+  photo_url: string | null;
+  privacy: 'PUBLIC' | 'PRIVATE';
+  spec_snapshot: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -72,9 +89,10 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${userVehicles?.length || 0} public vehicles`);
 
     // Transform user vehicles into VehicleSummary format for compatibility with existing gallery
-    const summaries: VehicleSummary[] = (userVehicles || []).map((vehicle: any) => {
+    const summaries: VehicleSummary[] = (userVehicles || []).map((vehicle: CommunityVehicle) => {
       // Extract data from spec_snapshot if available, otherwise use direct fields
-      const specData = vehicle.spec_snapshot || {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const specData = (vehicle.spec_snapshot || {}) as Record<string, any>;
 
       // Create a single trim for each user vehicle with all available data
       const trim: TrimVariant = {

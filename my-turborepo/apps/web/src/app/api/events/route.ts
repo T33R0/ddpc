@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { vehicleId, kind, title, occurredAt, odometer, partId } = validation.data;
+    const { vehicleId, kind, title, occurredAt, odometer } = validation.data;
 
     // Verify user owns this vehicle
     const { data: vehicle, error: vehicleError } = await supabase

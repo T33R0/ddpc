@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
@@ -6,67 +7,11 @@ import { useStoredVehicles } from '@/lib/hooks/useVehicles'
 import { Card, CardContent } from '@repo/ui/card'
 import AddVehicleModal from './add-vehicle-modal'
 import { AuthProvider } from '@repo/ui/auth-context'
-import { supabase } from '@/lib/supabase'
+import { RealtimeChannel } from '@supabase/supabase-js'
 import { Plus } from 'lucide-react'
 import { VehicleWithOdometer } from '@repo/types'
-
-type ImageWithTimeoutFallbackProps = {
-  src: string
-  fallbackSrc: string
-  alt: string
-  className?: string
-  timeout?: number
-}
-
-function ImageWithTimeoutFallback({
-  src,
-  fallbackSrc,
-  alt,
-  className,
-  timeout = 3000
-}: ImageWithTimeoutFallbackProps) {
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [showFallback, setShowFallback] = useState(false)
-  const imgRef = React.useRef<HTMLImageElement>(null)
-
-  useEffect(() => {
-    // Check if image is already loaded (cached by browser)
-    if (imgRef.current?.complete && imgRef.current?.naturalHeight !== 0) {
-      setImageLoaded(true)
-      return
-    }
-
-    const timer = setTimeout(() => {
-      if (!imageLoaded) {
-        setShowFallback(true)
-      }
-    }, timeout)
-
-    return () => clearTimeout(timer)
-  }, [timeout, imageLoaded, src])
-
-  if (showFallback) {
-    return (
-      <img
-        src={fallbackSrc}
-        alt={alt}
-        className={className}
-      />
-    )
-  }
-
-  return (
-    <img
-      ref={imgRef}
-      src={src}
-      alt={alt}
-      className={className}
-      onLoad={() => setImageLoaded(true)}
-      onError={() => setShowFallback(true)}
-    />
-  )
-}
-
+import { supabase } from '@/lib/supabase'
+import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback';
 import { getVehicleSlug } from '@/lib/vehicle-utils-client'
 
 function VehicleCard({
@@ -118,33 +63,7 @@ function VehicleCard({
     }
   }
 
-  // Format YMMT to fit in 2 lines with max 30 chars per line
-  const formatYmmt = (ymmt: string) => {
-    if (!ymmt || ymmt.length <= 30) {
-      return { line1: ymmt, line2: '' }
-    }
 
-    // Try to split at word boundaries within 30 chars
-    const words = ymmt.split(' ')
-    let line1 = ''
-    let line2 = ''
-
-    for (const word of words) {
-      if (line1.length + word.length + 1 <= 30) {
-        line1 += (line1 ? ' ' : '') + word
-      } else if (!line2) {
-        line2 = word
-      } else if (line2.length + word.length + 1 <= 30) {
-        line2 += ' ' + word
-      } else {
-        // If second line would exceed 30 chars, truncate with ellipsis
-        line2 = line2.substring(0, 27) + '...'
-        break
-      }
-    }
-
-    return { line1, line2 }
-  }
 
   const handleClick = () => {
     // Use smart slug generation
@@ -356,12 +275,10 @@ function VehicleGallery({
 
 type GarageContentProps = {
   initialVehicles: VehicleWithOdometer[]
-  preferredVehicleId: string | null
 }
 
 export function GarageContent({
   initialVehicles,
-  preferredVehicleId,
 }: GarageContentProps) {
   // Use server-fetched data as initial state, ensuring no duplicates
   const initialActive = initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
@@ -426,7 +343,7 @@ export function GarageContent({
 
   // Real-time subscription to vehicle status changes
   useEffect(() => {
-    let subscription: any = null
+    let subscription: RealtimeChannel | null = null
 
     const setupSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -443,7 +360,7 @@ export function GarageContent({
             filter: `owner_id=eq.${user.id}`,
           },
           (payload) => {
-            const updatedVehicle = payload.new as any
+            const updatedVehicle = payload.new as VehicleWithOdometer
             const vehicleId = updatedVehicle.id
             const newStatus = updatedVehicle.current_status
 
@@ -583,16 +500,16 @@ export function GarageContent({
   }
 
   // Remove duplicates from active vehicles (safety check)
-  const uniqueActiveVehicles = activeVehicles.filter((v, index, self) =>
+  const uniqueActiveVehicles = React.useMemo(() => activeVehicles.filter((v, index, self) =>
     index === self.findIndex((t) => t.id === v.id)
-  )
+  ), [activeVehicles])
 
   // Update state if duplicates found
   useEffect(() => {
     if (activeVehicles.length !== uniqueActiveVehicles.length) {
       setActiveVehicles(uniqueActiveVehicles)
     }
-  }, [activeVehicles.length, uniqueActiveVehicles.length])
+  }, [activeVehicles.length, uniqueActiveVehicles])
 
   // Refresh data when page becomes visible (handles navigation from vehicle page)
   useEffect(() => {
@@ -692,6 +609,7 @@ export function GarageContent({
         </div>
       </section>
 
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <AddVehicleModal {...({ open: addVehicleModalOpen, onOpenChange: setAddVehicleModalOpen, onVehicleAdded: handleVehicleAdded } as any)} />
     </AuthProvider>
   )

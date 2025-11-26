@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { Header } from '@repo/ui/header';
 import { usePathname } from 'next/navigation';
 
 import { useAuth } from '../lib/auth';
-import { useTheme } from '../lib/theme-context';
+import { useTheme, Theme } from '../lib/theme-context';
 import { useVehicles } from '../lib/hooks/useVehicles';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../lib/user-routing';
 import { useReportModal } from '../lib/report-modal-context';
@@ -60,7 +59,7 @@ export function HeaderWithAuth() {
       onReportProblem={openReportModal}
       userBasePath={userBasePath}
       theme={theme}
-      onThemeChange={(newTheme) => setTheme(newTheme as any)}
+      onThemeChange={(newTheme) => setTheme(newTheme as Theme)}
     />
   );
 }

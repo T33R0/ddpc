@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser } from '@/lib/plan-utils';
 import type { UsageStats } from '@repo/types';
 
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user tier for limits context
-    const tier = await getPlanForUser(user.id);
+    // const tier = await getPlanForUser(user.id);
 
     // TODO: In a real implementation, calculate actual usage from database
     // For now, return mock data

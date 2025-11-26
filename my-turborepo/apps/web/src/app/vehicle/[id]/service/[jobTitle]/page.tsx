@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
@@ -39,8 +40,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
   const { vehicleId, nickname } = vehicleInfo
 
   // Redirect to nickname URL if accessed via UUID and vehicle has nickname
-  const isLikelyUUID = isUUID(vehicleSlug)
-  if (nickname && isLikelyUUID) {
+  if (nickname && isUUID(vehicleSlug)) {
     redirect(`/vehicle/${encodeURIComponent(nickname)}/service/${encodeURIComponent(jobTitle)}`)
   }
 
@@ -57,7 +57,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
   }
 
   // Fetch planned service logs for this job title
-  const { data: plannedLogs, error: plannedLogsError } = await supabase
+  const { data: plannedLogs } = await supabase
     .from('maintenance_log')
     .select(`
       id,
@@ -78,8 +78,8 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
 
   // Find the log matching the job title
   const matchingLog = plannedLogs?.find((log: any) => {
-    const serviceItem = Array.isArray(log.service_item) 
-      ? log.service_item[0] 
+    const serviceItem = Array.isArray(log.service_item)
+      ? log.service_item[0]
       : log.service_item
     return serviceItem?.name === jobTitle
   })
@@ -96,4 +96,3 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
     />
   )
 }
-

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
@@ -9,55 +10,7 @@ import { Button } from '@repo/ui/button';
 import Link from 'next/link';
 import { AuthModal } from '@/features/auth/AuthModal';
 
-// Simple image component that matches the gallery card behavior
-type ImageWithTimeoutFallbackProps = {
-  src: string;
-  fallbackSrc: string;
-  alt: string;
-  className?: string;
-  timeout?: number;
-};
-
-function ImageWithTimeoutFallback({
-  src,
-  fallbackSrc,
-  alt,
-  className,
-  timeout = 3000
-}: ImageWithTimeoutFallbackProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!imageLoaded) {
-        setShowFallback(true);
-      }
-    }, timeout);
-
-    return () => clearTimeout(timer);
-  }, [timeout, imageLoaded]);
-
-  if (showFallback) {
-    return (
-      <img
-        src={fallbackSrc}
-        alt={alt}
-        className={className}
-      />
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className={className}
-      onLoad={() => setImageLoaded(true)}
-      onError={() => setShowFallback(true)}
-    />
-  );
-}
+import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback';
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;
@@ -166,24 +119,9 @@ const VehicleDetailsModal = ({
     setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
   }, [summary, initialTrimId]);
 
-  // Auto-trigger add to garage when user signs in if pending
-  useEffect(() => {
-    if (user && pendingAdd) {
-      setPendingAdd(false);
-      // Small timeout to ensure auth state is fully propagated
-      setTimeout(() => {
-        handleAddToGarage();
-      }, 500);
-    }
-  }, [user, pendingAdd]);
-
   const selectedTrim = useMemo<TrimVariant | null>(() => {
     return summary.trims.find((trim) => trim.id === selectedTrimId) ?? summary.trims[0] ?? null;
   }, [summary, selectedTrimId]);
-
-  if (!selectedTrim) {
-    return null;
-  }
 
   const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTrimId(event.target.value);
@@ -215,7 +153,7 @@ const VehicleDetailsModal = ({
     }
   };
 
-  const handleAddToGarage = async () => {
+  const handleAddToGarage = React.useCallback(async () => {
     if (!selectedTrim) {
       toast.error('Select a trim before adding to your garage.');
       return;
@@ -257,8 +195,8 @@ const VehicleDetailsModal = ({
 
       // Redirect to vehicle page after a short delay if this was a pending add (meaning user just signed up/in)
       if (pendingAdd && data.id) {
-         window.location.href = `/vehicle/${data.id}`;
-         return;
+        window.location.href = `/vehicle/${data.id}`;
+        return;
       }
 
       setTimeout(() => {
@@ -270,7 +208,22 @@ const VehicleDetailsModal = ({
     } finally {
       setIsAddingToGarage(false);
     }
-  };
+  }, [selectedTrim, user, pendingAdd, onClose]);
+
+  // Auto-trigger add to garage when user signs in if pending
+  useEffect(() => {
+    if (user && pendingAdd) {
+      setPendingAdd(false);
+      // Small timeout to ensure auth state is fully propagated
+      setTimeout(() => {
+        handleAddToGarage();
+      }, 500);
+    }
+  }, [user, pendingAdd, handleAddToGarage]);
+
+  if (!selectedTrim) {
+    return null;
+  }
 
   // Use the same image priority as the gallery card: heroImage first, then selected trim's image_url
   const primaryImageUrl = summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
@@ -521,16 +474,16 @@ const VehicleDetailsModal = ({
             </div>
           </DialogFooter>
         </div>
-      </DialogContent>
+      </DialogContent >
 
-      <AuthModal 
+      <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         title="Add to Your Garage"
         description="Sign up or sign in to add this vehicle to your garage and track its history."
         onSuccess={() => setShowAuthModal(false)}
       />
-    </Dialog>
+    </Dialog >
   );
 };
 

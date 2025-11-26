@@ -1,3 +1,4 @@
+
 'use client'
 // ============================================================================
 // Fuel Page Client Component - Main client component for fuel tracking page
@@ -95,17 +96,17 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   const redStart = getArcPoint(redStartAngle)
   const redEnd = getArcPoint(redEndAngle)
 
-  const yellowStartAngle = redEndAngle
+  // const yellowStartAngle = redEndAngle
   const yellowEndAngle = getAngleForMpg(factoryMpg * 0.90)
   const yellowStart = redEnd
   const yellowEnd = getArcPoint(yellowEndAngle)
 
-  const greenStartAngle = yellowEndAngle
+  // const greenStartAngle = yellowEndAngle
   const greenEndAngle = getAngleForMpg(factoryMpg * 1.00)
   const greenStart = yellowEnd
   const greenEnd = getArcPoint(greenEndAngle)
 
-  const blueStartAngle = greenEndAngle
+  // const blueStartAngle = greenEndAngle
   const blueEndAngle = getAngleForMpg(factoryMpg * 1.10)
   const blueStart = greenEnd
   const blueEnd = getArcPoint(blueEndAngle)

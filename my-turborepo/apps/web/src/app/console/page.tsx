@@ -18,7 +18,7 @@ import { getVehicleSlug } from '../../lib/vehicle-utils-client';
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
   const { data: vehiclesData, isLoading: vehiclesLoading } = useVehicles();
-  const { data: consoleStats, isLoading: statsLoading } = useConsoleStats();
+  const { data: consoleStats } = useConsoleStats();
   const router = useRouter();
   const vehicles = vehiclesData?.vehicles || [];
 
@@ -61,7 +61,7 @@ export default function ConsolePage() {
     }
   });
 
-  const getVehicleStatus = (vehicle: any) => {
+  const getVehicleStatus = (vehicle: { current_status: string }) => {
     // Format status for display based on current_status
     switch (vehicle.current_status) {
       case 'daily_driver':

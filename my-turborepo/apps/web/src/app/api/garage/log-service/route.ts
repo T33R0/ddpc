@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If odometer value is provided, validate it through the centralized odometer service
-    let odometerEntryId = null;
+    // let odometerEntryId = null;
     if (odometerValue !== null) {
       const odometerValidation = await validateAndRecordOdometerReading(
         supabase,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      odometerEntryId = odometerValidation.odometerEntryId;
+      // odometerEntryId = odometerValidation.odometerEntryId;
     }
 
     // Insert service log entry

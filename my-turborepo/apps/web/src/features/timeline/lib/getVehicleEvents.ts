@@ -96,11 +96,16 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
 
   // Add maintenance events
   if (maintenanceLogs) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     maintenanceLogs.forEach((log: any) => {
+      const serviceItemName = Array.isArray(log.service_items)
+        ? log.service_items[0]?.name
+        : log.service_items?.name
+
       events.push({
         id: `maintenance-${log.id}`,
         date: new Date(log.event_date),
-        title: log.service_items?.name || 'Maintenance Service',
+        title: serviceItemName || 'Maintenance Service',
         description: log.notes || log.service_provider || '',
         type: 'maintenance',
         cost: log.cost || undefined,
@@ -111,13 +116,21 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
 
   // Add modification events
   if (mods) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mods.forEach((mod: any) => {
       const eventDate = mod.event_date ? new Date(mod.event_date) : new Date(mod.created_at)
+      const modItemName = Array.isArray(mod.mod_items)
+        ? mod.mod_items[0]?.name
+        : mod.mod_items?.name
+      const modItemDesc = Array.isArray(mod.mod_items)
+        ? mod.mod_items[0]?.description
+        : mod.mod_items?.description
+
       events.push({
         id: `mod-${mod.id}`,
         date: eventDate,
-        title: mod.mod_items?.name || 'Vehicle Modification',
-        description: mod.notes || mod.mod_items?.description || '',
+        title: modItemName || 'Vehicle Modification',
+        description: mod.notes || modItemDesc || '',
         type: 'modification',
         cost: mod.cost || undefined,
         odometer: mod.odometer || undefined,

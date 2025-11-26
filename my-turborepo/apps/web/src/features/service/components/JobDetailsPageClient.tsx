@@ -18,7 +18,7 @@ type JobDetailsPageClientProps = {
     nickname?: string | null
   }
   jobTitle: string
-  jobLog: any
+  jobLog: { id: string }
 }
 
 export function JobDetailsPageClient({

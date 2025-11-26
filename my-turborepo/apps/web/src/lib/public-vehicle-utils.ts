@@ -27,7 +27,7 @@ export async function getPublicVehicleBySlug(vehicleSlug: string): Promise<{
   nickname: string | null
   privacy: string
   owner_id: string
-  [key: string]: any
+  [key: string]: unknown
 } | null> {
   const supabase = getServiceRoleClient()
   const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)

@@ -33,7 +33,7 @@ import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../../lib/user-
 type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme';
 
 export default function AccountPage() {
-const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle, refreshProfile } = useAuth();
+  const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle, refreshProfile } = useAuth();
   const { theme, setTheme, saveTheme } = useTheme();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
@@ -251,7 +251,7 @@ const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoo
     try {
       await signOut();
       toast.success('Successfully signed out!');
-    } catch (error) {
+    } catch {
       toast.error('Error signing out');
       setIsSigningOut(false);
     }
@@ -578,6 +578,7 @@ const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoo
 
                     {avatarUrl && (
                       <div className="flex justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={avatarUrl}
                           alt="Avatar preview"

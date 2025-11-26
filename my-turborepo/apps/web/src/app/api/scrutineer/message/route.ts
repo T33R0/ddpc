@@ -46,11 +46,11 @@ const Explore = {
   }
 };
 
-const SkillTools = {
-  explore: [Explore.searchVehicles],
-  maintenance: [],
-  performance: []
-};
+// const SkillTools = {
+//   explore: [Explore.searchVehicles],
+//   maintenance: [],
+//   performance: []
+// };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -90,17 +90,17 @@ async function requireUser(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireUser(req);
+    await requireUser(req);
     const body = await req.json() as InputType;
 
     if (!body.text || typeof body.text !== 'string' || body.text.trim().length === 0) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    const { text, skill: hint, sessionId } = body;
+    const { text, skill: hint } = body;
 
     // Simple rule-based responses for now
-    const fast = tryRuleAnswers(text, hint);
+    const fast = tryRuleAnswers(text);
     if (fast) {
       return NextResponse.json({ reply: fast.reply });
     }
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
 
         const reply = formatToolResultAsAssistantText(result, "explore");
         return NextResponse.json({ reply });
-      } catch (error) {
+      } catch {
         return NextResponse.json({
           reply: "I encountered an issue searching for vehicles. Please try rephrasing your request."
         });
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
 }
 
 // --- helpers ---
-function tryRuleAnswers(text: string, hint?: string) {
+function tryRuleAnswers(text: string) {
   // Simple rule-based responses
   if (/^help$/i.test(text)) return { reply: "Tell me what you want: search by make/model/year, maintenance schedule, or performance goals." };
   if (/^hello|hi$/i.test(text)) return { reply: "Hello! I'm Scrutineer, your automotive AI assistant. How can I help you today?" };
@@ -166,12 +166,25 @@ function extractModel(text: string): string | undefined {
   return modelMatch ? modelMatch[1] : undefined;
 }
 
-function formatToolResultAsAssistantText(result: any, skill?: string) {
+interface VehicleResult {
+  year: number;
+  make: string;
+  model: string;
+  trim?: string;
+  body_type?: string;
+}
+
+interface ToolResult {
+  results?: VehicleResult[];
+  [key: string]: unknown;
+}
+
+function formatToolResultAsAssistantText(result: ToolResult, skill?: string) {
   if (skill === "explore") {
     if (!result.results || result.results.length === 0) {
       return "I couldn't find any vehicles matching your criteria. Try adjusting your search parameters.";
     }
-    return `Here are some candidates:\n` + result.results.slice(0, 10).map((r:any)=>
+    return `Here are some candidates:\n` + result.results.slice(0, 10).map((r: VehicleResult) =>
       `• ${r.year} ${r.make} ${r.model} ${r.trim ?? ""} — ${r.body_type ?? ""}`
     ).join("\n");
   }

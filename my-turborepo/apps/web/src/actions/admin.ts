@@ -50,7 +50,7 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
     if (profileError) throw profileError
 
     // Enhance with auth data (slow N+1 but works for fallback)
-    const users = await Promise.all(profiles.map(async (p: any) => {
+    const users = await Promise.all(profiles.map(async (p: { user_id: string; username: string; created_at: string; role: string; banned: boolean }) => {
       const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(p.user_id)
 
       // Get vehicle stats
@@ -65,7 +65,7 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
         .select('current_status')
         .eq('owner_id', p.user_id)
 
-      const statusCounts = vehicles?.reduce((acc: any, v: any) => {
+      const statusCounts = vehicles?.reduce((acc: Record<string, number>, v: { current_status: string | null }) => {
         const s = v.current_status || 'unknown'
         acc[s] = (acc[s] || 0) + 1
         return acc
@@ -163,7 +163,7 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
         // Fallback to direct update
         const { data: updateData, error: updateError } = await adminClient
           .from('user_profile')
-          .update({ role: roleValue as any })
+          .update({ role: roleValue as 'admin' | 'user' })
           .eq('user_id', userId)
           .select()
 
@@ -191,13 +191,14 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
       }
       console.log('RPC succeeded:', rpcData)
     }
-  } catch (error: any) {
-    console.error('Unexpected error in toggleAdminRole:', error)
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Unexpected error in toggleAdminRole:', err)
     // Re-throw if it's already our formatted error
-    if (error.message && error.message.includes('Failed to update admin role')) {
-      throw error
+    if (err.message && err.message.includes('Failed to update admin role')) {
+      throw err
     }
-    throw new Error(`Failed to update admin role: ${error.message || 'Unknown error'}`)
+    throw new Error(`Failed to update admin role: ${err.message || 'Unknown error'}`)
   }
 
   revalidatePath('/admin/users')

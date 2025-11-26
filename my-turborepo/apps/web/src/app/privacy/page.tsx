@@ -1,3 +1,6 @@
+import Link from 'next/link';
+
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-black text-white p-4">
@@ -52,12 +55,12 @@ export default function PrivacyPage() {
         </div>
 
         <div className="text-center mt-12">
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Return Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

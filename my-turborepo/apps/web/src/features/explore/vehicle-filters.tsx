@@ -3,9 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
-import { Button } from '@repo/ui/button';
-import type { VehicleSummary } from '@repo/types';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
 
 export type FilterState = {
@@ -33,7 +30,7 @@ type FilterOptions = {
 type VehicleFiltersProps = {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
-  filterOptions: any;
+  filterOptions: FilterOptions;
 };
 
 export function VehicleFilters({ filters, onFilterChange, filterOptions }: VehicleFiltersProps) {

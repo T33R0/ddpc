@@ -16,6 +16,25 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
+interface TrimData {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  trim: string;
+  image_url?: string;
+  [key: string]: unknown;
+}
+
+interface VehicleData {
+  id: string;
+  year: number;
+  make: string;
+  model: string;
+  hero_image?: string;
+  trims: TrimData[];
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -68,15 +87,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data into VehicleSummary format
-    const summaries: VehicleSummary[] = (data as any[] | null)?.map((vehicle) => {
-      const trims: TrimVariant[] = vehicle.trims.map((trimData: any) => ({
+    const summaries: VehicleSummary[] = (data as VehicleData[] | null)?.map((vehicle) => {
+      const trims: TrimVariant[] = vehicle.trims.map((trimData: TrimData) => ({
         ...trimData,
+        year: trimData.year.toString(),
         primaryImage: trimData.image_url || undefined,
       }));
 
       return {
         id: vehicle.id,
-        year: vehicle.year,
+        year: vehicle.year.toString(),
         make: vehicle.make,
         model: vehicle.model,
         heroImage: vehicle.hero_image || undefined,

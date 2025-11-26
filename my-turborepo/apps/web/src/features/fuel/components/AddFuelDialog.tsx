@@ -128,7 +128,7 @@ export function AddFuelDialog({
           </DialogTitle>
           <DialogDescription>
             Enter the details from your fuel-up. This will also update your
-            vehicle's current mileage.
+            vehicle&apos;s current mileage.
           </DialogDescription>
         </DialogHeader>
 
@@ -208,6 +208,7 @@ export function AddFuelDialog({
               onChange={(e) => handleInputChange('trip_miles', e.target.value)}
               placeholder="e.g., 350.5"
             />
+            <p className="text-sm text-muted-foreground">Don&apos;t see your fuel type?</p>
             <p className="text-xs text-muted-foreground mt-1">
               Leave blank to calculate automatically from previous fuel-up
             </p>
@@ -248,4 +249,3 @@ export function AddFuelDialog({
     </Dialog>
   )
 }
-

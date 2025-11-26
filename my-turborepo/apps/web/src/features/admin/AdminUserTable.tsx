@@ -16,12 +16,12 @@ interface User {
   banned: boolean
 }
 
-export function AdminUserTable({ 
-  users, 
+export function AdminUserTable({
+  users,
   currentEmail,
   page,
-  hasMore 
-}: { 
+  hasMore
+}: {
   users: User[]
   currentEmail?: string
   page: number
@@ -48,7 +48,7 @@ export function AdminUserTable({
 
   const handleToggleAdmin = async (userId: string, makeAdmin: boolean) => {
     if (!confirm(`Are you sure you want to ${makeAdmin ? 'grant' : 'revoke'} admin access?`)) return
-    
+
     startTransition(async () => {
       try {
         await toggleAdminRole(userId, makeAdmin)
@@ -58,13 +58,6 @@ export function AdminUserTable({
         alert('Failed to update admin role')
       }
     })
-  }
-
-  const formatStatus = (counts: Record<string, number>) => {
-    if (!counts || Object.keys(counts).length === 0) return '-'
-    return Object.entries(counts)
-      .map(([status, count]) => `${status}: ${count}`)
-      .join(', ')
   }
 
   return (
@@ -138,9 +131,8 @@ export function AdminUserTable({
                       <button
                         onClick={() => setConfirmSuspend(user.user_id)}
                         disabled={isPending}
-                        className={`${
-                          user.banned ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'
-                        }`}
+                        className={`${user.banned ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'
+                          }`}
                       >
                         {user.banned ? 'Unsuspend' : 'Suspend'}
                       </button>
@@ -162,23 +154,23 @@ export function AdminUserTable({
           </tbody>
         </table>
       </div>
-      
+
       <div className="flex justify-between items-center pt-4">
-         <button 
-           onClick={() => router.push(`/admin/users?page=${Math.max(1, page - 1)}`)}
-           disabled={page === 1 || isPending}
-           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-         >
-           Previous
-         </button>
-         <span className="text-sm text-gray-700 dark:text-gray-300">Page {page}</span>
-         <button 
-           onClick={() => router.push(`/admin/users?page=${page + 1}`)}
-           disabled={!hasMore || isPending}
-           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-         >
-           Next
-         </button>
+        <button
+          onClick={() => router.push(`/admin/users?page=${Math.max(1, page - 1)}`)}
+          disabled={page === 1 || isPending}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-sm text-gray-700 dark:text-gray-300">Page {page}</span>
+        <button
+          onClick={() => router.push(`/admin/users?page=${page + 1}`)}
+          disabled={!hasMore || isPending}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   )

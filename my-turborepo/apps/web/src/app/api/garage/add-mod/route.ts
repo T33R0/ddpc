@@ -13,6 +13,16 @@ const addModSchema = z.object({
   event_date: z.string().optional(),
 });
 
+interface ModData {
+  user_vehicle_id: string;
+  title: string;
+  status: string;
+  description?: string;
+  cost?: number;
+  odometer?: number;
+  event_date?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -57,7 +67,6 @@ export async function POST(request: NextRequest) {
     }
 
     // If odometer value is provided, validate it through the centralized odometer service
-    let odometerEntryId = null;
     if (odometerValue !== null && event_date) {
       const odometerValidation = await validateAndRecordOdometerReading(
         supabase,
@@ -73,11 +82,11 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      odometerEntryId = odometerValidation.odometerEntryId;
+      // odometerEntryId = odometerValidation.odometerEntryId;
     }
 
     // Insert modification entry
-    const modData: any = {
+    const modData: ModData = {
       user_vehicle_id: vehicleId,
       title: title.trim(),
       status,

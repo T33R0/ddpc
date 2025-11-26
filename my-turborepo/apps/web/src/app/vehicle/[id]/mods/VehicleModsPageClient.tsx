@@ -91,7 +91,7 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">No Modifications Yet</h3>
                   <p className="text-muted-foreground mb-6">
-                    Track your vehicle's modifications and upgrades. Start by adding your first mod.
+                    Track your vehicle&apos;s modifications and upgrades. Start by adding your first mod.
                   </p>
                   <Button
                     onClick={() => setIsAddDialogOpen(true)}
@@ -116,4 +116,3 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
     </>
   )
 }
-

@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { ServicePageClient } from '@/features/service/ServicePageClient'
 import { ServiceInterval, MaintenanceLog } from '@repo/types'
-import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
+import { resolveVehicleSlug } from '@/lib/vehicle-utils'
 
 export const revalidate = 0; // Ensure data is always fresh
 
@@ -37,7 +38,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     notFound() // Triggers 404 page
   }
 
-  const { vehicleId, nickname, canonicalSlug } = vehicleInfo
+  const { vehicleId, canonicalSlug } = vehicleInfo
 
   // Redirect to canonical URL if needed
   if (canonicalSlug && vehicleSlug !== canonicalSlug) {

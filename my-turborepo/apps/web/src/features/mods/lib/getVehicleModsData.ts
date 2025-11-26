@@ -118,10 +118,23 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
     }
 
     // Transform parts - mod_parts is an array, each with quantity_used and part_inventory (which is an object, not array)
-    const parts: ModPart[] = (mod.mod_parts || [])
-      .filter((mp: any) => mp.part_inventory) // Filter out any mod_parts with missing part_inventory
-      .map((mp: any) => {
-        const part = mp.part_inventory
+    interface ModPartJoin {
+      quantity_used: number;
+      part_inventory: {
+        id: string;
+        name: string;
+        vendor_name?: string;
+        cost?: number;
+      } | null;
+    }
+
+    const parts: ModPart[] = ((mod.mod_parts as unknown) as ModPartJoin[])
+      .filter((mp: ModPartJoin): mp is ModPartJoin => {
+        const p = mp as ModPartJoin;
+        return !!p.part_inventory;
+      })
+      .map((mp: ModPartJoin) => {
+        const part = mp.part_inventory!;
         return {
           id: part.id || '',
           name: part.name || 'Unknown Part',
@@ -140,7 +153,7 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
         // Since we don't know the exact enum values, we'll check if it contains 'success' or similar
         const outcomeType = String(outcomeData.outcome_type || '').toLowerCase()
         const success = outcomeType.includes('success') || outcomeType === 'successful'
-        
+
         outcome = {
           id: outcomeData.id,
           success,

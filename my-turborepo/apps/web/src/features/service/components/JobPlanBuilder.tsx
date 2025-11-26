@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
 import { Plus, RotateCcw, Save } from 'lucide-react'
@@ -26,22 +26,10 @@ export function JobPlanBuilder({
   const [isReassemblyMode, setIsReassemblyMode] = useState(false)
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
 
-  // Fetch or create job plan
-  useEffect(() => {
-    fetchOrCreateJobPlan()
-  }, [maintenanceLogId, userId, jobTitle])
-
-  // Fetch steps when job plan is available
-  useEffect(() => {
-    if (jobPlanId) {
-      fetchSteps()
-    }
-  }, [jobPlanId])
-
-  const fetchOrCreateJobPlan = async () => {
+  const fetchOrCreateJobPlan = React.useCallback(async () => {
     try {
       // First, try to find existing job plan for this maintenance log
-      const { data: existingPlan, error: fetchError } = await supabase
+      const { data: existingPlan } = await supabase
         .from('job_plans')
         .select('id')
         .eq('maintenance_log_id', maintenanceLogId)
@@ -71,9 +59,9 @@ export function JobPlanBuilder({
     } catch (error) {
       console.error('Error fetching/creating job plan:', error)
     }
-  }
+  }, [maintenanceLogId, userId, jobTitle])
 
-  const fetchSteps = async () => {
+  const fetchSteps = React.useCallback(async () => {
     if (!jobPlanId) return
 
     setIsLoading(true)
@@ -91,7 +79,19 @@ export function JobPlanBuilder({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [jobPlanId])
+
+  // Fetch or create job plan
+  useEffect(() => {
+    fetchOrCreateJobPlan()
+  }, [fetchOrCreateJobPlan])
+
+  // Fetch steps when job plan is available
+  useEffect(() => {
+    if (jobPlanId) {
+      fetchSteps()
+    }
+  }, [jobPlanId, fetchSteps])
 
   const handleAddStep = async () => {
     if (!stepInput.trim() || !jobPlanId) return
@@ -128,7 +128,7 @@ export function JobPlanBuilder({
 
       if (error) throw error
 
-      setSteps(steps.map(step => 
+      setSteps(steps.map(step =>
         step.id === stepId ? { ...step, is_completed: completed } : step
       ))
     } catch (error) {
@@ -145,7 +145,7 @@ export function JobPlanBuilder({
 
       if (error) throw error
 
-      setSteps(steps.map(step => 
+      setSteps(steps.map(step =>
         step.id === stepId ? { ...step, description } : step
       ))
     } catch (error) {
@@ -162,7 +162,7 @@ export function JobPlanBuilder({
 
       if (error) throw error
 
-      setSteps(steps.map(step => 
+      setSteps(steps.map(step =>
         step.id === stepId ? { ...step, notes: notes.trim() || null } : step
       ))
     } catch (error) {
@@ -297,9 +297,9 @@ export function JobPlanBuilder({
         newSteps.map(step =>
           supabase
             .from('job_steps')
-            .update({ 
+            .update({
               step_order: step.step_order,
-              is_completed: false 
+              is_completed: false
             })
             .eq('id', step.id)
         )

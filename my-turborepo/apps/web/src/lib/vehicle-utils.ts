@@ -22,6 +22,15 @@ export async function resolveVehicleSlug(
 } | null> {
   const { isUUID, getVehicleSlug } = await import('./vehicle-utils-client')
 
+  interface UserVehicle {
+    id: string;
+    nickname: string | null;
+    year: number | null;
+    make: string | null;
+    model: string | null;
+    trim: string | null;
+  }
+
   const supabase = existingClient ?? await createClient()
 
   // Get authenticated user
@@ -60,7 +69,7 @@ export async function resolveVehicleSlug(
   }
 
   // Helper to calculate canonical slug
-  const getCanonicalSlug = (vehicle: any) => {
+  const getCanonicalSlug = (vehicle: UserVehicle) => {
     return getVehicleSlug(vehicle, vehicles)
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface Vehicle {
   id: string;
@@ -21,7 +21,7 @@ export function useVehicles(options: { enabled?: boolean } = {}) {
   const [error, setError] = useState<Error | null>(null);
   const { enabled = true } = options;
 
-  const fetchVehicles = async () => {
+  const fetchVehicles = useCallback(async () => {
     if (!enabled) return;
 
     try {
@@ -48,13 +48,13 @@ export function useVehicles(options: { enabled?: boolean } = {}) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [enabled]);
 
   useEffect(() => {
     if (enabled) {
       fetchVehicles();
     }
-  }, [enabled]);
+  }, [enabled, fetchVehicles]);
 
   return { data, isLoading, error, refetch: fetchVehicles };
 }

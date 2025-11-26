@@ -11,15 +11,16 @@ const UserAvatarIcon = ({ size }: { size?: number }) => {
 
   if (avatarUrl) {
     return (
-      <img 
-        src={avatarUrl} 
-        alt="Profile" 
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt="Profile"
         className="w-full h-full object-cover rounded-full"
-        style={{ borderRadius: '50%' }} 
+        style={{ borderRadius: '50%' }}
       />
     );
   }
-  
+
   // Fallback to Settings icon with original size
   return <Settings size={size} />;
 };

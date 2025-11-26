@@ -50,6 +50,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         }
       }
     } catch (error) {
+      console.error(error);
       toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -64,6 +65,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         toast.error(error.message);
       }
     } catch (error) {
+      console.error(error);
       toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);

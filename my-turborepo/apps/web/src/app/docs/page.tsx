@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export default function DocsPage() {
   // Redirect to the docs app
@@ -47,22 +47,21 @@ export default function DocsPage() {
             and integration guides.
           </p>
           <div className="flex gap-4">
-            <a
-              href="#"
-              className="text-blue-400 hover:text-blue-300 underline"
+            <span
+              className="text-blue-400 cursor-not-allowed"
             >
               View Full Documentation (Coming Soon)
-            </a>
+            </span>
           </div>
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Return Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

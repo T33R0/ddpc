@@ -38,18 +38,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch the user profile
-    let { data: profile, error: profileError } = await supabase
+    const { data: initialProfile, error: profileError } = await supabase
       .from('user_profile')
       .select('*')
       .eq('user_id', user.id)
       .single();
+
+    let profile = initialProfile;
 
     // If profile doesn't exist, create a default one
     if (profileError && profileError.code === 'PGRST116') {
       console.log('User profile not found, creating default profile for user:', user.id);
 
       // Generate a unique username by appending a random number if needed
-      let baseUsername = user.email?.split('@')[0] || 'user';
+      const baseUsername = user.email?.split('@')[0] || 'user';
       let username = baseUsername;
       let counter = 1;
 
@@ -202,7 +204,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update the user profile
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       username: username.trim(),
       display_name: displayName?.trim() || null,
       location: location?.trim() || null,

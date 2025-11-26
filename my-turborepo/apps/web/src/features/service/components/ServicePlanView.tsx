@@ -48,7 +48,6 @@ export interface ServicePlanViewRef {
 
 export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewProps>(
   ({
-    vehicleId,
     onMarkComplete,
     onAddToPlan,
     initialPlannedLogs,

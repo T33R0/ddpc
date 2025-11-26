@@ -9,7 +9,7 @@ import { SearchModal } from './search-modal';
 type ExploreActionButtonsProps = {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
-  filterOptions: any;
+  filterOptions: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   onSearch: (query: string) => void;
 };
 

@@ -1,12 +1,10 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
-import { DollarSign, TrendingUp, Wrench, Settings, Car, BarChart3, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, Car, BarChart3, Download } from 'lucide-react';
 
 interface VehicleFinancials {
   vehicle_id: string;
@@ -29,14 +27,11 @@ interface OverallStats {
   highestCostVehicle: VehicleFinancials | null;
 }
 
-const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
-
 export function FinancialsDashboard() {
   const { session } = useAuth();
   const [financials, setFinancials] = useState<VehicleFinancials[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'all' | 'year' | '6months'>('all');
 
   useEffect(() => {
     async function fetchFinancials() {
@@ -113,7 +108,7 @@ export function FinancialsDashboard() {
       : 0;
     const highestCostVehicle = financials.length > 0
       ? financials.reduce((max, v) =>
-          v.total_spend > max.total_spend ? v : max)
+        v.total_spend > max.total_spend ? v : max)
       : null;
 
     return {
@@ -250,7 +245,7 @@ export function FinancialsDashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: any) => [`$${value.toLocaleString()}`, 'Amount']}
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
                     contentStyle={{
                       backgroundColor: '#1F2937',
                       border: '1px solid #374151',
@@ -261,7 +256,7 @@ export function FinancialsDashboard() {
               </ResponsiveContainer>
             </div>
             <div className="flex justify-center space-x-6 mt-4">
-              {spendingByCategoryData.map((item, index) => (
+              {spendingByCategoryData.map((item) => (
                 <div key={item.name} className="flex items-center">
                   <div
                     className="w-3 h-3 rounded-full mr-2"
@@ -303,7 +298,7 @@ export function FinancialsDashboard() {
                     tickFormatter={(value) => `$${value}`}
                   />
                   <Tooltip
-                    formatter={(value: any, name: string) => [
+                    formatter={(value: number, name: string) => [
                       name === 'cost' ? `$${value.toLocaleString()}` : `$${value.toFixed(2)}/mi`,
                       name === 'cost' ? 'Total Cost' : 'Cost per Mile'
                     ]}
@@ -368,9 +363,8 @@ export function FinancialsDashboard() {
                       ${vehicle.maintenance_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="text-right py-3 px-4">
-                      <span className={`font-medium ${
-                        vehicle.cost_per_mile > overallStats.averageCostPerMile ? 'text-red-400' : 'text-green-400'
-                      }`}>
+                      <span className={`font-medium ${vehicle.cost_per_mile > overallStats.averageCostPerMile ? 'text-red-400' : 'text-green-400'
+                        }`}>
                         ${vehicle.cost_per_mile.toFixed(2)}
                       </span>
                     </td>

@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { vehicleId, odometer } = validation.data;
+    // const { vehicleId, odometer } = validation.data;
 
     // TODO: In a real implementation, update vehicle odometer in database
     // For now, return success

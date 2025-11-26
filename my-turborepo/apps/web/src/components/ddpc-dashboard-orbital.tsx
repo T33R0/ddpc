@@ -52,7 +52,7 @@ export default function DDPCDashboardOrbital({
   const pingColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
   const bgColor = resolvedTheme === 'dark' ? 'bg-black' : 'bg-white';
   const iconColor = resolvedTheme === 'dark' ? 'text-white' : 'text-black';
-  
+
   // Node text colors
   const nodeTextColor = resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-600';
   const nodeTextActiveColor = resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900';
@@ -185,9 +185,6 @@ export default function DDPCDashboardOrbital({
     return relatedItems.includes(itemId);
   };
 
-  const nodeSize = 75;
-  const logoSize = 75;
-
   return (
     <div
       className="w-[800px] h-[800px] flex flex-col items-center justify-center relative"
@@ -245,9 +242,8 @@ export default function DDPCDashboardOrbital({
                 }}
               >
                 <div
-                  className={`absolute rounded-full -inset-1 ${
-                    isPulsing ? "animate-pulse duration-1000" : ""
-                  }`}
+                  className={`absolute rounded-full -inset-1 ${isPulsing ? "animate-pulse duration-1000" : ""
+                    }`}
                   style={{
                     background: `radial-gradient(circle, ${node.color}20 0%, transparent 70%)`,
                     width: 94,
@@ -267,7 +263,7 @@ export default function DDPCDashboardOrbital({
                   ${isExpanded ? "scale-125" : ""}
                   ${isRelated ? "animate-pulse border-white/60" : ""}
                 `}
-                  style={{ 
+                  style={{
                     backgroundColor: isExpanded ? 'white' : node.color,
                     width: 75,
                     height: 75,
@@ -286,7 +282,7 @@ export default function DDPCDashboardOrbital({
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? nodeTextActiveColor + " scale-110" : nodeTextColor}
                 `}
-                  style={{ 
+                  style={{
                     top: 90,
                     // Subpixel antialiasing for text
                     WebkitFontSmoothing: "antialiased",
@@ -297,16 +293,16 @@ export default function DDPCDashboardOrbital({
                 </div>
 
                 {isExpanded && (
-                  <Card 
+                  <Card
                     className={`absolute left-1/2 -translate-x-1/2 w-72 ${cardBg} backdrop-blur-lg ${cardBorder} ${cardGlow} shadow-xl overflow-visible`}
                     style={{ top: 120 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
-                    
+
                     {/* Scrutineer Coming Soon Badge - overlaying modal */}
                     {node.title === "Scrutineer" && (
                       <div className="absolute -top-3 -right-3 z-50">
-                        <Badge 
+                        <Badge
                           className="px-3 py-1 text-sm font-bold animate-pulse shadow-[0_0_10px_theme(colors.green.500)] border-green-400 text-green-400 bg-black/80 dark:text-green-400 dark:border-green-400 dark:shadow-[0_0_10px_theme(colors.green.500)] light:text-blue-500 light:border-blue-500 light:shadow-[0_0_10px_theme(colors.blue.500)]"
                         >
                           Coming Soon

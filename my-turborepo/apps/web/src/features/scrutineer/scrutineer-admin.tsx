@@ -3,32 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
 
-// Interfaces for future implementation
-interface PromptTemplate {
-  id: string;
-  name: string;
-  skill: 'explore' | 'maintenance' | 'performance';
-  systemPrompt: string;
-  userPrompt?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
-interface UsageStats {
-  totalTokens: number;
-  totalCost: number;
-  totalRequests: number;
-  avgResponseTime: number;
-  modelUsage: { [key: string]: number };
-  dailyUsage: Array<{ date: string; tokens: number; cost: number }>;
-}
-
-interface HealthStatus {
-  ollamaReachable: boolean;
-  ollamaVersion?: string;
-  lastHealthCheck: Date;
-  responseTime?: number;
-}
 
 export function ScrutineerAdmin() {
   return (

@@ -28,7 +28,7 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
     })
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { payload: FuelEntry; value: number | null }[]; label?: string }) => {
     if (active && payload && payload.length > 0 && payload[0]) {
       const data = payload[0].payload
       const mpgValue = payload[0].value

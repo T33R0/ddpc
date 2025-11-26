@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogBody,
   DialogFooter,
 } from '@repo/ui/dialog'
 import { GripVertical, Pencil, Check, FileText, Trash2 } from 'lucide-react'
@@ -106,85 +105,83 @@ export function JobStep({
       `}
     >
       <div className="flex items-center gap-3">
-      {/* Drag Handle */}
-      {!isEditing && (
-        <div
-          className="cursor-move text-muted-foreground hover:text-foreground transition-colors"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <GripVertical className="h-5 w-5" />
-        </div>
-      )}
+        {/* Drag Handle */}
+        {!isEditing && (
+          <div
+            className="cursor-move text-muted-foreground hover:text-foreground transition-colors"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
 
-      {/* Checkbox */}
-      <Checkbox
-        checked={step.is_completed}
-        onCheckedChange={(checked) => onToggleComplete(step.id, checked === true)}
-        disabled={isEditing}
-      />
+        {/* Checkbox */}
+        <Checkbox
+          checked={step.is_completed}
+          onCheckedChange={(checked) => onToggleComplete(step.id, checked === true)}
+          disabled={isEditing}
+        />
 
-      {/* Step Name or Edit Input */}
-      {isEditing ? (
-        <div className="flex-1 flex items-center gap-2">
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-1 h-8"
-            autoFocus
-          />
-          <Button
-            onClick={handleSave}
-            size="sm"
-            className="h-8 px-3"
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : (
-        <>
-          <span
-            className={`flex-1 transition-all ${
-              step.is_completed 
-                ? 'text-muted-foreground' 
-                : 'text-foreground'
-            }`}
-            style={step.is_completed ? { 
-              textDecoration: 'line-through',
-              textDecorationThickness: '2px'
-            } : { textDecoration: 'none' }}
-          >
-            {step.description}
-          </span>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="text-muted-foreground hover:text-foreground transition-colors p-1"
-            type="button"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setIsNotesOpen(true)}
-            className={`text-muted-foreground hover:text-foreground transition-colors p-1 ${
-              step.notes ? 'text-primary' : ''
-            }`}
-            type="button"
-            title="Notes"
-          >
-            <FileText className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onDelete(step.id)}
-            className="text-muted-foreground hover:text-destructive transition-colors p-1"
-            type="button"
-            title="Delete step"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </>
-      )}
+        {/* Step Name or Edit Input */}
+        {isEditing ? (
+          <div className="flex-1 flex items-center gap-2">
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 h-8"
+              autoFocus
+            />
+            <Button
+              onClick={handleSave}
+              size="sm"
+              className="h-8 px-3"
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <>
+            <span
+              className={`flex-1 transition-all ${step.is_completed
+                  ? 'text-muted-foreground'
+                  : 'text-foreground'
+                }`}
+              style={step.is_completed ? {
+                textDecoration: 'line-through',
+                textDecorationThickness: '2px'
+              } : { textDecoration: 'none' }}
+            >
+              {step.description}
+            </span>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              type="button"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setIsNotesOpen(true)}
+              className={`text-muted-foreground hover:text-foreground transition-colors p-1 ${step.notes ? 'text-primary' : ''
+                }`}
+              type="button"
+              title="Notes"
+            >
+              <FileText className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => onDelete(step.id)}
+              className="text-muted-foreground hover:text-destructive transition-colors p-1"
+              type="button"
+              title="Delete step"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </>
+        )}
       </div>
-      
+
       {/* Notes Display */}
       {step.notes && !isEditing && (
         <div className="text-sm text-muted-foreground ml-[52px] truncate">

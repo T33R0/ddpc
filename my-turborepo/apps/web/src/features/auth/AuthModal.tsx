@@ -18,9 +18,9 @@ interface AuthModalProps {
   onSuccess?: () => void;
 }
 
-export function AuthModal({ 
-  isOpen, 
-  onClose, 
+export function AuthModal({
+  isOpen,
+  onClose,
   defaultMode = 'signin',
   title,
   description,
@@ -70,6 +70,7 @@ export function AuthModal({
         }
       }
     } catch (error) {
+      console.error(error);
       toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -87,6 +88,7 @@ export function AuthModal({
         // but standard behavior is redirect.
       }
     } catch (error) {
+      console.error(error);
       toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);

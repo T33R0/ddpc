@@ -6,6 +6,14 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
+interface NHTSAResult {
+  Value: string | null;
+  ValueId: string | null;
+  Variable: string;
+  VariableId: number;
+  ErrorCode?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!supabase) {
@@ -28,14 +36,14 @@ export async function POST(request: NextRequest) {
     const results = vinData.Results;
 
     // Check if the VIN was valid according to NHTSA
-    const hasError = results.some((r: any) => r.ErrorCode && r.ErrorCode !== '0');
+    const hasError = results.some((r: NHTSAResult) => r.ErrorCode && r.ErrorCode !== '0');
     if (hasError || results.length === 0) {
       return NextResponse.json({
         error: "We're unable to match this VIN to a vehicle in the NHTSA database. Please ensure you entered your VIN correctly."
       }, { status: 404 });
     }
 
-    const getValue = (variable: string) => results.find((r: any) => r.Variable === variable)?.Value || null;
+    const getValue = (variable: string) => results.find((r: NHTSAResult) => r.Variable === variable)?.Value || null;
 
     const make = getValue('Make');
     const model = getValue('Model');
@@ -72,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // No match found in curated data, build from NHTSA data
-    const specSnapshot = results.reduce((acc: any, curr: any) => {
+    const specSnapshot = results.reduce((acc: Record<string, string | null>, curr: NHTSAResult) => {
       if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
         const key = curr.Variable.replace(/ /g, '_').toLowerCase();
         acc[key] = curr.Value;

@@ -8,7 +8,7 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
-import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, Car, Gauge, Ruler, CarFront, Scale, Cog, ChevronLeft } from 'lucide-react'
+import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, ChevronLeft } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { Badge } from '@repo/ui/badge'
@@ -63,6 +63,7 @@ function ImageWithTimeoutFallback({
   // On server-side or before hydration, show fallback
   if (!mounted || showFallback || !currentSrc) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={fallbackSrc}
         alt={alt}
@@ -72,6 +73,7 @@ function ImageWithTimeoutFallback({
   }
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={currentSrc}
       alt={alt}

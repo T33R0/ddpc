@@ -1,12 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import Link from 'next/link'
-import { TimeoutError, withTimeout } from '@/lib/with-timeout'
-import { Button } from '@repo/ui/button'
 import { MaintenanceLog } from '@repo/types'
 
 interface HistoryLog {
@@ -37,110 +36,10 @@ interface ServiceHistoryListProps {
   vehicleId: string
 }
 
-export function ServiceHistoryList({ vehicleId, initialHistory = [] }: ServiceHistoryListProps & { initialHistory?: MaintenanceLog[] }) {
+export function ServiceHistoryList({ initialHistory = [] }: ServiceHistoryListProps & { initialHistory?: MaintenanceLog[] }) {
   const [groupedLogs, setGroupedLogs] = useState<GroupedLogs[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    // If we have initial history, process it immediately
-    if (initialHistory.length > 0) {
-      processLogs(initialHistory)
-    } else {
-      // Only fetch if no initial history (or if we want to refresh, but for now let's rely on server data)
-      // Actually, if initialHistory is empty, it might mean there are no logs, OR we need to fetch.
-      // But since the server fetches *all* history, empty means empty.
-      // So we can skip fetching on mount if we trust the server data.
-      setGroupedLogs([])
-    }
-  }, [initialHistory])
-
-  const processLogs = (logsData: any[]) => {
-    // Group logs by category (logic moved from fetchHistoryLogs)
-    // We need to map the raw logs to the structure we need
-    // The server returns logs with service_item and service_category expanded?
-    // Let's check the server query in page.tsx.
-    // It fetches:
-    /*
-      id, event_date, odometer, service_item_id, notes, service_provider, cost, status,
-      service_item:service_items ( id, name )
-    */
-    // It does NOT fetch category info directly. We might need to infer it or fetch it?
-    // Or we can just group by "Uncategorized" if we don't have it, to save time.
-    // Or we can fetch categories client side if needed.
-    // But wait, the previous code fetched categories.
-
-    // Let's try to group by service_item.category_id if available, or fetch metadata if missing.
-    // Since we want to be fast, let's just group by service_item name for now or "Service History".
-    // Actually, the previous code fetched categories to group them.
-    // Let's keep it simple: Just list them chronologically for now, or group by Month/Year?
-    // The previous UI grouped by Category.
-
-    // If we want to maintain Category grouping, we need category info.
-    // The server query in page.tsx DOES NOT return category_id or category name.
-    // We should update the server query to return that too.
-
-    // For now, let's just render them in a single list to verify data loading.
-    // Or we can do a quick client-side fetch for metadata only (much lighter than fetching all logs).
-
-    // Let's stick to the previous grouping logic but use the passed logs.
-    // We still need to fetch metadata (categories) if not present.
-
-    const logsWithMetadata = logsData.map(log => ({
-      ...log,
-      // Ensure structure matches HistoryLog interface
-      service_item: log.service_item || undefined,
-      service_category: undefined // We don't have this yet
-    }))
-
-    // We need to fetch metadata for these items to group them correctly
-    fetchMetadataAndGroup(logsWithMetadata)
-  }
-
-  const fetchMetadataAndGroup = async (logs: HistoryLog[]) => {
-    // Extract service item IDs
-    const serviceItemIds = [
-      ...new Set(
-        logs
-          .map((log) => log.service_item_id)
-          .filter((id): id is string => id !== null)
-      ),
-    ]
-
-    if (serviceItemIds.length === 0) {
-      // No items with IDs, just group as Uncategorized
-      groupAndSetLogs(logs, {})
-      return
-    }
-
-    try {
-      // Fetch service items with categories
-      const { data: itemsData, error } = await supabase
-        .from('service_items')
-        .select('id, name, category_id, service_categories(id, name)')
-        .in('id', serviceItemIds)
-
-      if (error) throw error
-
-      const itemMap: Record<string, any> = {}
-      if (itemsData) {
-        itemsData.forEach((item: any) => {
-          itemMap[item.id] = {
-            ...item,
-            category_name: item.service_categories?.name || 'Uncategorized'
-          }
-        })
-      }
-
-      groupAndSetLogs(logs, itemMap)
-    } catch (err) {
-      console.error('Error fetching metadata:', err)
-      // Fallback to uncategorized
-      groupAndSetLogs(logs, {})
-    }
-  }
-
-  const groupAndSetLogs = (logs: HistoryLog[], itemMap: Record<string, any>) => {
+  const groupAndSetLogs = React.useCallback((logs: HistoryLog[], itemMap: Record<string, { category_id?: string; category_name?: string; name: string }>) => {
     const grouped: Record<string, GroupedLogs> = {}
 
     logs.forEach((log) => {
@@ -150,9 +49,9 @@ export function ServiceHistoryList({ vehicleId, initialHistory = [] }: ServiceHi
 
       if (log.service_item_id && itemMap[log.service_item_id]) {
         const info = itemMap[log.service_item_id]
-        categoryId = info.category_id || 'uncategorized'
-        categoryName = info.category_name || 'Uncategorized'
-        serviceItemName = info.name
+        categoryId = info?.category_id || 'uncategorized'
+        categoryName = info?.category_name || 'Uncategorized'
+        serviceItemName = info?.name || 'Service Entry'
       } else if (log.service_item) {
         serviceItemName = log.service_item.name
       }
@@ -195,7 +94,78 @@ export function ServiceHistoryList({ vehicleId, initialHistory = [] }: ServiceHi
       .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime())
 
     setGroupedLogs(sortedGroups)
-  }
+  }, [])
+
+  const fetchMetadataAndGroup = React.useCallback(async (logs: HistoryLog[]) => {
+    // Extract service item IDs
+    const serviceItemIds = [
+      ...new Set(
+        logs
+          .map((log) => log.service_item_id)
+          .filter((id): id is string => id !== null)
+      ),
+    ]
+
+    if (serviceItemIds.length === 0) {
+      // No items with IDs, just group as Uncategorized
+      groupAndSetLogs(logs, {})
+      return
+    }
+
+    try {
+      // Fetch service items with categories
+      const { data: itemsData, error } = await supabase
+        .from('service_items')
+        .select('id, name, category_id, service_categories(id, name)')
+        .in('id', serviceItemIds)
+
+      if (error) throw error
+
+      const itemMap: Record<string, { category_id?: string; category_name?: string; name: string }> = {}
+      if (itemsData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        itemsData.forEach((item: any) => {
+          const categoryName = Array.isArray(item.service_categories)
+            ? item.service_categories[0]?.name
+            : item.service_categories?.name || 'Uncategorized'
+
+          itemMap[item.id] = {
+            ...item,
+            category_name: categoryName
+          }
+        })
+      }
+
+      groupAndSetLogs(logs, itemMap)
+    } catch (err) {
+      console.error('Error fetching metadata:', err)
+      // Fallback to uncategorized
+      groupAndSetLogs(logs, {})
+    }
+  }, [groupAndSetLogs])
+
+  const processLogs = React.useCallback((logsData: MaintenanceLog[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const logsWithMetadata = logsData.map((log: any) => ({
+      ...log,
+      // Ensure structure matches HistoryLog interface
+      service_item: log.service_item || undefined,
+      service_category: undefined, // We don't have this yet
+      service_item_id: log.service_item_id || null
+    }))
+
+    // We need to fetch metadata for these items to group them correctly
+    fetchMetadataAndGroup(logsWithMetadata)
+  }, [fetchMetadataAndGroup])
+
+  useEffect(() => {
+    // If we have initial history, process it immediately
+    if (initialHistory.length > 0) {
+      processLogs(initialHistory)
+    } else {
+      setGroupedLogs([])
+    }
+  }, [initialHistory, processLogs])
 
   const formatLogEntry = (log: HistoryLog) => {
     const serviceName = log.service_item?.name || 'Service Entry'
@@ -209,7 +179,7 @@ export function ServiceHistoryList({ vehicleId, initialHistory = [] }: ServiceHi
       <Card className="bg-card border-border">
         <CardContent className="p-6">
           <p className="text-muted-foreground text-center">
-            No service history logged. Click 'Add Service Entry' to get started.
+            No service history logged. Click &apos;Add Service Entry&apos; to get started.
           </p>
         </CardContent>
       </Card>
@@ -248,4 +218,3 @@ export function ServiceHistoryList({ vehicleId, initialHistory = [] }: ServiceHi
     </div>
   )
 }
-

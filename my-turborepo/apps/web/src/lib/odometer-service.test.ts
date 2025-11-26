@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { validateAndRecordOdometerReading } from './odometer-service';
 import { SupabaseClient } from '@supabase/supabase-js';
 
@@ -20,7 +20,7 @@ describe('Odometer Service', () => {
         });
 
         // Chain the mocks: from -> select -> eq -> order -> limit -> single
-        (mockSupabase.from as any).mockReturnValue({
+        (mockSupabase.from as Mock).mockReturnValue({
             select: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
                     order: vi.fn().mockReturnValue({
@@ -79,7 +79,7 @@ describe('Odometer Service', () => {
             gt: mockGt
         });
 
-        (mockSupabase.from as any).mockReturnValue({
+        (mockSupabase.from as Mock).mockReturnValue({
             select: vi.fn().mockReturnValue({
                 eq: mockEq,
             }),

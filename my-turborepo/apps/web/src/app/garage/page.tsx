@@ -5,7 +5,6 @@ import { VehicleWithOdometer } from '@repo/types'
 // Server Component that fetches data
 export default async function GaragePage() {
   let vehiclesWithOdometer: VehicleWithOdometer[] = []
-  let preferredVehicleId: string | null = null
 
   try {
     const supabase = await createClient()
@@ -26,7 +25,7 @@ export default async function GaragePage() {
       if (!vehicleError && vehicles) {
         // Fetch latest odometer readings
         const vehicleIds = vehicles.map((v) => v.id)
-        let odometerMap = new Map<string, number>()
+        const odometerMap = new Map<string, number>()
 
         if (vehicleIds.length > 0) {
           const { data: odometerLogs } = await supabase
@@ -36,20 +35,22 @@ export default async function GaragePage() {
             .order('recorded_at', { ascending: false })
 
           // Group by vehicle and take the most recent reading
+          type OdometerLog = { user_vehicle_id: string; reading_mi: number; recorded_at: string }
           const groupedLogs = odometerLogs?.reduce((acc, log) => {
-            if (!acc[log.user_vehicle_id] || acc[log.user_vehicle_id].recorded_at < log.recorded_at) {
+            const existingLog = acc[log.user_vehicle_id]
+            if (!existingLog || existingLog.recorded_at < log.recorded_at) {
               acc[log.user_vehicle_id] = log
             }
             return acc
-          }, {} as Record<string, any>) || {}
+          }, {} as Record<string, OdometerLog>) || {}
 
-          Object.values(groupedLogs).forEach((log: any) => {
+          Object.values(groupedLogs).forEach((log) => {
             odometerMap.set(log.user_vehicle_id, log.reading_mi)
           })
         }
 
         // Transform data
-        vehiclesWithOdometer = vehicles.map((v: any) => {
+        vehiclesWithOdometer = vehicles.map((v) => {
           const latestMileage = odometerMap.get(v.id) ?? v.odometer
           return {
             id: v.id,
@@ -66,15 +67,6 @@ export default async function GaragePage() {
             trim: v.vehicle_data?.trim,
           }
         })
-
-        // Try to get preferred vehicle ID
-        const { data: userProfile } = await supabase
-          .from('user_profile')
-          .select('preferred_vehicle_id')
-          .eq('user_id', user.id)
-          .single()
-
-        preferredVehicleId = userProfile?.preferred_vehicle_id || null
       }
     }
   } catch (error) {
@@ -84,5 +76,5 @@ export default async function GaragePage() {
   }
 
   // Always render the client component with whatever data we have
-  return <GarageContent initialVehicles={vehiclesWithOdometer} preferredVehicleId={preferredVehicleId} />
+  return <GarageContent initialVehicles={vehiclesWithOdometer} />
 }

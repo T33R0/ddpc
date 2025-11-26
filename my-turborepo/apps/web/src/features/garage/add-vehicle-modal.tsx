@@ -1,57 +1,29 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ImageWithFallback } from '../../components/image-with-fallback';
-import { getVehicleImageSources } from '../../lib/vehicle-images';
-import type { VehicleSummary, TrimVariant } from '@repo/types';
-import toast from 'react-hot-toast';
-import { useAuth } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { toast } from 'react-hot-toast';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
+  DialogFooter,
 } from '@repo/ui/dialog';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
+import { ImageWithFallback } from '@/components/image-with-fallback';
+import { getVehicleImageSources } from '@/lib/vehicle-images';
+import { VehicleSummary, TrimVariant } from '@/lib/types';
 
-type AddVehicleModalProps = {
-  open?: boolean;
+interface AddVehicleModalProps {
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   onVehicleAdded?: () => void;
-};
-
-// Helper function to format specs with proper units
-const formatSpec = (value: string | undefined | null, unit: string = ''): string => {
-  if (!value || value === 'null' || value === 'undefined') return '—';
-  return unit ? `${value}${unit}` : value;
-};
-
-// Calculate power-to-weight ratio
-const calculatePowerToWeight = (hp: string | undefined, weight: string | undefined): string => {
-  if (!hp || !weight) return '—';
-  const hpNum = parseFloat(hp);
-  const weightNum = parseFloat(weight);
-  if (isNaN(hpNum) || isNaN(weightNum) || hpNum === 0) return '—';
-
-  const lbPerHp = (weightNum / hpNum).toFixed(2);
-  const hpPerTon = ((hpNum / weightNum) * 2000).toFixed(0);
-  return `${lbPerHp} lb/hp (≈${hpPerTon} hp/ton)`;
-};
-
-// Calculate specific output
-const calculateSpecificOutput = (hp: string | undefined, displacement: string | undefined): string => {
-  if (!hp || !displacement) return '—';
-  const hpNum = parseFloat(hp);
-  const dispNum = parseFloat(displacement);
-  if (isNaN(hpNum) || isNaN(dispNum) || dispNum === 0) return '—';
-
-  const hpPerLiter = (hpNum / dispNum).toFixed(0);
-  return `${hpPerLiter} hp/L`;
-};
+}
 
 // Format engine configuration
 const formatEngine = (trim: TrimVariant): string => {
@@ -206,14 +178,6 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     setSelectedTrimId('');
     setManualVehicleData(null);
   }, [selectedYear, selectedMake]);
-
-  // Get available trims for selected year, make, and model
-  const availableTrims = useMemo(() => {
-    if (!selectedYear || !selectedMake || !selectedModel) return [];
-    // This would need to be implemented to fetch actual trims
-    // For now, return empty array
-    return [];
-  }, [selectedYear, selectedMake, selectedModel]);
 
   const selectedTrim = useMemo<TrimVariant | null>(() => {
     if (!currentVehicleData || !currentSelectedTrimId) return null;

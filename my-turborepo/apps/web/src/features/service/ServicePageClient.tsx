@@ -47,74 +47,13 @@ type ServicePageClientProps = {
 }
 
 // -----------------
-// HELPER FUNCTION: Calculate Due Status
-// -----------------
-type DueStatus = {
-  status: 'overdue' | 'due' | 'ok'
-  message: string
-}
-
-function getDueStatus(
-  item: ServiceInterval,
-  currentOdometer: number | null
-): DueStatus {
-  const now = new Date()
-  const currentMiles = currentOdometer || 0
-
-  // Case 1: Item has never been completed (due_miles is null)
-  // This means it's due based on its *base* interval.
-  if (item.due_miles === null) {
-    // If current miles are *over* the base interval, it's overdue
-    if (currentMiles > (item.interval_miles || 0)) {
-      return {
-        status: 'overdue',
-        message: `Overdue (Interval: ${item.interval_miles?.toLocaleString()} mi)`,
-      }
-    }
-    // Otherwise, it's just "Due"
-    return {
-      status: 'due',
-      message: `Due Now (First service)`,
-    }
-  }
-
-  // Case 2: Item *has* been completed, so it has a calculated due_miles/due_date
-  const dueMiles = item.due_miles || 0
-  const dueDate = item.due_date ? new Date(item.due_date) : null
-  const milesRemaining = dueMiles - currentMiles
-
-  // Check Overdue status first (most critical)
-  if (currentMiles >= dueMiles || (dueDate && now > dueDate)) {
-    return {
-      status: 'overdue',
-      message: `Overdue (Due at ${dueMiles.toLocaleString()} mi)`,
-    }
-  }
-
-  // Check Due Soon status
-  const milesWarningThreshold = (item.interval_miles || 10000) * 0.1 // 10% threshold
-  if (milesRemaining <= milesWarningThreshold) {
-    return {
-      status: 'due',
-      message: `Due in ${milesRemaining.toLocaleString()} miles`,
-    }
-  }
-
-  // Otherwise, it's OK
-  return {
-    status: 'ok',
-    message: `Due at ${dueMiles.toLocaleString()} miles`,
-  }
-}
-
-// -----------------
 // HELPER COMPONENTS (to keep the main component clean)
 // -----------------
 
 // The "Plan" tab's content - replaced with ServicePlanView
 const PlanTabContent = React.forwardRef<ServicePlanViewRef, {
   vehicleId: string
-  onMarkComplete: (log: any) => void
+  onMarkComplete: (log: ServicePageClientProps['initialPlannedLogs'][number]) => void
   onAddToPlan: (serviceItemId: string) => void
   initialPlannedLogs: ServicePageClientProps['initialPlannedLogs']
   initialChecklistCategories: ServicePageClientProps['initialChecklistCategories']
@@ -150,9 +89,7 @@ function HistoryTabContent({ vehicleId, initialHistory }: { vehicleId: string, i
 export function ServicePageClient({
   vehicle,
   initialPlannedLogs,
-  initialPlan,
   initialHistory,
-  initialScheduled,
   initialChecklistCategories,
   initialChecklistItems,
 }: ServicePageClientProps) {
@@ -166,7 +103,7 @@ export function ServicePageClient({
   const [selectedPlanItem, setSelectedPlanItem] = useState<ServiceInterval | null>(null)
 
   // For planned log (marking complete)
-  const [selectedPlannedLog, setSelectedPlannedLog] = useState<any>(null)
+  const [selectedPlannedLog, setSelectedPlannedLog] = useState<ServicePageClientProps['initialPlannedLogs'][number] | null>(null)
 
   // For pre-filling service item (Add to Plan)
   const [prefillServiceItemId, setPrefillServiceItemId] = useState<string | undefined>(undefined)
@@ -184,7 +121,7 @@ export function ServicePageClient({
   }
 
   // Handler for marking a planned log as complete
-  const handleMarkComplete = (log: any) => {
+  const handleMarkComplete = (log: ServicePageClientProps['initialPlannedLogs'][number]) => {
     setSelectedPlannedLog(log)
     setSelectedPlanItem(null)
     setPrefillServiceItemId(undefined)
@@ -197,14 +134,6 @@ export function ServicePageClient({
     setPrefillStatus('Plan')
     setSelectedPlanItem(null)
     setSelectedPlannedLog(null)
-    setIsServiceModalOpen(true)
-  }
-
-  // Handler for the "Log Service" button (guided)
-  const openLogPlanItemModal = (item: ServiceInterval) => {
-    setSelectedPlanItem(item) // Set the selected item
-    setSelectedPlannedLog(null)
-    setPrefillServiceItemId(undefined)
     setIsServiceModalOpen(true)
   }
 

@@ -27,8 +27,9 @@ export default function GarageError({
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground">
-                        We couldn't load your garage data. This might be a temporary connection issue.
+                        We couldn&apos;t load your garage data. This might be a temporary connection issue.
                     </p>
+                    {/* eslint-disable-next-line turbo/no-undeclared-env-vars */}
                     {process.env.NODE_ENV === 'development' && (
                         <pre className="mt-4 rounded bg-muted p-2 text-xs text-destructive">
                             {error.message}

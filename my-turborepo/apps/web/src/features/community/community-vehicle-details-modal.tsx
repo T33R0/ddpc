@@ -1,3 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -65,7 +68,7 @@ type CommunityVehicleDetailsModalProps = {
 // Helper function to format specs with proper units
 const formatSpec = (value: string | undefined | null, unit: string = ''): string => {
   if (!value || value === 'null' || value === 'undefined') return '—';
-  return unit ? `${value}${unit}` : value;
+  return unit ? `${value}${unit} ` : value;
 };
 
 // Calculate power-to-weight ratio
@@ -77,7 +80,7 @@ const calculatePowerToWeight = (hp: string | undefined, weight: string | undefin
 
   const lbPerHp = (weightNum / hpNum).toFixed(2);
   const hpPerTon = ((hpNum / weightNum) * 2000).toFixed(0);
-  return `${lbPerHp} lb/hp (≈${hpPerTon} hp/ton)`;
+  return `${lbPerHp} lb / hp(≈${hpPerTon} hp / ton)`;
 };
 
 // Calculate specific output
@@ -88,17 +91,17 @@ const calculateSpecificOutput = (hp: string | undefined, displacement: string | 
   if (isNaN(hpNum) || isNaN(dispNum) || dispNum === 0) return '—';
 
   const hpPerLiter = (hpNum / dispNum).toFixed(0);
-  return `${hpPerLiter} hp/L`;
+  return `${hpPerLiter} hp / L`;
 };
 
 // Format engine configuration
 const formatEngine = (trim: TrimVariant): string => {
   const parts: string[] = [];
 
-  if (trim.engine_size_l) parts.push(`${trim.engine_size_l}L`);
+  if (trim.engine_size_l) parts.push(`${trim.engine_size_l} L`);
   if (trim.cylinders) {
     const cyl = trim.cylinders;
-    parts.push(cyl.includes('cylinder') ? cyl : `${cyl}-cyl`);
+    parts.push(cyl.includes('cylinder') ? cyl : `${cyl} -cyl`);
   }
   if (trim.engine_type) parts.push(trim.engine_type.toUpperCase());
 
@@ -113,12 +116,12 @@ const formatFuelEconomy = (trim: TrimVariant): string => {
     parts.push(`${trim.epa_combined_mpg} mpg`);
 
     if (trim.epa_city_highway_mpg) {
-      parts.push(`(${trim.epa_city_highway_mpg.replace('/', '/')} city/hwy)`);
+      parts.push(`(${trim.epa_city_highway_mpg.replace('/', '/')} city / hwy)`);
     }
   }
 
   if (trim.fuel_tank_capacity_gal) {
-    parts.push(`• ${trim.fuel_tank_capacity_gal}-gal tank`);
+    parts.push(`• ${trim.fuel_tank_capacity_gal} -gal tank`);
 
     // Calculate range if we have mpg and tank size
     if (trim.epa_city_highway_mpg) {
@@ -182,9 +185,9 @@ const CommunityVehicleDetailsModal = ({
 
   // Prioritize user uploaded image, then stock photo
   const primaryImageUrl = selectedTrim.vehicle_image || summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
-  
+
   // Format YMMT (Year Make Model Trim)
-  const ymmt = `${summary.year} ${summary.make} ${summary.model} ${selectedTrim.trim || ''}`.trim();
+  const ymmt = `${summary.year} ${summary.make} ${summary.model} ${selectedTrim.trim || ''} `.trim();
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
@@ -263,7 +266,7 @@ const CommunityVehicleDetailsModal = ({
                   <div className="text-muted-foreground text-sm">Engine:</div>
                   <div className="text-foreground">
                     {formatEngine(selectedTrim)}
-                    {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type}`}
+                    {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type} `}
                   </div>
                 </div>
               )}
@@ -276,14 +279,14 @@ const CommunityVehicleDetailsModal = ({
                     {selectedTrim.horsepower_hp && (
                       <>
                         {selectedTrim.horsepower_hp} hp
-                        {selectedTrim.horsepower_rpm && ` @ ${selectedTrim.horsepower_rpm} rpm`}
+                        {selectedTrim.horsepower_rpm && ` @${selectedTrim.horsepower_rpm} rpm`}
                       </>
                     )}
                     {selectedTrim.torque_ft_lbs && (
                       <>
                         {selectedTrim.horsepower_hp && ' • '}
                         {selectedTrim.torque_ft_lbs} lb-ft
-                        {selectedTrim.torque_rpm && ` @ ${selectedTrim.torque_rpm} rpm`}
+                        {selectedTrim.torque_rpm && ` @${selectedTrim.torque_rpm} rpm`}
                       </>
                     )}
                   </div>

@@ -13,14 +13,14 @@ interface UpcomingServicesProps {
 export function UpcomingServices({ upcomingServices, onLogService }: UpcomingServicesProps) {
   if (upcomingServices.length === 0) {
     return (
-      <Card 
+      <Card
         className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
       >
         <CardContent className="flex flex-col items-center justify-center py-16">
           <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground mb-2">No Service Plan Items</h3>
           <p className="text-sm text-muted-foreground text-center max-w-md">
-            Service intervals from your vehicle's maintenance plan will be displayed here.
+            Service intervals from your vehicle&apos;s maintenance plan will be displayed here.
           </p>
         </CardContent>
       </Card>
@@ -28,7 +28,7 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
   }
 
   return (
-    <Card 
+    <Card
       className="bg-card backdrop-blur-lg rounded-2xl text-foreground border border-border"
     >
       <CardHeader>
@@ -79,8 +79,8 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
                 )}
               </div>
 
-              <Button 
-                onClick={() => onLogService(service)} 
+              <Button
+                onClick={() => onLogService(service)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
               >
                 Log Service

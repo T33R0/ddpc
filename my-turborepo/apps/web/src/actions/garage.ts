@@ -2,11 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
 
-const addVehicleSchema = z.object({
-    vehicleDataId: z.string().min(1, 'Vehicle Data ID is required'),
-})
+
 
 export type AddVehicleState = {
     success?: boolean

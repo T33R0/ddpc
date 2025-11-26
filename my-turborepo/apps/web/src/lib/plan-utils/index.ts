@@ -12,7 +12,8 @@ export function mapPlanToTier(plan: User['plan']): Tier {
   }
 }
 
-export function getPlanForUser(userId: string): Promise<Tier> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function getPlanForUser(_userId: string): Promise<Tier> {
   // This would typically fetch from database
   // For now, return T0 as default
   return Promise.resolve('T0');
@@ -66,13 +67,15 @@ export function checkLimit(tier: Tier, limitKey: string, currentValue: number): 
   return currentValue < limit;
 }
 
-export async function decrementAiBudget(userId: string, tokens: number): Promise<boolean> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function decrementAiBudget(_userId: string, _tokens: number): Promise<boolean> {
   // Implementation would check and decrement user's AI token budget
   // For now, always return true
   return true;
 }
 
-export async function rateLimit(userId: string, scope: string, perMinute: number): Promise<boolean> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function rateLimit(_userId: string, _scope: string, _perMinute: number): Promise<boolean> {
   // Implementation would check rate limits
   // For now, always return true
   return true;

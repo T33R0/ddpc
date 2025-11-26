@@ -1,7 +1,7 @@
 import type { VehicleSummary } from "@repo/types";
 import type { Vehicle as ConsoleVehicle } from "./hooks/useVehicles";
 
-export const fieldContains = (field: any, term: string) => {
+export const fieldContains = (field: unknown, term: string) => {
     if (field == null) return false;
     return String(field).toLowerCase().includes(term);
 };

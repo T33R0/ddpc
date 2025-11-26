@@ -5,6 +5,26 @@ import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+interface OdometerLog {
+  user_vehicle_id: string;
+  reading_mi: number;
+  recorded_at: string;
+}
+
+interface UserVehicle {
+  id: string;
+  nickname: string | null;
+  year: number | null;
+  make: string | null;
+  model: string | null;
+  trim: string | null;
+  odometer: number | null;
+  title: string | null;
+  current_status: string | null;
+  photo_url: string | null;
+  vehicle_image: string | null;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -86,20 +106,21 @@ export async function GET(request: NextRequest) {
     if (odometerLogs) {
       // Group by vehicle and take the most recent reading
       const groupedLogs = odometerLogs.reduce((acc, log) => {
-        if (!acc[log.user_vehicle_id] || acc[log.user_vehicle_id].recorded_at < log.recorded_at) {
+        const current = acc[log.user_vehicle_id];
+        if (!current || current.recorded_at < log.recorded_at) {
           acc[log.user_vehicle_id] = log
         }
         return acc
-      }, {} as Record<string, any>)
+      }, {} as Record<string, OdometerLog>)
 
-      Object.values(groupedLogs).forEach((log: any) => {
+      Object.values(groupedLogs).forEach((log) => {
         latestMileageMap.set(log.user_vehicle_id, log.reading_mi)
       })
     }
 
     // Transform vehicles to match expected format
-    const vehicles = (userVehicles || []).map((uv: any) => {
-      const latestMileage = latestMileageMap.get(uv.id) ?? uv.odometer
+    const vehicles = (userVehicles || []).map((uv: UserVehicle) => {
+      const latestMileage = latestMileageMap.get(uv.id) ?? uv.odometer ?? null
       return {
         id: uv.id,
         name: uv.nickname || uv.title || `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim() || 'Unnamed Vehicle',

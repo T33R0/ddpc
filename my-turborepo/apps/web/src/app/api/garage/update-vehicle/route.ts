@@ -11,6 +11,14 @@ import { revalidatePath } from 'next/cache'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+interface UpdateVehicleData {
+  nickname?: string | null;
+  current_status?: string;
+  photo_url?: string | null;
+  privacy?: 'PUBLIC' | 'PRIVATE';
+  vehicle_image?: string | null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('=== UPDATE VEHICLE API CALLED ===');
@@ -100,7 +108,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Vehicle found:', vehicleCheck);
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: UpdateVehicleData = {};
     if (nickname !== undefined) updateData.nickname = nickname;
     if (status !== undefined) updateData.current_status = status;
     if (photo_url !== undefined) updateData.photo_url = photo_url;

@@ -30,7 +30,7 @@ export default function ScrutineerPage() {
     // In a real app, we would send this to an API
     // For now, just simulate success
     setTimeout(() => {
-        setSubmitted(true);
+      setSubmitted(true);
     }, 500);
   };
 
@@ -38,14 +38,14 @@ export default function ScrutineerPage() {
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24 mx-auto">
         <div className="max-w-3xl mx-auto space-y-12">
-          
+
           {/* Header & Definition */}
           <div className="space-y-6">
             <h1 className="text-4xl font-bold text-foreground">Scrutineer</h1>
             <div className="p-6 bg-card rounded-lg border border-border">
               <h2 className="text-xl font-semibold mb-2 text-card-foreground">Definition</h2>
               <p className="text-lg text-muted-foreground italic">
-                "In motorsport, the Scrutineer is the ultimate authority on technical integrity—the eyes that see what others miss, ensuring a machine is truly ready for the limit."
+                &quot;In motorsport, the Scrutineer is the ultimate authority on technical integrity—the eyes that see what others miss, ensuring a machine is truly ready for the limit.&quot;
               </p>
             </div>
           </div>
@@ -56,7 +56,7 @@ export default function ScrutineerPage() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-foreground">Your Digital Crew Chief</h3>
               <p className="text-muted-foreground">
-                We are training an AI model that doesn't just read manuals—it remembers your specific build. The Scrutineer is designed to be the second set of eyes on your project. From diagnosing weird noises based on your service history to validating that your new downpipe fits your current turbo setup, the Scrutineer provides personalized, context-aware guidance to keep your project on the road and out of the shop.
+                We are training an AI model that doesn&apos;t just read manuals—it remembers your specific build. The Scrutineer is designed to be the second set of eyes on your project. From diagnosing weird noises based on your service history to validating that your new downpipe fits your current turbo setup, the Scrutineer provides personalized, context-aware guidance to keep your project on the road and out of the shop.
               </p>
             </div>
           </div>
@@ -67,18 +67,18 @@ export default function ScrutineerPage() {
               <h3 className="text-xl font-medium text-foreground">Are you interested in this feature?</h3>
               <p className="text-sm text-muted-foreground">Join {count} other enthusiasts waiting for this.</p>
             </div>
-            
+
             <div className="flex flex-col items-center gap-2">
-                <div className="text-2xl font-bold text-primary animate-in fade-in slide-in-from-bottom-2">
-                    {count}
-                </div>
-                <Button 
-                    size="lg" 
-                    onClick={handleInterestClick}
-                    className="px-8 py-6 text-lg"
-                >
-                    Keep me posted
-                </Button>
+              <div className="text-2xl font-bold text-primary animate-in fade-in slide-in-from-bottom-2">
+                {count}
+              </div>
+              <Button
+                size="lg"
+                onClick={handleInterestClick}
+                className="px-8 py-6 text-lg"
+              >
+                Keep me posted
+              </Button>
             </div>
           </div>
 
@@ -94,23 +94,23 @@ export default function ScrutineerPage() {
               Be the first to know when Scrutineer goes live.
             </ModalDescription>
           </ModalHeader>
-          
+
           <ModalBody>
             {submitted ? (
               <div className="text-center py-8 space-y-4">
                 <div className="text-green-500 text-5xl">✓</div>
                 <p className="text-lg font-medium">Thank you for your interest!</p>
-                <p className="text-muted-foreground">We'll keep you posted.</p>
+                <p className="text-muted-foreground">We&apos;ll keep you posted.</p>
               </div>
             ) : (
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email address</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="you@example.com" 
-                    required 
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -121,10 +121,10 @@ export default function ScrutineerPage() {
               </form>
             )}
           </ModalBody>
-          
+
           {submitted && (
             <ModalFooter>
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Close</Button>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Close</Button>
             </ModalFooter>
           )}
         </ModalContent>

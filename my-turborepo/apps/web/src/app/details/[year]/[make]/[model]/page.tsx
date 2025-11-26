@@ -49,9 +49,7 @@ export default async function VehicleDetailsPage(props: {
     }
 
     // Image logic: Use the selected trim's image, or fallback to the first trim's image, or generic
-    // @ts-ignore - Supabase types might not automatically infer the joined table structure without explicit types
     const primaryImage = selectedVehicle.vehicle_primary_image?.url || (Array.isArray(selectedVehicle.vehicle_primary_image) ? selectedVehicle.vehicle_primary_image[0]?.url : null);
-    // @ts-ignore
     const firstTrimImage = vehicles[0].vehicle_primary_image?.url || (Array.isArray(vehicles[0].vehicle_primary_image) ? vehicles[0].vehicle_primary_image[0]?.url : null);
 
     const imageUrl = primaryImage || firstTrimImage || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
@@ -112,9 +110,9 @@ export default async function VehicleDetailsPage(props: {
                                 </div>
                             </div>
 
-                            <AddToGarageButton 
-                                vehicleId={selectedVehicle.id} 
-                                vehicleName={`${year} ${decodedMake} ${decodedModel} ${selectedVehicle.trim || ''}`} 
+                            <AddToGarageButton
+                                vehicleId={selectedVehicle.id}
+                                vehicleName={`${year} ${decodedMake} ${decodedModel} ${selectedVehicle.trim || ''}`}
                             />
                         </div>
                     </div>
