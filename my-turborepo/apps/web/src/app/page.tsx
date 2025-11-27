@@ -32,8 +32,13 @@ export default function Home() {
   };
 
   // If checking auth status or user is logged in (will redirect), don't show landing content
+  // If checking auth status or user is logged in (will redirect), show loading
   if (loading || user) {
-    return null; // Or a loading spinner if desired
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
@@ -46,16 +51,16 @@ export default function Home() {
           the digital platform for auto enthusiasts
         </p>
         <div className="flex flex-col gap-4 min-[400px]:flex-row">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             onClick={() => setIsAuthModalOpen(true)}
             className="px-8 lowercase"
           >
             enter
           </Button>
-          <Button 
-            asChild 
-            variant="outline" 
+          <Button
+            asChild
+            variant="outline"
             size="lg"
             className="px-8 lowercase"
           >
@@ -66,7 +71,7 @@ export default function Home() {
         </div>
       </div>
 
-      <AuthModal 
+      <AuthModal
         open={isAuthModalOpen}
         onOpenChange={setIsAuthModalOpen}
         onGoogleSignIn={handleGoogleSignIn}

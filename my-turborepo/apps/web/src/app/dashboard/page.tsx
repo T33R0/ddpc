@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuth } from '../../lib/auth';
 import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,12 @@ export default function DashboardPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,7 +45,6 @@ export default function DashboardPage() {
   }
 
   if (!user) {
-    router.push('/');
     return null;
   }
 
