@@ -14,14 +14,14 @@ class SimpleRateLimiter {
   constructor(
     private windowMs: number = 10 * 1000, // 10 seconds
     private max: number = 10 // 10 requests per window
-  ) {}
+  ) { }
 
   async check(req: Request, cost: number = 1): Promise<RateLimitResult> {
     try {
       // Get client IP
       const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-                 req.headers.get('x-real-ip') ||
-                 'unknown'
+        req.headers.get('x-real-ip') ||
+        'unknown'
 
       const key = `rate-limit:${ip}`
       const now = Date.now()
@@ -56,9 +56,9 @@ class SimpleRateLimiter {
         resetTime: new Date(resetTime)
       }
     } catch (error) {
-      // Fail open on errors
+      // Fail closed on errors to prevent DDoS if KV is down
       console.error('Rate limiter error:', error)
-      return { ok: true }
+      return { ok: false }
     }
   }
 }
