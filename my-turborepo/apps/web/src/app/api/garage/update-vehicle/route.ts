@@ -1,8 +1,6 @@
 // Enhanced debugging for update vehicle API
-console.log('=== UPDATE VEHICLE API DEBUG ===');
-console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log('SUPABASE_ANON_KEY loaded:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-console.log('SUPABASE_SERVICE_KEY loaded:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+// Logs removed for security
+
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -21,12 +19,9 @@ interface UpdateVehicleData {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== UPDATE VEHICLE API CALLED ===');
-
     // Check request headers
     const authHeader = request.headers.get('authorization');
-    console.log('Auth header present:', !!authHeader);
-    console.log('Auth header starts with Bearer:', authHeader?.startsWith('Bearer '));
+
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('❌ No valid auth header');
@@ -34,8 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    console.log('Token length:', token.length);
-    console.log('Token preview:', token.substring(0, 20) + '...');
+
 
     // Create Supabase client
     const authenticatedSupabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -48,7 +42,6 @@ export async function POST(request: NextRequest) {
     });
 
     // Test user authentication
-    console.log('🔍 Attempting to get user...');
     const { data: { user }, error: authError } = await authenticatedSupabase.auth.getUser();
 
     if (authError) {
@@ -61,13 +54,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized', details: 'No user found' }, { status: 401 });
     }
 
-    console.log('✅ User authenticated:', user.id, user.email);
+
 
     // Parse request body
     let body;
     try {
       body = await request.json();
-      console.log('📦 Request body:', body);
+
     } catch (error) {
       console.log('❌ Failed to parse request body:', error);
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -80,11 +73,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required field: vehicleId' }, { status: 400 });
     }
 
-    console.log('🔍 Vehicle ID to update:', vehicleId);
-    console.log('📝 Update data:', { nickname, status });
+
 
     // First, verify the vehicle exists and belongs to the user
-    console.log('🔍 Checking if vehicle exists and belongs to user...');
     const { data: vehicleCheck, error: vehicleCheckError } = await authenticatedSupabase
       .from('user_vehicle')
       .select('id, owner_id, current_status')
@@ -105,7 +96,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
     }
 
-    console.log('✅ Vehicle found:', vehicleCheck);
+
 
     // Prepare update data
     const updateData: UpdateVehicleData = {};
@@ -115,10 +106,9 @@ export async function POST(request: NextRequest) {
     if (privacy !== undefined) updateData.privacy = privacy;
     if (vehicle_image !== undefined) updateData.vehicle_image = vehicle_image;
 
-    console.log('📝 Update data prepared:', updateData);
+
 
     // Perform the update
-    console.log('🔄 Attempting database update...');
     const { data: updatedVehicle, error: updateError } = await authenticatedSupabase
       .from('user_vehicle')
       .update(updateData)
@@ -139,7 +129,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    console.log('✅ Vehicle updated successfully:', updatedVehicle);
+
 
     // Revalidate all pages that might display this vehicle's data
     revalidatePath('/garage')

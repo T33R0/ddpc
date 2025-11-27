@@ -1,10 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["SUPABASE_SERVICE_ROLE_KEY"],
+  "globalEnv": [],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "dist/**"
+      ]
     },
     "lint": {},
     "test": {},
