@@ -16,7 +16,7 @@ export function HeaderWithAuth() {
   const { open: openReportModal } = useReportModal();
 
   const normalizedPathname = stripUsernamePrefixFromPathname(pathname).pathname || '/';
-  const isHeaderHidden = normalizedPathname === '/' || normalizedPathname === '/dashboard';
+  const isHeaderHidden = normalizedPathname === '/' || normalizedPathname === '/hub';
   const { data: vehiclesData } = useVehicles({ enabled: !isHeaderHidden });
 
   if (isHeaderHidden) {

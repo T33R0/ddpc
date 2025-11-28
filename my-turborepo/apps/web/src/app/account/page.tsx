@@ -400,12 +400,12 @@ export default function AccountPage() {
         <div className="relative container px-4 md:px-6 pt-24 max-w-4xl mx-auto">
           <div className="mb-8">
             <Button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/hub')}
               variant="ghost"
               className="mb-4 text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              Back to Hub
             </Button>
             <h1 className="text-4xl font-bold text-foreground mb-2">Account Management</h1>
             <p className="text-lg text-muted-foreground">Manage your account settings and preferences</p>

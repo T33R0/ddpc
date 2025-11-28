@@ -26,7 +26,7 @@ const UserAvatarIcon = ({ size }: { size?: number }) => {
   return <Settings size={size} />;
 };
 
-export default function DashboardPage() {
+export default function HubPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
 
@@ -48,8 +48,8 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Dashboard navigation nodes
-  const dashboardNodes = [
+  // Hub navigation nodes
+  const hubNodes = [
     {
       id: 1,
       title: "Account",
@@ -124,7 +124,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex-grow flex items-center justify-center">
-        <DDPCDashboardOrbital nodes={dashboardNodes} />
+        <DDPCDashboardOrbital nodes={hubNodes} />
       </div>
     </div>
   );

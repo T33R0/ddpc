@@ -136,12 +136,12 @@ export function UserAccountDropdown({
             <div className="p-1">
               {/* Dashboard */}
               <Link
-                href={getScopedHref('/dashboard')}
+                href={getScopedHref('/hub')}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <LayoutDashboard size={16} />
-                <span>Dashboard</span>
+                <span>My Hub</span>
               </Link>
 
               {/* Account Settings */}
