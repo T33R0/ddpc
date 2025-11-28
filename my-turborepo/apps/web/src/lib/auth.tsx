@@ -92,8 +92,14 @@ export function AuthProvider({
 
   // Initial profile fetch if we have a session
   useEffect(() => {
-    if (initialSession?.user?.id) {
-      fetchProfile(initialSession.user.id);
+    if (initialSession) {
+      // Sync server session to client to ensure they match
+      // This prevents "zombie" sessions from localStorage taking over
+      supabase.auth.setSession(initialSession);
+
+      if (initialSession.user?.id) {
+        fetchProfile(initialSession.user.id);
+      }
     }
   }, [initialSession, fetchProfile]);
 
@@ -140,6 +146,9 @@ export function AuthProvider({
   }, [fetchProfile, initialSession]);
 
   const signUp = async (email: string, password: string) => {
+    // Force sign out before starting a new sign in flow
+    await supabase.auth.signOut();
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -189,6 +198,9 @@ export function AuthProvider({
   };
 
   const signIn = async (email: string, password: string) => {
+    // Force sign out before starting a new sign in flow
+    await supabase.auth.signOut();
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -197,6 +209,9 @@ export function AuthProvider({
   };
 
   const signInWithGoogle = async () => {
+    // Force sign out before starting a new sign in flow
+    await supabase.auth.signOut();
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
