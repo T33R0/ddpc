@@ -40,25 +40,27 @@ export function ExploreActionButtons({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-foreground text-lg font-medium">Find your next vehicle:</span>
-          <Button
-            onClick={() => setShowSearch(true)}
-            variant="outline"
-            className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground w-[150px]"
-          >
-            <Search className="w-4 h-4" />
-            Search
-          </Button>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <span className="text-foreground text-lg font-medium w-full sm:w-auto">Find your next vehicle:</span>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Button
+              onClick={() => setShowSearch(true)}
+              variant="outline"
+              className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground flex-1 sm:flex-none sm:w-[150px]"
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </Button>
 
-          <Button
-            onClick={() => setShowFilter(true)}
-            variant="outline"
-            className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground w-[150px]"
-          >
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
+            <Button
+              onClick={() => setShowFilter(true)}
+              variant="outline"
+              className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground flex-1 sm:flex-none sm:w-[150px]"
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </Button>
+          </div>
         </div>
 
         <button

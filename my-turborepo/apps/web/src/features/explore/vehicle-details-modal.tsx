@@ -246,7 +246,7 @@ const VehicleDetailsModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Side Navigation Arrows - Fixed positioning */}
+        {/* Side Navigation Arrows - Responsive positioning */}
         {canNavigatePrev && (
           <button
             onClick={(e) => {
@@ -254,9 +254,9 @@ const VehicleDetailsModal = ({
               onNavigate?.('prev');
             }}
             aria-label="Previous vehicle"
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg"
+            className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
           >
-            <ChevronLeft className="w-8 h-8 text-foreground" />
+            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
           </button>
         )}
 
@@ -267,9 +267,9 @@ const VehicleDetailsModal = ({
               onNavigate?.('next');
             }}
             aria-label="Next vehicle"
-            className="fixed right-4 top-1/2 -translate-y-1/2 z-[60] p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg"
+            className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
           >
-            <ChevronRight className="w-8 h-8 text-foreground" />
+            <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
           </button>
         )}
 
@@ -278,13 +278,40 @@ const VehicleDetailsModal = ({
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left Column - Image and Trim Selector */}
             <div className="space-y-4">
-              <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10">
+              <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10 relative group">
                 <ImageWithTimeoutFallback
                   src={primaryImageUrl}
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
                   className="w-full h-full object-cover"
                 />
+
+                {/* Mobile Navigation Arrows Overlay on Image */}
+                <div className="absolute inset-0 flex items-center justify-between px-2 md:hidden pointer-events-none">
+                  {canNavigatePrev ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate?.('prev');
+                      }}
+                      className="pointer-events-auto p-2 bg-black/50 text-white rounded-full backdrop-blur-sm"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                  ) : <div />}
+
+                  {canNavigateNext && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate?.('next');
+                      }}
+                      className="pointer-events-auto p-2 bg-black/50 text-white rounded-full backdrop-blur-sm"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Trim Selector */}
@@ -445,12 +472,12 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <DialogFooter className="pt-6">
-            <div className="flex gap-4 justify-center w-full">
+          <DialogFooter className="pt-6 sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 -mx-6 px-6 border-t border-border mt-auto">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full">
               <Button
                 onClick={handleAddToGarage}
                 disabled={isAddingToGarage || isAddedToGarage}
-                className={`min-w-[200px] ${isAddedToGarage ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                className={`w-full sm:w-auto min-w-[200px] ${isAddedToGarage ? 'bg-green-600 hover:bg-green-700' : ''}`}
               >
                 {isAddingToGarage
                   ? 'Adding to Garage...'
@@ -463,7 +490,7 @@ const VehicleDetailsModal = ({
               <Button
                 asChild
                 variant="outline"
-                className="min-w-[200px]"
+                className="w-full sm:w-auto min-w-[200px]"
               >
                 <Link
                   href={`/details/${summary.year}/${encodeURIComponent(summary.make)}/${encodeURIComponent(summary.model)}?trim=${selectedTrimId}`}
