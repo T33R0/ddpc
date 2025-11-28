@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
+import { createClient } from '../lib/supabase/server';
 import { AuthProvider } from '../lib/auth';
 import { ThemeProvider } from '../lib/theme-context';
 import { ReportModalProvider } from '../lib/report-modal-context';
@@ -24,12 +25,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
   return (
     <html lang="en" className={`${inter.variable} font-sans`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <AuthProvider>
+          <AuthProvider initialSession={session}>
             <ReportModalProvider>
               <div className="relative flex flex-col min-h-screen">
                 <div

@@ -33,10 +33,7 @@ export default function DDPCDashboardOrbital({
   const [rotationAngle, setRotationAngle] = useState<number>(0);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [pulseEffect, setPulseEffect] = useState<Record<number, boolean>>({});
-  const [centerOffset] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
+  const [containerSize, setContainerSize] = useState<number>(800);
   const [activeNodeId, setActiveNodeId] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
@@ -68,6 +65,38 @@ export default function DDPCDashboardOrbital({
   const isAdmin = user?.app_metadata?.role === 'admin' || user?.user_metadata?.role === 'admin';
   const isBreakGlassUser = user?.email === 'myddpc@gmail.com';
   const canAccessAdmin = isAdmin || isBreakGlassUser;
+
+  // Responsive calculations
+  const isMobile = containerSize < 600;
+  const radius = isMobile ? containerSize * 0.35 : 250;
+  const logoSize = isMobile ? 100 : 150;
+  const logoIconSize = isMobile ? 60 : 100;
+  const nodeSize = isMobile ? 50 : 75;
+  const nodeIconSize = isMobile ? 24 : 40;
+  const nodeTextTop = isMobile ? 60 : 90;
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setContainerSize(width);
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+
+    // Also use ResizeObserver for more robust size tracking
+    const observer = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      observer.disconnect();
+    };
+  }, []);
 
   const buildScopedRoute = useCallback(
     (path: string) => {
@@ -162,11 +191,11 @@ export default function DDPCDashboardOrbital({
 
   const calculateNodePosition = (index: number, total: number) => {
     const angle = ((index / total) * 360 + rotationAngle) % 360;
-    const radius = 250;
     const radian = (angle * Math.PI) / 180;
 
-    const x = radius * Math.cos(radian) + centerOffset.x;
-    const y = radius * Math.sin(radian) + centerOffset.y;
+    // Center is (0,0) in the transform context
+    const x = radius * Math.cos(radian);
+    const y = radius * Math.sin(radian);
 
     const zIndex = Math.round(100 + 50 * Math.cos(radian));
     const opacity = 1;
@@ -187,7 +216,7 @@ export default function DDPCDashboardOrbital({
 
   return (
     <div
-      className="w-[800px] h-[800px] flex flex-col items-center justify-center relative"
+      className="w-full max-w-[800px] aspect-square flex flex-col items-center justify-center relative mx-auto"
       ref={containerRef}
       onClick={handleContainerClick}
     >
@@ -197,21 +226,20 @@ export default function DDPCDashboardOrbital({
           ref={orbitRef}
           style={{
             perspective: "1000px",
-            transform: `translate(${centerOffset.x}px, ${centerOffset.y}px)`,
           }}
         >
           {/* DDPC Logo Center */}
           <div
             className={`absolute rounded-full border-2 ${bgColor} ${ringColor} ${glowColor} flex items-center justify-center z-10 transition-colors duration-300 ${canAccessAdmin ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
-            style={{ width: 150, height: 150 }}
+            style={{ width: logoSize, height: logoSize }}
             onClick={handleLogoClick}
           >
             <div className={iconColor}>
-              <Logo size={100} />
+              <Logo size={logoIconSize} />
             </div>
             <div
               className={`absolute rounded-full border ${pingColor} animate-ping opacity-50`}
-              style={{ width: 170, height: 170 }}
+              style={{ width: logoSize + 20, height: logoSize + 20 }}
             ></div>
           </div>
 
@@ -246,10 +274,10 @@ export default function DDPCDashboardOrbital({
                     }`}
                   style={{
                     background: `radial-gradient(circle, ${node.color}20 0%, transparent 70%)`,
-                    width: 94,
-                    height: 94,
-                    left: -9.5,
-                    top: -9.5,
+                    width: nodeSize + 20,
+                    height: nodeSize + 20,
+                    left: -10,
+                    top: -10,
                   }}
                 ></div>
 
@@ -265,25 +293,26 @@ export default function DDPCDashboardOrbital({
                 `}
                   style={{
                     backgroundColor: isExpanded ? 'white' : node.color,
-                    width: 75,
-                    height: 75,
+                    width: nodeSize,
+                    height: nodeSize,
                     // Ensuring crisp borders
                     boxShadow: isExpanded ? '0 0 0 1px rgba(255,255,255,0.1)' : 'none'
                   }}
                 >
-                  <Icon size={40} />
+                  <Icon size={nodeIconSize} />
                 </div>
 
                 <div
                   className={`
                   absolute whitespace-nowrap
-                  text-lg font-semibold tracking-wider
+                  font-semibold tracking-wider
                   transition-all duration-300
                   left-1/2 -translate-x-1/2
                   ${isExpanded ? nodeTextActiveColor + " scale-110" : nodeTextColor}
                 `}
                   style={{
-                    top: 90,
+                    top: nodeTextTop,
+                    fontSize: isMobile ? '0.875rem' : '1.125rem',
                     // Subpixel antialiasing for text
                     WebkitFontSmoothing: "antialiased",
                     MozOsxFontSmoothing: "grayscale"
@@ -294,8 +323,8 @@ export default function DDPCDashboardOrbital({
 
                 {isExpanded && (
                   <Card
-                    className={`absolute left-1/2 -translate-x-1/2 w-72 ${cardBg} backdrop-blur-lg ${cardBorder} ${cardGlow} shadow-xl overflow-visible`}
-                    style={{ top: 120 }}
+                    className={`absolute left-1/2 -translate-x-1/2 ${isMobile ? 'w-64' : 'w-72'} ${cardBg} backdrop-blur-lg ${cardBorder} ${cardGlow} shadow-xl overflow-visible`}
+                    style={{ top: nodeTextTop + 30 }}
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
 

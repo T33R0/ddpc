@@ -37,11 +37,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+export function AuthProvider({
+  children,
+  initialSession = null
+}: {
+  children: React.ReactNode;
+  initialSession?: Session | null;
+}) {
+  const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
+  const [session, setSession] = useState<Session | null>(initialSession);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialSession);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const router = useRouter();
 
@@ -84,17 +90,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await fetchProfile(user?.id ?? null);
   }, [fetchProfile, user?.id]);
 
+  // Initial profile fetch if we have a session
   useEffect(() => {
-    // Get initial session
+    if (initialSession?.user?.id) {
+      fetchProfile(initialSession.user.id);
+    }
+  }, [initialSession, fetchProfile]);
+
+  useEffect(() => {
+    // Get initial session if not provided
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user?.id) {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
+      if (!initialSession) {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user?.id) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       }
     };
 
@@ -103,6 +118,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // If we have an initial session and this is the INITIAL_SESSION event,
+        // we can ignore it to prevent overwriting with potentially stale local state
+        // if the local storage hasn't updated yet.
+        if (event === 'INITIAL_SESSION' && initialSession) {
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -115,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [fetchProfile, initialSession]);
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
