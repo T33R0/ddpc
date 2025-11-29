@@ -14,6 +14,7 @@ export type AddVehicleState = {
 export async function addVehicleToGarage(
     vehicleDataId: string
 ): Promise<AddVehicleState> {
+    console.log(`[addVehicleToGarage] Starting for vehicleDataId: ${vehicleDataId}`)
     const supabase = await createClient()
 
     try {
@@ -23,10 +24,13 @@ export async function addVehicleToGarage(
         } = await supabase.auth.getUser()
 
         if (authError || !user) {
+            console.error('[addVehicleToGarage] Auth error:', authError)
             return { error: 'Unauthorized' }
         }
+        console.log(`[addVehicleToGarage] User authenticated: ${user.id}`)
 
         // --- 1. Fetch Stock Data ---
+        console.log('[addVehicleToGarage] Fetching stock data...')
         const { data: stockData, error: stockError } = await supabase
             .from('vehicle_data')
             .select('*')
@@ -34,9 +38,10 @@ export async function addVehicleToGarage(
             .single()
 
         if (stockError || !stockData) {
-            console.error('Stock data error:', stockError)
+            console.error('[addVehicleToGarage] Stock data error:', stockError)
             return { error: 'Failed to find stock vehicle data' }
         }
+        console.log('[addVehicleToGarage] Stock data found')
 
         // Also fetch the primary image for the vehicle
         const { data: primaryImage } = await supabase
@@ -46,6 +51,7 @@ export async function addVehicleToGarage(
             .single()
 
         // --- 2. Create the User's Vehicle ---
+        console.log('[addVehicleToGarage] Creating user vehicle...')
         const { data: newVehicle, error: createVehicleError } = await supabase
             .from('user_vehicle')
             .insert({
@@ -78,14 +84,16 @@ export async function addVehicleToGarage(
             .single()
 
         if (createVehicleError || !newVehicle) {
-            console.error('Create vehicle error:', createVehicleError)
+            console.error('[addVehicleToGarage] Create vehicle error:', createVehicleError)
             return { error: `Failed to add vehicle to garage: ${createVehicleError?.message || 'Unknown error'} (Code: ${createVehicleError?.code})` }
         }
+        console.log(`[addVehicleToGarage] Vehicle created: ${newVehicle.id}`)
 
         //
         // --- 3. (SSI LOGIC) Seeding Pipeline ---
         //
         try {
+            console.log('[addVehicleToGarage] Starting SSI seeding...')
             // 3.1. Find all master schedule items for this vehicle type
             const { data: masterSchedule, error: scheduleError } = await supabase
                 .from('master_service_schedule')
@@ -97,6 +105,7 @@ export async function addVehicleToGarage(
             }
 
             if (masterSchedule && masterSchedule.length > 0) {
+                console.log(`[addVehicleToGarage] Found ${masterSchedule.length} schedule items to seed`)
                 // 3.2. Map them to the user's `service_intervals` table
                 const intervalsToSeed = masterSchedule.map((item) => ({
                     user_id: newVehicle.owner_id,
@@ -117,6 +126,9 @@ export async function addVehicleToGarage(
                 if (insertIntervalsError) {
                     throw insertIntervalsError // Caught by the try/catch
                 }
+                console.log('[addVehicleToGarage] SSI seeding complete')
+            } else {
+                console.log('[addVehicleToGarage] No schedule items found to seed')
             }
         } catch (seedingError) {
             // CRITICAL: We do NOT fail the whole request if seeding fails.
@@ -129,9 +141,10 @@ export async function addVehicleToGarage(
         // --- END OF NEW SSI LOGIC ---
 
         revalidatePath('/garage')
+        console.log('[addVehicleToGarage] Success')
         return { success: true, vehicleId: newVehicle.id }
     } catch (error) {
-        console.error('Unexpected error adding vehicle:', error)
+        console.error('[addVehicleToGarage] Unexpected error adding vehicle:', error)
         return { error: 'An unexpected error occurred' }
     }
 }

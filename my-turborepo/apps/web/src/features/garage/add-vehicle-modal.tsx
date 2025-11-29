@@ -18,6 +18,7 @@ import { Search } from 'lucide-react';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { getVehicleImageSources } from '@/lib/vehicle-images';
 import { VehicleSummary, TrimVariant } from '@/lib/types';
+import { addVehicleToGarage } from '@/actions/garage';
 
 interface AddVehicleModalProps {
   open: boolean;
@@ -271,9 +272,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     setIsAddingToGarage(true);
 
     try {
-      // Use Server Action instead of API route
-      const { addVehicleToGarage } = await import('@/actions/garage');
+      console.log('Calling addVehicleToGarage server action...');
       const result = await addVehicleToGarage(selectedTrim.id);
+      console.log('addVehicleToGarage result:', result);
 
       if (result.error) {
         throw new Error(result.error);
@@ -305,6 +306,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
       console.error('Error adding vehicle to garage:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');
     } finally {
+      console.log('Finished adding vehicle to garage (finally block)');
       setIsAddingToGarage(false);
     }
   };
