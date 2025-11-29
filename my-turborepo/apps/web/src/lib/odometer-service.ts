@@ -61,14 +61,15 @@ export async function getCurrentMileage(
       .eq('user_vehicle_id', vehicleId)
       .order('recorded_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') { // No rows returned
-        return { currentMileage: null, lastReadingDate: null };
-      }
       console.error('Error fetching current mileage:', error);
       throw error;
+    }
+
+    if (!latestReading) {
+      return { currentMileage: null, lastReadingDate: null };
     }
 
     return {
