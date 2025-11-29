@@ -69,17 +69,23 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
   const ymmt = `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} ${vehicle.trim || ''}`.trim()
 
   // Fetch mods with parts and outcomes
+  // Note: mods table uses 'notes' (not 'title'/'description') and 'mod_item_id' (FK to mod_items)
   const { data: modsData, error: modsError } = await supabase
     .from('mods')
     .select(`
       id,
-      title,
-      description,
+      notes,
+      mod_item_id,
       status,
       cost,
       odometer,
       event_date,
       created_at,
+      mod_item:mod_items (
+        id,
+        name,
+        description
+      ),
       mod_parts (
         quantity_used,
         part_inventory (
@@ -163,10 +169,32 @@ export async function getVehicleModsData(vehicleId: string): Promise<VehicleMods
       }
     }
 
+    // Extract title and description from notes field or mod_item
+    // If mod_item exists, use its name as title, otherwise parse notes
+    let title: string
+    let description: string | undefined
+    
+    // Handle mod_item - Supabase returns it as an object (single join result)
+    const modItem = mod.mod_item as unknown as { id: string; name: string; description?: string } | null | undefined
+    
+    if (modItem && typeof modItem === 'object' && 'name' in modItem && modItem.name) {
+      // Use mod_item name as title
+      title = modItem.name
+      description = mod.notes || modItem.description || undefined
+    } else if (mod.notes) {
+      // Parse notes - first line is title, rest is description
+      const notesLines = mod.notes.split('\n\n')
+      title = notesLines[0] || 'Modification'
+      description = notesLines.slice(1).join('\n\n') || undefined
+    } else {
+      title = 'Modification'
+      description = undefined
+    }
+
     return {
       id: mod.id,
-      title: mod.title,
-      description: mod.description || undefined,
+      title,
+      description,
       status: mod.status,
       cost: mod.cost ? Number(mod.cost) : undefined,
       odometer: mod.odometer || undefined,

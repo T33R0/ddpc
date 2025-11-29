@@ -221,6 +221,8 @@ export function ServicePageClient({
         lockStatusToHistory={!!selectedPlannedLog}
         prefillServiceItemId={prefillServiceItemId}
         prefillStatus={prefillStatus}
+        initialCategories={initialChecklistCategories}
+        initialItems={initialChecklistItems}
       />
 
       <AddFuelDialog

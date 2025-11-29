@@ -88,7 +88,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
         )
       `)
       .eq('user_vehicle_id', vehicleId)
-      .lte('event_date', new Date().toISOString())
+      .eq('status', 'History')
       .order('event_date', { ascending: false }),
     supabase
       .from('maintenance_log')

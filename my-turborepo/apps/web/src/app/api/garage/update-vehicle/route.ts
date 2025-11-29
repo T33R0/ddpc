@@ -83,18 +83,14 @@ export async function POST(request: NextRequest) {
       .eq('owner_id', user.id)
       .single();
 
-    if (vehicleCheckError) {
+    if (vehicleCheckError || !vehicleCheck) {
       console.log('❌ Vehicle check error:', vehicleCheckError);
       return NextResponse.json({
         error: 'Vehicle not found or access denied',
-        details: vehicleCheckError.message
+        details: vehicleCheckError?.message || 'Vehicle not found'
       }, { status: 404 });
     }
 
-    if (!vehicleCheck) {
-      console.log('❌ Vehicle not found');
-      return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
-    }
 
 
 

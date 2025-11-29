@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       vehicleId,
-      title,
-      description,
+      notes,
+      mod_item_id,
       status,
       cost,
       odometer,
@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields
-    if (!vehicleId || !title || !status || !event_date) {
+    if (!vehicleId || !notes || !status || !event_date) {
       return NextResponse.json(
-        { error: 'Missing required fields: vehicleId, title, status, event_date' },
+        { error: 'Missing required fields: vehicleId, notes, status, event_date' },
         { status: 400 }
       )
     }
@@ -49,17 +49,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert the modification
+    const modData: {
+      user_vehicle_id: string
+      notes: string
+      mod_item_id?: string
+      status: string
+      cost?: number | null
+      odometer?: number | null
+      event_date: string
+    } = {
+      user_vehicle_id: vehicleId,
+      notes,
+      status,
+      event_date: new Date(event_date).toISOString()
+    }
+    
+    if (mod_item_id) modData.mod_item_id = mod_item_id
+    if (cost) modData.cost = parseFloat(cost)
+    if (odometer) modData.odometer = parseInt(odometer)
+
     const { data: mod, error: modError } = await supabase
       .from('mods')
-      .insert({
-        user_vehicle_id: vehicleId,
-        title,
-        description: description || null,
-        status,
-        cost: cost ? parseFloat(cost) : null,
-        odometer: odometer ? parseInt(odometer) : null,
-        event_date: new Date(event_date).toISOString()
-      })
+      .insert(modData)
       .select()
       .single()
 

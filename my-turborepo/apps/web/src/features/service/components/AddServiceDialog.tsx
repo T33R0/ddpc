@@ -34,6 +34,8 @@ interface AddServiceDialogProps {
   lockStatusToHistory?: boolean // Lock status to History (for marking complete)
   prefillServiceItemId?: string // Pre-fill with service item ID (for Add to Plan)
   prefillStatus?: 'History' | 'Plan' // Pre-fill status
+  initialCategories?: ServiceCategory[] // Pre-loaded categories from server
+  initialItems?: ServiceItem[] // Pre-loaded items from server
 }
 
 interface ServiceCategory {
@@ -68,13 +70,15 @@ export function AddServiceDialog({
   vehicleId,
   lockStatusToHistory = false,
   prefillServiceItemId,
-  prefillStatus = 'History'
+  prefillStatus = 'History',
+  initialCategories = [],
+  initialItems = []
 }: AddServiceDialogProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
-  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([])
+  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(initialCategories)
+  const [serviceItems, setServiceItems] = useState<ServiceItem[]>(initialItems)
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null)
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   const [isLoadingItems, setIsLoadingItems] = useState(false)
@@ -91,13 +95,15 @@ export function AddServiceDialog({
     plan_item_id: null,
   })
 
-  // Fetch service categories on mount
+  // Initialize categories from props or fetch if needed
   useEffect(() => {
-    if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog) {
+    if (initialCategories.length > 0) {
+      setServiceCategories(initialCategories)
+    } else if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog && serviceCategories.length === 0) {
       console.log('Modal opened, fetching service categories...')
       fetchServiceCategories()
     }
-  }, [isOpen, currentStep, prefillServiceItemId, plannedLog])
+  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories])
 
   // Fetch service items when category is selected
   useEffect(() => {

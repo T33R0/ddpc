@@ -28,10 +28,14 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    const title = formData.get('title') as string
+    const description = formData.get('description') as string
+    // Combine title and description into notes field (mods table uses notes, not title/description)
+    const notes = description ? `${title}\n\n${description}` : title
+    
     const data = {
       vehicleId,
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
+      notes,
       status: formData.get('status') as string,
       cost: formData.get('cost') as string,
       odometer: formData.get('odometer') as string,

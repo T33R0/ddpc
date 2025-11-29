@@ -5,8 +5,8 @@ import { z } from 'zod';
 
 const addModSchema = z.object({
   vehicleId: z.string(),
-  title: z.string().min(1, 'Modification title is required'),
-  description: z.string().optional(),
+  notes: z.string().min(1, 'Modification notes/description is required'),
+  mod_item_id: z.string().optional(),
   status: z.enum(['planned', 'ordered', 'installed', 'tuned']),
   cost: z.string().optional(),
   odometer: z.string().optional(),
@@ -15,9 +15,9 @@ const addModSchema = z.object({
 
 interface ModData {
   user_vehicle_id: string;
-  title: string;
+  notes: string;
+  mod_item_id?: string;
   status: string;
-  description?: string;
   cost?: number;
   odometer?: number;
   event_date?: string;
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body', details: validation.error.issues }, { status: 400 });
     }
 
-    const { vehicleId, title, description, status, cost, odometer, event_date } = validation.data;
+    const { vehicleId, notes, mod_item_id, status, cost, odometer, event_date } = validation.data;
 
     // Verify user owns this vehicle
     const { data: vehicle, error: vehicleError } = await supabase
@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
     // Insert modification entry
     const modData: ModData = {
       user_vehicle_id: vehicleId,
-      title: title.trim(),
+      notes: notes.trim(),
       status,
     };
 
     // Add optional fields
-    if (description) modData.description = description;
+    if (mod_item_id) modData.mod_item_id = mod_item_id;
     if (costValue !== null) modData.cost = costValue;
     if (odometerValue !== null) modData.odometer = odometerValue;
     if (event_date) modData.event_date = event_date;
