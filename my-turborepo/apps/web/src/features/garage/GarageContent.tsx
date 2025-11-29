@@ -280,6 +280,7 @@ type GarageContentProps = {
 export function GarageContent({
   initialVehicles,
 }: GarageContentProps) {
+  const router = useRouter()
   // Use server-fetched data as initial state, ensuring no duplicates
   const initialActive = initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
   const uniqueInitialActive = initialActive.filter((v, index, self) =>
@@ -485,6 +486,10 @@ export function GarageContent({
       if (!response.ok) {
         console.error('Failed to update vehicle status')
         // Revert on error - the realtime subscription will handle the correct state
+      } else {
+        // Force a router refresh to ensure server components (like the list) are up to date
+        // This is critical for persistence across reloads if the cache is stale
+        router.refresh()
       }
     } catch (err) {
       console.error('Error updating vehicle status:', err)

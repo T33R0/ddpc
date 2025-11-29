@@ -136,6 +136,11 @@ export async function POST(request: NextRequest) {
     revalidatePath('/console')
     revalidatePath(`/vehicle/${vehicleId}`)
 
+    // Also revalidate the nickname path if it exists
+    if (updatedVehicle.nickname) {
+      revalidatePath(`/vehicle/${updatedVehicle.nickname}`)
+    }
+
     return NextResponse.json({
       success: true,
       vehicle: updatedVehicle,

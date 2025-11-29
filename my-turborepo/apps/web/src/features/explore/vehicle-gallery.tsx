@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { VehicleSummary } from '@/lib/types';
 import VehicleDetailsModal from './vehicle-details-modal';
 import { ImageWithTimeoutFallback } from '../../components/image-with-timeout-fallback';
@@ -87,6 +87,24 @@ interface VehicleGalleryProps {
 
 export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: VehicleGalleryProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<SelectedVehicle | null>(null);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !loadingMore && onLoadMore) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, onLoadMore]);
 
   return (
     <>
@@ -110,15 +128,15 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
       )}
 
       {/* Infinite Scroll Trigger */}
-      {hasMore && onLoadMore && (
-        <div className="mt-8 flex justify-center">
-          <button
-            onClick={onLoadMore}
-            disabled={loadingMore}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 disabled:opacity-50"
-          >
-            {loadingMore ? 'Loading...' : 'Load More'}
-          </button>
+
+      {hasMore && (
+        <div
+          ref={observerTarget}
+          className="h-20 flex justify-center items-center mt-8"
+        >
+          {loadingMore && (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          )}
         </div>
       )}
 

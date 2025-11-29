@@ -274,6 +274,8 @@ function StatusBadge({
 
       if (response.ok) {
         onUpdate(newStatus)
+        // Force refresh to ensure persistence
+        window.location.reload() // Using reload here as router.refresh() might not be enough for the badge state if it relies on props
       }
     } catch (err) {
       console.error('Failed to update status:', err)
@@ -442,6 +444,7 @@ function VehicleHeader({
 
       // Redirect to the new nickname URL (or vehicle ID if nickname was removed)
       const newSlug = newNickname || vehicleId
+      router.refresh() // Force refresh to update server data
       router.push(`/vehicle/${encodeURIComponent(newSlug)}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred')
