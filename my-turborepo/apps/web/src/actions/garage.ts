@@ -79,7 +79,7 @@ export async function addVehicleToGarage(
 
         if (createVehicleError || !newVehicle) {
             console.error('Create vehicle error:', createVehicleError)
-            return { error: 'Failed to add vehicle to garage' }
+            return { error: `Failed to add vehicle to garage: ${createVehicleError?.message || 'Unknown error'} (Code: ${createVehicleError?.code})` }
         }
 
         //

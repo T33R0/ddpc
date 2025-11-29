@@ -231,7 +231,7 @@ const VehicleDetailsModal = ({
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0"
+        className="sm:max-w-5xl max-h-[85dvh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -287,14 +287,15 @@ const VehicleDetailsModal = ({
                 />
 
                 {/* Mobile Navigation Arrows Overlay on Image */}
-                <div className="absolute inset-0 flex items-center justify-between px-2 md:hidden pointer-events-none">
+                <div className="absolute inset-0 flex items-center justify-between px-2 md:hidden z-20 pointer-events-none">
                   {canNavigatePrev ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onNavigate?.('prev');
                       }}
-                      className="pointer-events-auto p-2 bg-black/50 text-white rounded-full backdrop-blur-sm"
+                      className="pointer-events-auto p-3 bg-black/60 text-white rounded-full backdrop-blur-md shadow-lg active:scale-95 transition-transform"
+                      aria-label="Previous vehicle"
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -306,7 +307,8 @@ const VehicleDetailsModal = ({
                         e.stopPropagation();
                         onNavigate?.('next');
                       }}
-                      className="pointer-events-auto p-2 bg-black/50 text-white rounded-full backdrop-blur-sm"
+                      className="pointer-events-auto p-3 bg-black/60 text-white rounded-full backdrop-blur-md shadow-lg active:scale-95 transition-transform"
+                      aria-label="Next vehicle"
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
