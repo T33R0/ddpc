@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { AuthModal } from '@/features/auth/AuthModal';
 
 import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback';
+import { addVehicleToGarage } from '@/actions/garage';
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;
@@ -167,35 +168,19 @@ const VehicleDetailsModal = ({
     setIsAddingToGarage(true);
 
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error('Could not get user session.');
-      }
-      const accessToken = sessionData.session.access_token;
+      // Use Server Action directly
+      const result = await addVehicleToGarage(selectedTrim.id);
 
-      const response = await fetch('/api/garage/add-vehicle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          vehicleDataId: selectedTrim.id,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to add vehicle to garage');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       setIsAddedToGarage(true);
       toast.success('Vehicle successfully added to your garage!');
 
       // Redirect to vehicle page after a short delay if this was a pending add (meaning user just signed up/in)
-      if (pendingAdd && data.id) {
-        window.location.href = `/vehicle/${data.id}`;
+      if (pendingAdd && result.vehicleId) {
+        window.location.href = `/vehicle/${result.vehicleId}`;
         return;
       }
 

@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
+import { addVehicleToGarage } from '@/actions/garage';
 
 interface AddToGarageButtonProps {
   vehicleId: string; // This is the trim ID from vehicle_data
@@ -27,35 +28,20 @@ export function AddToGarageButton({ vehicleId, vehicleName }: AddToGarageButtonP
     }
 
     setIsAdding(true);
+    setIsAdding(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error('Could not get user session.');
-      }
-      const accessToken = sessionData.session.access_token;
+      // Use Server Action directly
+      const result = await addVehicleToGarage(vehicleId);
 
-      const response = await fetch('/api/garage/add-vehicle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          vehicleDataId: vehicleId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to add vehicle to garage');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       toast.success(`${vehicleName} added to your garage!`);
-      
+
       // Redirect to vehicle page
-      if (data.id) {
-        router.push(`/vehicle/${data.id}`);
+      if (result.vehicleId) {
+        router.push(`/vehicle/${result.vehicleId}`);
       } else {
         router.push('/garage');
       }
@@ -69,8 +55,8 @@ export function AddToGarageButton({ vehicleId, vehicleName }: AddToGarageButtonP
 
   return (
     <>
-      <Button 
-        onClick={handleAddToGarage} 
+      <Button
+        onClick={handleAddToGarage}
         disabled={isAdding}
         className="w-full sm:w-auto"
       >
@@ -93,7 +79,7 @@ export function AddToGarageButton({ vehicleId, vehicleName }: AddToGarageButtonP
           // The requirement says "then when the user signs up or in, send them to /vehicle/[id] for their vehicle."
           // This implies automatic action.
           setTimeout(() => {
-             handleAddToGarage();
+            handleAddToGarage();
           }, 500);
         }}
       />
