@@ -273,7 +273,19 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
     try {
       console.log('Calling addVehicleToGarage server action...');
-      const result = await addVehicleToGarage(selectedTrim.id);
+      toast.loading('Debug: Starting add process...', { duration: 2000 });
+
+      // Create a timeout promise
+      const timeoutPromise = new Promise<{ error: string }>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out after 15 seconds')), 15000);
+      });
+
+      // Race the server action against the timeout
+      const result = await Promise.race([
+        addVehicleToGarage(selectedTrim.id),
+        timeoutPromise
+      ]) as any; // Type assertion needed due to race
+
       console.log('addVehicleToGarage result:', result);
 
       if (result.error) {
@@ -329,7 +341,10 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader>
-          <DialogTitle>Add a Vehicle to Your Garage</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Add a Vehicle to Your Garage
+            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">DEBUG MODE</span>
+          </DialogTitle>
           <DialogDescription>
             Search our database by VIN or by Year, Make, and Model.
           </DialogDescription>
