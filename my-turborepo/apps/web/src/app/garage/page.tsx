@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { GarageContent } from '@/features/garage/GarageContent'
 import { VehicleWithOdometer } from '@repo/types'
 
+// Force dynamic rendering since we use cookies for auth
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Server Component that fetches data
 export default async function GaragePage() {
   let vehiclesWithOdometer: VehicleWithOdometer[] = []

@@ -484,12 +484,21 @@ export function GarageContent({
       })
 
       if (!response.ok) {
-        console.error('Failed to update vehicle status')
-        // Revert on error - the realtime subscription will handle the correct state
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to update vehicle status:', errorData)
+        alert(`Failed to update vehicle status: ${errorData.error || errorData.details || 'Unknown error'}`)
+        // Revert optimistic update on error
+        router.refresh()
       } else {
+        const result = await response.json().catch(() => ({}))
+        console.log('Vehicle status updated successfully:', result)
         // Force a router refresh to ensure server components (like the list) are up to date
         // This is critical for persistence across reloads if the cache is stale
         router.refresh()
+        // Also force a full reload after a short delay to ensure persistence
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
       }
     } catch (err) {
       console.error('Error updating vehicle status:', err)

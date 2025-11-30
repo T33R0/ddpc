@@ -238,6 +238,7 @@ function StatusBadge({
   onUpdate: (newStatus: string) => void
   isOwner: boolean
 }) {
+  const router = useRouter()
   const statusOptions = ['daily_driver', 'parked', 'listed', 'sold', 'retired']
   const statusLabels: Record<string, string> = {
     daily_driver: 'Daily Driver',
@@ -275,7 +276,15 @@ function StatusBadge({
       if (response.ok) {
         onUpdate(newStatus)
         // Force refresh to ensure persistence
-        window.location.reload() // Using reload here as router.refresh() might not be enough for the badge state if it relies on props
+        router.refresh()
+        // Also reload after a short delay to ensure server state is updated
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to update status:', errorData)
+        alert(`Failed to update status: ${errorData.error || 'Unknown error'}`)
       }
     } catch (err) {
       console.error('Failed to update status:', err)
@@ -309,6 +318,8 @@ function PrivacyBadge({
   onUpdate: (newPrivacy: 'PUBLIC' | 'PRIVATE') => void
   isOwner: boolean
 }) {
+  const router = useRouter()
+  
   if (!isOwner) {
     return (
       <Badge
@@ -349,6 +360,16 @@ function PrivacyBadge({
 
       if (response.ok) {
         onUpdate(newPrivacy)
+        // Force refresh to ensure persistence
+        router.refresh()
+        // Also reload after a short delay to ensure server state is updated
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to update privacy:', errorData)
+        alert(`Failed to update privacy: ${errorData.error || 'Unknown error'}`)
       }
     } catch (err) {
       console.error('Failed to update privacy:', err)
