@@ -118,12 +118,68 @@ export async function POST(request: NextRequest) {
       console.log('❌ Error code:', updateError.code);
       console.log('❌ Error details:', updateError.details);
       console.log('❌ Error hint:', updateError.hint);
+      console.log('❌ Update data attempted:', updateData);
+      
+      // Check if it's an RLS policy error
+      if (updateError.code === '42501' || 
+          updateError.message?.includes('row-level security') || 
+          updateError.message?.includes('RLS') ||
+          updateError.message?.includes('permission denied') ||
+          updateError.code === 'PGRST301') {
+        return NextResponse.json({
+          error: 'Permission denied. The RLS policy may be missing the WITH CHECK clause.',
+          details: updateError.message,
+          code: updateError.code,
+          hint: 'Please run the fix_user_vehicle_update_rls.sql migration in your Supabase database. This adds the required WITH CHECK clause to the user_vehicle_update_self policy.'
+        }, { status: 403 });
+      }
+      
       return NextResponse.json({
         error: 'Failed to update vehicle',
         details: updateError.message,
         code: updateError.code
       }, { status: 500 });
     }
+
+    // CRITICAL: Verify the update actually happened
+    // Without WITH CHECK clause, RLS can return success but not update the row
+    if (!updatedVehicle) {
+      console.log('❌ Update returned no data - RLS policy likely blocking update');
+      return NextResponse.json({
+        error: 'Update completed but no vehicle data returned',
+        details: 'The update may have been silently blocked by RLS policies. Please verify the user_vehicle_update_self policy has both USING and WITH CHECK clauses.',
+        hint: 'Run verify_rls_policy.sql to check, then fix_user_vehicle_update_rls.sql to fix.'
+      }, { status: 500 });
+    }
+
+    // Verify the update actually changed the values
+    const updateSucceeded = Object.keys(updateData).every(key => {
+      const expectedValue = updateData[key as keyof UpdateVehicleData]
+      const actualValue = updatedVehicle[key as keyof typeof updatedVehicle]
+      return expectedValue === actualValue || 
+             (expectedValue === null && actualValue === null) ||
+             (expectedValue === undefined && actualValue === undefined)
+    })
+
+    if (!updateSucceeded) {
+      console.log('❌ Update values do not match:', {
+        attempted: updateData,
+        returned: updatedVehicle
+      })
+      return NextResponse.json({
+        error: 'Update may have been blocked - values do not match',
+        details: 'The update returned but the values were not changed. This suggests RLS is blocking the update.',
+        hint: 'Please run fix_user_vehicle_update_rls.sql to add the WITH CHECK clause to the RLS policy.'
+      }, { status: 500 })
+    }
+
+    // Log successful update for debugging
+    console.log('✅ Vehicle updated successfully:', {
+      vehicleId: updatedVehicle.id,
+      updatedFields: Object.keys(updateData),
+      newStatus: updatedVehicle.current_status,
+      newPrivacy: updatedVehicle.privacy
+    });
 
 
 

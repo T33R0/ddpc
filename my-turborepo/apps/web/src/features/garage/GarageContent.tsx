@@ -483,23 +483,46 @@ export function GarageContent({
         }),
       })
 
+      const result = await response.json().catch(() => ({}))
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to update vehicle status:', errorData)
-        alert(`Failed to update vehicle status: ${errorData.error || errorData.details || 'Unknown error'}`)
+        console.error('Failed to update vehicle status:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: result
+        })
+        
+        // Show user-friendly error message
+        const errorMessage = result.error || result.details || 'Unknown error'
+        alert(`Failed to update vehicle status: ${errorMessage}${result.hint ? '\n\n' + result.hint : ''}`)
+        
         // Revert optimistic update on error
         router.refresh()
-      } else {
-        const result = await response.json().catch(() => ({}))
-        console.log('Vehicle status updated successfully:', result)
-        // Force a router refresh to ensure server components (like the list) are up to date
-        // This is critical for persistence across reloads if the cache is stale
-        router.refresh()
-        // Also force a full reload after a short delay to ensure persistence
-        setTimeout(() => {
-          window.location.reload()
-        }, 1000)
+        return
       }
+
+      // Verify the response indicates success
+      if (!result.success && !result.vehicle) {
+        console.error('Update response missing success indicator:', result)
+        alert('Update may have failed. Please check the console for details.')
+        router.refresh()
+        return
+      }
+
+      console.log('Vehicle status updated successfully:', {
+        vehicleId: result.vehicle?.id,
+        newStatus: result.vehicle?.current_status,
+        response: result
+      })
+
+      // Force a router refresh to ensure server components (like the list) are up to date
+      // This is critical for persistence across reloads if the cache is stale
+      router.refresh()
+      
+      // Also force a full reload after a short delay to ensure persistence
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
     } catch (err) {
       console.error('Error updating vehicle status:', err)
       // Revert on error - the realtime subscription will handle the correct state

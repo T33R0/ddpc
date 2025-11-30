@@ -273,19 +273,39 @@ function StatusBadge({
         }),
       })
 
-      if (response.ok) {
-        onUpdate(newStatus)
-        // Force refresh to ensure persistence
-        router.refresh()
-        // Also reload after a short delay to ensure server state is updated
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to update status:', errorData)
-        alert(`Failed to update status: ${errorData.error || 'Unknown error'}`)
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        console.error('Failed to update status:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: result
+        })
+        const errorMessage = result.error || result.details || 'Unknown error'
+        alert(`Failed to update status: ${errorMessage}${result.hint ? '\n\n' + result.hint : ''}`)
+        return
       }
+
+      // Verify the response indicates success
+      if (!result.success && !result.vehicle) {
+        console.error('Update response missing success indicator:', result)
+        alert('Update may have failed. Please check the console for details.')
+        return
+      }
+
+      console.log('Status updated successfully:', {
+        vehicleId: result.vehicle?.id,
+        newStatus: result.vehicle?.current_status,
+        response: result
+      })
+
+      onUpdate(newStatus)
+      // Force refresh to ensure persistence
+      router.refresh()
+      // Also reload after a short delay to ensure server state is updated
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (err) {
       console.error('Failed to update status:', err)
     }
@@ -358,19 +378,39 @@ function PrivacyBadge({
         }),
       })
 
-      if (response.ok) {
-        onUpdate(newPrivacy)
-        // Force refresh to ensure persistence
-        router.refresh()
-        // Also reload after a short delay to ensure server state is updated
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to update privacy:', errorData)
-        alert(`Failed to update privacy: ${errorData.error || 'Unknown error'}`)
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        console.error('Failed to update privacy:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: result
+        })
+        const errorMessage = result.error || result.details || 'Unknown error'
+        alert(`Failed to update privacy: ${errorMessage}${result.hint ? '\n\n' + result.hint : ''}`)
+        return
       }
+
+      // Verify the response indicates success
+      if (!result.success && !result.vehicle) {
+        console.error('Update response missing success indicator:', result)
+        alert('Update may have failed. Please check the console for details.')
+        return
+      }
+
+      console.log('Privacy updated successfully:', {
+        vehicleId: result.vehicle?.id,
+        newPrivacy: result.vehicle?.privacy,
+        response: result
+      })
+
+      onUpdate(newPrivacy)
+      // Force refresh to ensure persistence
+      router.refresh()
+      // Also reload after a short delay to ensure server state is updated
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (err) {
       console.error('Failed to update privacy:', err)
     }
