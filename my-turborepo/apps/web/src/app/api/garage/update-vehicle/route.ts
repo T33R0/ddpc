@@ -1,13 +1,7 @@
-// Enhanced debugging for update vehicle API
-// Logs removed for security
-
-
+// Vehicle update API - uses cookie-based authentication
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface UpdateVehicleData {
   nickname?: string | null;
@@ -19,30 +13,11 @@ interface UpdateVehicleData {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check request headers
-    const authHeader = request.headers.get('authorization');
+    // Create Supabase client using cookie-based authentication
+    const supabase = await createClient();
 
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No valid auth header');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.substring(7);
-
-
-    // Create Supabase client
-    const authenticatedSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false },
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    });
-
-    // Test user authentication
-    const { data: { user }, error: authError } = await authenticatedSupabase.auth.getUser();
+    // Get authenticated user - this validates with the Supabase Auth server
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError) {
       console.log('❌ Auth error:', authError);
@@ -76,7 +51,7 @@ export async function POST(request: NextRequest) {
 
 
     // First, verify the vehicle exists and belongs to the user
-    const { data: vehicleCheck, error: vehicleCheckError } = await authenticatedSupabase
+    const { data: vehicleCheck, error: vehicleCheckError } = await supabase
       .from('user_vehicle')
       .select('id, owner_id, current_status')
       .eq('id', vehicleId)
@@ -105,7 +80,7 @@ export async function POST(request: NextRequest) {
 
 
     // Perform the update
-    const { data: updatedVehicle, error: updateError } = await authenticatedSupabase
+    const { data: updatedVehicle, error: updateError } = await supabase
       .from('user_vehicle')
       .update(updateData)
       .eq('id', vehicleId)

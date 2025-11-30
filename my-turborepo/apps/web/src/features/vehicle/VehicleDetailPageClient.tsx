@@ -123,13 +123,6 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
     setIsUploading(true)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        alert('You must be logged in to upload images')
-        setIsUploading(false)
-        return
-      }
-
       // Use API route for upload (handles bucket creation errors better)
       const formData = new FormData()
       formData.append('file', file)
@@ -137,9 +130,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
 
       const response = await fetch('/api/garage/upload-vehicle-image', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        credentials: 'include',
         body: formData,
       })
 
@@ -258,15 +249,12 @@ function StatusBadge({
 
   const handleStatusChange = async (newStatus: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
       const response = await fetch('/api/garage/update-vehicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           vehicleId,
           status: newStatus,
@@ -363,15 +351,12 @@ function PrivacyBadge({
 
   const handlePrivacyChange = async (newPrivacy: 'PUBLIC' | 'PRIVATE') => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
       const response = await fetch('/api/garage/update-vehicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           vehicleId,
           privacy: newPrivacy,
@@ -472,20 +457,12 @@ function VehicleHeader({
     setError(null)
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (!session) {
-        setError('You must be logged in to update the nickname')
-        setIsSaving(false)
-        return
-      }
-
       const response = await fetch('/api/garage/update-vehicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           vehicleId,
           nickname: nickname.trim() || null,

@@ -468,15 +468,12 @@ export function GarageContent({
 
     // Then update via API
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
       const response = await fetch('/api/garage/update-vehicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           vehicleId,
           status: newStatus,
