@@ -222,18 +222,29 @@ export function AuthProvider({
   };
 
   const signOut = async () => {
-    // Immediately reflect the logged-out state so the UI/responders update without waiting on Supabase
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    router.push('/');
-    router.refresh();
-    setShowLogoutModal(true);
-
     try {
+      // 1. Sign out from Supabase FIRST - this clears the session cookies
       await supabase.auth.signOut();
+      
+      // 2. Clear local state AFTER signOut succeeds
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      
+      // 3. Show the logout modal
+      setShowLogoutModal(true);
+      
+      // 4. Navigate AFTER cookies are cleared
+      router.push('/');
+      router.refresh();
     } catch (error) {
       console.error('Error signing out:', error);
+      // Even if there's an error, try to clean up local state
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      router.push('/');
+      router.refresh();
     }
   };
 
