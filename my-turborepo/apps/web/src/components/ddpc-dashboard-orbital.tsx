@@ -62,7 +62,7 @@ export default function DDPCDashboardOrbital({
   const cardGlow = resolvedTheme === 'dark' ? '' : 'shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-200';
 
   // Admin check logic
-  const isAdmin = user?.app_metadata?.role === 'admin' || user?.user_metadata?.role === 'admin';
+  const isAdmin = profile?.role === 'admin';
   const isBreakGlassUser = user?.email === 'myddpc@gmail.com';
   const canAccessAdmin = isAdmin || isBreakGlassUser;
 
