@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { useRouter } from 'next/navigation';
+import { signOut as signOutAction } from '../actions/auth';
 
 interface UserProfile {
   id: string;
@@ -219,15 +220,8 @@ export function AuthProvider({
     setProfile(null);
     setShowLogoutModal(true);
 
-    // 2. Navigate immediately
-    router.push('/');
-    router.refresh();
-
-    // 3. Sign out from Supabase in the background (don't block UI)
-    // 3. Sign out from Supabase in the background (don't block UI)
-    supabase.auth.signOut().catch((error) => {
-      console.error('Error signing out from Supabase:', error);
-    });
+    // 2. Call Server Action to clear cookies and redirect
+    await signOutAction();
   };
 
   const value = {
