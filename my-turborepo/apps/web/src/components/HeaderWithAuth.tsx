@@ -9,9 +9,11 @@ import { useVehicles } from '../lib/hooks/useVehicles';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../lib/user-routing';
 import { useReportModal } from '../lib/report-modal-context';
 
+import { signOut } from '../actions/auth';
+
 export function HeaderWithAuth() {
   const pathname = usePathname() || '/';
-  const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
+  const { user, profile, signUp, signIn, signInWithGoogle } = useAuth();
   const { theme, setTheme } = useTheme();
   const { open: openReportModal } = useReportModal();
 
