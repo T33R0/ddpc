@@ -218,13 +218,14 @@ export function AuthProvider({
     setUser(null);
     setProfile(null);
     setShowLogoutModal(true);
-    
+
     // 2. Navigate immediately
     router.push('/');
     router.refresh();
-    
+
     // 3. Sign out from Supabase in the background (don't block UI)
-    supabase.auth.signOut({ scope: 'local' }).catch((error) => {
+    // 3. Sign out from Supabase in the background (don't block UI)
+    supabase.auth.signOut().catch((error) => {
       console.error('Error signing out from Supabase:', error);
     });
   };
