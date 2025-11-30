@@ -146,9 +146,6 @@ export function AuthProvider({
   }, [fetchProfile, initialSession]);
 
   const signUp = async (email: string, password: string) => {
-    // Force sign out before starting a new sign in flow
-    await supabase.auth.signOut();
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -198,9 +195,6 @@ export function AuthProvider({
   };
 
   const signIn = async (email: string, password: string) => {
-    // Force sign out before starting a new sign in flow
-    await supabase.auth.signOut();
-
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -209,9 +203,6 @@ export function AuthProvider({
   };
 
   const signInWithGoogle = async () => {
-    // Force sign out before starting a new sign in flow
-    await supabase.auth.signOut();
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -223,8 +214,8 @@ export function AuthProvider({
 
   const signOut = async () => {
     try {
-      // 1. Sign out from Supabase FIRST - this clears the session cookies
-      await supabase.auth.signOut();
+      // 1. Sign out from Supabase FIRST - use local scope to avoid network timeout
+      await supabase.auth.signOut({ scope: 'local' });
       
       // 2. Clear local state AFTER signOut succeeds
       setSession(null);
