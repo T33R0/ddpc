@@ -108,9 +108,17 @@ export function AddServiceDialog({
   // Fetch service items when category is selected
   useEffect(() => {
     if (selectedCategory && currentStep === 2) {
-      fetchServiceItems(selectedCategory.id)
+      // First try to use initialItems if available
+      const itemsFromInitial = initialItems.filter(item => item.category_id === selectedCategory.id)
+      if (itemsFromInitial.length > 0) {
+        setServiceItems(itemsFromInitial)
+        setIsLoadingItems(false)
+      } else {
+        // Fallback to fetching if not in initialItems
+        fetchServiceItems(selectedCategory.id)
+      }
     }
-  }, [selectedCategory, currentStep])
+  }, [selectedCategory, currentStep, initialItems])
 
   // Pre-fill form when modal opens with plannedLog or prefillServiceItemId
   useEffect(() => {
@@ -154,6 +162,7 @@ export function AddServiceDialog({
               plan_item_id: null,
             })
             // Skip to step 2 and fetch the service item's category
+            // Use initialItems if available, otherwise fetch
             await fetchServiceItemAndCategory(prefillServiceItemId)
           } finally {
             setIsInitializing(false)
@@ -211,20 +220,53 @@ export function AddServiceDialog({
   }, [isOpen, plannedLog, prefillServiceItemId, prefillStatus, planItem])
 
   const fetchServiceItemAndCategory = async (serviceItemId: string) => {
+    setIsInitializing(true)
     try {
-      // Fetch the service item to get its category
+      // First try to find the item in initialItems
+      const itemFromInitial = initialItems.find(item => item.id === serviceItemId)
+      
+      if (itemFromInitial) {
+        // Use initial data
+        const categoryFromInitial = initialCategories.find(cat => cat.id === itemFromInitial.category_id)
+        
+        if (categoryFromInitial) {
+          // Set category and filter items
+          setSelectedCategory(categoryFromInitial)
+          const itemsForCategory = initialItems.filter(item => item.category_id === categoryFromInitial.id)
+          setServiceItems(itemsForCategory)
+          setCurrentStep(2)
+          setIsInitializing(false)
+          return
+        }
+      }
+
+      // Fallback to fetching from Supabase if not in initial data
       const { data: item, error: itemError } = await supabase
         .from('service_items')
-        .select('id, name, category_id, service_categories!inner(id, name)')
+        .select('id, name, category_id')
         .eq('id', serviceItemId)
         .single()
 
       if (itemError) throw itemError
 
       if (item && item.category_id) {
-        // Fetch all items for this category
+        // Try to find category in initialCategories first
+        const categoryFromInitial = initialCategories.find(cat => cat.id === item.category_id)
+        
+        if (categoryFromInitial) {
+          // Use initial items for this category
+          const itemsForCategory = initialItems.filter(i => i.category_id === item.category_id)
+          if (itemsForCategory.length > 0) {
+            setServiceItems(itemsForCategory)
+            setSelectedCategory(categoryFromInitial)
+            setCurrentStep(2)
+            setIsInitializing(false)
+            return
+          }
+        }
+        
+        // Fallback: fetch from Supabase
         await fetchServiceItems(item.category_id)
-        // Fetch the category separately to get its details
         const { data: categoryData, error: categoryError } = await supabase
           .from('service_categories')
           .select('id, name')
@@ -239,6 +281,8 @@ export function AddServiceDialog({
     } catch (err) {
       console.error('Error fetching service item:', err)
       setError('Failed to load service item details')
+    } finally {
+      setIsInitializing(false)
     }
   }
 
@@ -274,18 +318,38 @@ export function AddServiceDialog({
 
   const fetchServiceItems = async (categoryId: string) => {
     setIsLoadingItems(true)
+    setError(null)
     try {
+      // First check if we have items in initialItems for this category
+      const itemsFromInitial = initialItems.filter(item => item.category_id === categoryId)
+      if (itemsFromInitial.length > 0) {
+        setServiceItems(itemsFromInitial)
+        setIsLoadingItems(false)
+        return
+      }
+
+      // Fallback to fetching from Supabase
       const { data, error } = await supabase
         .from('service_items')
         .select('id, name, description, category_id')
         .eq('category_id', categoryId)
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error fetching service items:', error)
+        throw error
+      }
+      
       setServiceItems(data || [])
+      
+      if (!data || data.length === 0) {
+        console.warn(`No service items found for category ${categoryId}`)
+      }
     } catch (err) {
       console.error('Error fetching service items:', err)
-      setError('Failed to load service items')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load service items'
+      setError(`Failed to load service items: ${errorMessage}`)
+      setServiceItems([]) // Ensure empty array on error
     } finally {
       setIsLoadingItems(false)
     }
