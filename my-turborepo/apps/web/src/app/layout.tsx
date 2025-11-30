@@ -26,8 +26,13 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Use getUser() to validate session - this contacts the Supabase Auth server
+  // and avoids the "insecure getSession" warning
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Only get session if user is validated
+  const session = user ? (await supabase.auth.getSession()).data.session : null;
 
   return (
     <html lang="en" className={`${inter.variable} font-sans`} suppressHydrationWarning>

@@ -213,30 +213,20 @@ export function AuthProvider({
   };
 
   const signOut = async () => {
-    try {
-      // 1. Sign out from Supabase FIRST - use local scope to avoid network timeout
-      await supabase.auth.signOut({ scope: 'local' });
-      
-      // 2. Clear local state AFTER signOut succeeds
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      
-      // 3. Show the logout modal
-      setShowLogoutModal(true);
-      
-      // 4. Navigate AFTER cookies are cleared
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Error signing out:', error);
-      // Even if there's an error, try to clean up local state
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      router.push('/');
-      router.refresh();
-    }
+    // 1. Clear local state IMMEDIATELY for instant UI feedback
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setShowLogoutModal(true);
+    
+    // 2. Navigate immediately
+    router.push('/');
+    router.refresh();
+    
+    // 3. Sign out from Supabase in the background (don't block UI)
+    supabase.auth.signOut({ scope: 'local' }).catch((error) => {
+      console.error('Error signing out from Supabase:', error);
+    });
   };
 
   const value = {

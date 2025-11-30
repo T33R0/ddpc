@@ -512,14 +512,8 @@ export function GarageContent({
         response: result
       })
 
-      // Force a router refresh to ensure server components (like the list) are up to date
-      // This is critical for persistence across reloads if the cache is stale
+      // Soft refresh to update server state without page flash
       router.refresh()
-      
-      // Also force a full reload after a short delay to ensure persistence
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
     } catch (err) {
       console.error('Error updating vehicle status:', err)
       // Revert on error - the realtime subscription will handle the correct state
@@ -528,9 +522,8 @@ export function GarageContent({
 
   // Function to refresh garage data when vehicles are added or updated
   const handleVehicleAdded = () => {
-    // For now, refresh the page to re-run the Server Component
-    // In a more sophisticated implementation, you could refetch data via API
-    window.location.reload()
+    // Soft refresh to re-run the Server Component without page flash
+    router.refresh()
   }
 
   // Remove duplicates from active vehicles (safety check)

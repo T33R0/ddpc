@@ -288,12 +288,8 @@ function StatusBadge({
       })
 
       onUpdate(newStatus)
-      // Force refresh to ensure persistence
+      // Soft refresh to update server state without page flash
       router.refresh()
-      // Also reload after a short delay to ensure server state is updated
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
     } catch (err) {
       console.error('Failed to update status:', err)
     }
@@ -390,12 +386,8 @@ function PrivacyBadge({
       })
 
       onUpdate(newPrivacy)
-      // Force refresh to ensure persistence
+      // Soft refresh to update server state without page flash
       router.refresh()
-      // Also reload after a short delay to ensure server state is updated
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
     } catch (err) {
       console.error('Failed to update privacy:', err)
     }
