@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { ServicePageClient } from '@/features/service/ServicePageClient'
-import { ServiceInterval, MaintenanceLog } from '@repo/types'
+import { ServiceInterval } from '@repo/types'
 import { resolveVehicleSlug } from '@/lib/vehicle-utils'
 
 export const revalidate = 0; // Ensure data is always fresh
@@ -57,10 +57,9 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
     notFound() // Triggers 404 page
   }
 
-  // --- 3-5. Fetch plan, history, and scheduled entries in parallel ---
+  // --- 3-5. Fetch plan, planned logs, and service data in parallel ---
   const [
     planResult,
-    historyResult,
     plannedLogsResult,
     scheduledResult,
     serviceCategoriesResult,
@@ -71,25 +70,6 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
       .select('*')
       .eq('user_vehicle_id', vehicleId)
       .order('interval_miles', { ascending: true }),
-    supabase
-      .from('maintenance_log')
-      .select(`
-        id,
-        event_date,
-        odometer,
-        service_item_id,
-        notes,
-        service_provider,
-        cost,
-        status,
-        service_item:service_items (
-          id,
-          name
-        )
-      `)
-      .eq('user_vehicle_id', vehicleId)
-      .or('status.eq.History,status.is.null')
-      .order('event_date', { ascending: false }),
     supabase
       .from('maintenance_log')
       .select(`
@@ -126,7 +106,6 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
   ])
 
   const { data: plan, error: planError } = planResult
-  const { data: history, error: historyError } = historyResult
   const { data: scheduled, error: scheduledError } = scheduledResult
   const { data: plannedLogs, error: plannedLogsError } = plannedLogsResult
   const { data: serviceCategories, error: serviceCategoriesError } = serviceCategoriesResult
@@ -134,10 +113,6 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
 
   if (planError) {
     console.error('Error fetching service plan:', planError)
-  }
-
-  if (historyError) {
-    console.error('Error fetching service history:', historyError)
   }
 
   if (scheduledError) {
@@ -163,12 +138,6 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
       initialPlannedLogs={(plannedLogs as any[] | null) || []}
       initialPlan={
         (plan as ServiceInterval[] | null) || []
-      }
-      initialHistory={
-        (history as MaintenanceLog[] | null) || []
-      }
-      initialScheduled={
-        (scheduled as MaintenanceLog[] | null) || []
       }
       initialChecklistCategories={(serviceCategories as any[] | null) || []}
       initialChecklistItems={(serviceItems as any[] | null) || []}

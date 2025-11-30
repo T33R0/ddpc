@@ -4,15 +4,12 @@ import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ServiceInterval,
-  MaintenanceLog,
 } from '@repo/types'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
 import { Button } from '@repo/ui/button'
 import { Plus, Fuel } from 'lucide-react'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
 import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
 import { ServicePlanView, ServicePlanViewRef } from '@/features/service/components/ServicePlanView'
-import { ServiceHistoryList } from '@/features/service/components/ServiceHistoryList'
 
 // -----------------
 // PROPS
@@ -40,8 +37,6 @@ type ServicePageClientProps = {
     } | null
   }[]
   initialPlan: ServiceInterval[]
-  initialHistory: MaintenanceLog[]
-  initialScheduled: MaintenanceLog[]
   initialChecklistCategories: { id: string; name: string }[]
   initialChecklistItems: { id: string; name: string; description: string | null; category_id: string }[]
 }
@@ -74,22 +69,12 @@ const PlanTabContent = React.forwardRef<ServicePlanViewRef, {
 
 PlanTabContent.displayName = 'PlanTabContent'
 
-// The "History" tab's content
-function HistoryTabContent({ vehicleId, initialHistory }: { vehicleId: string, initialHistory: MaintenanceLog[] }) {
-  return (
-    <div className="space-y-8 mt-4">
-      <ServiceHistoryList vehicleId={vehicleId} initialHistory={initialHistory} />
-    </div>
-  )
-}
-
 // -----------------
 // MAIN COMPONENT
 // -----------------
 export function ServicePageClient({
   vehicle,
   initialPlannedLogs,
-  initialHistory,
   initialChecklistCategories,
   initialChecklistItems,
 }: ServicePageClientProps) {
@@ -181,28 +166,18 @@ export function ServicePageClient({
             </div>
           </div>
 
-          <Tabs defaultValue="plan" className="w-full text-foreground">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="plan">Plan</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="plan">
-              <PlanTabContent
-                vehicleId={vehicle.id}
-                onMarkComplete={handleMarkComplete}
-                onAddToPlan={handleAddToPlan}
-                initialPlannedLogs={initialPlannedLogs}
-                initialChecklistCategories={initialChecklistCategories}
-                initialChecklistItems={initialChecklistItems}
-                ref={servicePlanViewRef}
-              />
-            </TabsContent>
-
-            <TabsContent value="history">
-              <HistoryTabContent vehicleId={vehicle.id} initialHistory={initialHistory} />
-            </TabsContent>
-          </Tabs>
+          {/* Plan Section - No tabs, just show the plan content directly */}
+          <div className="mt-8">
+            <PlanTabContent
+              vehicleId={vehicle.id}
+              onMarkComplete={handleMarkComplete}
+              onAddToPlan={handleAddToPlan}
+              initialPlannedLogs={initialPlannedLogs}
+              initialChecklistCategories={initialChecklistCategories}
+              initialChecklistItems={initialChecklistItems}
+              ref={servicePlanViewRef}
+            />
+          </div>
         </div>
       </section>
 
