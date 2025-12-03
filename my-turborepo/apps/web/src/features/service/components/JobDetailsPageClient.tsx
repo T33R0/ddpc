@@ -20,7 +20,6 @@ type JobDetailsPageClientProps = {
   }
   jobTitle: string
   jobLog: { id: string }
-  userId: string
   initialJobPlan?: { id: string; name: string } | null
   initialSteps?: JobStepData[]
 }
@@ -29,12 +28,22 @@ export function JobDetailsPageClient({
   vehicle,
   jobTitle,
   jobLog,
-  userId,
   initialJobPlan,
   initialSteps,
 }: JobDetailsPageClientProps) {
   const router = useRouter()
   const vehicleSlug = vehicle.nickname || vehicle.id
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+      }
+    }
+    getUserId()
+  }, [])
 
   const handleBack = () => {
     router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service`)
@@ -75,14 +84,17 @@ export function JobDetailsPageClient({
           <TabsContent value="plan" className="mt-6">
             <Card className="bg-card backdrop-blur-sm border-border">
               <CardContent className="p-6">
-                <JobPlanBuilder
-                  key={jobLog.id}
-                  maintenanceLogId={jobLog.id}
-                  userId={userId}
-                  jobTitle={jobTitle}
-                  initialJobPlan={initialJobPlan}
-                  initialSteps={initialSteps}
-                />
+                {userId && jobLog?.id ? (
+                  <JobPlanBuilder
+                    maintenanceLogId={jobLog.id}
+                    userId={userId}
+                    jobTitle={jobTitle}
+                    initialJobPlan={initialJobPlan}
+                    initialSteps={initialSteps}
+                  />
+                ) : (
+                  <div className="text-muted-foreground">Loading...</div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
