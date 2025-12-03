@@ -6,6 +6,7 @@ import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { JobPlanBuilder } from './JobPlanBuilder'
+import { JobStepData } from './JobStep'
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 
@@ -19,12 +20,16 @@ type JobDetailsPageClientProps = {
   }
   jobTitle: string
   jobLog: { id: string }
+  initialJobPlan?: { id: string; name: string } | null
+  initialSteps?: JobStepData[]
 }
 
 export function JobDetailsPageClient({
   vehicle,
   jobTitle,
   jobLog,
+  initialJobPlan,
+  initialSteps,
 }: JobDetailsPageClientProps) {
   const router = useRouter()
   const vehicleSlug = vehicle.nickname || vehicle.id
@@ -84,6 +89,8 @@ export function JobDetailsPageClient({
                     maintenanceLogId={jobLog.id}
                     userId={userId}
                     jobTitle={jobTitle}
+                    initialJobPlan={initialJobPlan}
+                    initialSteps={initialSteps}
                   />
                 ) : (
                   <div className="text-muted-foreground">Loading...</div>

@@ -49,36 +49,15 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
     setIsSubmitting(true);
 
     try {
-      let screenshotUrl = null;
-
-      // Upload screenshot if exists (keep client-side for now)
-      if (screenshot) {
-        const fileExt = screenshot.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('issue-attachments')
-          .upload(filePath, screenshot);
-
-        if (uploadError) {
-          throw new Error('Failed to upload screenshot');
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('issue-attachments')
-          .getPublicUrl(filePath);
-
-        screenshotUrl = publicUrl;
-      }
-
       // Use Server Action for DB insert
       const formData = new FormData();
       formData.append('description', description);
       formData.append('url', url);
       formData.append('email', email);
-      if (screenshotUrl) {
-        formData.append('screenshotUrl', screenshotUrl);
+
+      // Append screenshot file directly to FormData if exists
+      if (screenshot) {
+        formData.append('screenshot', screenshot);
       }
 
       // Dynamically import the action to avoid build issues if not fully set up

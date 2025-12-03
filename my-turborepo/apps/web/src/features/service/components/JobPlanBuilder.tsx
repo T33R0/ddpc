@@ -11,18 +11,22 @@ interface JobPlanBuilderProps {
   maintenanceLogId: string
   userId: string
   jobTitle: string
+  initialJobPlan?: { id: string; name: string } | null
+  initialSteps?: JobStepData[]
 }
 
 export function JobPlanBuilder({
   maintenanceLogId,
   userId,
   jobTitle,
+  initialJobPlan,
+  initialSteps,
 }: JobPlanBuilderProps) {
-  const [steps, setSteps] = useState<JobStepData[]>([])
+  const [steps, setSteps] = useState<JobStepData[]>(initialSteps || [])
   const [isLoading, setIsLoading] = useState(false)
   const [stepInput, setStepInput] = useState('')
   const [draggedStepId, setDraggedStepId] = useState<string | null>(null)
-  const [jobPlanId, setJobPlanId] = useState<string | null>(null)
+  const [jobPlanId, setJobPlanId] = useState<string | null>(initialJobPlan?.id || null)
   const [isReassemblyMode, setIsReassemblyMode] = useState(false)
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
 
@@ -81,17 +85,12 @@ export function JobPlanBuilder({
     }
   }, [jobPlanId])
 
-  // Fetch or create job plan
-  useEffect(() => {
-    fetchOrCreateJobPlan()
-  }, [fetchOrCreateJobPlan])
-
   // Fetch steps when job plan is available
   useEffect(() => {
-    if (jobPlanId) {
+    if (jobPlanId && !initialSteps) {
       fetchSteps()
     }
-  }, [jobPlanId, fetchSteps])
+  }, [jobPlanId, fetchSteps, initialSteps])
 
   const handleAddStep = async () => {
     if (!stepInput.trim() || !jobPlanId) return

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { deleteServiceLog } from '../actions'
 
 interface PlannedServiceLog {
   id: string
@@ -93,12 +94,9 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
 
       setDeletingId(logId)
       try {
-        const { error } = await supabase
-          .from('maintenance_log')
-          .delete()
-          .eq('id', logId)
+        const result = await deleteServiceLog(logId)
 
-        if (error) throw error
+        if (result.error) throw new Error(result.error)
 
         setPlannedLogs(prev => prev.filter((log) => log.id !== logId))
         router.refresh()

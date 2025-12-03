@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
 import { JobDetailsPageClient } from '@/features/service/components/JobDetailsPageClient'
+import { getJobPlan, createJobPlan, getJobSteps } from '@/features/service/actions'
 
 export const revalidate = 0
 
@@ -88,11 +89,23 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
     notFound()
   }
 
+  // Fetch or create job plan
+  let jobPlan = await getJobPlan(matchingLog.id, user.id)
+
+  if (!jobPlan) {
+    jobPlan = await createJobPlan(matchingLog.id, user.id, jobTitle)
+  }
+
+  // Fetch steps
+  const steps = jobPlan ? await getJobSteps(jobPlan.id) : []
+
   return (
     <JobDetailsPageClient
       vehicle={vehicle}
       jobTitle={jobTitle}
       jobLog={matchingLog}
+      initialJobPlan={jobPlan}
+      initialSteps={steps}
     />
   )
 }
