@@ -38,9 +38,9 @@ export async function submitIssueReport(
                 return { error: 'File must be an image' }
             }
 
-            // Validate file size (max 10MB)
-            if (screenshot.size > 10 * 1024 * 1024) {
-                return { error: 'File size must be less than 10MB' }
+            // Validate file size (max 4MB)
+            if (screenshot.size > 4 * 1024 * 1024) {
+                return { error: 'File size must be less than 4MB' }
             }
 
             const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY

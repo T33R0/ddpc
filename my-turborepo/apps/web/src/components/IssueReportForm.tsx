@@ -40,7 +40,14 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setScreenshot(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error('Image size must be less than 4MB');
+        // Reset the input
+        e.target.value = '';
+        return;
+      }
+      setScreenshot(file);
     }
   };
 
@@ -129,32 +136,37 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
 
       <div className="space-y-2">
         <Label>Screenshot (optional)</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id="screenshot-upload"
-          />
-          <Label
-            htmlFor="screenshot-upload"
-            className="flex items-center gap-2 cursor-pointer border border-input rounded-md px-3 py-2 hover:bg-accent transition-colors text-sm"
-          >
-            <Paperclip className="w-4 h-4" />
-            {screenshot ? screenshot.name : 'Upload Screenshot'}
-          </Label>
-          {screenshot && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setScreenshot(null)}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              id="screenshot-upload"
+            />
+            <Label
+              htmlFor="screenshot-upload"
+              className="flex items-center gap-2 cursor-pointer border border-input rounded-md px-3 py-2 hover:bg-accent transition-colors text-sm"
             >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+              <Paperclip className="w-4 h-4" />
+              {screenshot ? screenshot.name : 'Upload Screenshot'}
+            </Label>
+            {screenshot && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setScreenshot(null)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Max file size: 4MB. Supported formats: JPG, PNG, GIF.
+          </p>
         </div>
       </div>
 
