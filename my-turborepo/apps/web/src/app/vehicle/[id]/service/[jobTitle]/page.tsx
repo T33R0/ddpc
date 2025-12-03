@@ -104,6 +104,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
       vehicle={vehicle}
       jobTitle={jobTitle}
       jobLog={matchingLog}
+      userId={user.id}
       initialJobPlan={jobPlan}
       initialSteps={steps}
     />

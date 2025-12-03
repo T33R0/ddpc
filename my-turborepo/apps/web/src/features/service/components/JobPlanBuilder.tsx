@@ -85,6 +85,13 @@ export function JobPlanBuilder({
     }
   }, [jobPlanId])
 
+  // Sync steps with initialSteps if they change (e.g. on navigation if key wasn't enough)
+  useEffect(() => {
+    if (initialSteps) {
+      setSteps(initialSteps)
+    }
+  }, [initialSteps])
+
   // Fetch steps when job plan is available
   useEffect(() => {
     if (jobPlanId && !initialSteps) {
