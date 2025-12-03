@@ -151,10 +151,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     } else {
       setAvailableMakes([]);
     }
-    setSelectedMake('');
-    setSelectedModel('');
-    setSelectedTrimId('');
-    setManualVehicleData(null);
+    // Removed automatic resets here to allow programmatic setting
   }, [selectedYear]);
 
   // Load models when year and make change
@@ -175,15 +172,49 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     } else {
       setAvailableModels([]);
     }
-    setSelectedModel('');
-    setSelectedTrimId('');
-    setManualVehicleData(null);
+    // Removed automatic resets here to allow programmatic setting
   }, [selectedYear, selectedMake]);
 
   const selectedTrim = useMemo<TrimVariant | null>(() => {
     if (!currentVehicleData || !currentSelectedTrimId) return null;
     return currentVehicleData.trims.find((trim) => trim.id === currentSelectedTrimId) ?? currentVehicleData.trims[0] ?? null;
   }, [currentVehicleData, currentSelectedTrimId]);
+
+  const searchVehicles = async (year: string, make: string, model: string) => {
+    try {
+      // Fetch vehicle data based on year/make/model
+      const filters = {
+        minYear: parseInt(year),
+        maxYear: parseInt(year),
+        make: make,
+        model: model,
+      };
+
+      const response = await fetch('/api/explore/vehicles?page=1&pageSize=1&' +
+        new URLSearchParams({
+          minYear: filters.minYear.toString(),
+          maxYear: filters.maxYear.toString(),
+          make: filters.make,
+          model: filters.model,
+        }).toString());
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          setManualVehicleData(data.data[0]);
+          setSelectedTrimId(data.data[0].trims[0]?.id || '');
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error('Error searching vehicles:', error);
+      return false;
+    }
+  };
 
   const handleVinDecode = async () => {
     if (!vin.trim()) {
@@ -214,6 +245,28 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
       // Safe check for trims
       const trims = data.vehicleData.trims;
       if (!trims || !Array.isArray(trims) || trims.length === 0) {
+        // Fallback to manual entry if we have YMM
+        if (data.vehicleData.year && data.vehicleData.make && data.vehicleData.model) {
+          toast('Exact trim not found. Switching to manual selection...', { icon: 'ℹ️' });
+
+          setActiveTab('manual');
+          setSelectedYear(data.vehicleData.year.toString());
+          setSelectedMake(data.vehicleData.make);
+          setSelectedModel(data.vehicleData.model);
+
+          // Trigger search to populate trims
+          const found = await searchVehicles(
+            data.vehicleData.year.toString(),
+            data.vehicleData.make,
+            data.vehicleData.model
+          );
+
+          if (!found) {
+            toast.error('Could not find trims for this vehicle. Please select manually.');
+          }
+          return;
+        }
+
         throw new Error('Vehicle found, but no trim details available. Please try manual entry.');
       }
 
@@ -234,37 +287,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
       return;
     }
 
-    try {
-      // Fetch vehicle data based on year/make/model
-      const filters = {
-        minYear: parseInt(selectedYear),
-        maxYear: parseInt(selectedYear),
-        make: selectedMake,
-        model: selectedModel,
-      };
-
-      const response = await fetch('/api/explore/vehicles?page=1&pageSize=1&' +
-        new URLSearchParams({
-          minYear: filters.minYear.toString(),
-          maxYear: filters.maxYear.toString(),
-          make: filters.make,
-          model: filters.model,
-        }).toString());
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data && data.data.length > 0) {
-          setManualVehicleData(data.data[0]);
-          setSelectedTrimId(data.data[0].trims[0]?.id || '');
-        } else {
-          toast.error('No vehicles found with the selected criteria');
-        }
-      } else {
-        toast.error('Failed to search for vehicles');
-      }
-    } catch (error) {
-      console.error('Error searching vehicles:', error);
-      toast.error('Failed to search for vehicles');
+    const found = await searchVehicles(selectedYear, selectedMake, selectedModel);
+    if (!found) {
+      toast.error('No vehicles found with the selected criteria');
     }
   };
 
