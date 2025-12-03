@@ -71,9 +71,15 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (vehicleSummaries && vehicleSummaries.length > 0) {
+        // Ensure trims exists
+        const vehicleData = vehicleSummaries[0];
+        if (!vehicleData.trims) {
+          vehicleData.trims = [];
+        }
+
         return NextResponse.json({
           success: true,
-          vehicleData: vehicleSummaries[0],
+          vehicleData: vehicleData,
           matchFound: true
         });
       }

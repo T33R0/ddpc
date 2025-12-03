@@ -207,8 +207,18 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
         throw new Error(data.error || 'Failed to decode VIN');
       }
 
+      if (!data.vehicleData) {
+        throw new Error('No vehicle data returned');
+      }
+
+      // Safe check for trims
+      const trims = data.vehicleData.trims;
+      if (!trims || !Array.isArray(trims) || trims.length === 0) {
+        throw new Error('Vehicle found, but no trim details available. Please try manual entry.');
+      }
+
       setVinVehicleData(data.vehicleData);
-      setSelectedVinTrimId(data.vehicleData.trims[0]?.id || '');
+      setSelectedVinTrimId(trims[0].id);
       toast.success('VIN decoded successfully!');
     } catch (error) {
       console.error('Error decoding VIN:', error);
