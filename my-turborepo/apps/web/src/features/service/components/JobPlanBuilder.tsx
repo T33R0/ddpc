@@ -363,8 +363,6 @@ export function JobPlanBuilder({
         .insert(templateSteps)
 
       if (stepsError) throw stepsError
-
-      alert(`Template "${jobTitle}" saved successfully!`)
     } catch (error) {
       console.error('Error saving template:', error)
       alert('Failed to save template. Please try again.')
@@ -372,6 +370,14 @@ export function JobPlanBuilder({
       setIsSavingTemplate(false)
     }
   }
+
+  // Debug: Check client user
+  const [clientUser, setClientUser] = useState<string | null>(null)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setClientUser(data.user?.id || 'No user')
+    })
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -381,7 +387,8 @@ export function JobPlanBuilder({
           stateJobPlanId: jobPlanId,
           stepsCount: steps.length,
           isReassemblyMode,
-          userIdProp: userId
+          userIdProp: userId,
+          clientUser: clientUser
         }, null, 2)}
       </div>
 
@@ -454,4 +461,3 @@ export function JobPlanBuilder({
     </div>
   )
 }
-
