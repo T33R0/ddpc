@@ -85,6 +85,13 @@ export function JobPlanBuilder({
     }
   }, [jobPlanId])
 
+  // Sync jobPlanId with initialJobPlan if it changes (e.g. on navigation)
+  useEffect(() => {
+    if (initialJobPlan?.id) {
+      setJobPlanId(initialJobPlan.id)
+    }
+  }, [initialJobPlan])
+
   // Fetch or create job plan (Fallback if initialJobPlan is missing or null)
   useEffect(() => {
     if (!jobPlanId) {
