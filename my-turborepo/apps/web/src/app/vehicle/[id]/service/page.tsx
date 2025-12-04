@@ -81,7 +81,12 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
         service_provider,
         cost,
         status,
+        status,
         service_item:service_items (
+          id,
+          name
+        ),
+        job_plans (
           id,
           name
         )

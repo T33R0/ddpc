@@ -20,6 +20,10 @@ interface PlannedServiceLog {
     id: string
     name: string
   } | null
+  job_plans?: {
+    id: string
+    name: string
+  }[] | null
 }
 
 interface ServiceCategory {
@@ -120,8 +124,9 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     }
 
     const handleCardClick = (log: PlannedServiceLog) => {
-      if (log.service_item?.name) {
-        const jobTitle = encodeURIComponent(log.service_item.name)
+      const jobName = log.job_plans?.[0]?.name || log.service_item?.name
+      if (jobName) {
+        const jobTitle = encodeURIComponent(jobName)
         router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service/${jobTitle}`)
       }
     }
@@ -177,7 +182,7 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className="font-medium text-foreground mb-1">
-                          {log.service_item?.name || 'Service Entry'}
+                          {log.job_plans?.[0]?.name || log.service_item?.name || 'Service Entry'}
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           Due: {formatDueDate(log)}

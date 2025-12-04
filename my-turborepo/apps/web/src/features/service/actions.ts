@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { JobStepData } from './components/JobStep'
 import { ServiceLogInputs } from './schema'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 export type ServiceActionResponse = {
   success: boolean
@@ -211,7 +210,6 @@ export async function deleteServiceLog(logId: string): Promise<ServiceActionResp
 
 export async function updateJobTitle(jobPlanId: string, newTitle: string, userId: string): Promise<ServiceActionResponse> {
   const supabase = await createClient()
-  const adminSupabase = createAdminClient()
 
   // 1. Check for uniqueness
   const { data: existing } = await supabase
@@ -226,38 +224,7 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
     return { success: false, error: 'A job plan with this name already exists.' }
   }
 
-  // 2. Get the service_item_id from the job plan -> maintenance_log
-  const { data: plan, error: planError } = await supabase
-    .from('job_plans')
-    .select(`
-      maintenance_log_id,
-      maintenance_log:maintenance_log_id (
-        service_item_id
-      )
-    `)
-    .eq('id', jobPlanId)
-    .single()
-
-  if (planError || !plan) {
-    return { success: false, error: 'Job plan not found.' }
-  }
-
-  const serviceItemId = (plan.maintenance_log as any)?.service_item_id
-
-  if (serviceItemId) {
-    // 3. Update service item name (using admin client to bypass RLS)
-    const { error: itemError } = await adminSupabase
-      .from('service_items')
-      .update({ name: newTitle })
-      .eq('id', serviceItemId)
-
-    if (itemError) {
-      console.error('Error updating service item:', itemError)
-      return { success: false, error: 'Failed to update service item name.' }
-    }
-  }
-
-  // 4. Update job plan name (using user client to ensure ownership)
+  // 2. Update job plan name
   const { error: updateError } = await supabase
     .from('job_plans')
     .update({ name: newTitle })

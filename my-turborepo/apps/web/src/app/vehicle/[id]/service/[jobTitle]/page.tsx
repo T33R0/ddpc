@@ -70,6 +70,10 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
       service_item:service_items (
         id,
         name
+      ),
+      job_plans (
+        id,
+        name
       )
     `)
     .eq('user_vehicle_id', vehicleId)
@@ -78,6 +82,10 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
 
   // Find the log matching the job title
   const matchingLog = plannedLogs?.find((log: any) => {
+    // Check if job plan name matches
+    if (log.job_plans?.[0]?.name === jobTitle) return true
+
+    // Fallback: Check if service item name matches (only if no custom job plan name exists or if it matches service item name)
     const serviceItem = Array.isArray(log.service_item)
       ? log.service_item[0]
       : log.service_item
