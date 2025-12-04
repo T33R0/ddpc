@@ -12,26 +12,26 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "*",
-    "@repo/types": "*",
     "@repo/assets": "*",
-    "next": "^15.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "@vercel/speed-insights": "*"
+    "@repo/types": "*",
+    "@repo/ui": "*",
+    "@vercel/speed-insights": "*",
+    "next": "^15.5.7",
+    "react": "^19.1.2",
+    "react-dom": "^19.1.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/prettier-config": "*",
-    "@repo/typescript-config": "*",
     "@repo/tailwind-config": "*",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19",
+    "@repo/typescript-config": "*",
     "@types/node": "^22.15.3",
-    "@types/react": "19.1.0",
-    "@types/react-dom": "19.1.1",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "autoprefixer": "^10.4.19",
     "eslint": "^9.34.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.1",
     "typescript": "5.9.2"
   }
 }
