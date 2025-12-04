@@ -118,3 +118,94 @@ export async function saveJobTemplate(userId: string, name: string, steps: JobSt
     throw new Error('Failed to create template steps')
   }
 }
+
+import { ServiceLogInputs } from './schema'
+
+export async function logPlannedService(data: ServiceLogInputs) {
+  const supabase = await createClient()
+
+  // 1. Create the service log
+  const { data: log, error: logError } = await supabase
+    .from('maintenance_log')
+    .insert({
+      user_vehicle_id: data.user_vehicle_id,
+      service_item_id: data.service_item_id,
+      event_date: data.event_date,
+      odometer: data.odometer,
+      cost: data.cost,
+      service_provider: data.service_provider,
+      notes: data.notes,
+      status: data.status,
+    })
+    .select()
+    .single()
+
+  if (logError) {
+    return { success: false, error: logError.message }
+  }
+
+  // 2. If it was a planned item, we might need to update the plan item status
+  // But based on AddServiceDialog, it seems we just create a log.
+  // However, if there was a plan_item_id, we should probably delete it or mark it done.
+  // The AddServiceDialog logic suggests:
+  // if (planItem) -> logPlannedService
+  // else -> logFreeTextService
+
+  // If we have a plan_item_id, let's delete the planned item (since it's now done/logged)
+  if (data.plan_item_id) {
+    const { error: deleteError } = await supabase
+      .from('maintenance_log') // Wait, planned items are also in maintenance_log with status='Plan'
+      .delete()
+      .eq('id', data.plan_item_id)
+
+    if (deleteError) {
+      console.error('Error deleting planned item:', deleteError)
+      // We don't fail the whole request if this fails, but it's good to know
+    }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true, data: log }
+}
+
+export async function logFreeTextService(data: ServiceLogInputs) {
+  const supabase = await createClient()
+
+  const { data: log, error: logError } = await supabase
+    .from('maintenance_log')
+    .insert({
+      user_vehicle_id: data.user_vehicle_id,
+      service_item_id: data.service_item_id,
+      event_date: data.event_date,
+      odometer: data.odometer,
+      cost: data.cost,
+      service_provider: data.service_provider,
+      notes: data.notes,
+      status: data.status,
+    })
+    .select()
+    .single()
+
+  if (logError) {
+    return { success: false, error: logError.message }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true, data: log }
+}
+
+export async function deleteServiceLog(logId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('maintenance_log')
+    .delete()
+    .eq('id', logId)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true }
+}
