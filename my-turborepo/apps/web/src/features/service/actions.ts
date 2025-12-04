@@ -207,3 +207,65 @@ export async function deleteServiceLog(logId: string): Promise<ServiceActionResp
   revalidatePath('/vehicle/[id]/service', 'page')
   return { success: true }
 }
+
+export async function updateJobTitle(jobPlanId: string, newTitle: string, userId: string): Promise<ServiceActionResponse> {
+  const supabase = await createClient()
+
+  // 1. Check for uniqueness
+  const { data: existing } = await supabase
+    .from('job_plans')
+    .select('id')
+    .eq('user_id', userId)
+    .ilike('name', newTitle)
+    .neq('id', jobPlanId)
+    .single()
+
+  if (existing) {
+    return { success: false, error: 'A job plan with this name already exists.' }
+  }
+
+  // 2. Get the service_item_id from the job plan -> maintenance_log
+  const { data: plan, error: planError } = await supabase
+    .from('job_plans')
+    .select(`
+      maintenance_log_id,
+      maintenance_log:maintenance_log_id (
+        service_item_id
+      )
+    `)
+    .eq('id', jobPlanId)
+    .single()
+
+  if (planError || !plan) {
+    return { success: false, error: 'Job plan not found.' }
+  }
+
+  const serviceItemId = (plan.maintenance_log as any)?.service_item_id
+
+  if (serviceItemId) {
+    // 3. Update service item name
+    const { error: itemError } = await supabase
+      .from('service_items')
+      .update({ name: newTitle })
+      .eq('id', serviceItemId)
+
+    if (itemError) {
+      return { success: false, error: 'Failed to update service item name.' }
+    }
+  }
+
+  // 4. Update job plan name
+  const { error: updateError } = await supabase
+    .from('job_plans')
+    .update({ name: newTitle })
+    .eq('id', jobPlanId)
+
+  if (updateError) {
+    return { success: false, error: 'Failed to update job plan name.' }
+  }
+
+  revalidatePath('/vehicle/[id]/service/[jobTitle]', 'page')
+  revalidatePath('/vehicle/[id]/service', 'page')
+
+  return { success: true }
+}

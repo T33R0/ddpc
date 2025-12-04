@@ -4,11 +4,12 @@ import { useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
 import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { Input } from '@repo/ui/input'
+import { ArrowLeft, Pencil, Check, X } from 'lucide-react'
 import { JobPlanBuilder } from './JobPlanBuilder'
 import { JobStepData } from './JobStep'
-import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
+import { updateJobTitle } from '../actions'
 
 type JobDetailsPageClientProps = {
   vehicle: {
@@ -36,8 +37,49 @@ export function JobDetailsPageClient({
   const router = useRouter()
   const vehicleSlug = vehicle.nickname || vehicle.id
 
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleInput, setTitleInput] = useState(jobTitle)
+  const [isSavingTitle, setIsSavingTitle] = useState(false)
+
   const handleBack = () => {
     router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service`)
+  }
+
+  const handleSaveTitle = async () => {
+    if (!titleInput.trim() || titleInput === jobTitle || !initialJobPlan?.id) {
+      setIsEditingTitle(false)
+      setTitleInput(jobTitle)
+      return
+    }
+
+    setIsSavingTitle(true)
+    try {
+      const result = await updateJobTitle(initialJobPlan.id, titleInput.trim(), userId)
+
+      if (!result.success) {
+        alert(result.error || 'Failed to update title')
+        setTitleInput(jobTitle)
+      } else {
+        // Redirect to new URL
+        router.replace(`/vehicle/${encodeURIComponent(vehicleSlug)}/service/${encodeURIComponent(titleInput.trim())}`)
+      }
+    } catch (error) {
+      console.error('Error updating title:', error)
+      alert('Failed to update title')
+      setTitleInput(jobTitle)
+    } finally {
+      setIsSavingTitle(false)
+      setIsEditingTitle(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveTitle()
+    } else if (e.key === 'Escape') {
+      setIsEditingTitle(false)
+      setTitleInput(jobTitle)
+    }
   }
 
   return (
@@ -61,9 +103,51 @@ export function JobDetailsPageClient({
             Back to Service
           </Button>
           <h1 className="text-4xl font-bold text-foreground">Job Details</h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            {jobTitle}
-          </p>
+
+          <div className="mt-2 flex items-center gap-2 h-10">
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                  className="text-lg h-9 w-[300px]"
+                  disabled={isSavingTitle}
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSaveTitle}
+                  disabled={isSavingTitle}
+                  className="h-9 w-9 p-0"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsEditingTitle(false)
+                    setTitleInput(jobTitle)
+                  }}
+                  disabled={isSavingTitle}
+                  className="h-9 w-9 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div
+                className="group flex items-center gap-2 cursor-pointer"
+                onClick={() => setIsEditingTitle(true)}
+              >
+                <p className="text-lg text-muted-foreground group-hover:text-foreground transition-colors">
+                  {jobTitle}
+                </p>
+                <Pencil className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
+          </div>
         </div>
 
         <Tabs defaultValue="plan" className="w-full text-foreground">
@@ -75,18 +159,6 @@ export function JobDetailsPageClient({
           <TabsContent value="plan" className="mt-6">
             <Card className="bg-card backdrop-blur-sm border-border">
               <CardContent className="p-6">
-                {/* Debug Info */}
-                <div className="mb-4 p-2 bg-black/80 text-red-400 text-xs font-mono rounded whitespace-pre-wrap">
-                  PROPS DEBUG: {JSON.stringify({
-                    hasUserId: !!userId,
-                    userId: userId,
-                    hasJobLog: !!jobLog?.id,
-                    jobLogId: jobLog?.id,
-                    initialJobPlan: initialJobPlan,
-                    stepsCount: initialSteps?.length
-                  }, null, 2)}
-                </div>
-
                 {userId && jobLog?.id ? (
                   <JobPlanBuilder
                     maintenanceLogId={jobLog.id}
