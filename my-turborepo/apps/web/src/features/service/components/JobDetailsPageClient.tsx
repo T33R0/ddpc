@@ -102,7 +102,6 @@ export function JobDetailsPageClient({
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Service
           </Button>
-          <h1 className="text-4xl font-bold text-foreground">Job Details</h1>
 
           <div className="mt-2 flex items-center gap-2 h-10">
             {isEditingTitle ? (
@@ -137,14 +136,17 @@ export function JobDetailsPageClient({
                 </Button>
               </div>
             ) : (
-              <div
-                className="group flex items-center gap-2 cursor-pointer"
-                onClick={() => setIsEditingTitle(true)}
-              >
-                <p className="text-lg text-muted-foreground group-hover:text-foreground transition-colors">
-                  {jobTitle}
-                </p>
-                <Pencil className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center gap-2">
+                <h1 className="text-4xl font-bold text-foreground">{jobTitle}</h1>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditingTitle(true)}
+                  className="h-8 w-8 p-0 opacity-50 hover:opacity-100 transition-opacity"
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span className="sr-only">Edit title</span>
+                </Button>
               </div>
             )}
           </div>
@@ -188,4 +190,3 @@ export function JobDetailsPageClient({
     </section>
   )
 }
-
