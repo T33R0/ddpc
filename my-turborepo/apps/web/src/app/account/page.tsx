@@ -42,6 +42,7 @@ export default function AccountPage() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [isUpdated, setIsUpdated] = useState(false);
 
   // Profile form state
   const [username, setUsername] = useState('');
@@ -190,6 +191,8 @@ export default function AccountPage() {
         const syncedSlug = await syncAuthMetadata(username, displayName, avatarUrl);
         updateScopedUrl(syncedSlug);
         await refreshProfile();
+        setIsUpdated(true);
+        setTimeout(() => setIsUpdated(false), 2000);
       } else {
         toast.error(data.error || 'Failed to update profile');
       }
@@ -544,10 +547,10 @@ export default function AccountPage() {
 
                     <Button
                       onClick={handleUpdateProfile}
-                      disabled={isLoading}
+                      disabled={isLoading || isUpdated}
                       className="w-full"
                     >
-                      {isLoading ? 'Updating...' : 'Update Profile'}
+                      {isLoading ? 'Updating...' : isUpdated ? 'Updated' : 'Update Profile'}
                     </Button>
                   </CardContent>
                 </Card>
