@@ -75,6 +75,18 @@ export function JobDetailsPageClient({
           <TabsContent value="plan" className="mt-6">
             <Card className="bg-card backdrop-blur-sm border-border">
               <CardContent className="p-6">
+                {/* Debug Info */}
+                <div className="mb-4 p-2 bg-black/80 text-red-400 text-xs font-mono rounded whitespace-pre-wrap">
+                  PROPS DEBUG: {JSON.stringify({
+                    hasUserId: !!userId,
+                    userId: userId,
+                    hasJobLog: !!jobLog?.id,
+                    jobLogId: jobLog?.id,
+                    initialJobPlan: initialJobPlan,
+                    stepsCount: initialSteps?.length
+                  }, null, 2)}
+                </div>
+
                 {userId && jobLog?.id ? (
                   <JobPlanBuilder
                     maintenanceLogId={jobLog.id}

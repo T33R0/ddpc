@@ -373,29 +373,16 @@ export function JobPlanBuilder({
     }
   }
 
-
-
-  // Debug info
-  const [debugInfo, setDebugInfo] = useState<any>({})
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setDebugInfo({
-        propUserId: userId,
-        propJobPlanId: initialJobPlan?.id,
-        stateJobPlanId: jobPlanId,
-        clientUser: user?.id,
-        stepsCount: steps.length
-      })
-    }
-    checkUser()
-  }, [userId, initialJobPlan, jobPlanId, steps.length])
-
   return (
     <div className="space-y-4">
-      {/* Debug Info - Remove after fixing */}
-      <div className="text-xs text-red-400 bg-black/80 p-2 rounded font-mono whitespace-pre-wrap">
-        DEBUG: {JSON.stringify(debugInfo, null, 2)}
+      {/* Internal Debug Info */}
+      <div className="text-xs text-blue-400 bg-black/80 p-2 rounded font-mono whitespace-pre-wrap">
+        INTERNAL DEBUG: {JSON.stringify({
+          stateJobPlanId: jobPlanId,
+          stepsCount: steps.length,
+          isReassemblyMode,
+          userIdProp: userId
+        }, null, 2)}
       </div>
 
       {/* Action Buttons */}
