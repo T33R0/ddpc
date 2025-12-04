@@ -253,14 +253,13 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
       .update({ name: newTitle })
       .eq('id', serviceItemId)
       .select() // Select to verify update
-      .single()
 
     if (itemError) {
       console.error('[updateJobTitle] Service item update error:', itemError)
       return { success: false, error: 'Failed to update service item name.' }
     }
 
-    if (!itemData) {
+    if (!itemData || itemData.length === 0) {
       console.error('[updateJobTitle] Service item update returned no data (RLS?)')
       return { success: false, error: 'Failed to update service item. You may not have permission.' }
     }
