@@ -6,6 +6,13 @@ import { Button } from '@repo/ui/button'
 import { Plus, RotateCcw, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { JobStep, JobStepData } from './JobStep'
+import {
+  addJobStep,
+  updateJobStep,
+  deleteJobStep,
+  reorderJobSteps,
+  saveJobTemplate
+} from '../actions'
 
 interface JobPlanBuilderProps {
   maintenanceLogId: string
@@ -119,74 +126,66 @@ export function JobPlanBuilder({
     const newStepOrder = steps.length > 0 ? Math.max(...steps.map(s => s.step_order)) + 1 : 1
 
     try {
-      const { data, error } = await supabase
-        .from('job_steps')
-        .insert({
-          job_plan_id: jobPlanId,
-          step_order: newStepOrder,
-          description: stepInput.trim(),
-          is_completed: false,
-        })
-        .select()
-        .single()
+      // Optimistic update
+      const tempId = crypto.randomUUID()
+      const newStep: JobStepData = {
+        id: tempId,
+        job_plan_id: jobPlanId,
+        step_order: newStepOrder,
+        description: stepInput.trim(),
+        is_completed: false,
+      } as any
 
-      if (error) throw error
-
-      setSteps([...steps, data])
+      setSteps([...steps, newStep])
       setStepInput('')
+
+      const data = await addJobStep(jobPlanId, stepInput.trim(), newStepOrder)
+
+      // Update with real data
+      setSteps(prev => prev.map(s => s.id === tempId ? data : s))
     } catch (error) {
       console.error('Error adding step:', error)
+      fetchSteps()
     }
   }
 
   const handleToggleComplete = async (stepId: string, completed: boolean) => {
     try {
-      const { error } = await supabase
-        .from('job_steps')
-        .update({ is_completed: completed })
-        .eq('id', stepId)
-
-      if (error) throw error
-
+      // Optimistic update
       setSteps(steps.map(step =>
         step.id === stepId ? { ...step, is_completed: completed } : step
       ))
+
+      await updateJobStep(stepId, { is_completed: completed })
     } catch (error) {
       console.error('Error updating step:', error)
+      fetchSteps()
     }
   }
 
   const handleUpdateStep = async (stepId: string, description: string) => {
     try {
-      const { error } = await supabase
-        .from('job_steps')
-        .update({ description })
-        .eq('id', stepId)
-
-      if (error) throw error
-
       setSteps(steps.map(step =>
         step.id === stepId ? { ...step, description } : step
       ))
+
+      await updateJobStep(stepId, { description })
     } catch (error) {
       console.error('Error updating step description:', error)
+      fetchSteps()
     }
   }
 
   const handleUpdateNotes = async (stepId: string, notes: string) => {
     try {
-      const { error } = await supabase
-        .from('job_steps')
-        .update({ notes: notes.trim() || null })
-        .eq('id', stepId)
-
-      if (error) throw error
-
       setSteps(steps.map(step =>
         step.id === stepId ? { ...step, notes: notes.trim() || null } : step
       ))
+
+      await updateJobStep(stepId, { notes: notes.trim() || null })
     } catch (error) {
       console.error('Error updating step notes:', error)
+      fetchSteps()
     }
   }
 
@@ -194,38 +193,27 @@ export function JobPlanBuilder({
     if (!jobPlanId) return
 
     try {
-      const { error } = await supabase
-        .from('job_steps')
-        .delete()
-        .eq('id', stepId)
-
-      if (error) throw error
-
-      // Remove from local state
-      const deletedStep = steps.find(s => s.id === stepId)
+      // Optimistic update
       const remainingSteps = steps.filter(s => s.id !== stepId)
-
-      // Reorder remaining steps
       const reorderedSteps = remainingSteps.map((step, index) => ({
         ...step,
         step_order: index + 1,
       }))
-
-      // Update step_order in database
-      if (deletedStep) {
-        await Promise.all(
-          reorderedSteps.map(step =>
-            supabase
-              .from('job_steps')
-              .update({ step_order: step.step_order })
-              .eq('id', step.id)
-          )
-        )
-      }
-
       setSteps(reorderedSteps)
+
+      await deleteJobStep(stepId)
+
+      // Reorder remaining steps on server
+      const updates = reorderedSteps.map(step => ({
+        id: step.id,
+        step_order: step.step_order
+      }))
+      if (updates.length > 0) {
+        await reorderJobSteps(updates)
+      }
     } catch (error) {
       console.error('Error deleting step:', error)
+      fetchSteps()
     }
   }
 
@@ -273,26 +261,18 @@ export function JobPlanBuilder({
       step_order: index + 1,
     }))
 
-    try {
-      // Update all steps in parallel
-      await Promise.all(
-        updates.map(update =>
-          supabase
-            .from('job_steps')
-            .update({ step_order: update.step_order })
-            .eq('id', update.id)
-        )
-      )
+    setSteps(newSteps.map((step, index) => ({
+      ...step,
+      step_order: index + 1,
+    })))
+    setDraggedStepId(null)
 
-      setSteps(newSteps.map((step, index) => ({
-        ...step,
-        step_order: index + 1,
-      })))
+    try {
+      await reorderJobSteps(updates)
     } catch (error) {
       console.error('Error reordering steps:', error)
+      fetchSteps()
     }
-
-    setDraggedStepId(null)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -311,24 +291,19 @@ export function JobPlanBuilder({
       is_completed: false,
     }))
 
-    try {
-      // Update step_order and is_completed for all steps
-      await Promise.all(
-        newSteps.map(step =>
-          supabase
-            .from('job_steps')
-            .update({
-              step_order: step.step_order,
-              is_completed: false
-            })
-            .eq('id', step.id)
-        )
-      )
+    setSteps(newSteps)
+    setIsReassemblyMode(!isReassemblyMode)
 
-      setSteps(newSteps)
-      setIsReassemblyMode(!isReassemblyMode)
+    try {
+      const updates = newSteps.map(step => ({
+        id: step.id,
+        step_order: step.step_order
+      }))
+
+      await reorderJobSteps(updates)
     } catch (error) {
       console.error('Error reversing steps:', error)
+      fetchSteps()
     }
   }
 
@@ -337,32 +312,8 @@ export function JobPlanBuilder({
 
     setIsSavingTemplate(true)
     try {
-      // Create job template
-      const { data: template, error: templateError } = await supabase
-        .from('job_templates')
-        .insert({
-          user_id: userId,
-          name: jobTitle,
-        })
-        .select('id')
-        .single()
-
-      if (templateError) throw templateError
-      if (!template) throw new Error('Failed to create template')
-
-      // Create template steps
-      const templateSteps = steps.map((step, index) => ({
-        job_template_id: template.id,
-        step_order: index + 1,
-        description: step.description,
-        notes: step.notes || null,
-      }))
-
-      const { error: stepsError } = await supabase
-        .from('job_template_steps')
-        .insert(templateSteps)
-
-      if (stepsError) throw stepsError
+      await saveJobTemplate(userId, jobTitle, steps)
+      alert(`Template "${jobTitle}" saved successfully!`)
     } catch (error) {
       console.error('Error saving template:', error)
       alert('Failed to save template. Please try again.')
@@ -371,27 +322,8 @@ export function JobPlanBuilder({
     }
   }
 
-  // Debug: Check client user
-  const [clientUser, setClientUser] = useState<string | null>(null)
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setClientUser(data.user?.id || 'No user')
-    })
-  }, [])
-
   return (
     <div className="space-y-4">
-      {/* Internal Debug Info */}
-      <div className="text-xs text-blue-400 bg-black/80 p-2 rounded font-mono whitespace-pre-wrap">
-        INTERNAL DEBUG: {JSON.stringify({
-          stateJobPlanId: jobPlanId,
-          stepsCount: steps.length,
-          isReassemblyMode,
-          userIdProp: userId,
-          clientUser: clientUser
-        }, null, 2)}
-      </div>
-
       {/* Action Buttons */}
       <div className="flex gap-2 flex-wrap">
         <Button
