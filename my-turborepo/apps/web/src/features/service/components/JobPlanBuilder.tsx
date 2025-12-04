@@ -30,6 +30,13 @@ export function JobPlanBuilder({
   const [isReassemblyMode, setIsReassemblyMode] = useState(false)
   const [isSavingTemplate, setIsSavingTemplate] = useState(false)
 
+  // Update jobPlanId if initialJobPlan changes
+  useEffect(() => {
+    if (initialJobPlan?.id) {
+      setJobPlanId(initialJobPlan.id)
+    }
+  }, [initialJobPlan])
+
   const fetchOrCreateJobPlan = React.useCallback(async () => {
     try {
       // First, try to find existing job plan for this maintenance log
@@ -98,6 +105,13 @@ export function JobPlanBuilder({
       fetchSteps()
     }
   }, [jobPlanId, fetchSteps, initialSteps])
+
+  // Fetch or create job plan if missing
+  useEffect(() => {
+    if (!jobPlanId && userId && maintenanceLogId) {
+      fetchOrCreateJobPlan()
+    }
+  }, [jobPlanId, userId, maintenanceLogId, fetchOrCreateJobPlan])
 
   const handleAddStep = async () => {
     if (!stepInput.trim() || !jobPlanId) return
