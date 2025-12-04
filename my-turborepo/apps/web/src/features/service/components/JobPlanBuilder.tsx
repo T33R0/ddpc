@@ -3,15 +3,18 @@
 import React, { useState, useEffect } from 'react'
 import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
-import { Plus, RotateCcw, Save } from 'lucide-react'
+import { Plus, RotateCcw, Copy } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { JobStep, JobStepData } from './JobStep'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog'
+import { Label } from '@repo/ui/label'
+import { useRouter } from 'next/navigation'
 import {
   addJobStep,
   updateJobStep,
   deleteJobStep,
   reorderJobSteps,
-  saveJobTemplate
+  duplicateJobPlan
 } from '../actions'
 
 interface JobPlanBuilderProps {
@@ -29,13 +32,18 @@ export function JobPlanBuilder({
   initialJobPlan,
   initialSteps,
 }: JobPlanBuilderProps) {
+  const router = useRouter()
   const [steps, setSteps] = useState<JobStepData[]>(initialSteps || [])
   const [isLoading, setIsLoading] = useState(false)
   const [stepInput, setStepInput] = useState('')
   const [draggedStepId, setDraggedStepId] = useState<string | null>(null)
   const [jobPlanId, setJobPlanId] = useState<string | null>(initialJobPlan?.id || null)
   const [isReassemblyMode, setIsReassemblyMode] = useState(false)
-  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+
+  // Duplication State
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false)
+  const [duplicateName, setDuplicateName] = useState('')
+  const [isDuplicating, setIsDuplicating] = useState(false)
 
   // Update jobPlanId if initialJobPlan changes
   useEffect(() => {
@@ -307,18 +315,28 @@ export function JobPlanBuilder({
     }
   }
 
-  const handleSaveAsTemplate = async () => {
-    if (!jobPlanId || steps.length === 0) return
+  const handleDuplicateJob = async () => {
+    if (!jobPlanId || !duplicateName.trim()) return
 
-    setIsSavingTemplate(true)
+    setIsDuplicating(true)
     try {
-      await saveJobTemplate(userId, jobTitle, steps)
-      alert(`Template "${jobTitle}" saved successfully!`)
+      const result = await duplicateJobPlan(jobPlanId, duplicateName, userId)
+      if (result.success && result.data) {
+        setIsDuplicateDialogOpen(false)
+        // Redirect to the new job page
+        const newSlug = encodeURIComponent(result.data.name)
+        // Assuming we stay on the same vehicle
+        const currentPath = window.location.pathname
+        const vehiclePart = currentPath.split('/service')[0]
+        router.push(`${vehiclePart}/service/${newSlug}`)
+      } else {
+        alert(result.error || 'Failed to duplicate job')
+      }
     } catch (error) {
-      console.error('Error saving template:', error)
-      alert('Failed to save template. Please try again.')
+      console.error('Error duplicating job:', error)
+      alert('Failed to duplicate job')
     } finally {
-      setIsSavingTemplate(false)
+      setIsDuplicating(false)
     }
   }
 
@@ -335,13 +353,16 @@ export function JobPlanBuilder({
           {isReassemblyMode ? 'Disassembly Mode' : 'Re-assembly Mode'}
         </Button>
         <Button
-          onClick={handleSaveAsTemplate}
-          disabled={isSavingTemplate || steps.length === 0}
+          onClick={() => {
+            setDuplicateName(`${initialJobPlan?.name || jobTitle} (Copy)`)
+            setIsDuplicateDialogOpen(true)
+          }}
+          disabled={!jobPlanId}
           variant="outline"
           className="border-white/20 text-gray-300 hover:bg-black/30 hover:border-white/30"
         >
-          <Save className="h-4 w-4 mr-2" />
-          {isSavingTemplate ? 'Saving...' : 'Save as Template'}
+          <Copy className="h-4 w-4 mr-2" />
+          Duplicate Job
         </Button>
       </div>
 
@@ -390,6 +411,38 @@ export function JobPlanBuilder({
           ))}
         </div>
       )}
+
+      {/* Duplicate Dialog */}
+      <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicate Job Plan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="duplicate-name">New Job Name</Label>
+              <Input
+                id="duplicate-name"
+                value={duplicateName}
+                onChange={(e) => setDuplicateName(e.target.value)}
+                placeholder="e.g. Front Right Axle"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDuplicateDialogOpen(false)}
+              disabled={isDuplicating}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleDuplicateJob} disabled={isDuplicating || !duplicateName.trim()}>
+              {isDuplicating ? 'Duplicating...' : 'Duplicate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -89,42 +89,100 @@ export async function reorderJobSteps(updates: { id: string; step_order: number 
   revalidatePath('/vehicle/[id]/service/[jobTitle]', 'page')
 }
 
-export async function saveJobTemplate(userId: string, name: string, steps: JobStepData[]) {
+export async function duplicateJobPlan(originalJobPlanId: string, newName: string, userId: string): Promise<ServiceActionResponse> {
   const supabase = await createClient()
 
-  // Create job template
-  const { data: template, error: templateError } = await supabase
-    .from('job_templates')
-    .insert({
-      user_id: userId,
-      name: name,
-    })
-    .select('id')
+  // 1. Fetch original job plan details
+  const { data: originalPlan, error: planError } = await supabase
+    .from('job_plans')
+    .select(`
+      maintenance_log_id,
+      maintenance_log:maintenance_log_id (
+        user_vehicle_id,
+        service_item_id,
+        event_date,
+        odometer,
+        cost,
+        service_provider,
+        notes,
+        status
+      )
+    `)
+    .eq('id', originalJobPlanId)
     .single()
 
-  if (templateError) {
-    console.error('Error creating template:', templateError)
-    throw new Error('Failed to create template')
+  if (planError || !originalPlan) {
+    return { success: false, error: 'Original job plan not found.' }
   }
 
-  if (!template) throw new Error('Failed to create template')
+  const originalLog = originalPlan.maintenance_log as any
 
-  // Create template steps
-  const templateSteps = steps.map((step, index) => ({
-    job_template_id: template.id,
-    step_order: index + 1,
-    description: step.description,
-    notes: step.notes || null,
-  }))
+  // 2. Create new maintenance log
+  const { data: newLog, error: logError } = await supabase
+    .from('maintenance_log')
+    .insert({
+      user_vehicle_id: originalLog.user_vehicle_id,
+      service_item_id: originalLog.service_item_id,
+      event_date: originalLog.event_date,
+      odometer: originalLog.odometer,
+      cost: originalLog.cost,
+      service_provider: originalLog.service_provider,
+      notes: originalLog.notes,
+      status: 'Plan', // Always start as Plan
+    })
+    .select()
+    .single()
 
-  const { error: stepsError } = await supabase
-    .from('job_template_steps')
-    .insert(templateSteps)
+  if (logError) {
+    return { success: false, error: 'Failed to create new maintenance log.' }
+  }
+
+  // 3. Create new job plan
+  const { data: newJobPlan, error: jobError } = await supabase
+    .from('job_plans')
+    .insert({
+      user_id: userId,
+      maintenance_log_id: newLog.id,
+      name: newName,
+    })
+    .select()
+    .single()
+
+  if (jobError) {
+    return { success: false, error: 'Failed to create new job plan.' }
+  }
+
+  // 4. Fetch original steps
+  const { data: steps, error: stepsError } = await supabase
+    .from('job_steps')
+    .select('*')
+    .eq('job_plan_id', originalJobPlanId)
+    .order('step_order', { ascending: true })
 
   if (stepsError) {
-    console.error('Error creating template steps:', stepsError)
-    throw new Error('Failed to create template steps')
+    return { success: false, error: 'Failed to fetch original steps.' }
   }
+
+  // 5. Copy steps to new plan
+  if (steps && steps.length > 0) {
+    const newSteps = steps.map(step => ({
+      job_plan_id: newJobPlan.id,
+      step_order: step.step_order,
+      description: step.description,
+      is_completed: false, // Reset completion status
+    }))
+
+    const { error: copyError } = await supabase
+      .from('job_steps')
+      .insert(newSteps)
+
+    if (copyError) {
+      return { success: false, error: 'Failed to copy steps.' }
+    }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true, data: newJobPlan }
 }
 
 export async function logPlannedService(data: ServiceLogInputs): Promise<ServiceActionResponse> {
