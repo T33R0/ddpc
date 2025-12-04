@@ -3,6 +3,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { JobStepData } from './components/JobStep'
+import { ServiceLogInputs } from './schema'
+
+export type ServiceActionResponse = {
+  success: boolean
+  error?: string
+  data?: any
+  details?: { message?: string; path?: (string | number)[] }[]
+}
 
 export async function addJobStep(jobPlanId: string, description: string, stepOrder: number) {
   const supabase = await createClient()
@@ -119,9 +127,7 @@ export async function saveJobTemplate(userId: string, name: string, steps: JobSt
   }
 }
 
-import { ServiceLogInputs } from './schema'
-
-export async function logPlannedService(data: ServiceLogInputs) {
+export async function logPlannedService(data: ServiceLogInputs): Promise<ServiceActionResponse> {
   const supabase = await createClient()
 
   // 1. Create the service log
@@ -145,22 +151,14 @@ export async function logPlannedService(data: ServiceLogInputs) {
   }
 
   // 2. If it was a planned item, we might need to update the plan item status
-  // But based on AddServiceDialog, it seems we just create a log.
-  // However, if there was a plan_item_id, we should probably delete it or mark it done.
-  // The AddServiceDialog logic suggests:
-  // if (planItem) -> logPlannedService
-  // else -> logFreeTextService
-
-  // If we have a plan_item_id, let's delete the planned item (since it's now done/logged)
   if (data.plan_item_id) {
     const { error: deleteError } = await supabase
-      .from('maintenance_log') // Wait, planned items are also in maintenance_log with status='Plan'
+      .from('maintenance_log')
       .delete()
       .eq('id', data.plan_item_id)
 
     if (deleteError) {
       console.error('Error deleting planned item:', deleteError)
-      // We don't fail the whole request if this fails, but it's good to know
     }
   }
 
@@ -168,7 +166,7 @@ export async function logPlannedService(data: ServiceLogInputs) {
   return { success: true, data: log }
 }
 
-export async function logFreeTextService(data: ServiceLogInputs) {
+export async function logFreeTextService(data: ServiceLogInputs): Promise<ServiceActionResponse> {
   const supabase = await createClient()
 
   const { data: log, error: logError } = await supabase
@@ -194,7 +192,7 @@ export async function logFreeTextService(data: ServiceLogInputs) {
   return { success: true, data: log }
 }
 
-export async function deleteServiceLog(logId: string) {
+export async function deleteServiceLog(logId: string): Promise<ServiceActionResponse> {
   const supabase = await createClient()
 
   const { error } = await supabase
