@@ -210,6 +210,7 @@ export async function deleteServiceLog(logId: string): Promise<ServiceActionResp
 
 export async function updateJobTitle(jobPlanId: string, newTitle: string, userId: string): Promise<ServiceActionResponse> {
   const supabase = await createClient()
+  console.log('[updateJobTitle] Starting update for:', { jobPlanId, newTitle, userId })
 
   // 1. Check for uniqueness
   const { data: existing } = await supabase
@@ -221,6 +222,7 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
     .single()
 
   if (existing) {
+    console.log('[updateJobTitle] Duplicate name found')
     return { success: false, error: 'A job plan with this name already exists.' }
   }
 
@@ -237,21 +239,34 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
     .single()
 
   if (planError || !plan) {
+    console.error('[updateJobTitle] Plan not found or error:', planError)
     return { success: false, error: 'Job plan not found.' }
   }
 
   const serviceItemId = (plan.maintenance_log as any)?.service_item_id
+  console.log('[updateJobTitle] Found serviceItemId:', serviceItemId)
 
   if (serviceItemId) {
     // 3. Update service item name
-    const { error: itemError } = await supabase
+    const { data: itemData, error: itemError } = await supabase
       .from('service_items')
       .update({ name: newTitle })
       .eq('id', serviceItemId)
+      .select() // Select to verify update
+      .single()
 
     if (itemError) {
+      console.error('[updateJobTitle] Service item update error:', itemError)
       return { success: false, error: 'Failed to update service item name.' }
     }
+
+    if (!itemData) {
+      console.error('[updateJobTitle] Service item update returned no data (RLS?)')
+      return { success: false, error: 'Failed to update service item. You may not have permission.' }
+    }
+    console.log('[updateJobTitle] Service item updated successfully')
+  } else {
+    console.warn('[updateJobTitle] No serviceItemId found, skipping service item update')
   }
 
   // 4. Update job plan name
@@ -261,9 +276,11 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
     .eq('id', jobPlanId)
 
   if (updateError) {
+    console.error('[updateJobTitle] Job plan update error:', updateError)
     return { success: false, error: 'Failed to update job plan name.' }
   }
 
+  console.log('[updateJobTitle] Success')
   revalidatePath('/vehicle/[id]/service/[jobTitle]', 'page')
   revalidatePath('/vehicle/[id]/service', 'page')
 
