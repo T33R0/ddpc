@@ -88,11 +88,63 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
     notFound()
   }
 
+  // Fetch or create Job Plan
+  let jobPlanId = null
+  let jobPlanName = null
+  let jobSteps: any[] = []
+
+  // Try to find existing job plan for this maintenance log
+  const { data: existingPlan } = await supabase
+    .from('job_plans')
+    .select('id, name')
+    .eq('maintenance_log_id', matchingLog.id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (existingPlan) {
+    jobPlanId = existingPlan.id
+    jobPlanName = existingPlan.name
+  } else {
+    // If no plan exists, create one
+    const { data: newPlan, error: createError } = await supabase
+      .from('job_plans')
+      .insert({
+        user_id: user.id,
+        maintenance_log_id: matchingLog.id,
+        name: jobTitle,
+      })
+      .select('id, name')
+      .single()
+
+    if (!createError && newPlan) {
+      jobPlanId = newPlan.id
+      jobPlanName = newPlan.name
+    } else {
+      console.error('Error creating job plan:', createError)
+    }
+  }
+
+  // Fetch steps if we have a job plan
+  if (jobPlanId) {
+    const { data: steps } = await supabase
+      .from('job_steps')
+      .select('*')
+      .eq('job_plan_id', jobPlanId)
+      .order('step_order', { ascending: true })
+
+    if (steps) {
+      jobSteps = steps
+    }
+  }
+
   return (
     <JobDetailsPageClient
       vehicle={vehicle}
       jobTitle={jobTitle}
       jobLog={matchingLog}
+      userId={user.id}
+      initialJobPlan={jobPlanId ? { id: jobPlanId, name: jobPlanName || jobTitle } : null}
+      initialSteps={jobSteps}
     />
   )
 }

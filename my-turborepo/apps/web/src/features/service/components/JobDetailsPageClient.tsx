@@ -18,6 +18,7 @@ type JobDetailsPageClientProps = {
     year: string
     nickname?: string | null
   }
+  userId: string
   jobTitle: string
   jobLog: { id: string }
   initialJobPlan?: { id: string; name: string } | null
@@ -28,22 +29,12 @@ export function JobDetailsPageClient({
   vehicle,
   jobTitle,
   jobLog,
+  userId,
   initialJobPlan,
   initialSteps,
 }: JobDetailsPageClientProps) {
   const router = useRouter()
   const vehicleSlug = vehicle.nickname || vehicle.id
-  const [userId, setUserId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const getUserId = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUserId(user.id)
-      }
-    }
-    getUserId()
-  }, [])
 
   const handleBack = () => {
     router.push(`/vehicle/${encodeURIComponent(vehicleSlug)}/service`)
