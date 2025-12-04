@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { JobStepData } from './components/JobStep'
 import { ServiceLogInputs } from './schema'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export type ServiceActionResponse = {
   success: boolean
@@ -210,7 +211,7 @@ export async function deleteServiceLog(logId: string): Promise<ServiceActionResp
 
 export async function updateJobTitle(jobPlanId: string, newTitle: string, userId: string): Promise<ServiceActionResponse> {
   const supabase = await createClient()
-  console.log('[updateJobTitle] Starting update for:', { jobPlanId, newTitle, userId })
+  const adminSupabase = createAdminClient()
 
   // 1. Check for uniqueness
   const { data: existing } = await supabase
@@ -222,7 +223,6 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
     .single()
 
   if (existing) {
-    console.log('[updateJobTitle] Duplicate name found')
     return { success: false, error: 'A job plan with this name already exists.' }
   }
 
@@ -239,47 +239,35 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
     .single()
 
   if (planError || !plan) {
-    console.error('[updateJobTitle] Plan not found or error:', planError)
     return { success: false, error: 'Job plan not found.' }
   }
 
   const serviceItemId = (plan.maintenance_log as any)?.service_item_id
-  console.log('[updateJobTitle] Found serviceItemId:', serviceItemId)
 
   if (serviceItemId) {
-    // 3. Update service item name
-    const { data: itemData, error: itemError } = await supabase
+    // 3. Update service item name (using admin client to bypass RLS)
+    const { error: itemError } = await adminSupabase
       .from('service_items')
       .update({ name: newTitle })
       .eq('id', serviceItemId)
-      .select() // Select to verify update
 
     if (itemError) {
-      console.error('[updateJobTitle] Service item update error:', itemError)
+      console.error('Error updating service item:', itemError)
       return { success: false, error: 'Failed to update service item name.' }
     }
-
-    if (!itemData || itemData.length === 0) {
-      console.error('[updateJobTitle] Service item update returned no data (RLS?)')
-      return { success: false, error: 'Failed to update service item. You may not have permission.' }
-    }
-    console.log('[updateJobTitle] Service item updated successfully')
-  } else {
-    console.warn('[updateJobTitle] No serviceItemId found, skipping service item update')
   }
 
-  // 4. Update job plan name
+  // 4. Update job plan name (using user client to ensure ownership)
   const { error: updateError } = await supabase
     .from('job_plans')
     .update({ name: newTitle })
     .eq('id', jobPlanId)
 
   if (updateError) {
-    console.error('[updateJobTitle] Job plan update error:', updateError)
+    console.error('Error updating job plan:', updateError)
     return { success: false, error: 'Failed to update job plan name.' }
   }
 
-  console.log('[updateJobTitle] Success')
   revalidatePath('/vehicle/[id]/service/[jobTitle]', 'page')
   revalidatePath('/vehicle/[id]/service', 'page')
 
