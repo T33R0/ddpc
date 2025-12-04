@@ -14,7 +14,7 @@ import {
   ModalBody,
 } from '@repo/ui/modal';
 
-export default function ScrutineerPage() {
+export default function DDSRPage() {
   const [count, setCount] = useState(1024); // Starting with a "fake" number to look popular
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -41,24 +41,18 @@ export default function ScrutineerPage() {
 
           {/* Header & Definition */}
           <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-foreground">Scrutineer</h1>
+            <h1 className="text-4xl font-bold text-foreground lowercase">ddsr</h1>
             <div className="p-6 bg-card rounded-lg border border-border">
               <h2 className="text-xl font-semibold mb-2 text-card-foreground">Definition</h2>
-              <p className="text-lg text-muted-foreground italic">
-                &quot;In motorsport, the Scrutineer is the ultimate authority on technical integrity—the eyes that see what others miss, ensuring a machine is truly ready for the limit.&quot;
+              <p className="text-lg text-muted-foreground italic lowercase">
+                &quot;the next extension of ddpc&quot;
               </p>
             </div>
           </div>
 
           {/* Coming Soon */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground">Coming Soon</h2>
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-foreground">Your Digital Crew Chief</h3>
-              <p className="text-muted-foreground">
-                We are training an AI model that doesn&apos;t just read manuals—it remembers your specific build. The Scrutineer is designed to be the second set of eyes on your project. From diagnosing weird noises based on your service history to validating that your new downpipe fits your current turbo setup, the Scrutineer provides personalized, context-aware guidance to keep your project on the road and out of the shop.
-              </p>
-            </div>
+            <h2 className="text-5xl font-bold text-foreground lowercase">ddsr coming soon</h2>
           </div>
 
           {/* Interest Check & CTA */}
@@ -91,7 +85,7 @@ export default function ScrutineerPage() {
           <ModalHeader>
             <ModalTitle>Get Updates</ModalTitle>
             <ModalDescription>
-              Be the first to know when Scrutineer goes live.
+              Be the first to know when ddsr goes live.
             </ModalDescription>
           </ModalHeader>
 

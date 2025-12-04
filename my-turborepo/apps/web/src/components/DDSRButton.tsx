@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { Button } from '@repo/ui/button';
-import { ScrutineerPopup } from '@repo/ui/scrutineer-popup';
+import { DDSRPopup } from '@repo/ui/ddsr-popup';
+import { MonitorPlay } from 'lucide-react';
 
-export function ScrutineerButton() {
+export function DDSRButton() {
   const [isPopupOpen, setPopupOpen] = React.useState(false);
 
   return (
@@ -16,10 +17,10 @@ export function ScrutineerButton() {
           size="icon"
           className="rounded-full w-12 h-12"
         >
-          S
+          <MonitorPlay className="w-6 h-6" />
         </Button>
       </div>
-      <ScrutineerPopup isOpen={isPopupOpen} onClose={() => setPopupOpen(false)} />
+      <DDSRPopup isOpen={isPopupOpen} onClose={() => setPopupOpen(false)} />
     </>
   );
 }

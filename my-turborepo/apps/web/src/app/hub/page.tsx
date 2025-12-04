@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useAuth } from '../../lib/auth';
 import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
 import { useRouter } from 'next/navigation';
-import { Car, Settings, Zap, Warehouse, SlidersHorizontal } from 'lucide-react';
+import { Car, Settings, MonitorPlay, Warehouse, SlidersHorizontal } from 'lucide-react';
 
 const UserAvatarIcon = ({ size }: { size?: number }) => {
   const { user } = useAuth();
@@ -96,11 +96,11 @@ export default function HubPage() {
     },
     {
       id: 5,
-      title: "Scrutineer",
-      route: "/scrutineer",
-      description: "Get intelligent recommendations for your builds, part compatibility checks, and maintenance scheduling powered by our Scrutineer AI.",
-      icon: Zap,
-      category: "AI",
+      title: "ddsr",
+      route: "/ddsr",
+      description: "the next extension of ddpc",
+      icon: MonitorPlay,
+      category: "Sim",
       relatedIds: [2, 3, 4],
       status: "new" as const,
       color: "#06b6d4" // Cyan
