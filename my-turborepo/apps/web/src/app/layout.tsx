@@ -10,7 +10,7 @@ import {
   HeaderWithAuth,
   FooterWrapper,
   LogoutModal,
-  ScrutineerButton,
+  DDSRButton,
   Toaster
 } from '../components/DynamicLayout';
 import './globals.css';
@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <FooterWrapper />
               </div>
               <LogoutModal />
-              <ScrutineerButton />
+              <DDSRButton />
             </ReportModalProvider>
           </AuthProvider>
         </ThemeProvider>

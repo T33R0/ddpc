@@ -328,8 +328,8 @@ export default function DDPCDashboardOrbital({
                   >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-gray-500"></div>
 
-                    {/* Scrutineer Coming Soon Badge - overlaying modal */}
-                    {node.title === "Scrutineer" && (
+                    {/* ddsr Coming Soon Badge - overlaying modal */}
+                    {node.title === "ddsr" && (
                       <div className="absolute -top-3 -right-3 z-50">
                         <Badge
                           className="px-3 py-1 text-sm font-bold animate-pulse shadow-[0_0_10px_theme(colors.green.500)] border-green-400 text-green-400 bg-black/80 dark:text-green-400 dark:border-green-400 dark:shadow-[0_0_10px_theme(colors.green.500)] light:text-blue-500 light:border-blue-500 light:shadow-[0_0_10px_theme(colors.blue.500)]"
