@@ -188,11 +188,13 @@ export default function AccountPage() {
         setUser(data.user);
         toast.success('Profile updated successfully!');
 
+        setIsUpdated(true);
+        setIsLoading(false);
+        setTimeout(() => setIsUpdated(false), 2000);
+
         const syncedSlug = await syncAuthMetadata(username, displayName, avatarUrl);
         updateScopedUrl(syncedSlug);
         await refreshProfile();
-        setIsUpdated(true);
-        setTimeout(() => setIsUpdated(false), 2000);
       } else {
         toast.error(data.error || 'Failed to update profile');
       }
