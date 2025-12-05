@@ -22,6 +22,7 @@ export async function addJobStep(jobPlanId: string, description: string, stepOrd
       step_order: stepOrder,
       description: description,
       is_completed: false,
+      is_completed_reassembly: false,
     })
     .select()
     .single()
@@ -35,7 +36,7 @@ export async function addJobStep(jobPlanId: string, description: string, stepOrd
   return data
 }
 
-export async function updateJobStep(stepId: string, updates: Partial<JobStepData>) {
+export async function updateJobStep(stepId: string, updates: Partial<JobStepData> & { is_completed_reassembly?: boolean }) {
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -49,6 +50,66 @@ export async function updateJobStep(stepId: string, updates: Partial<JobStepData
   }
 
   revalidatePath('/vehicle/[id]/service/[jobTitle]', 'page')
+}
+
+export async function duplicateJobStep(stepId: string): Promise<ServiceActionResponse> {
+  const supabase = await createClient()
+
+  // 1. Fetch the step to duplicate
+  const { data: step, error: stepError } = await supabase
+    .from('job_steps')
+    .select('*')
+    .eq('id', stepId)
+    .single()
+
+  if (stepError || !step) {
+    return { success: false, error: 'Step not found' }
+  }
+
+  // 2. Fetch all steps in the plan to shift order
+  const { data: allSteps, error: listError } = await supabase
+    .from('job_steps')
+    .select('id, step_order')
+    .eq('job_plan_id', step.job_plan_id)
+    .gte('step_order', step.step_order + 1)
+    .order('step_order', { ascending: true })
+
+  if (listError) {
+    return { success: false, error: 'Failed to fetch steps list' }
+  }
+
+  // 3. Shift steps down
+  if (allSteps && allSteps.length > 0) {
+    const promises = allSteps.map(s =>
+      supabase
+        .from('job_steps')
+        .update({ step_order: s.step_order + 1 })
+        .eq('id', s.id)
+    )
+    await Promise.all(promises)
+  }
+
+  // 4. Insert duplicate step
+  const { data: newStep, error: insertError } = await supabase
+    .from('job_steps')
+    .insert({
+      job_plan_id: step.job_plan_id,
+      step_order: step.step_order + 1,
+      description: step.description + ' (Copy)',
+      notes: step.notes,
+      is_completed: false,
+      is_completed_reassembly: false,
+    })
+    .select()
+    .single()
+
+  if (insertError) {
+    console.error('Error duplicating step:', insertError)
+    return { success: false, error: 'Failed to create duplicate step' }
+  }
+
+  revalidatePath('/vehicle/[id]/service/[jobTitle]', 'page')
+  return { success: true, data: newStep }
 }
 
 export async function deleteJobStep(stepId: string) {
@@ -170,6 +231,7 @@ export async function duplicateJobPlan(originalJobPlanId: string, newName: strin
       step_order: step.step_order,
       description: step.description,
       is_completed: false, // Reset completion status
+      is_completed_reassembly: false,
     }))
 
     const { error: copyError } = await supabase
@@ -183,6 +245,83 @@ export async function duplicateJobPlan(originalJobPlanId: string, newName: strin
 
   revalidatePath('/vehicle/[id]/service', 'page')
   return { success: true, data: newJobPlan }
+}
+
+export async function archiveJobPlan(jobPlanId: string): Promise<ServiceActionResponse> {
+  const supabase = await createClient()
+
+  // Get maintenance log id
+  const { data: plan } = await supabase.from('job_plans').select('maintenance_log_id').eq('id', jobPlanId).single()
+
+  if (!plan) return { success: false, error: 'Plan not found' }
+
+  const { error } = await supabase
+    .from('maintenance_log')
+    .update({ status: 'Archive' })
+    .eq('id', plan.maintenance_log_id)
+
+  if (error) {
+    console.error('Error archiving plan:', error)
+    return { success: false, error: 'Failed to archive plan' }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true }
+}
+
+export async function restoreJobPlan(jobPlanId: string): Promise<ServiceActionResponse> {
+  const supabase = await createClient()
+
+  const { data: plan } = await supabase.from('job_plans').select('maintenance_log_id').eq('id', jobPlanId).single()
+
+  if (!plan) return { success: false, error: 'Plan not found' }
+
+  const { error } = await supabase
+    .from('maintenance_log')
+    .update({ status: 'Plan' })
+    .eq('id', plan.maintenance_log_id)
+
+  if (error) {
+    console.error('Error restoring plan:', error)
+    return { success: false, error: 'Failed to restore plan' }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true }
+}
+
+export async function permanentDeleteJobPlan(jobPlanId: string, confirmedName: string): Promise<ServiceActionResponse> {
+  const supabase = await createClient()
+
+  const { data: plan } = await supabase
+    .from('job_plans')
+    .select('name, maintenance_log_id')
+    .eq('id', jobPlanId)
+    .single()
+
+  if (!plan) return { success: false, error: 'Plan not found' }
+
+  if (plan.name !== confirmedName) {
+    return { success: false, error: 'Plan name does not match' }
+  }
+
+  // Delete maintenance log (cascade should handle job plan, but let's be safe)
+  // Actually, job_plans references maintenance_log. So deleting maintenance_log should cascade if configured,
+  // or we delete job_plan first.
+  // Assuming cascade is set up on maintenance_log deletion or just delete explicitly.
+
+  const { error } = await supabase
+    .from('maintenance_log')
+    .delete()
+    .eq('id', plan.maintenance_log_id)
+
+  if (error) {
+    console.error('Error deleting plan:', error)
+    return { success: false, error: 'Failed to delete plan' }
+  }
+
+  revalidatePath('/vehicle/[id]/service', 'page')
+  return { success: true }
 }
 
 export async function logPlannedService(data: ServiceLogInputs): Promise<ServiceActionResponse> {
