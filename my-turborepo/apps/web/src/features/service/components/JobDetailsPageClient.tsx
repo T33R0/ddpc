@@ -10,6 +10,7 @@ import { JobPlanBuilder } from './JobPlanBuilder'
 import { JobStepData } from './JobStep'
 import { useEffect, useState } from 'react'
 import { updateJobTitle } from '../actions'
+import { JobParts } from './JobParts'
 
 type JobDetailsPageClientProps = {
   vehicle: {
@@ -179,9 +180,11 @@ export function JobDetailsPageClient({
           <TabsContent value="parts" className="mt-6">
             <Card className="bg-card backdrop-blur-sm border-border">
               <CardContent className="p-6">
-                <p className="text-muted-foreground">
-                  Parts content will be displayed here. This section will show the parts list, quantities, and related information for this service job.
-                </p>
+                {jobLog?.id ? (
+                  <JobParts maintenanceLogId={jobLog.id} />
+                ) : (
+                  <div className="text-muted-foreground">Loading...</div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
