@@ -12,9 +12,8 @@ export const ServiceLogSchema = z.object({
   plan_item_id: z.string().uuid().optional(),
   // Service item ID from service_items table
   service_item_id: z.string().uuid().optional(),
-  // Status: "History" for past/completed services, "Plan" for planned services
-  status: z.enum(['History', 'Plan']).optional(),
+  // Status: "History" for past/completed services, "Plan" for planned services, "Archive" for soft-deleted plans
+  status: z.enum(['History', 'Plan', 'Archive']).optional(),
 })
 
 export type ServiceLogInputs = z.infer<typeof ServiceLogSchema>
-

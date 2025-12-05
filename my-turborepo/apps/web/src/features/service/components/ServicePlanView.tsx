@@ -4,9 +4,17 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'rea
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
-import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { deleteServiceLog } from '../actions'
+import { Input } from '@repo/ui/input'
+import { Label } from '@repo/ui/label'
+import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp, Archive, ArchiveRestore } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@repo/ui/dialog'
+import { archiveJobPlan, restoreJobPlan, permanentDeleteJobPlan } from '../actions'
 
 interface PlannedServiceLog {
   id: string
@@ -16,6 +24,7 @@ interface PlannedServiceLog {
   notes?: string | null
   service_provider?: string | null
   cost?: number | null
+  status?: string // 'Plan' | 'Archive' | 'History'
   service_item?: {
     id: string
     name: string
@@ -65,10 +74,18 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     const [plannedLogs, setPlannedLogs] = useState<PlannedServiceLog[]>(initialPlannedLogs)
     const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(initialChecklistCategories)
     const [serviceItemsByCategory, setServiceItemsByCategory] = useState<Record<string, ServiceItem[]>>({})
-    const [deletingId, setDeletingId] = useState<string | null>(null)
+
+    // UI State
+    const [isActionLoading, setIsActionLoading] = useState<string | null>(null)
     const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
       () => new Set(initialChecklistCategories.map(cat => cat.id))
     )
+    const [showArchived, setShowArchived] = useState(false)
+
+    // Delete Confirmation State
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [planToDelete, setPlanToDelete] = useState<PlannedServiceLog | null>(null)
+    const [deleteConfirmationName, setDeleteConfirmationName] = useState('')
 
     useEffect(() => {
       setPlannedLogs(initialPlannedLogs)
@@ -91,24 +108,62 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
       refresh: () => router.refresh(),
     }))
 
-    const handleDeletePlan = async (logId: string) => {
-      if (!confirm('Are you sure you want to delete this planned service?')) {
-        return
-      }
-
-      setDeletingId(logId)
+    const handleArchivePlan = async (logId: string, jobPlanId: string) => {
+      setIsActionLoading(logId)
       try {
-        const result = await deleteServiceLog(logId)
-
+        const result = await archiveJobPlan(jobPlanId)
         if (result.error) throw new Error(result.error)
-
-        setPlannedLogs(prev => prev.filter((log) => log.id !== logId))
         router.refresh()
       } catch (err) {
-        console.error('Error deleting planned log:', err)
-        alert('Failed to delete planned service. Please try again.')
+        console.error('Error archiving plan:', err)
+        alert('Failed to archive plan.')
       } finally {
-        setDeletingId(null)
+        setIsActionLoading(null)
+      }
+    }
+
+    const handleRestorePlan = async (logId: string, jobPlanId: string) => {
+      setIsActionLoading(logId)
+      try {
+        const result = await restoreJobPlan(jobPlanId)
+        if (result.error) throw new Error(result.error)
+        router.refresh()
+      } catch (err) {
+        console.error('Error restoring plan:', err)
+        alert('Failed to restore plan.')
+      } finally {
+        setIsActionLoading(null)
+      }
+    }
+
+    const initiateDelete = (log: PlannedServiceLog) => {
+      setPlanToDelete(log)
+      setDeleteConfirmationName('')
+      setDeleteModalOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+      if (!planToDelete || !planToDelete.job_plans?.[0]?.id) return
+
+      const jobPlanId = planToDelete.job_plans[0].id
+      setIsActionLoading(planToDelete.id) // Show loading on the item in background potentially
+
+      try {
+        const result = await permanentDeleteJobPlan(jobPlanId, deleteConfirmationName)
+        if (!result.success) {
+           alert(result.error || 'Failed to delete plan. Check the name matches exactly.')
+           setIsActionLoading(null)
+           return
+        }
+
+        setDeleteModalOpen(false)
+        setPlanToDelete(null)
+        router.refresh()
+      } catch (err) {
+        console.error('Error deleting plan:', err)
+        alert('An unexpected error occurred.')
+      } finally {
+        setIsActionLoading(null)
       }
     }
 
@@ -143,13 +198,24 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
       })
     }
 
+    // Filter logs
+    const activeLogs = plannedLogs.filter(l => l.status === 'Plan')
+    const archivedLogs = plannedLogs.filter(l => l.status === 'Archive')
+
     return (
       <div className="space-y-8 mt-4">
-        {/* Section 1: Your Active Plan */}
+        {/* Section 1: Active Plans */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">Your Active Plan</h2>
+          <div className="flex justify-between items-center">
+             <h2 className="text-2xl font-semibold text-foreground">Active Plans</h2>
+             {archivedLogs.length > 0 && (
+               <Button variant="ghost" onClick={() => setShowArchived(!showArchived)}>
+                 {showArchived ? 'Hide Archived' : 'Show Archived'}
+               </Button>
+             )}
+          </div>
 
-          {plannedLogs.length === 0 ? (
+          {activeLogs.length === 0 ? (
             <Card className="bg-card border-border">
               <CardContent className="p-6">
                 <p className="text-muted-foreground text-center">
@@ -159,23 +225,18 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
             </Card>
           ) : (
             <div className="space-y-3">
-              {plannedLogs.map((log) => (
+              {activeLogs.map((log) => (
                 <Card
                   key={log.id}
                   className="bg-card border-border cursor-pointer transition-all duration-300"
-                  style={{
-                    transition: 'all 0.3s ease-out',
-                  }}
                   onClick={() => handleCardClick(log)}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)'
+                    e.currentTarget.style.transform = 'scale(1.02)'
                     e.currentTarget.style.borderColor = 'hsl(var(--primary))'
-                    e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--primary) / 0.2)'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)'
                     e.currentTarget.style.borderColor = ''
-                    e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
                   <CardContent className="p-4">
@@ -195,18 +256,23 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
                           size="sm"
                         >
                           <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Mark as Completed
+                          Complete
                         </Button>
-                        <Button
-                          onClick={() => handleDeletePlan(log.id)}
-                          variant="outline"
-                          size="sm"
-                          disabled={deletingId === log.id}
-                          className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {deletingId === log.id ? 'Deleting...' : 'Delete Plan'}
-                        </Button>
+                        {log.job_plans?.[0]?.id && (
+                          <Button
+                            onClick={() => {
+                              const planId = log.job_plans?.[0]?.id
+                              if (planId) handleArchivePlan(log.id, planId)
+                            }}
+                            variant="outline"
+                            size="sm"
+                            disabled={isActionLoading === log.id}
+                            className="border-warning/50 text-warning hover:bg-warning/10 hover:border-warning"
+                          >
+                             <Archive className="h-4 w-4 mr-2" />
+                             {isActionLoading === log.id ? 'Archiving...' : 'Archive'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -216,8 +282,58 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
           )}
         </div>
 
-        {/* Section 2: Suggested Service Checklist */}
-        <div className="space-y-4">
+        {/* Section 2: Archived Plans */}
+        {showArchived && archivedLogs.length > 0 && (
+          <div className="space-y-4 pt-4 border-t border-border">
+             <h2 className="text-2xl font-semibold text-muted-foreground">Archived Plans</h2>
+             <div className="space-y-3 opacity-80">
+                {archivedLogs.map((log) => (
+                  <Card key={log.id} className="bg-muted/30 border-dashed border-border">
+                     <CardContent className="p-4">
+                        <div className="flex justify-between items-center">
+                           <div>
+                              <h3 className="font-medium text-muted-foreground">
+                                {log.job_plans?.[0]?.name || log.service_item?.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">Archived</p>
+                           </div>
+                           <div className="flex gap-2">
+                              {log.job_plans?.[0]?.id && (
+                                <>
+                                  <Button
+                                    onClick={() => {
+                                      const planId = log.job_plans?.[0]?.id
+                                      if (planId) handleRestorePlan(log.id, planId)
+                                    }}
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={isActionLoading === log.id}
+                                  >
+                                    <ArchiveRestore className="h-4 w-4 mr-2" />
+                                    Restore
+                                  </Button>
+                                  <Button
+                                    onClick={() => initiateDelete(log)}
+                                    variant="destructive"
+                                    size="sm"
+                                    disabled={isActionLoading === log.id}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </Button>
+                                </>
+                              )}
+                           </div>
+                        </div>
+                     </CardContent>
+                  </Card>
+                ))}
+             </div>
+          </div>
+        )}
+
+        {/* Section 3: Suggested Service Checklist */}
+        <div className="space-y-4 pt-4">
           <h2 className="text-2xl font-semibold text-foreground">Suggested Service Checklist</h2>
 
           {serviceCategories.length === 0 ? (
@@ -276,9 +392,43 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+          <DialogContent>
+             <DialogHeader>
+                <DialogTitle>Permanently Delete Plan</DialogTitle>
+             </DialogHeader>
+             <div className="py-4 space-y-4">
+                <p className="text-sm text-muted-foreground">
+                   To confirm deletion, please type the name of the plan: <span className="font-bold text-foreground">{planToDelete?.job_plans?.[0]?.name}</span>
+                </p>
+                <div className="space-y-2">
+                   <Label>Plan Name</Label>
+                   <Input
+                      value={deleteConfirmationName}
+                      onChange={(e) => setDeleteConfirmationName(e.target.value)}
+                      placeholder="Type plan name here..."
+                   />
+                </div>
+                <p className="text-xs text-destructive">
+                   This action cannot be undone.
+                </p>
+             </div>
+             <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
+                <Button
+                   variant="destructive"
+                   onClick={handleConfirmDelete}
+                   disabled={deleteConfirmationName !== planToDelete?.job_plans?.[0]?.name || isActionLoading === planToDelete?.id}
+                >
+                   {isActionLoading === planToDelete?.id ? 'Deleting...' : 'Delete Permanently'}
+                </Button>
+             </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   })
 
 ServicePlanView.displayName = 'ServicePlanView'
-

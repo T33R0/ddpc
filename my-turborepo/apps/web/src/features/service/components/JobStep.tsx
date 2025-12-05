@@ -12,13 +12,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@repo/ui/dialog'
-import { GripVertical, Pencil, Check, FileText, Trash2 } from 'lucide-react'
+import { GripVertical, Pencil, Check, FileText, Trash2, Copy } from 'lucide-react'
 
 export interface JobStepData {
   id: string
   step_order: number
   description: string
   is_completed: boolean
+  is_completed_reassembly?: boolean
   notes?: string | null
 }
 
@@ -28,10 +29,12 @@ interface JobStepProps {
   onUpdate: (stepId: string, description: string) => void
   onUpdateNotes: (stepId: string, notes: string) => void
   onDelete: (stepId: string) => void
+  onDuplicate: (stepId: string) => void
   onDragStart: (e: React.DragEvent, stepId: string) => void
   onDragOver: (e: React.DragEvent) => void
   onDrop: (e: React.DragEvent, stepId: string) => void
   isDragging: boolean
+  isReassemblyMode: boolean
 }
 
 export function JobStep({
@@ -40,15 +43,19 @@ export function JobStep({
   onUpdate,
   onUpdateNotes,
   onDelete,
+  onDuplicate,
   onDragStart,
   onDragOver,
   onDrop,
   isDragging,
+  isReassemblyMode,
 }: JobStepProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(step.description)
   const [isNotesOpen, setIsNotesOpen] = useState(false)
   const [notesValue, setNotesValue] = useState(step.notes || '')
+
+  const isCompleted = isReassemblyMode ? step.is_completed_reassembly : step.is_completed
 
   // Update edit value when step description changes externally
   useEffect(() => {
@@ -101,7 +108,7 @@ export function JobStep({
       className={`
         flex flex-col gap-2 p-3 rounded-lg border transition-all
         ${isDragging ? 'opacity-50' : ''}
-        ${step.is_completed ? 'bg-muted/50 border-border/50' : 'bg-card border-border'}
+        ${isCompleted ? 'bg-muted/50 border-border/50' : 'bg-card border-border'}
       `}
     >
       <div className="flex items-center gap-3">
@@ -117,7 +124,7 @@ export function JobStep({
 
         {/* Checkbox */}
         <Checkbox
-          checked={step.is_completed}
+          checked={!!isCompleted}
           onCheckedChange={(checked) => onToggleComplete(step.id, checked === true)}
           disabled={isEditing}
         />
@@ -143,11 +150,11 @@ export function JobStep({
         ) : (
           <>
             <span
-              className={`flex-1 transition-all ${step.is_completed
+              className={`flex-1 transition-all ${isCompleted
                   ? 'text-muted-foreground'
                   : 'text-foreground'
                 }`}
-              style={step.is_completed ? {
+              style={isCompleted ? {
                 textDecoration: 'line-through',
                 textDecorationThickness: '2px'
               } : { textDecoration: 'none' }}
@@ -169,6 +176,14 @@ export function JobStep({
               title="Notes"
             >
               <FileText className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => onDuplicate(step.id)}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              type="button"
+              title="Duplicate step"
+            >
+              <Copy className="h-4 w-4" />
             </button>
             <button
               onClick={() => onDelete(step.id)}
@@ -222,4 +237,3 @@ export function JobStep({
     </div>
   )
 }
-
