@@ -52,7 +52,7 @@ export async function getJobParts(logId: string) {
     return { success: false, error: 'Failed to fetch parts' }
   }
 
-  return { success: true, data: data as MaintenancePart[] }
+  return { success: true, data: data as unknown as MaintenancePart[] }
 }
 
 // Search user's part inventory
