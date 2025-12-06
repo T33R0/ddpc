@@ -7,7 +7,7 @@ import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalDescription } from '@repo/ui/modal'
 import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, ChevronLeft } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
@@ -522,14 +522,14 @@ function VehicleHeader({
       </div>
 
       {isOwner && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">Edit Vehicle Nickname</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
+        <Modal open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <ModalContent className="bg-card border-border">
+            <ModalHeader>
+              <ModalTitle className="text-foreground">Edit Vehicle Nickname</ModalTitle>
+              <ModalDescription className="text-muted-foreground">
                 Change the nickname for this vehicle. Leave empty to remove the nickname.
-              </DialogDescription>
-            </DialogHeader>
+              </ModalDescription>
+            </ModalHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="nickname" className="text-foreground">Nickname</Label>
@@ -550,7 +550,7 @@ function VehicleHeader({
                 <p className="text-sm text-destructive">{error}</p>
               )}
             </div>
-            <DialogFooter>
+            <ModalFooter>
               <Button
                 variant="ghost"
                 onClick={() => setIsEditDialogOpen(false)}
@@ -566,9 +566,9 @@ function VehicleHeader({
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
     </>
   )

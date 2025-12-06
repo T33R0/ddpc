@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '../../lib/auth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogDescription } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalBody, ModalDescription } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
@@ -108,17 +108,17 @@ export function AuthModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center">
+    <Modal open={isOpen} onOpenChange={onClose}>
+      <ModalContent className="sm:max-w-md">
+        <ModalHeader>
+          <ModalTitle className="text-center">
             {title || (isSignUp ? 'Create Account' : 'Welcome Back')}
-          </DialogTitle>
-          <DialogDescription className="text-center">
+          </ModalTitle>
+          <ModalDescription className="text-center">
             {description || (isSignUp ? 'Sign up to get started with DDPC' : 'Sign in to your account')}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogBody>
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -213,8 +213,8 @@ export function AuthModal({
               {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>
           </div>
-        </DialogBody>
-      </DialogContent>
-    </Dialog>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }

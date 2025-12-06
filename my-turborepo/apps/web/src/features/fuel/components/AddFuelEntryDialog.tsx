@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Button } from '@repo/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@repo/ui/dialog'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalFooter } from '@repo/ui/modal'
 import { Label } from '@repo/ui/label'
 import { Input } from '@repo/ui/input'
 import { Checkbox } from '@repo/ui/checkbox'
@@ -117,14 +117,14 @@ export function AddFuelEntryDialog({ open, onOpenChange, onSuccess }: AddFuelEnt
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add Fuel Entry</DialogTitle>
-          <DialogDescription>
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalContent className="sm:max-w-[425px]">
+        <ModalHeader>
+          <ModalTitle>Add Fuel Entry</ModalTitle>
+          <ModalDescription>
             Record a new fuel fill-up for your vehicle.
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-sm text-red-500">
@@ -247,16 +247,16 @@ export function AddFuelEntryDialog({ open, onOpenChange, onSuccess }: AddFuelEnt
             />
           </div>
 
-          <DialogFooter>
+          <ModalFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? 'Saving...' : 'Save Entry'}
             </Button>
-          </DialogFooter>
+          </ModalFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   );
 }

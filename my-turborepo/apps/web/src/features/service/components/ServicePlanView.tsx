@@ -8,12 +8,12 @@ import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp, Archive, ArchiveRestore } from 'lucide-react'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@repo/ui/dialog'
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalFooter,
+} from '@repo/ui/modal'
 import { archiveJobPlan, restoreJobPlan, permanentDeleteJobPlan } from '../actions'
 
 interface PlannedServiceLog {
@@ -394,11 +394,11 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
         </div>
 
         {/* Delete Confirmation Modal */}
-        <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-          <DialogContent>
-             <DialogHeader>
-                <DialogTitle>Permanently Delete Plan</DialogTitle>
-             </DialogHeader>
+        <Modal open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+          <ModalContent>
+             <ModalHeader>
+                <ModalTitle>Permanently Delete Plan</ModalTitle>
+             </ModalHeader>
              <div className="py-4 space-y-4">
                 <p className="text-sm text-muted-foreground">
                    To confirm deletion, please type the name of the plan: <span className="font-bold text-foreground">{planToDelete?.job_plans?.[0]?.name}</span>
@@ -415,7 +415,7 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
                    This action cannot be undone.
                 </p>
              </div>
-             <DialogFooter>
+             <ModalFooter>
                 <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
                 <Button
                    variant="destructive"
@@ -424,9 +424,9 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
                 >
                    {isActionLoading === planToDelete?.id ? 'Deleting...' : 'Delete Permanently'}
                 </Button>
-             </DialogFooter>
-          </DialogContent>
-        </Dialog>
+             </ModalFooter>
+          </ModalContent>
+        </Modal>
       </div>
     )
   })

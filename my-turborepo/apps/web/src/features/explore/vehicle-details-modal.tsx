@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalTitle, ModalDescription, ModalHeader, ModalFooter } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
 import { AuthModal } from '@/features/auth/AuthModal';
@@ -248,22 +248,22 @@ const VehicleDetailsModal = ({
   const primaryImageUrl = summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
+    <Modal open={open} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent
         className="sm:max-w-5xl max-h-[85dvh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <DialogHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
-          <DialogTitle className="text-2xl font-bold text-foreground text-left">
+        <ModalHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
+          <ModalTitle className="text-2xl font-bold text-foreground text-left">
             {summary.year} {summary.make} {summary.model}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
+          </ModalTitle>
+          <ModalDescription className="sr-only">
             Vehicle details and specifications for {summary.year} {summary.make} {summary.model}
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
         {/* Side Navigation Arrows - Responsive positioning */}
         {canNavigatePrev && (
@@ -517,7 +517,7 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <DialogFooter className="pt-6 sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 -mx-6 px-6 border-t border-border mt-auto">
+          <ModalFooter className="pt-6 sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 -mx-6 px-6 border-t border-border mt-auto">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full">
               <Button
                 onClick={handleAddToGarage}
@@ -544,9 +544,9 @@ const VehicleDetailsModal = ({
                 </Link>
               </Button>
             </div>
-          </DialogFooter>
+          </ModalFooter>
         </div>
-      </DialogContent >
+      </ModalContent >
 
       <AuthModal
         isOpen={showAuthModal}
@@ -555,7 +555,7 @@ const VehicleDetailsModal = ({
         description="Sign up or sign in to add this vehicle to your garage and track its history."
         onSuccess={() => setShowAuthModal(false)}
       />
-    </Dialog >
+    </Modal >
   );
 };
 

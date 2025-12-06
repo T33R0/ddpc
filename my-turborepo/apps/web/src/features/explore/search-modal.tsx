@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalBody } from '@repo/ui/modal';
 import { Input } from '@repo/ui/input';
 import { Button } from '@repo/ui/button';
 
@@ -71,15 +71,15 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3">
-        <DialogHeader>
-          <DialogTitle>Search Vehicles</DialogTitle>
-          <DialogDescription>
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalContent className="max-w-4xl w-full sm:w-4/5 md:w-3/4 lg:w-2/3">
+        <ModalHeader>
+          <ModalTitle>Search Vehicles</ModalTitle>
+          <ModalDescription>
             Search for vehicles by year, make, model, trim, or any vehicle specification
-          </DialogDescription>
-        </DialogHeader>
-        <DialogBody className="px-6 pb-6">
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody className="px-6 pb-6">
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
@@ -100,9 +100,9 @@ export function SearchModal({ open, onOpenChange, onSearch }: SearchModalProps) 
               Search
             </Button>
           </form>
-        </DialogBody>
-      </DialogContent>
-    </Dialog>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }
 

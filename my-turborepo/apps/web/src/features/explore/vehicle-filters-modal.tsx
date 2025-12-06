@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalBody, ModalFooter } from '@repo/ui/modal';
 import { DropdownMenu } from '@repo/ui/dropdown-menu';
 import { Button } from '@repo/ui/button';
 
@@ -59,15 +59,15 @@ export function VehicleFiltersModal({
     : [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Filter Vehicles</DialogTitle>
-          <DialogDescription>
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalContent className="sm:max-w-4xl">
+        <ModalHeader>
+          <ModalTitle>Filter Vehicles</ModalTitle>
+          <ModalDescription>
             Filter vehicles by year, make, model, engine type, fuel type, drivetrain, or body type
-          </DialogDescription>
-        </DialogHeader>
-        <DialogBody className="px-6 pb-6">
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody className="px-6 pb-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <DropdownMenu
               className="w-full"
@@ -176,17 +176,17 @@ export function VehicleFiltersModal({
             </DropdownMenu>
           </div>
 
-          <DialogFooter className="mt-6 pt-4 border-t border-border">
+          <ModalFooter className="mt-6 pt-4 border-t border-border">
             <Button
               onClick={() => onOpenChange(false)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors"
             >
               Apply Filters
             </Button>
-          </DialogFooter>
-        </DialogBody>
-      </DialogContent>
-    </Dialog>
+          </ModalFooter>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }
 

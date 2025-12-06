@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-} from '@repo/ui/dialog';
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalBody,
+} from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import { IssueReportForm } from './IssueReportForm';
 
@@ -30,25 +30,25 @@ export function ReportProblemModal({ isOpen, onOpenChange }: ReportProblemModalP
   }, [pathname, isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md text-left">
-        <DialogHeader>
-          <DialogTitle>Report a Problem</DialogTitle>
-          <DialogDescription>
+    <Modal open={isOpen} onOpenChange={onOpenChange}>
+      <ModalContent className="sm:max-w-md text-left">
+        <ModalHeader>
+          <ModalTitle>Report a Problem</ModalTitle>
+          <ModalDescription>
             Help us improve by reporting issues you encounter.
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
-        <DialogBody>
+        <ModalBody>
           <IssueReportForm
             defaultUrl={currentUrl}
             onSuccess={() => onOpenChange(false)}
             onCancel={() => onOpenChange(false)}
             isModal={true}
           />
-        </DialogBody>
-      </DialogContent>
-    </Dialog>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }
 

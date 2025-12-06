@@ -102,15 +102,15 @@ type ModalContentProps = {
   className?: string;
   drawerProps?: React.ComponentProps<typeof DrawerContent>;
   popoverProps?: React.ComponentProps<typeof DialogContent>;
-};
+} & React.ComponentProps<'div'>;
 
-const ModalContent = ({ className, children, drawerProps, popoverProps }: ModalContentProps) => {
+const ModalContent = ({ className, children, drawerProps, popoverProps, ...rest }: ModalContentProps) => {
   const { isMobile } = useContext();
   const Component = isMobile ? DrawerContent : DialogContent;
   const props = isMobile ? drawerProps : popoverProps;
 
   return (
-    <Component className={className} {...props}>
+    <Component className={className} {...props} {...rest}>
       {children}
     </Component>
   );

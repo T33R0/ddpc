@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalBody, ModalFooter } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Textarea } from '@repo/ui/textarea';
@@ -63,15 +63,15 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Give a Testimonial</DialogTitle>
-          <DialogDescription>
+    <Modal open={isOpen} onOpenChange={onOpenChange}>
+      <ModalContent className="sm:max-w-[425px]">
+        <ModalHeader>
+          <ModalTitle>Give a Testimonial</ModalTitle>
+          <ModalDescription>
             Share your experience with ddpc. Your feedback helps us grow!
-          </DialogDescription>
-        </DialogHeader>
-        <DialogBody>
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
             <div className="flex items-center gap-4 mb-4">
                 <Avatar className="h-12 w-12">
@@ -119,14 +119,14 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
                 </div>
             </div>
 
-            <DialogFooter>
+            <ModalFooter>
                 <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting...' : 'Submit Testimonial'}
                 </Button>
-            </DialogFooter>
+            </ModalFooter>
             </form>
-        </DialogBody>
-      </DialogContent>
-    </Dialog>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }
