@@ -1,6 +1,9 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { VehicleEvent } from '../lib/getVehicleEvents'
+import { HistoryDetailSheet } from './HistoryDetailSheet'
 
 // Icon components for different event types
 function MaintenanceIcon() {
@@ -78,6 +81,8 @@ interface TimelineFeedProps {
 }
 
 export function TimelineFeed({ events }: TimelineFeedProps) {
+  const [selectedEvent, setSelectedEvent] = useState<VehicleEvent | null>(null)
+
   if (events.length === 0) {
     return (
       <Card className="bg-card rounded-2xl text-foreground border border-border">
@@ -97,70 +102,74 @@ export function TimelineFeed({ events }: TimelineFeedProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {events.map((event) => (
-        <Card
-          key={event.id}
-          className="bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border"
-        >
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start space-x-4">
-                {getEventIcon(event.type)}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className={`text-sm font-bold ${getEventTypeColor(event.type)}`}>
-                      {getEventTypeLabel(event.type)}
-                    </span>
-                    {event.status && event.type === 'modification' && (
-                      <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
-                        {event.status}
+    <>
+      <div className="space-y-4">
+        {events.map((event) => (
+          <Card
+            key={event.id}
+            onClick={() => setSelectedEvent(event)}
+            className="bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border cursor-pointer active:scale-[0.99]"
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-4">
+                  {getEventIcon(event.type)}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className={`text-sm font-bold ${getEventTypeColor(event.type)}`}>
+                        {getEventTypeLabel(event.type)}
                       </span>
+                      {event.status && event.type === 'modification' && (
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                          {event.status}
+                        </span>
+                      )}
+                    </div>
+                    <CardTitle className="text-lg font-bold text-foreground mb-1">
+                      {event.title}
+                    </CardTitle>
+                    {event.description && (
+                      <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
+                        {event.description}
+                      </p>
                     )}
                   </div>
-                  <CardTitle className="text-lg font-bold text-foreground mb-1">
-                    {event.title}
-                  </CardTitle>
-                  {event.description && (
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {event.description}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {event.date.toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                  {event.odometer && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {event.odometer.toLocaleString()} miles
                     </p>
                   )}
                 </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {event.date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </p>
-                {event.odometer && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {event.odometer.toLocaleString()} miles
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          {(event.cost !== undefined && event.cost > 0) && (
-            <CardContent className="pt-0">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Cost:</span>
-                <span className="text-sm font-semibold text-foreground">
-                  ${event.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </CardContent>
-          )}
-        </Card>
-      ))}
+            </CardHeader>
+            {(event.cost !== undefined && event.cost > 0) && (
+              <CardContent className="pt-0">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Cost:</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    ${event.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+      </div>
 
-      {/* TODO: Add pagination for large histories */}
-      {/* TODO: Add filtering by event type */}
-      {/* TODO: Add sorting options (date, cost, mileage) */}
-      {/* TODO: Add search functionality */}
-    </div>
+      <HistoryDetailSheet
+        event={selectedEvent}
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
+    </>
   )
 }
