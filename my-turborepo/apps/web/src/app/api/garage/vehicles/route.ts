@@ -25,7 +25,6 @@ interface UserVehicle {
   vehicle_image: string | null;
   created_at: string;
   last_event_at: string | null;
-  updated_at: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -52,9 +51,10 @@ export async function GET(request: NextRequest) {
     const storedOnly = url.searchParams.get('stored_only') === 'true';
 
     // Fetch user's vehicles with pagination
+    // Removing updated_at as it does not exist on user_vehicle
     let query = supabase
       .from('user_vehicle')
-      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url, vehicle_image, created_at, last_event_at, updated_at')
+      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url, vehicle_image, created_at, last_event_at')
       .eq('owner_id', user.id);
 
     // Filter for stored vehicles if requested
@@ -71,10 +71,6 @@ export async function GET(request: NextRequest) {
         case 'status':
           // For status, simple alphabetical sort.
           // Parked, Listed, Sold, Retired -> Listed, Parked, Retired, Sold
-          // Ideal user order: Parked, Listed, Sold, Retired.
-          // Since we can't easily do custom order without a function, we'll rely on alphabetical for now
-          // or we could sort in memory but that breaks pagination.
-          // Let's stick to alphabetical Current Status for now.
           query = query.order('current_status', { ascending: sortDir === 'asc' });
           break;
         case 'ownership_period':
@@ -83,14 +79,12 @@ export async function GET(request: NextRequest) {
           break;
         case 'last_edited':
         default:
-          // Try to sort by last_event_at, fallback to updated_at
+          // Try to sort by last_event_at, fallback to created_at
           // Supabase order() supports nullsFirst/nullsLast.
           // We want the most recent event first.
-          // We can't easily do COALESCE(last_event_at, updated_at) in simple query builder sort.
-          // We will sort by last_event_at first, then updated_at.
           query = query
             .order('last_event_at', { ascending: sortDir === 'asc', nullsFirst: false })
-            .order('updated_at', { ascending: sortDir === 'asc', nullsFirst: false });
+            .order('created_at', { ascending: sortDir === 'asc', nullsFirst: false });
           break;
       }
     }
@@ -171,8 +165,7 @@ export async function GET(request: NextRequest) {
         image_url: uv.vehicle_image || uv.photo_url,
         vehicle_image: uv.vehicle_image,
         created_at: uv.created_at,
-        last_event_at: uv.last_event_at,
-        updated_at: uv.updated_at
+        last_event_at: uv.last_event_at
       }
     })
 
