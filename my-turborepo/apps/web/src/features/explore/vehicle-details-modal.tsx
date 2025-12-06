@@ -120,11 +120,45 @@ const VehicleDetailsModal = ({
     setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
   }, [summary, initialTrimId]);
 
+  // Group trims by name
+  const groupedTrims = useMemo(() => {
+    const groups: Record<string, TrimVariant[]> = {};
+    summary.trims.forEach(trim => {
+      // Use trim name as key, fallback to model if trim name is missing
+      const key = trim.trim || trim.model;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(trim);
+    });
+    return groups;
+  }, [summary]);
+
   const selectedTrim = useMemo<TrimVariant | null>(() => {
     return summary.trims.find((trim) => trim.id === selectedTrimId) ?? summary.trims[0] ?? null;
   }, [summary, selectedTrimId]);
 
-  const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  // Derive selected trim name from selectedTrim
+  const selectedTrimName = useMemo(() => {
+    if (!selectedTrim) return '';
+    return selectedTrim.trim || selectedTrim.model;
+  }, [selectedTrim]);
+
+  // Get variants for the current trim name
+  const currentTrimVariants = useMemo(() => {
+    return groupedTrims[selectedTrimName] || [];
+  }, [groupedTrims, selectedTrimName]);
+
+  const handleTrimNameChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newTrimName = event.target.value;
+    const variants = groupedTrims[newTrimName];
+    if (variants && variants.length > 0 && variants[0]) {
+      // Auto-select the first variant in the group
+      setSelectedTrimId(variants[0].id);
+    }
+  };
+
+  const handleTrimVariantChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTrimId(event.target.value);
   };
 
@@ -301,23 +335,47 @@ const VehicleDetailsModal = ({
                 </div>
               </div>
 
-              {/* Trim Selector */}
-              <div className="space-y-2">
-                <label htmlFor="trim-select" className="text-sm text-muted-foreground block">
-                  Select Trim:
-                </label>
-                <select
-                  id="trim-select"
-                  value={selectedTrimId}
-                  onChange={handleTrimChange}
-                  className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {summary.trims.map((trim) => (
-                    <option key={trim.id} value={trim.id} className="bg-background text-foreground">
-                      {trim.trim || trim.trim_description || trim.model}
-                    </option>
-                  ))}
-                </select>
+              {/* Trim Selectors */}
+              <div className="space-y-4">
+                {/* Primary Trim Selector */}
+                <div className="space-y-2">
+                  <label htmlFor="trim-name-select" className="text-sm text-muted-foreground block">
+                    Select Trim:
+                  </label>
+                  <select
+                    id="trim-name-select"
+                    value={selectedTrimName}
+                    onChange={handleTrimNameChange}
+                    className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {Object.keys(groupedTrims).map((trimName) => (
+                      <option key={trimName} value={trimName} className="bg-background text-foreground">
+                        {trimName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Secondary Configuration Selector (Conditional) */}
+                {currentTrimVariants.length > 1 && (
+                  <div className="space-y-2">
+                    <label htmlFor="trim-variant-select" className="text-sm text-muted-foreground block">
+                      Configuration:
+                    </label>
+                    <select
+                      id="trim-variant-select"
+                      value={selectedTrimId}
+                      onChange={handleTrimVariantChange}
+                      className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {currentTrimVariants.map((variant) => (
+                        <option key={variant.id} value={variant.id} className="bg-background text-foreground">
+                          {variant.trim_description || 'Standard'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
