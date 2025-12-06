@@ -1,0 +1,11 @@
+
+> dev
+> turbo run dev
+
+turbo 2.5.8
+
+• Packages in scope: @repo/assets, @repo/eslint-config, @repo/prettier-config, @repo/services, @repo/tailwind-config, @repo/types, @repo/typescript-config, @repo/ui, docs, web
+• Running dev in 10 packages
+• Remote caching disabled
+web:dev: cache bypass, force executing 00b11b2ea8b17d3a
+docs:dev: cache bypass, force executing fc6416806e1631f0
