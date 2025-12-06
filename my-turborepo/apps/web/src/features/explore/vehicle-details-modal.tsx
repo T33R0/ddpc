@@ -497,7 +497,7 @@ const VehicleDetailsModal = ({
               {selectedTrim.total_seating && (
                 <div className="space-y-1">
                   <div className="text-muted-foreground text-sm">Seating:</div>
-                  <div className="text-foreground">{selectedTrim.total_seating} passengers</div>
+                  <div className="text-foreground">{parseFloat(selectedTrim.total_seating).toFixed(0)} passengers</div>
                 </div>
               )}
 
