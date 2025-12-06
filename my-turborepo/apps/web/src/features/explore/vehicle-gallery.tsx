@@ -146,6 +146,20 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
           open={!!selectedVehicle}
           onClose={() => setSelectedVehicle(null)}
           summary={selectedVehicle.summary}
+          onNavigate={(direction) => {
+            const newIndex = direction === 'next' ? selectedVehicle.index + 1 : selectedVehicle.index - 1;
+            if (newIndex >= 0 && newIndex < vehicles.length) {
+              const newVehicle = vehicles[newIndex];
+              if (newVehicle) {
+                setSelectedVehicle({
+                  summary: newVehicle,
+                  index: newIndex
+                });
+              }
+            }
+          }}
+          canNavigatePrev={selectedVehicle.index > 0}
+          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
         />
       )}
     </>
