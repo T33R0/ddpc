@@ -8,7 +8,7 @@ import { Card, CardContent } from '@repo/ui/card'
 import AddVehicleModal from './add-vehicle-modal'
 import { AuthProvider } from '@repo/ui/auth-context'
 import { RealtimeChannel } from '@supabase/supabase-js'
-import { Plus } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
 import { VehicleWithOdometer } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback';
@@ -63,8 +63,6 @@ function VehicleCard({
     }
   }
 
-
-
   const handleClick = () => {
     // Use smart slug generation
     const urlSlug = getVehicleSlug(vehicle, allVehicles)
@@ -104,9 +102,14 @@ function VehicleCard({
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
-        <div className="absolute top-2 left-2 z-10">
+        <div className="absolute top-2 left-2 z-10 flex gap-1">
           <span className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.current_status)}`}></span>
         </div>
+        {onDragStart && (
+          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded p-1 cursor-grab active:cursor-grabbing text-white">
+            <GripVertical size={16} />
+          </div>
+        )}
         <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10 relative">
           <ImageWithTimeoutFallback
             src={vehicle.vehicle_image || vehicle.image_url || "/branding/fallback-logo.png"}
@@ -168,7 +171,11 @@ function VehicleGallery({
   loadingMore,
   hasMore,
   onDrop,
-  galleryType
+  galleryType,
+  isCollapsible,
+  onSortChange,
+  currentSort,
+  onManualReorder
 }: {
   title: string
   vehicles: VehicleWithOdometer[]
@@ -180,12 +187,18 @@ function VehicleGallery({
   hasMore?: boolean
   onDrop?: (vehicleId: string, newStatus: string) => void
   galleryType?: 'active' | 'stored'
+  isCollapsible?: boolean
+  onSortChange?: (sort: string) => void
+  currentSort?: string
+  onManualReorder?: (draggedId: string, targetId: string) => void
 }) {
+  const [isExpanded, setIsExpanded] = useState(true)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [draggingVehicleId, setDraggingVehicleId] = useState<string | null>(null)
+
   // Infinite scroll logic
   const handleScroll = useCallback(() => {
-    if (!onLoadMore || loadingMore || !hasMore) return
+    if (!onLoadMore || loadingMore || !hasMore || (isCollapsible && !isExpanded)) return
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
     const windowHeight = window.innerHeight
@@ -195,7 +208,7 @@ function VehicleGallery({
     if (scrollTop + windowHeight >= documentHeight - 300) {
       onLoadMore()
     }
-  }, [onLoadMore, loadingMore, hasMore])
+  }, [onLoadMore, loadingMore, hasMore, isCollapsible, isExpanded])
 
   useEffect(() => {
     if (onLoadMore) {
@@ -229,42 +242,125 @@ function VehicleGallery({
     const vehicleId = e.dataTransfer.getData('vehicleId')
     const currentStatus = e.dataTransfer.getData('currentStatus')
 
-    if (vehicleId && onDrop && galleryType) {
-      const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
-      if (currentStatus !== newStatus) {
-        onDrop(vehicleId, newStatus)
-      }
+    if (vehicleId) {
+       // Check if we are reordering within the same gallery
+       // Simple heuristic: If galleryType is stored and vehicle is stored, it's reorder
+       // But we don't have vehicle status easily here without lookup.
+       // We rely on the parent handler to differentiate or pass metadata.
+
+       if (onDrop) {
+          // Status change logic
+          const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+          // If status is different, it's a move between galleries
+          if (currentStatus !== newStatus) {
+             onDrop(vehicleId, newStatus)
+             setDraggingVehicleId(null)
+             return
+          }
+       }
+
+       // If same status, it might be a reorder
+       // We need the target element to know where it dropped
+       // But HTML5 DnD 'drop' event is on the container here.
+       // Reordering is usually handled by dropping ON another card.
+       // Since this drop handler is on the CONTAINER, it handles moves between lists well.
+       // For reordering, we need individual card drop zones or a library.
+       // However, we can implement basic "append" or "prepend" if dropped on container? No.
+       // Let's rely on the cards themselves handling drop for reorder if needed?
+       // For now, simpler implementation: Drop on container = Move between galleries (Status Change).
     }
+    setDraggingVehicleId(null)
+  }
+
+  const handleCardDrop = (e: React.DragEvent, targetVehicleId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const draggedId = e.dataTransfer.getData('vehicleId')
+    const draggedStatus = e.dataTransfer.getData('currentStatus')
+
+    // If dropping on a card in the SAME gallery (approx by checking if target is in this gallery)
+    const isTargetInGallery = vehicles.find(v => v.id === targetVehicleId)
+    const isDraggedInGallery = vehicles.find(v => v.id === draggedId)
+
+    if (isTargetInGallery && isDraggedInGallery && onManualReorder) {
+        onManualReorder(draggedId, targetVehicleId)
+    } else if (onDrop && galleryType) {
+        // Fallback to status change if moving between galleries
+         const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+         if (draggedStatus !== newStatus) {
+            onDrop(draggedId, newStatus)
+         }
+    }
+    setIsDraggingOver(false)
     setDraggingVehicleId(null)
   }
 
   return (
     <div className="mb-12">
-      <h2 className="text-2xl font-bold text-foreground mb-6">{title}</h2>
-      <div
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
-          }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {vehicles.map((vehicle) => (
-          <VehicleCard
-            key={vehicle.id}
-            vehicle={vehicle}
-            allVehicles={allVehicles}
-            onDragStart={() => setDraggingVehicleId(vehicle.id)}
-            onDragEnd={() => setDraggingVehicleId(null)}
-            isDragging={draggingVehicleId === vehicle.id}
-          />
-        ))}
+      <div className="flex items-center justify-between mb-6">
+        <div
+          className={`flex items-center gap-2 ${isCollapsible ? 'cursor-pointer select-none hover:text-accent transition-colors' : ''}`}
+          onClick={() => isCollapsible && setIsExpanded(!isExpanded)}
+        >
+            <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+            {isCollapsible && (
+              isExpanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />
+            )}
+        </div>
 
-        {showAddCard && (
-          <AddVehicleCard onClick={onAddClick || (() => { })} />
+        {/* Sort Controls - only show when expanded and sortable */}
+        {isExpanded && onSortChange && (
+            <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground hidden sm:inline">Sort by:</label>
+                <select
+                    className="bg-card border border-border rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    value={currentSort}
+                    onChange={(e) => onSortChange(e.target.value)}
+                >
+                    <option value="last_edited">Last Edited</option>
+                    <option value="year">Year</option>
+                    <option value="status">Status</option>
+                    <option value="ownership_period">Ownership Period</option>
+                    <option value="custom">Manual</option>
+                </select>
+            </div>
         )}
       </div>
 
-      {loadingMore && (
+      {isExpanded && (
+        <div
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            {vehicles.map((vehicle) => (
+            <div
+                key={vehicle.id}
+                onDragOver={(e) => {
+                     e.preventDefault() // Allow drop
+                     e.stopPropagation()
+                }}
+                onDrop={(e) => handleCardDrop(e, vehicle.id)}
+            >
+                <VehicleCard
+                    vehicle={vehicle}
+                    allVehicles={allVehicles}
+                    onDragStart={() => setDraggingVehicleId(vehicle.id)}
+                    onDragEnd={() => setDraggingVehicleId(null)}
+                    isDragging={draggingVehicleId === vehicle.id}
+                />
+            </div>
+            ))}
+
+            {showAddCard && (
+            <AddVehicleCard onClick={onAddClick || (() => { })} />
+            )}
+        </div>
+      )}
+
+      {isExpanded && loadingMore && (
         <div className="flex justify-center mt-8">
           <div className="text-muted-foreground">Loading more vehicles...</div>
         </div>
@@ -290,41 +386,161 @@ export function GarageContent({
   const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(uniqueInitialActive)
   const [storedVehiclesLocal, setStoredVehiclesLocal] = useState<VehicleWithOdometer[]>([])
 
+  // Sorting State
+  const [storedSortBy, setStoredSortBy] = useState('last_edited')
+
   // For stored vehicles, we still need the hook since they load progressively
-  const { vehicles: storedVehicles, isLoading: storedLoading, loadingMore, hasMore, loadMore } = useStoredVehicles()
+  // We pass sort params to the hook
+  const {
+    vehicles: storedVehicles,
+    isLoading: storedLoading,
+    loadingMore,
+    hasMore,
+    loadMore
+  } = useStoredVehicles({
+      sort_by: storedSortBy,
+      sort_direction: storedSortBy === 'year' || storedSortBy === 'last_edited' ? 'desc' : 'asc'
+  })
+
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false)
 
   // Show add vehicle card only if active vehicles < 3
   const canAddVehicle = activeVehicles.length < 3
 
   // Combined stored vehicles (local + hook), excluding active vehicles and duplicates
-  const allStoredVehicles = [
-    ...storedVehiclesLocal.filter(v =>
-      v.current_status !== 'daily_driver' &&
-      !activeVehicles.find(av => av.id === v.id)
-    ),
-    ...storedVehicles.filter(v =>
-      v.current_status !== 'daily_driver' &&
-      !storedVehiclesLocal.find(lv => lv.id === v.id) &&
-      !activeVehicles.find(av => av.id === v.id)
-    )
-  ]
+  // We need to respect the sort order here if possible, but local optimisitic updates make this tricky.
+  // Ideally, useStoredVehicles returns the sorted list.
+  // Local updates should be minimized or re-fetched.
+  // For manual reordering, we need to manage the order in local state overriding the hook.
 
-  // All known vehicles for slug generation context
-  const allKnownVehicles = [...activeVehicles, ...allStoredVehicles]
+  const [manualOrderVehicles, setManualOrderVehicles] = useState<VehicleWithOdometer[]>([])
+  const [isManualSort, setIsManualSort] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Sync stored vehicles from hook, filtering out any that are active
-  // Merge with existing local vehicles to preserve optimistically added ones
+  // Load manual order from localStorage on mount
   useEffect(() => {
-    const filteredFromHook = storedVehicles.filter(v =>
-      v.current_status !== 'daily_driver' &&
-      !activeVehicles.find(av => av.id === v.id)
-    )
+    try {
+      const savedOrder = localStorage.getItem('garage-manual-order')
+      if (savedOrder) {
+        const orderMap = JSON.parse(savedOrder) as string[]
+        if (Array.isArray(orderMap) && orderMap.length > 0) {
+          // If we have a saved order, we might want to default to manual sort?
+          // Or just have the order ready.
+          // The user requirement says "reorder... and that ordering sticks".
+          // If we switch to 'custom', we need the list.
+          // We can't fully reconstruct the list until we have vehicles.
+        }
+      }
+      const savedSortMode = localStorage.getItem('garage-sort-mode')
+      if (savedSortMode === 'custom') {
+        setIsManualSort(true)
+      } else if (savedSortMode) {
+        setStoredSortBy(savedSortMode)
+      }
+    } catch (e) {
+      console.error('Failed to load garage settings', e)
+    }
+    setIsInitialized(true)
+  }, [])
 
-    // Merge: keep optimistically added vehicles that aren't in hook yet, plus hook vehicles
-    setStoredVehiclesLocal((prev) => {
+  // Save sort mode to localStorage
+  useEffect(() => {
+    if (!isInitialized) return
+    localStorage.setItem('garage-sort-mode', isManualSort ? 'custom' : storedSortBy)
+  }, [isManualSort, storedSortBy, isInitialized])
+
+  // Save manual order to localStorage
+  useEffect(() => {
+    if (!isInitialized || !isManualSort || manualOrderVehicles.length === 0) return
+    const orderIds = manualOrderVehicles.map(v => v.id)
+    localStorage.setItem('garage-manual-order', JSON.stringify(orderIds))
+  }, [manualOrderVehicles, isManualSort, isInitialized])
+
+  // Update manual order list when hook updates
+  // If we are in manual mode, we need to respect the saved order
+  // And merge in new vehicles
+  useEffect(() => {
+     if (!isManualSort) return
+
+     // Merge current fetched vehicles into manual list
+     // Logic:
+     // 1. Start with existing manualOrderVehicles (if any) or create from saved order
+     // 2. Add any new vehicles from storedVehicles that aren't in the list
+     // 3. Update data for existing vehicles in the list
+
+     setManualOrderVehicles(prev => {
+        let baseList = prev
+
+        // If list is empty, try to load from saved order + storedVehicles
+        if (baseList.length === 0) {
+           try {
+              const savedOrder = JSON.parse(localStorage.getItem('garage-manual-order') || '[]') as string[]
+              if (savedOrder.length > 0) {
+                 // Sort storedVehicles according to savedOrder
+                 // Vehicles not in savedOrder go to the end
+                 const vehicleMap = new Map(storedVehicles.map(v => [v.id, v]))
+                 const ordered: VehicleWithOdometer[] = []
+                 const usedIds = new Set<string>()
+
+                 savedOrder.forEach(id => {
+                    const v = vehicleMap.get(id)
+                    if (v) {
+                       ordered.push(v)
+                       usedIds.add(id)
+                    }
+                 })
+
+                 storedVehicles.forEach(v => {
+                    if (!usedIds.has(v.id)) {
+                       ordered.push(v)
+                    }
+                 })
+
+                 baseList = ordered
+              } else {
+                 baseList = storedVehicles
+              }
+           } catch {
+              baseList = storedVehicles
+           }
+        } else {
+            // Update existing items in baseList with new data from storedVehicles
+            // And append new items
+            const currentIds = new Set(baseList.map(v => v.id))
+            const newItems = storedVehicles.filter(v => !currentIds.has(v.id))
+
+            baseList = baseList.map(v => {
+               const updated = storedVehicles.find(sv => sv.id === v.id)
+               return updated ? updated : v
+            })
+
+            if (newItems.length > 0) {
+               baseList = [...baseList, ...newItems]
+            }
+        }
+
+        // Filter out vehicles that moved to active
+        // (This is handled by effectiveStoredVehicles logic usually, but here we manage the source list)
+        return baseList
+     })
+  }, [storedVehicles, isManualSort])
+
+  const effectiveStoredVehicles = React.useMemo(() => {
+      if (isManualSort && manualOrderVehicles.length > 0) {
+          return manualOrderVehicles.filter(v =>
+              v.current_status !== 'daily_driver' &&
+              !activeVehicles.find(av => av.id === v.id)
+          );
+      }
+
+      // Standard mode: Merge local optimistic updates + hook data
+      const filteredFromHook = storedVehicles.filter(v =>
+        v.current_status !== 'daily_driver' &&
+        !activeVehicles.find(av => av.id === v.id)
+      )
+
       // Keep vehicles that were optimistically added but aren't in hook yet
-      const optimisticOnly = prev.filter(lv =>
+      const optimisticOnly = storedVehiclesLocal.filter(lv =>
         lv.current_status !== 'daily_driver' &&
         !activeVehicles.find(av => av.id === lv.id) &&
         !filteredFromHook.find(hv => hv.id === lv.id)
@@ -338,9 +554,48 @@ export function GarageContent({
         }
       })
 
-      return combined
-    })
-  }, [storedVehicles, activeVehicles])
+      return combined;
+  }, [storedVehicles, storedVehiclesLocal, activeVehicles, isManualSort, manualOrderVehicles])
+
+  const handleSortChange = (newSort: string) => {
+      if (newSort === 'custom') {
+          setIsManualSort(true)
+          // Trigger the useEffect to populate manualOrderVehicles
+          setManualOrderVehicles([]) // Reset to trigger reconstruction from current data + storage
+      } else {
+          setIsManualSort(false)
+          setStoredSortBy(newSort)
+      }
+  }
+
+  const handleManualReorder = (draggedId: string, targetId: string) => {
+      // Switch to manual sort if not already
+      if (!isManualSort) {
+          setIsManualSort(true)
+          setManualOrderVehicles([...effectiveStoredVehicles])
+      }
+
+      setManualOrderVehicles(prev => {
+          // If prev is empty (first drag), initialize it
+          const list = prev.length > 0 ? prev : [...effectiveStoredVehicles]
+
+          const currentIndex = list.findIndex(v => v.id === draggedId)
+          const targetIndex = list.findIndex(v => v.id === targetId)
+
+          if (currentIndex === -1 || targetIndex === -1) return list
+
+          const newList = [...list]
+          const [movedItem] = newList.splice(currentIndex, 1)
+          if (movedItem) {
+            newList.splice(targetIndex, 0, movedItem)
+          }
+          return newList
+      })
+  }
+
+  // All known vehicles for slug generation context
+  const allKnownVehicles = [...activeVehicles, ...effectiveStoredVehicles]
+
 
   // Real-time subscription to vehicle status changes
   useEffect(() => {
@@ -428,7 +683,7 @@ export function GarageContent({
   const handleVehicleStatusChange = async (vehicleId: string, newStatus: string) => {
     // Optimistically update the UI immediately
     const vehicleToMove = activeVehicles.find(v => v.id === vehicleId) ||
-      storedVehiclesLocal.find(v => v.id === vehicleId) ||
+      effectiveStoredVehicles.find(v => v.id === vehicleId) ||
       storedVehicles.find(v => v.id === vehicleId)
 
     if (!vehicleToMove) return
@@ -465,6 +720,19 @@ export function GarageContent({
         return prev.filter(v => v.id !== vehicleId)
       }
     })
+
+    // Update manual list if in manual mode
+    if (isManualSort) {
+         setManualOrderVehicles((prev) => {
+              if (!isActive) {
+                   const exists = prev.find(v => v.id === vehicleId)
+                   if (exists) return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
+                   return [...prev, updatedVehicle]
+              } else {
+                   return prev.filter(v => v.id !== vehicleId)
+              }
+         })
+    }
 
     // Then update via API
     try {
@@ -614,18 +882,23 @@ export function GarageContent({
             onAddClick={() => setAddVehicleModalOpen(true)}
             onDrop={handleVehicleStatusChange}
             galleryType="active"
+            isCollapsible={false}
           />
 
           {/* Stored Vehicles Section - uses progressive loading */}
           <VehicleGallery
             title="Stored Vehicles"
-            vehicles={allStoredVehicles}
+            vehicles={effectiveStoredVehicles}
             allVehicles={allKnownVehicles}
             onLoadMore={loadMore}
             loadingMore={loadingMore}
             hasMore={hasMore}
             onDrop={handleVehicleStatusChange}
             galleryType="stored"
+            isCollapsible={true}
+            onSortChange={handleSortChange}
+            currentSort={isManualSort ? 'custom' : storedSortBy}
+            onManualReorder={handleManualReorder}
           />
 
           {storedLoading && storedVehicles.length === 0 && (
