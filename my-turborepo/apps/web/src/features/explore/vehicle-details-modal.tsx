@@ -152,7 +152,7 @@ const VehicleDetailsModal = ({
   const handleTrimNameChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newTrimName = event.target.value;
     const variants = groupedTrims[newTrimName];
-    if (variants && variants.length > 0) {
+    if (variants && variants.length > 0 && variants[0]) {
       // Auto-select the first variant in the group
       setSelectedTrimId(variants[0].id);
     }
