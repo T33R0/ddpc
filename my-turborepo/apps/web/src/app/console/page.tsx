@@ -326,13 +326,28 @@ export default function ConsolePage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 pt-4">
-                  <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                    onClick={() => router.push('/console/alerts')}
+                  >
                     View All
                   </Button>
-                  <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                    onClick={() => router.push('/console/documents')}
+                  >
                     Upload
                   </Button>
-                  <Button size="sm" variant="outline" className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                    onClick={() => router.push('/console/schedule')}
+                  >
                     Schedule
                   </Button>
                 </div>
@@ -348,37 +363,52 @@ export default function ConsolePage() {
             >
               <h3 className="text-lg font-semibold text-white mb-4">Financial Snapshot</h3>
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-white">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-400">Total Spend</p>
+                    <p className="text-lg font-bold text-white">
                       ${consoleStats?.financials?.totalSpend?.toLocaleString() || '0'}
                     </p>
-                    <p className="text-xs text-gray-400">Total Spend</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-white">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-400">Avg Monthly</p>
+                    <p className="text-lg font-bold text-white">
                       ${consoleStats?.financials?.avgMonthly?.toLocaleString() || '0'}
                     </p>
-                    <p className="text-xs text-gray-400">Avg Monthly</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-white">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-400">Total Logs</p>
+                    <p className="text-lg font-bold text-white">
                       {consoleStats?.financials?.totalLogs || 0}
                     </p>
-                    <p className="text-xs text-gray-400">Total Logs</p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Button size="sm" variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-800">
+                <div className="space-y-2 pt-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-gray-300 hover:bg-gray-800"
+                    onClick={() => router.push('/console/reports')}
+                  >
                     <BarChart className="w-4 h-4 mr-2" />
                     View Reports
                   </Button>
-                  <Button size="sm" variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-800">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-gray-300 hover:bg-gray-800"
+                    onClick={() => router.push('/console/receipts')}
+                  >
                     <Receipt className="w-4 h-4 mr-2" />
                     Manage Receipts
                   </Button>
-                  <Button size="sm" variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-800">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full justify-start text-gray-300 hover:bg-gray-800"
+                    onClick={() => router.push('/console/export')}
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     Export Data
                   </Button>
