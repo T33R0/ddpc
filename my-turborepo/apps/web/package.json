@@ -45,17 +45,14 @@
     "@repo/tailwind-config": "*",
     "@repo/types": "*",
     "@repo/typescript-config": "*",
-    "@testing-library/react": "^16.3.0",
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.19",
     "eslint": "^9.34.0",
-    "jsdom": "^27.2.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
-    "typescript": "5.9.2",
-    "vitest": "^4.0.15"
+    "typescript": "5.9.2"
   }
 }

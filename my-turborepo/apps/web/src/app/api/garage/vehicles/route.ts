@@ -23,6 +23,9 @@ interface UserVehicle {
   current_status: string | null;
   photo_url: string | null;
   vehicle_image: string | null;
+  created_at: string;
+  last_event_at: string | null;
+  updated_at: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -35,11 +38,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get pagination parameters
+    // Get pagination and sort parameters
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '24');
     const offset = (page - 1) * limit;
+
+    // Sort parameters
+    const sortBy = url.searchParams.get('sort_by') || 'last_edited';
+    const sortDir = url.searchParams.get('sort_direction') === 'asc' ? 'asc' : 'desc';
 
     // Check if this is a request for stored vehicles only
     const storedOnly = url.searchParams.get('stored_only') === 'true';
@@ -47,12 +54,45 @@ export async function GET(request: NextRequest) {
     // Fetch user's vehicles with pagination
     let query = supabase
       .from('user_vehicle')
-      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url, vehicle_image')
+      .select('id, nickname, year, make, model, trim, odometer, title, current_status, photo_url, vehicle_image, created_at, last_event_at, updated_at')
       .eq('owner_id', user.id);
 
     // Filter for stored vehicles if requested
     if (storedOnly) {
       query = query.in('current_status', ['parked', 'listed', 'sold', 'retired']);
+    }
+
+    // Apply sorting
+    if (storedOnly) {
+      switch (sortBy) {
+        case 'year':
+          query = query.order('year', { ascending: sortDir === 'asc', nullsFirst: false });
+          break;
+        case 'status':
+          // For status, simple alphabetical sort.
+          // Parked, Listed, Sold, Retired -> Listed, Parked, Retired, Sold
+          // Ideal user order: Parked, Listed, Sold, Retired.
+          // Since we can't easily do custom order without a function, we'll rely on alphabetical for now
+          // or we could sort in memory but that breaks pagination.
+          // Let's stick to alphabetical Current Status for now.
+          query = query.order('current_status', { ascending: sortDir === 'asc' });
+          break;
+        case 'ownership_period':
+          // Oldest created_at first = longest ownership (if current owner) or oldest history
+          query = query.order('created_at', { ascending: sortDir === 'asc' });
+          break;
+        case 'last_edited':
+        default:
+          // Try to sort by last_event_at, fallback to updated_at
+          // Supabase order() supports nullsFirst/nullsLast.
+          // We want the most recent event first.
+          // We can't easily do COALESCE(last_event_at, updated_at) in simple query builder sort.
+          // We will sort by last_event_at first, then updated_at.
+          query = query
+            .order('last_event_at', { ascending: sortDir === 'asc', nullsFirst: false })
+            .order('updated_at', { ascending: sortDir === 'asc', nullsFirst: false });
+          break;
+      }
     }
 
     const { data: userVehicles, error: vehiclesError } = await query
@@ -129,7 +169,10 @@ export async function GET(request: NextRequest) {
         odometer: latestMileage,
         current_status: uv.current_status || 'parked',
         image_url: uv.vehicle_image || uv.photo_url,
-        vehicle_image: uv.vehicle_image
+        vehicle_image: uv.vehicle_image,
+        created_at: uv.created_at,
+        last_event_at: uv.last_event_at,
+        updated_at: uv.updated_at
       }
     })
 

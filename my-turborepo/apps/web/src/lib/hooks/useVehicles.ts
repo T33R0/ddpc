@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface Vehicle {
   id: string;
@@ -8,6 +8,9 @@ export interface Vehicle {
   odometer: number | null;
   current_status: string;
   image_url?: string;
+  created_at?: string;
+  last_event_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface VehiclesData {
@@ -66,7 +69,12 @@ export interface StoredVehiclesData {
   limit: number;
 }
 
-export function useStoredVehicles() {
+interface UseStoredVehiclesOptions {
+  sort_by?: string;
+  sort_direction?: 'asc' | 'desc';
+}
+
+export function useStoredVehicles(options: UseStoredVehiclesOptions = {}) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -74,17 +82,35 @@ export function useStoredVehicles() {
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const fetchStoredVehicles = async (page: number = 1, append: boolean = false) => {
+  // Keep track of options to detect changes
+  const prevOptionsRef = useRef(options);
+
+  const { sort_by, sort_direction } = options;
+
+  const fetchStoredVehicles = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
       if (append) {
         setLoadingMore(true);
       } else {
         setIsLoading(true);
-        setVehicles([]);
-        setCurrentPage(0);
+        // Do not clear vehicles immediately to prevent flash, unless strictly needed?
+        // Actually, for sorting change we MUST clear.
+        if (page === 1) {
+             setVehicles([]);
+             setCurrentPage(0);
+        }
       }
 
-      const response = await fetch(`/api/garage/vehicles?page=${page}&limit=24&stored_only=true`, {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '24',
+        stored_only: 'true'
+      });
+
+      if (sort_by) params.set('sort_by', sort_by);
+      if (sort_direction) params.set('sort_direction', sort_direction);
+
+      const response = await fetch(`/api/garage/vehicles?${params.toString()}`, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache'
@@ -114,21 +140,41 @@ export function useStoredVehicles() {
       setIsLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [sort_by, sort_direction]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       fetchStoredVehicles(currentPage + 1, true);
     }
-  };
+  }, [loadingMore, hasMore, currentPage, fetchStoredVehicles]);
 
+  // Refetch when sort options change
   useEffect(() => {
-    fetchStoredVehicles(1, false);
-  }, []);
+    const prevOptions = prevOptionsRef.current;
+    if (prevOptions.sort_by !== sort_by || prevOptions.sort_direction !== sort_direction) {
+        prevOptionsRef.current = { sort_by, sort_direction };
+        fetchStoredVehicles(1, false);
+    }
+  }, [sort_by, sort_direction, fetchStoredVehicles]);
 
-  const refetch = () => {
+  // Initial fetch
+  useEffect(() => {
+    // Only fetch if empty (initial load) or explicit trigger
+    // Actually, the dependency array above handles sort changes.
+    // We just need to ensure we fetch once on mount if no sort change triggered it immediately.
+    // The previous useEffect handles changes, but we need one for mount?
+    // Let's rely on a separate effect for mount only if we want to be safe,
+    // or just assume the options change effect will run (it might not if props are stable on first render).
+
+    // To be safe, we check if we haven't loaded yet.
+    if (currentPage === 0 && !isLoading && !loadingMore && vehicles.length === 0) {
+        fetchStoredVehicles(1, false);
+    }
+  }, [fetchStoredVehicles, currentPage, isLoading, loadingMore, vehicles.length]);
+
+  const refetch = useCallback(() => {
     fetchStoredVehicles(1, false);
-  };
+  }, [fetchStoredVehicles]);
 
   return {
     vehicles,
