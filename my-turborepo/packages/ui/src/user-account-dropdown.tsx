@@ -33,6 +33,7 @@ interface UserAccountDropdownProps {
   theme?: string;
   onThemeChange?: (theme: string) => void;
   onReportProblem?: () => void;
+  onGiveTestimonial?: () => void;
 }
 
 export function UserAccountDropdown({
@@ -41,7 +42,8 @@ export function UserAccountDropdown({
   userBasePath,
   theme,
   onThemeChange,
-  onReportProblem
+  onReportProblem,
+  onGiveTestimonial
 }: UserAccountDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -164,6 +166,20 @@ export function UserAccountDropdown({
                   <span className="text-xs text-neutral-500 capitalize">{theme}</span>
                 </div>
               </div>
+
+              {/* Give Testimonial */}
+              {onGiveTestimonial && (
+                <button
+                  onClick={() => {
+                    onGiveTestimonial();
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors w-full text-left"
+                >
+                  <Sparkles size={16} />
+                  <span>Give Testimonial</span>
+                </button>
+              )}
 
               {/* Report / Feedback */}
               {onReportProblem && (

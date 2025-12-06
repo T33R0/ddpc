@@ -4,6 +4,7 @@ import React from 'react';
 import LandingLayout from '../landing-layout';
 import { Hero, Features, Testimonials, Pricing, ZoomParallax } from '@repo/ui/landing';
 import Lenis from 'lenis';
+import { getApprovedTestimonials } from '../../actions/testimonials';
 
 const images = [
   { src: '/images/sven-vahaja-nWfqEExkprE-unsplash.jpg', alt: 'enthusiast race cars in a paddock garage' },
@@ -16,6 +17,8 @@ const images = [
 ];
 
 export default function MorePage() {
+  const [testimonials, setTestimonials] = React.useState<{ text: string; image: string; name: string; role: string }[]>([]);
+
   React.useEffect(() => {
     const lenis = new Lenis();
 
@@ -25,6 +28,17 @@ export default function MorePage() {
     }
 
     requestAnimationFrame(raf);
+
+    // Fetch testimonials
+    getApprovedTestimonials().then(data => {
+      const formatted = data.map((t: any) => ({
+        text: t.content,
+        image: t.avatar_url || '',
+        name: t.display_name,
+        role: t.role
+      }));
+      setTestimonials(formatted);
+    });
   }, []);
 
   return (
@@ -32,7 +46,7 @@ export default function MorePage() {
       <Hero />
       <ZoomParallax images={images} />
       <Features />
-      <Testimonials />
+      <Testimonials testimonials={testimonials} />
       <Pricing />
     </LandingLayout>
   );
