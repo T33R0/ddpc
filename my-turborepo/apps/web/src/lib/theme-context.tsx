@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from './auth';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -19,6 +20,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
+    const { user, loading } = useAuth();
 
     // Load theme from localStorage on mount
     useEffect(() => {
@@ -34,6 +36,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         const updateResolvedTheme = () => {
+            // Force dark mode for unauthenticated users, the landing page, or if Auth is still loading
+            if (!user && !loading) {
+                setResolvedTheme('dark');
+                return;
+            }
+
             // Force dark mode for specific pages
             if (pathname === '/') {
                 setResolvedTheme('dark');
@@ -51,7 +59,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         updateResolvedTheme();
 
         // Listen for system theme changes when in auto mode
-        if (theme === 'auto' && pathname !== '/') {
+        if (theme === 'auto' && pathname !== '/' && user) {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             const handler = (e: MediaQueryListEvent) => {
                 setResolvedTheme(e.matches ? 'dark' : 'light');
@@ -60,7 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             mediaQuery.addEventListener('change', handler);
             return () => mediaQuery.removeEventListener('change', handler);
         }
-    }, [theme, mounted, pathname]);
+    }, [theme, mounted, pathname, user, loading]);
 
     // Apply theme class to html element
     useEffect(() => {
