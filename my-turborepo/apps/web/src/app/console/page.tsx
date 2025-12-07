@@ -33,8 +33,8 @@ export default function ConsolePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-foreground">Loading...</div>
       </div>
     );
   }
@@ -91,11 +91,11 @@ export default function ConsolePage() {
   };
 
   return (
-    <section className="relative py-12 min-h-screen">
+    <section className="relative py-12 min-h-screen bg-background text-foreground">
       {/* Background gradient effects */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+        className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none"
       >
         <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
         <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
@@ -103,12 +103,12 @@ export default function ConsolePage() {
 
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <h1 className="text-4xl font-bold text-white mb-8">Vehicle Console</h1>
+        <h1 className="text-4xl font-bold mb-8 text-foreground">Vehicle Console</h1>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-white text-lg font-medium">Manage your vehicles:</span>
+            <span className="text-lg font-medium text-foreground">Manage your vehicles:</span>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={() => setLogServiceModalOpen(true)}
@@ -122,12 +122,12 @@ export default function ConsolePage() {
         {/* Search and Filters */}
         <div className="space-y-4 mb-8">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search vehicles by nickname, make, model..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-900 border-gray-700 text-white placeholder-gray-400"
+              className="pl-10 bg-card border-input text-foreground placeholder-muted-foreground"
             />
           </div>
 
@@ -140,7 +140,7 @@ export default function ConsolePage() {
                 onClick={() => setSelectedFilter(filter)}
                 className={selectedFilter === filter
                   ? "bg-red-600 hover:bg-red-700 text-white border-red-600"
-                  : "flex items-center justify-center gap-2 bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-white"
+                  : "flex items-center justify-center gap-2 bg-card border-border hover:bg-accent hover:text-accent-foreground text-foreground"
                 }
               >
                 {filter}
@@ -177,26 +177,15 @@ export default function ConsolePage() {
                       onClick={() => router.push(`/vehicle/${encodeURIComponent(slug)}`)}
                     >
                       <div
-                        className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-4"
+                        className="bg-card backdrop-blur-lg rounded-2xl p-6 flex flex-col gap-4 border border-border hover:border-primary hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]"
                         style={{
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
                           transition: 'all 0.3s ease-out',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'scale(1.02)';
-                          e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
-                          e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                          e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                          e.currentTarget.style.boxShadow = 'none';
                         }}
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-lg font-semibold text-white">{vehicle.name}</h3>
-                            <p className="text-sm text-gray-400">{vehicle.ymmt}</p>
+                            <h3 className="text-lg font-semibold text-foreground">{vehicle.name}</h3>
+                            <p className="text-sm text-muted-foreground">{vehicle.ymmt}</p>
                           </div>
                           <Badge className={`text-xs ${getStatusColor(status)}`}>
                             {status}
@@ -205,22 +194,22 @@ export default function ConsolePage() {
 
                         <div className="grid grid-cols-3 gap-4">
                           <div className="text-center">
-                            <p className="text-xs text-gray-400">Odometer</p>
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-xs text-muted-foreground">Odometer</p>
+                            <p className="text-sm font-medium text-foreground">
                               {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : '---'}
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-gray-400">Fuel Level</p>
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-xs text-muted-foreground">Fuel Level</p>
+                            <p className="text-sm font-medium text-foreground">
                               {consoleStats?.vehicleStats?.[vehicle.id]?.fuelPercentage
                                 ? `${consoleStats.vehicleStats[vehicle.id]?.fuelPercentage}%`
                                 : '---'}
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-gray-400">Avg. MPG</p>
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-xs text-muted-foreground">Avg. MPG</p>
+                            <p className="text-sm font-medium text-foreground">
                               {consoleStats?.vehicleStats?.[vehicle.id]?.avgMpg
                                 ? consoleStats.vehicleStats[vehicle.id]?.avgMpg?.toFixed(1)
                                 : '---'}
@@ -232,7 +221,7 @@ export default function ConsolePage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/vehicle/${encodeURIComponent(slug)}/history`);
@@ -244,7 +233,7 @@ export default function ConsolePage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/vehicle/${encodeURIComponent(slug)}/service`);
@@ -256,7 +245,7 @@ export default function ConsolePage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/vehicle/${encodeURIComponent(slug)}/fuel`);
@@ -268,7 +257,7 @@ export default function ConsolePage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                            className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/vehicle/${encodeURIComponent(slug)}/mods`);
@@ -289,21 +278,16 @@ export default function ConsolePage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Priority Alerts */}
-            <div
-              className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-            >
-              <h3 className="text-lg font-semibold text-white mb-4">Priority Alerts &amp; Reminders</h3>
+            <div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Priority Alerts &amp; Reminders</h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500">
                     <AlertTriangle className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-medium text-white text-sm">Service Overdue</p>
-                    <p className="text-xs text-gray-400">---</p>
+                    <p className="font-medium text-foreground text-sm">Service Overdue</p>
+                    <p className="text-xs text-muted-foreground">---</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -311,8 +295,8 @@ export default function ConsolePage() {
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-medium text-white text-sm">Registration Expiring</p>
-                    <p className="text-xs text-gray-400">---</p>
+                    <p className="font-medium text-foreground text-sm">Registration Expiring</p>
+                    <p className="text-xs text-muted-foreground">---</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -320,8 +304,8 @@ export default function ConsolePage() {
                     <FileText className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-medium text-white text-sm">Document Pending</p>
-                    <p className="text-xs text-gray-400">---</p>
+                    <p className="font-medium text-foreground text-sm">Document Pending</p>
+                    <p className="text-xs text-muted-foreground">---</p>
                   </div>
                 </div>
 
@@ -329,7 +313,7 @@ export default function ConsolePage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                    className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                     onClick={() => router.push('/console/alerts')}
                   >
                     View All
@@ -337,7 +321,7 @@ export default function ConsolePage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                    className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                     onClick={() => router.push('/console/documents')}
                   >
                     Upload
@@ -345,7 +329,7 @@ export default function ConsolePage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="bg-gray-900/50 border-gray-700 hover:bg-gray-800 text-gray-300"
+                    className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                     onClick={() => router.push('/console/schedule')}
                   >
                     Schedule
@@ -355,30 +339,25 @@ export default function ConsolePage() {
             </div>
 
             {/* Financial Snapshot */}
-            <div
-              className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
-            >
-              <h3 className="text-lg font-semibold text-white mb-4">Financial Snapshot</h3>
+            <div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Financial Snapshot</h3>
               <div className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-400">Total Spend</p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-sm text-muted-foreground">Total Spend</p>
+                    <p className="text-lg font-bold text-foreground">
                       ${consoleStats?.financials?.totalSpend?.toLocaleString() || '0'}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-400">Avg Monthly</p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-sm text-muted-foreground">Avg Monthly</p>
+                    <p className="text-lg font-bold text-foreground">
                       ${consoleStats?.financials?.avgMonthly?.toLocaleString() || '0'}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-400">Total Logs</p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-sm text-muted-foreground">Total Logs</p>
+                    <p className="text-lg font-bold text-foreground">
                       {consoleStats?.financials?.totalLogs || 0}
                     </p>
                   </div>
@@ -388,7 +367,7 @@ export default function ConsolePage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="w-full justify-start text-gray-300 hover:bg-gray-800"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
                     onClick={() => router.push('/console/reports')}
                   >
                     <BarChart className="w-4 h-4 mr-2" />
@@ -397,7 +376,7 @@ export default function ConsolePage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="w-full justify-start text-gray-300 hover:bg-gray-800"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
                     onClick={() => router.push('/console/receipts')}
                   >
                     <Receipt className="w-4 h-4 mr-2" />
@@ -406,7 +385,7 @@ export default function ConsolePage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="w-full justify-start text-gray-300 hover:bg-gray-800"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
                     onClick={() => router.push('/console/export')}
                   >
                     <Download className="w-4 h-4 mr-2" />

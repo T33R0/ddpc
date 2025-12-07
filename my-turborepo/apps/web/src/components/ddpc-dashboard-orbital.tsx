@@ -44,21 +44,23 @@ export default function DDPCDashboardOrbital({
   const usernameSlug = profile?.username ? toUsernameSlug(profile.username) : null;
 
   // Determine theme colors
+  // Using theme semantic variables instead of hardcoded checks where possible
+  // Special effects (glows) might still need conditional logic if they are distinctly different colors per theme
   const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_20px_#22c55e]' : 'shadow-[0_0_20px_#3b82f6]';
   const ringColor = resolvedTheme === 'dark' ? 'border-green-500' : 'border-blue-500';
   const pingColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
-  const bgColor = resolvedTheme === 'dark' ? 'bg-black' : 'bg-white';
-  const iconColor = resolvedTheme === 'dark' ? 'text-white' : 'text-black';
+  const bgColor = 'bg-background';
+  const iconColor = 'text-foreground';
 
   // Node text colors
-  const nodeTextColor = resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-600';
-  const nodeTextActiveColor = resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900';
+  const nodeTextColor = 'text-muted-foreground';
+  const nodeTextActiveColor = 'text-foreground';
 
-  // Card colors for light theme
-  const cardBg = resolvedTheme === 'dark' ? 'bg-gray-900/95' : 'bg-white/95';
-  const cardBorder = resolvedTheme === 'dark' ? 'border-gray-600' : 'border-gray-200';
-  const cardText = resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900';
-  const cardDesc = resolvedTheme === 'dark' ? 'text-gray-300' : 'text-gray-600';
+  // Card colors using semantic classes
+  const cardBg = 'bg-popover/95';
+  const cardBorder = 'border-border';
+  const cardText = 'text-popover-foreground';
+  const cardDesc = 'text-muted-foreground';
   const cardGlow = resolvedTheme === 'dark' ? '' : 'shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-200';
 
   // Admin check logic
@@ -284,15 +286,15 @@ export default function DDPCDashboardOrbital({
                 <div
                   className={`
                   rounded-full flex items-center justify-center
-                  ${isExpanded ? "text-black" : "text-white"}
+                  ${isExpanded ? "text-primary-foreground" : "text-white"}
                   border-2
-                  ${isExpanded ? "border-white shadow-lg shadow-white/20" : "border-gray-600"}
+                  ${isExpanded ? "border-foreground shadow-lg shadow-foreground/20" : "border-gray-600"}
                   transition-all duration-300 transform
                   ${isExpanded ? "scale-125" : ""}
                   ${isRelated ? "animate-pulse border-white/60" : ""}
                 `}
                   style={{
-                    backgroundColor: isExpanded ? 'white' : node.color,
+                    backgroundColor: isExpanded ? 'hsl(var(--foreground))' : node.color,
                     width: nodeSize,
                     height: nodeSize,
                     // Ensuring crisp borders
@@ -351,7 +353,7 @@ export default function DDPCDashboardOrbital({
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`flex-1 border-gray-600 bg-transparent hover:bg-gray-800 hover:text-white transition-all ${cardDesc}`}
+                          className={`flex-1 border-border bg-transparent hover:bg-accent hover:text-accent-foreground transition-all ${cardDesc}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(buildScopedRoute(node.route));
@@ -363,7 +365,7 @@ export default function DDPCDashboardOrbital({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="px-3 hover:bg-gray-800"
+                          className="px-3 hover:bg-accent hover:text-accent-foreground"
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleItem(node.id);
