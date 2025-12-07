@@ -104,8 +104,8 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
       {vehicles.length === 0 ? (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="text-gray-400 text-lg mb-2">No community vehicles found</div>
-            <div className="text-gray-500 text-sm">Be the first to share your vehicle publicly!</div>
+            <div className="text-muted-foreground text-lg mb-2">No community vehicles found</div>
+            <div className="text-muted-foreground text-sm">Be the first to share your vehicle publicly!</div>
           </div>
         </div>
       ) : (
@@ -117,23 +117,9 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
               onClick={() => handleOpenVehicle(summary)}
             >
               <div
-                className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 text-white flex flex-col gap-6 cursor-pointer"
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  transition: 'all 0.3s ease-out',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.border = '1px solid rgb(132, 204, 22)';
-                  e.currentTarget.style.boxShadow = '0 0 30px rgba(132, 204, 22, 0.6)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className="bg-card text-card-foreground rounded-2xl p-6 flex flex-col gap-6 cursor-pointer border border-border shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-300"
               >
-                <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10 relative">
+                <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted relative">
                   <ImageWithTimeoutFallback
                     src={
                       summary.trims[0]?.vehicle_image ||
@@ -156,7 +142,7 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
                   )}
                 </div>
                 <div className="text-center h-16 flex items-center justify-center">
-                  <h3 className="text-2xl leading-tight line-clamp-2">
+                  <h3 className="text-2xl font-bold leading-tight line-clamp-2">
                     {summary.year} {summary.make} {summary.model} {summary.trims[0]?.trim || ''}
                   </h3>
                 </div>
@@ -171,7 +157,7 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
       {
         loadingMore && (
           <div className="flex justify-center items-center py-8">
-            <div className="text-white text-lg">Loading more vehicles...</div>
+            <div className="text-muted-foreground text-lg">Loading more vehicles...</div>
           </div>
         )
       }
@@ -180,7 +166,7 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
       {
         !loadingMore && !hasMore && vehicles.length > 0 && (
           <div className="flex justify-center items-center py-8">
-            <div className="text-neutral-400 text-sm">No more vehicles to load</div>
+            <div className="text-muted-foreground text-sm">No more vehicles to load</div>
           </div>
         )
       }
