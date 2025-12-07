@@ -146,6 +146,18 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
           open={!!selectedVehicle}
           onClose={() => setSelectedVehicle(null)}
           summary={selectedVehicle.summary}
+          canNavigatePrev={selectedVehicle.index > 0}
+          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
+          onNavigate={(direction) => {
+            const newIndex = direction === 'next' ? selectedVehicle.index + 1 : selectedVehicle.index - 1;
+            if (newIndex >= 0 && newIndex < vehicles.length) {
+              setSelectedVehicle({
+                summary: vehicles[newIndex],
+                index: newIndex,
+                initialTrimId: undefined // Reset trim selection when navigating
+              });
+            }
+          }}
         />
       )}
     </>
