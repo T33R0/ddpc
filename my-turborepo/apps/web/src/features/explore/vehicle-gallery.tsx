@@ -146,20 +146,21 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
           open={!!selectedVehicle}
           onClose={() => setSelectedVehicle(null)}
           summary={selectedVehicle.summary}
+          canNavigatePrev={selectedVehicle.index > 0}
+          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
           onNavigate={(direction) => {
             const newIndex = direction === 'next' ? selectedVehicle.index + 1 : selectedVehicle.index - 1;
             if (newIndex >= 0 && newIndex < vehicles.length) {
-              const newVehicle = vehicles[newIndex];
-              if (newVehicle) {
+              const nextVehicle = vehicles[newIndex];
+              if (nextVehicle) {
                 setSelectedVehicle({
-                  summary: newVehicle,
-                  index: newIndex
+                  summary: nextVehicle,
+                  index: newIndex,
+                  initialTrimId: undefined // Reset trim selection when navigating
                 });
               }
             }
           }}
-          canNavigatePrev={selectedVehicle.index > 0}
-          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
         />
       )}
     </>
