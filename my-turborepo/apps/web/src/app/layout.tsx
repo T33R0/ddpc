@@ -37,8 +37,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${inter.variable} font-sans`} suppressHydrationWarning>
       <body>
-        <ThemeProvider>
-          <AuthProvider initialSession={session}>
+        <AuthProvider initialSession={session}>
+          <ThemeProvider>
             <ReportModalProvider>
               <div className="relative flex flex-col min-h-screen">
                 <div
@@ -58,8 +58,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <LogoutModal />
               <DDSRButton />
             </ReportModalProvider>
-          </AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
         <SpeedInsights />
         <Analytics />
       </body>
