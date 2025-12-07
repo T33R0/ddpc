@@ -152,15 +152,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         if (user) {
             try {
-                const { error } = await supabase
+                // Perform update and select returned data to verify it actually happened
+                const { data, error } = await supabase
                     .from('user_profile')
                     .update({ theme: newTheme })
-                    .eq('user_id', user.id);
+                    .eq('user_id', user.id)
+                    .select(); // Important: verify we got data back
 
                 if (error) {
                     console.error('ThemeProvider: Error saving theme to DB:', error);
+                } else if (!data || data.length === 0) {
+                    console.error('ThemeProvider: Update succeeded but no rows were affected. Check RLS or existence of user_profile row.');
                 } else {
-                    console.log('ThemeProvider: Successfully saved theme to DB');
+                    console.log('ThemeProvider: Successfully saved theme to DB. Returned data:', data);
                 }
             } catch (err) {
                 console.error('ThemeProvider: Unexpected error saving theme:', err);
