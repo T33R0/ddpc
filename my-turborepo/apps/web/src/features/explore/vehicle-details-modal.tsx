@@ -256,7 +256,7 @@ const VehicleDetailsModal = ({
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <ModalHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
+        <ModalHeader className="sticky top-0 z-10 bg-background border-b border-border">
           <ModalTitle className="text-2xl font-bold text-foreground text-left">
             {summary.year} {summary.make} {summary.model}
           </ModalTitle>
@@ -273,7 +273,7 @@ const VehicleDetailsModal = ({
               onNavigate?.('prev');
             }}
             aria-label="Previous vehicle"
-            className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
+            className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
           >
             <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
           </button>
@@ -286,7 +286,7 @@ const VehicleDetailsModal = ({
               onNavigate?.('next');
             }}
             aria-label="Next vehicle"
-            className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
+            className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
           >
             <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
           </button>
@@ -517,7 +517,7 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <ModalFooter className="pt-6 sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 -mx-6 px-6 border-t border-border mt-auto">
+          <ModalFooter className="pt-6 sticky bottom-0 bg-background pb-4 -mx-6 px-6 border-t border-border mt-auto">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full">
               <Button
                 onClick={handleAddToGarage}
