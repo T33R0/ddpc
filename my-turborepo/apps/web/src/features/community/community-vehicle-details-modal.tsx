@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalTitle, ModalDescription, ModalHeader } from '@repo/ui/modal';
 
 // Simple image component that matches the gallery card behavior
 type ImageWithTimeoutFallbackProps = {
@@ -190,22 +190,22 @@ const CommunityVehicleDetailsModal = ({
   const ymmt = `${summary.year} ${summary.make} ${summary.model} ${selectedTrim.trim || ''} `.trim();
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
+    <Modal open={open} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent
         className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <DialogHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border z-10">
-          <DialogTitle className="text-2xl font-bold text-foreground text-left">
+        <ModalHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border z-10">
+          <ModalTitle className="text-2xl font-bold text-foreground text-left">
             {ymmt}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
+          </ModalTitle>
+          <ModalDescription className="sr-only">
             Vehicle details and specifications for {ymmt}
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
         {/* Side Navigation Arrows - Fixed positioning */}
         {canNavigatePrev && (
@@ -386,8 +386,8 @@ const CommunityVehicleDetailsModal = ({
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   );
 };
 

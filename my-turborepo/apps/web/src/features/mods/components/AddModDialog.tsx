@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@repo/ui/dialog'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalFooter } from '@repo/ui/modal'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
@@ -69,19 +69,19 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
+    <Modal open={isOpen} onOpenChange={onClose}>
+      <ModalContent
         className="sm:max-w-md p-0"
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
             <Wrench className="h-5 w-5" />
             Add Modification
-          </DialogTitle>
-          <DialogDescription>
+          </ModalTitle>
+          <ModalDescription>
             Track a new modification or upgrade for your vehicle.
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           {error && (
@@ -170,7 +170,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
             />
           </div>
 
-          <DialogFooter className="gap-2 pt-4">
+          <ModalFooter className="gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -191,10 +191,10 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 </>
               )}
             </Button>
-          </DialogFooter>
+          </ModalFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   )
 }
 

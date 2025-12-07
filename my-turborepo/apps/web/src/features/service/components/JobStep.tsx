@@ -6,12 +6,12 @@ import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
 import { Textarea } from '@repo/ui/textarea'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@repo/ui/dialog'
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalFooter,
+} from '@repo/ui/modal'
 import { GripVertical, Pencil, Check, FileText, Trash2, Copy } from 'lucide-react'
 
 export interface JobStepData {
@@ -205,11 +205,11 @@ export function JobStep({
       )}
 
       {/* Notes Dialog */}
-      <Dialog open={isNotesOpen} onOpenChange={setIsNotesOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Step Notes</DialogTitle>
-          </DialogHeader>
+      <Modal open={isNotesOpen} onOpenChange={setIsNotesOpen}>
+        <ModalContent className="sm:max-w-md">
+          <ModalHeader>
+            <ModalTitle>Step Notes</ModalTitle>
+          </ModalHeader>
           <div className="px-6 py-4">
             <Textarea
               value={notesValue}
@@ -219,7 +219,7 @@ export function JobStep({
               autoFocus
             />
           </div>
-          <DialogFooter>
+          <ModalFooter>
             <Button
               onClick={handleCancelNotes}
               variant="outline"
@@ -231,9 +231,9 @@ export function JobStep({
             >
               Save Notes
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }

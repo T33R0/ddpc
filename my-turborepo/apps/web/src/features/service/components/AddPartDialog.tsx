@@ -4,14 +4,14 @@ import { useState } from 'react'
 import { Plus, Search, Loader2 } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@repo/ui/dialog'
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
+} from '@repo/ui/modal'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { ScrollArea } from '@repo/ui/scroll-area'
@@ -126,20 +126,20 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Modal open={open} onOpenChange={setOpen}>
+      <ModalTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           Add Part
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add Part to Job</DialogTitle>
-          <DialogDescription>
+      </ModalTrigger>
+      <ModalContent className="sm:max-w-[500px]">
+        <ModalHeader>
+          <ModalTitle>Add Part to Job</ModalTitle>
+          <ModalDescription>
             Select a part from your inventory or create a new one.
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'search' | 'create')}>
           <TabsList className="grid w-full grid-cols-2">
@@ -226,11 +226,11 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
               </div>
             )}
 
-            <DialogFooter>
+            <ModalFooter>
                <Button onClick={handleAddSelected} disabled={!selectedPart}>
                  Add Selected
                </Button>
-            </DialogFooter>
+            </ModalFooter>
           </TabsContent>
 
           <TabsContent value="create" className="space-y-4">
@@ -283,15 +283,15 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
               </div>
             </div>
 
-            <DialogFooter>
+            <ModalFooter>
               <Button onClick={handleCreateAndAdd} disabled={isCreating || !newPart.name}>
                 {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create & Add (1)
               </Button>
-            </DialogFooter>
+            </ModalFooter>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@repo/ui/dialog'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalFooter } from '@repo/ui/modal'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
@@ -482,11 +482,11 @@ export function AddServiceDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0">
+    <Modal open={isOpen} onOpenChange={onClose}>
+      <ModalContent className="sm:max-w-md p-0">
         {isInitializing ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <DialogTitle className="sr-only">Loading</DialogTitle>
+            <ModalTitle className="sr-only">Loading</ModalTitle>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="text-muted-foreground text-sm">Loading service details...</p>
           </div>
@@ -495,15 +495,15 @@ export function AddServiceDialog({
             {/* Step 1: Category Selection */}
             {currentStep === 1 && (
               <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
+                <ModalHeader>
+                  <ModalTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
                     Add Service Entry
-                  </DialogTitle>
-                  <DialogDescription>
+                  </ModalTitle>
+                  <ModalDescription>
                     What system did you service?
-                  </DialogDescription>
-                </DialogHeader>
+                  </ModalDescription>
+                </ModalHeader>
 
                 <div className="px-6 pb-6">
                   {error && (
@@ -535,7 +535,7 @@ export function AddServiceDialog({
                     </div>
                   )}
 
-                  <DialogFooter className="gap-2 pt-4 mt-6">
+                  <ModalFooter className="gap-2 pt-4 mt-6">
                     <Button
                       type="button"
                       variant="outline"
@@ -543,7 +543,7 @@ export function AddServiceDialog({
                     >
                       Cancel
                     </Button>
-                  </DialogFooter>
+                  </ModalFooter>
                 </div>
               </>
             )}
@@ -551,15 +551,15 @@ export function AddServiceDialog({
             {/* Step 2: Job Selection & Form */}
             {currentStep === 2 && (
               <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
+                <ModalHeader>
+                  <ModalTitle className="flex items-center gap-2">
                     <Wrench className="h-5 w-5" />
                     Log: {selectedCategory?.name || 'Service'}
-                  </DialogTitle>
-                  <DialogDescription>
+                  </ModalTitle>
+                  <ModalDescription>
                     Select the service job and fill in the details.
-                  </DialogDescription>
-                </DialogHeader>
+                  </ModalDescription>
+                </ModalHeader>
 
                 <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
                   {error && (
@@ -678,7 +678,7 @@ export function AddServiceDialog({
                     />
                   </div>
 
-                  <DialogFooter className="gap-2 pt-4">
+                  <ModalFooter className="gap-2 pt-4">
                     <Button
                       type="button"
                       variant="outline"
@@ -700,14 +700,14 @@ export function AddServiceDialog({
                         </>
                       )}
                     </Button>
-                  </DialogFooter>
+                  </ModalFooter>
                 </form>
               </>
             )}
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </ModalContent>
+    </Modal>
   )
 }
 

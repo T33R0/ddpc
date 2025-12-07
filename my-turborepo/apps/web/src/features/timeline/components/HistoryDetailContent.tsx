@@ -9,13 +9,13 @@ import { Label } from '@repo/ui/label'
 import { updateMaintenanceLog, updateMod, updateMileage } from '../actions/timeline-actions'
 import { useRouter } from 'next/navigation'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui/dialog'
+  Modal,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from '@repo/ui/modal'
 import { cn } from '@repo/ui/lib/utils'
 
 interface HistoryDetailContentProps {
@@ -284,36 +284,36 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
       </div>
 
       {/* Warning Dialog */}
-      <Dialog open={showEditWarning} onOpenChange={setShowEditWarning}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit History Record</DialogTitle>
-            <DialogDescription>
+      <Modal open={showEditWarning} onOpenChange={setShowEditWarning}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>Edit History Record</ModalTitle>
+            <ModalDescription>
               You are about to modify a historical record. This will update the source data and reflected everywhere in the application.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+            </ModalDescription>
+          </ModalHeader>
+          <ModalFooter>
             <Button variant="outline" onClick={() => setShowEditWarning(false)}>Cancel</Button>
             <Button onClick={confirmEditMode}>Continue</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* Save Confirmation Dialog */}
-      <Dialog open={showSaveConfirmation} onOpenChange={setShowSaveConfirmation}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Save Changes?</DialogTitle>
-            <DialogDescription>
+      <Modal open={showSaveConfirmation} onOpenChange={setShowSaveConfirmation}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>Save Changes?</ModalTitle>
+            <ModalDescription>
               Are you sure you want to save these changes? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+            </ModalDescription>
+          </ModalHeader>
+          <ModalFooter>
             <Button variant="outline" onClick={() => setShowSaveConfirmation(false)}>Cancel</Button>
             <Button onClick={confirmSave}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
