@@ -46,11 +46,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             console.log('ThemeProvider: User logged in, fetching theme from DB for user:', user.id);
             try {
                 // Check if we can select 'theme' from user_profile
-                // Note: user.id usually matches user_profile.id if it's the PK.
                 const { data, error } = await supabase
                     .from('user_profile')
                     .select('theme')
-                    .eq('id', user.id)
+                    .eq('user_id', user.id)
                     .single();
 
                 if (error) {
@@ -71,7 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                     const { error: updateError } = await supabase
                         .from('user_profile')
                         .update({ theme: 'dark' })
-                        .eq('id', user.id);
+                        .eq('user_id', user.id);
 
                     if (updateError) {
                         console.error('ThemeProvider: Error saving default theme:', updateError);
@@ -156,11 +155,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 const { error } = await supabase
                     .from('user_profile')
                     .update({ theme: newTheme })
-                    .eq('id', user.id);
+                    .eq('user_id', user.id);
 
                 if (error) {
                     console.error('ThemeProvider: Error saving theme to DB:', error);
-                    alert(`Failed to save theme: ${error.message}`); // Temporary alert for debugging visibility
                 } else {
                     console.log('ThemeProvider: Successfully saved theme to DB');
                 }
