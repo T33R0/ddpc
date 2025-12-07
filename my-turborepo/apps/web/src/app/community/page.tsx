@@ -92,26 +92,26 @@ function CommunityContent() {
 
 
   return (
-    <section className="relative py-12 min-h-screen">
+    <section className="relative py-12 min-h-screen bg-background text-foreground">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <h1 className="text-4xl font-bold text-white mb-8">Community Hub</h1>
+        <h1 className="text-4xl font-bold mb-8 text-foreground">Community Hub</h1>
 
         {/* Search Bar */}
         <div className="mb-8 max-w-md">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <Input
               type="text"
               placeholder="Search community vehicles..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-10 bg-black/30 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-white/40 focus:ring-white/20"
+              className="pl-10 pr-10 bg-card border-input text-foreground placeholder-muted-foreground focus:border-ring focus:ring-ring"
             />
             {searchQuery && (
               <button
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -122,13 +122,13 @@ function CommunityContent() {
         {/* Active Search Display */}
         {searchQuery && (
           <div className="mb-6">
-            <div className="inline-flex items-center gap-2 bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-lg px-4 py-2">
-              <span className="text-blue-300 text-sm">
+            <div className="inline-flex items-center gap-2 bg-accent/20 backdrop-blur-sm border border-accent/30 rounded-lg px-4 py-2">
+              <span className="text-accent-foreground text-sm">
                 Showing {vehicles.length} result{vehicles.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
               </span>
               <button
                 onClick={handleClearSearch}
-                className="text-blue-300 hover:text-white transition-colors ml-2"
+                className="text-muted-foreground hover:text-foreground transition-colors ml-2"
               >
                 <X className="w-4 h-4" />
               </button>
