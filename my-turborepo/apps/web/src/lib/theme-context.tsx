@@ -30,17 +30,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Load theme from DB when user logs in, or default to dark if not logged in
     useEffect(() => {
-        if (!mounted || loading) return;
+        if (!mounted) return;
+
+        // Wait for loading to finish to ensure we have the correct user state
+        if (loading) return;
 
         const syncTheme = async () => {
             if (!user) {
-                // Not logged in: Force dark mode
+                console.log('ThemeProvider: No user logged in, enforcing dark mode.');
                 setThemeState('dark');
+                setResolvedTheme('dark'); // Force resolved immediately
                 return;
             }
 
-            // Logged in: Fetch from DB
+            console.log('ThemeProvider: User logged in, fetching theme from DB for user:', user.id);
             try {
+                // Check if we can select 'theme' from user_profile
+                // Note: user.id usually matches user_profile.id if it's the PK.
                 const { data, error } = await supabase
                     .from('user_profile')
                     .select('theme')
@@ -48,24 +54,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                     .single();
 
                 if (error) {
-                    console.error('Error fetching theme:', error);
+                    console.error('ThemeProvider: Error fetching theme:', error);
                     // Fallback to dark if error
                     setThemeState('dark');
                     return;
                 }
 
+                console.log('ThemeProvider: Fetched theme from DB:', data?.theme);
+
                 if (data?.theme && ['light', 'dark', 'auto'].includes(data.theme)) {
                     setThemeState(data.theme as Theme);
                 } else {
-                    // If no theme set, default to dark and save it
+                    console.log('ThemeProvider: No valid theme found in DB, defaulting to dark and saving.');
                     setThemeState('dark');
-                    await supabase
+                    // Attempt to save default
+                    const { error: updateError } = await supabase
                         .from('user_profile')
                         .update({ theme: 'dark' })
                         .eq('id', user.id);
+
+                    if (updateError) {
+                        console.error('ThemeProvider: Error saving default theme:', updateError);
+                    }
                 }
             } catch (err) {
-                console.error('Unexpected error syncing theme:', err);
+                console.error('ThemeProvider: Unexpected error syncing theme:', err);
                 setThemeState('dark');
             }
         };
@@ -78,13 +91,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         const updateResolvedTheme = () => {
-            // Force dark mode for unauthenticated users (double check)
+            // Force dark mode for unauthenticated users
             if (!user && !loading) {
                 setResolvedTheme('dark');
                 return;
             }
 
-            // Force dark mode for specific pages (like landing page if desired, though requirement says default dark)
+            // Force dark mode for landing page
             if (pathname === '/') {
                 setResolvedTheme('dark');
                 return;
@@ -117,8 +130,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         const root = document.documentElement;
+        // Remove both first to clear state
         root.classList.remove('light', 'dark');
+
+        // Add the resolved theme
         root.classList.add(resolvedTheme);
+
+        // Set style attribute explicitly for debugging/redundancy if classList fails (rare but possible with some hydration issues)
+        root.style.colorScheme = resolvedTheme;
+
+        console.log(`ThemeProvider: Applied theme class '${resolvedTheme}' to HTML element.`);
+
     }, [resolvedTheme, mounted]);
 
     const setTheme = (newTheme: Theme) => {
@@ -126,6 +148,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     const saveTheme = async (newTheme: Theme) => {
+        console.log('ThemeProvider: saving theme:', newTheme);
         setThemeState(newTheme);
 
         if (user) {
@@ -136,10 +159,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                     .eq('id', user.id);
 
                 if (error) {
-                    console.error('Error saving theme to DB:', error);
+                    console.error('ThemeProvider: Error saving theme to DB:', error);
+                    alert(`Failed to save theme: ${error.message}`); // Temporary alert for debugging visibility
+                } else {
+                    console.log('ThemeProvider: Successfully saved theme to DB');
                 }
             } catch (err) {
-                console.error('Unexpected error saving theme:', err);
+                console.error('ThemeProvider: Unexpected error saving theme:', err);
             }
         }
     };
