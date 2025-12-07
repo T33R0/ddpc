@@ -151,11 +151,14 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
           onNavigate={(direction) => {
             const newIndex = direction === 'next' ? selectedVehicle.index + 1 : selectedVehicle.index - 1;
             if (newIndex >= 0 && newIndex < vehicles.length) {
-              setSelectedVehicle({
-                summary: vehicles[newIndex],
-                index: newIndex,
-                initialTrimId: undefined // Reset trim selection when navigating
-              });
+              const nextVehicle = vehicles[newIndex];
+              if (nextVehicle) {
+                setSelectedVehicle({
+                  summary: nextVehicle,
+                  index: newIndex,
+                  initialTrimId: undefined // Reset trim selection when navigating
+                });
+              }
             }
           }}
         />
