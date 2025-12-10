@@ -35,7 +35,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow dark:bg-gray-800">
+      <nav className="fixed top-16 left-0 right-0 z-50 bg-white shadow dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between">
             <div className="flex">
@@ -79,7 +79,7 @@ export default async function AdminLayout({
           </div>
         </div>
       </nav>
-      <div className="pt-20 pb-10">
+      <div className="pt-36 pb-10">
         <main>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
