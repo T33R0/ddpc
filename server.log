@@ -1,0 +1,48 @@
+turbo 2.5.8
+
+• Packages in scope: web
+• Running dev in 1 packages
+• Remote caching disabled
+web:dev: cache bypass, force executing 579c472311db26c0
+web:dev:
+web:dev: > web@0.1.0 dev
+web:dev: > next dev --turbopack --port 3000
+web:dev:
+web:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+web:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+web:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+web:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+web:dev:  Detected additional lockfiles:
+web:dev:    * /app/my-turborepo/package-lock.json
+web:dev:
+web:dev:    ▲ Next.js 15.5.7 (Turbopack)
+web:dev:    - Local:        http://localhost:3000
+web:dev:    - Network:      http://192.168.0.2:3000
+web:dev:    - Environments: .env.local
+web:dev:    - Experiments (use with caution):
+web:dev:      · serverActions
+web:dev:
+web:dev:  ✓ Starting...
+web:dev: Attention: Next.js now collects completely anonymous telemetry regarding usage.
+web:dev: This information is used to shape Next.js' roadmap and prioritize features.
+web:dev: You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+web:dev: https://nextjs.org/telemetry
+web:dev:
+web:dev:  ○ Compiling middleware ...
+web:dev:  ✓ Compiled middleware in 543ms
+web:dev:  ✓ Ready in 2.1s
+web:dev:  ○ Compiling /about ...
+web:dev: [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+web:dev:  ✓ Compiled /about in 9.6s
+web:dev:  GET /about 200 in 11159ms
+web:dev:  ○ Compiling /api/garage/vehicles ...
+web:dev:  ✓ Compiled /api/garage/vehicles in 2.1s
+web:dev:  GET /api/garage/vehicles 401 in 2575ms
+web:dev:  GET /api/garage/vehicles 401 in 2575ms
+web:dev:  GET /features 200 in 2291ms
+web:dev:  ○ Compiling /blog ...
+web:dev:  ✓ Compiled /blog in 736ms
+web:dev:  GET /blog 200 in 982ms
+web:dev:  ○ Compiling /status ...
+web:dev:  ✓ Compiled /status in 760ms
+web:dev:  GET /status 200 in 1036ms
