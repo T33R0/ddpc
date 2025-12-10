@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAuth } from '../../lib/auth';
-import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
 import { useRouter } from 'next/navigation';
-import { Car, Settings, MonitorPlay, Warehouse, SlidersHorizontal } from 'lucide-react';
+import { Car, Settings, MonitorPlay, Warehouse, SlidersHorizontal, ShieldAlert } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@repo/ui/card';
+import { Badge } from '@repo/ui/badge';
+import { toUsernameSlug } from '../../lib/user-routing';
+import { useTheme } from '../../lib/theme-context';
 
 const UserAvatarIcon = ({ size }: { size?: number }) => {
   const { user } = useAuth();
@@ -29,12 +32,30 @@ const UserAvatarIcon = ({ size }: { size?: number }) => {
 export default function HubPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  const usernameSlug = profile?.username ? toUsernameSlug(profile.username) : null;
+
+  const buildScopedRoute = useCallback(
+    (path: string) => {
+      if (!path) return path;
+      const normalized = path.startsWith("/") ? path : `/${path}`;
+      if (!usernameSlug) {
+        return normalized;
+      }
+      if (normalized === "/") {
+        return `/${usernameSlug}`;
+      }
+      return `/${usernameSlug}${normalized}`;
+    },
+    [usernameSlug]
+  );
 
   if (loading) {
     return (
@@ -48,51 +69,41 @@ export default function HubPage() {
     return null;
   }
 
-  // Hub navigation nodes
+  // Admin access check
+  const canAccessAdmin = profile?.role === 'admin' || user?.email === 'myddpc@gmail.com';
+
   const hubNodes = [
     {
       id: 1,
       title: "Account",
       route: "/account",
-      description: "Manage your profile, security settings, and account preferences. Update your personal information and customize your DDPC experience.",
+      description: "Manage your profile, security settings, and account preferences.",
       icon: UserAvatarIcon,
-      category: "Account",
-      relatedIds: [2, 3],
-      status: "available" as const,
-      color: "#3b82f6"
+      color: "text-blue-500"
     },
     {
       id: 2,
       title: "Explore",
       route: "/explore",
-      description: "Browse and research vehicles in our comprehensive database. Find your next project or learn about different models.",
+      description: "Browse and research vehicles in our comprehensive database.",
       icon: Car,
-      category: "Explore",
-      relatedIds: [1, 3, 5],
-      status: "featured" as const,
-      color: "#10b981"
+      color: "text-emerald-500"
     },
     {
       id: 3,
       title: "Garage",
       route: "/garage",
-      description: "View and manage your personal vehicle collection. Track maintenance, modifications, and build progress for each vehicle.",
+      description: "View and manage your personal vehicle collection.",
       icon: Warehouse,
-      category: "Garage",
-      relatedIds: [1, 2, 4],
-      status: "available" as const,
-      color: "#8b5cf6"
+      color: "text-violet-500"
     },
     {
       id: 4,
       title: "Console",
       route: "/console",
-      description: "Connect with other enthusiasts and share builds. Join discussions, get advice, and showcase your projects.",
+      description: "Connect with other enthusiasts and share builds.",
       icon: SlidersHorizontal,
-      category: "Social",
-      relatedIds: [3, 5],
-      status: "available" as const,
-      color: "#8b5cf6" // Purple
+      color: "text-violet-500"
     },
     {
       id: 5,
@@ -100,20 +111,23 @@ export default function HubPage() {
       route: "/ddsr",
       description: "the next extension of ddpc",
       icon: MonitorPlay,
-      category: "Sim",
-      relatedIds: [2, 3, 4],
       status: "new" as const,
-      color: "#06b6d4" // Cyan
+      color: "text-cyan-500"
     },
   ];
 
   const displayName = profile?.username || user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
 
+  // Theme-aware glow styles
+  const hoverGlowClass = resolvedTheme === 'dark'
+    ? 'hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] hover:border-yellow-500/50'
+    : 'hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-500/50';
+
   return (
     <div className="min-h-screen p-4 flex flex-col">
       <div className="max-w-6xl w-full mx-auto pt-24">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="mb-12">
           <h1 className="text-4xl font-bold mb-2 text-foreground lowercase">
             welcome back, {displayName}!
           </h1>
@@ -121,10 +135,60 @@ export default function HubPage() {
             manage your vehicles and track your builds.
           </p>
         </div>
-      </div>
 
-      <div className="flex-grow flex items-center justify-center">
-        <DDPCDashboardOrbital nodes={hubNodes} />
+        {/* Command Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {hubNodes.map((node) => (
+            <Card
+              key={node.id}
+              className={`group relative overflow-hidden transition-all duration-300 cursor-pointer border-border bg-card/50 backdrop-blur-sm ${hoverGlowClass}`}
+              onClick={() => router.push(buildScopedRoute(node.route))}
+            >
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <div className={`p-2 rounded-full bg-background/50 ring-1 ring-border group-hover:scale-110 transition-transform duration-300 ${node.color}`}>
+                  <node.icon size={24} />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+                    {node.title}
+                    {node.status === 'new' && (
+                      <Badge variant="secondary" className="text-xs bg-cyan-500/10 text-cyan-500 border-cyan-500/20">Coming Soon</Badge>
+                    )}
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-base leading-relaxed">
+                  {node.description}
+                </CardDescription>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Admin Card */}
+          {canAccessAdmin && (
+            <Card
+              className={`group relative overflow-hidden transition-all duration-300 cursor-pointer border-red-500/20 bg-red-500/5 hover:bg-red-500/10 hover:border-red-500/50 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]`}
+              onClick={() => router.push('/admin')}
+            >
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <div className={`p-2 rounded-full bg-background/50 ring-1 ring-red-500/50 group-hover:scale-110 transition-transform duration-300 text-red-500`}>
+                  <ShieldAlert size={24} />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-xl font-bold tracking-tight text-red-500">
+                    Admin
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-base leading-relaxed">
+                  Access administrative controls and user management.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
