@@ -19,7 +19,7 @@ export function HeaderWithAuth() {
   const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
 
   const normalizedPathname = stripUsernamePrefixFromPathname(pathname).pathname || '/';
-  const isHeaderHidden = normalizedPathname === '/' || normalizedPathname === '/hub';
+  const isHeaderHidden = normalizedPathname === '/';
   const { data: vehiclesData } = useVehicles({ enabled: !isHeaderHidden });
 
   if (isHeaderHidden) {
