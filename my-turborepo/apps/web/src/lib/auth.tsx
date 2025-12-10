@@ -111,12 +111,13 @@ export function AuthProvider({
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+
         if (session?.user?.id) {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
         }
+        setLoading(false);
       }
     };
 
@@ -134,12 +135,13 @@ export function AuthProvider({
 
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+
         if (session?.user?.id) {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
         }
+        setLoading(false);
       }
     );
 

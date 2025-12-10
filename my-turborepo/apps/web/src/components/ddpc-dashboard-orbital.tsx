@@ -46,9 +46,9 @@ export default function DDPCDashboardOrbital({
   // Determine theme colors
   // Using theme semantic variables instead of hardcoded checks where possible
   // Special effects (glows) might still need conditional logic if they are distinctly different colors per theme
-  const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_20px_#eab308]' : 'shadow-[0_0_20px_#3b82f6]';
-  const ringColor = resolvedTheme === 'dark' ? 'border-green-500' : 'border-blue-500';
-  const pingColor = resolvedTheme === 'dark' ? 'border-green-500/50' : 'border-blue-500/50';
+  const glowColor = resolvedTheme === 'dark' ? 'shadow-[0_0_30px_#eab308]' : 'shadow-[0_0_20px_#3b82f6]';
+  const ringColor = resolvedTheme === 'dark' ? 'border-yellow-500' : 'border-blue-500';
+  const pingColor = resolvedTheme === 'dark' ? 'border-yellow-500/50' : 'border-blue-500/50';
   const bgColor = 'bg-background';
   const iconColor = 'text-foreground';
 
