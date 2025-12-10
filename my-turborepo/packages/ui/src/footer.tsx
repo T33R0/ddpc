@@ -8,8 +8,8 @@ const sections = [
   {
     title: 'Product',
     links: [
-      { name: 'Features', href: '#' },
-      { name: 'Pricing', href: '#' },
+      { name: 'Features', href: '/features' },
+      { name: 'Pricing', href: '/pricing' },
       { name: 'Vehicle Explore', href: '/explore' },
       { name: 'API', href: '/docs' },
     ],
@@ -19,17 +19,17 @@ const sections = [
     links: [
       { name: 'About', href: '/about' },
       { name: 'Community', href: '/community' },
-      { name: 'Blog', href: '#' },
-      { name: 'Careers', href: '#' },
+      { name: 'Blog', href: '/blog' },
+      { name: 'Careers', href: '/careers' },
     ],
   },
   {
     title: 'Support',
     links: [
-      { name: 'Help Center', href: '#' },
+      { name: 'Help Center', href: '/help' },
       { name: 'Contact Us', href: '/contact' },
       { name: 'Community Forum', href: '/community' },
-      { name: 'Status', href: '#' },
+      { name: 'Status', href: '/status' },
     ],
   },
 ];
