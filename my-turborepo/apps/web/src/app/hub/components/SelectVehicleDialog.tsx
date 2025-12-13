@@ -48,9 +48,9 @@ export function SelectVehicleDialog({
                 <div
                   key={vehicle.id}
                   className={cn(
-                    "group relative flex flex-col border rounded-xl overflow-hidden cursor-pointer transition-all duration-200",
-                    "hover:border-primary hover:shadow-md active:scale-[0.98]",
-                    "bg-card text-card-foreground"
+                    "group relative flex flex-col border border-border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
+                    "hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]",
+                    "bg-card text-foreground"
                   )}
                   onClick={(e) => {
                     e.stopPropagation()
