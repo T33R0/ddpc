@@ -4,7 +4,7 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { GarageQuickActions } from './components/GarageQuickActions'
 import { Car, Compass, Users } from 'lucide-react'
-import { DDPCDashboardOrbital } from '@/components/ddpc-dashboard-orbital'
+// import { DDPCDashboardOrbital } from '@/components/ddpc-dashboard-orbital'
 import { useAuth } from '@/lib/auth'
 import { AuthProvider } from '@repo/ui/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -32,9 +32,9 @@ export default function HubPage() {
 
         <div className="container relative z-10 flex min-h-screen flex-col items-center justify-center py-12">
           {/* Orbital Visualization */}
-          <div className="mb-12 scale-75 md:scale-100">
+          {/* <div className="mb-12 scale-75 md:scale-100">
              <DDPCDashboardOrbital />
-          </div>
+          </div> */}
 
           <div className="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
             {/* Garage Card */}
