@@ -117,7 +117,7 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
               onClick={() => handleOpenVehicle(summary)}
             >
               <div
-                className="bg-card text-card-foreground rounded-2xl p-6 flex flex-col gap-6 cursor-pointer border border-border shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-300"
+                className="bg-card text-foreground rounded-2xl p-6 flex flex-col gap-6 cursor-pointer border border-border transition-all duration-300 ease-out group-hover:scale-105 group-hover:border-accent group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
               >
                 <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted relative">
                   <ImageWithTimeoutFallback
