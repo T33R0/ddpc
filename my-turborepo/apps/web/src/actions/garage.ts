@@ -148,3 +148,50 @@ export async function addVehicleToGarage(
         return { error: 'An unexpected error occurred' }
     }
 }
+
+export type OnboardingData = {
+  vehicleId: string
+  acquisitionDate: string // ISO date string
+  acquisitionType: string
+  acquisitionCost?: number
+  ownershipEndDate?: string // ISO date string
+  status?: string
+}
+
+export async function completeOnboarding(data: OnboardingData) {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: 'Unauthorized' }
+  }
+
+  const updates: any = {
+    is_onboarding_completed: true,
+    acquisition_date: data.acquisitionDate,
+    acquisition_type: data.acquisitionType,
+    acquisition_cost: data.acquisitionCost,
+  }
+
+  if (data.ownershipEndDate) {
+    updates.ownership_end_date = data.ownershipEndDate
+  }
+
+  if (data.status) {
+    updates.current_status = data.status
+  }
+
+  const { error } = await supabase
+    .from('user_vehicle')
+    .update(updates)
+    .eq('id', data.vehicleId)
+    .eq('owner_id', user.id)
+
+  if (error) {
+    console.error('Error completing onboarding:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/vehicle/${data.vehicleId}`)
+  return { success: true }
+}

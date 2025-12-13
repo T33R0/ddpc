@@ -212,15 +212,14 @@ const VehicleDetailsModal = ({
       setIsAddedToGarage(true);
       toast.success('Vehicle successfully added to your garage!');
 
-      // Redirect to vehicle page after a short delay if this was a pending add (meaning user just signed up/in)
-      if (pendingAdd && result.vehicleId) {
+      if (result.vehicleId) {
+        // Always redirect to the new vehicle page
         window.location.href = `/vehicle/${result.vehicleId}`;
-        return;
+      } else {
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       }
-
-      setTimeout(() => {
-        onClose();
-      }, 2000);
     } catch (error) {
       console.error('Error adding vehicle to garage:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');
