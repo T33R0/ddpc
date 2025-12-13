@@ -3,8 +3,8 @@
 import React from 'react'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from '@repo/ui/modal'
 import { Vehicle } from '../../../lib/hooks/useVehicles'
-import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback'
 import { cn } from '@repo/ui/lib/utils'
+import { VehicleCard } from '@/components/vehicle-card'
 
 interface SelectVehicleDialogProps {
   isOpen: boolean
@@ -47,45 +47,26 @@ export function SelectVehicleDialog({
               {vehicles.map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className={cn(
-                    "group relative flex flex-col border border-border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
-                    "hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]",
-                    "bg-card text-foreground"
-                  )}
                   onClick={(e) => {
                     e.stopPropagation()
                     handleSelect(vehicle)
                   }}
                 >
-                  <div className="aspect-video w-full relative bg-muted">
-                    <ImageWithTimeoutFallback
-                      src={vehicle.image_url || "/branding/fallback-logo.png"}
-                      fallbackSrc="/branding/fallback-logo.png"
-                      alt={vehicle.name}
-                      className="object-cover w-full h-full"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white font-medium px-3 py-1 bg-black/60 rounded-full text-sm backdrop-blur-sm">
-                        Select
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-3">
-                    <h3 className="font-semibold text-sm truncate">{vehicle.name}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{vehicle.ymmt}</p>
-
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className={cn(
-                        "w-2 h-2 rounded-full",
-                        vehicle.current_status === 'daily_driver' ? "bg-green-500" :
-                        vehicle.current_status === 'parked' ? "bg-yellow-500" : "bg-gray-500"
-                      )} />
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                        {vehicle.current_status.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </div>
+                  <VehicleCard
+                    title={vehicle.name}
+                    subtitle={vehicle.ymmt}
+                    status={vehicle.current_status}
+                    imageUrl={vehicle.image_url}
+                    onClick={() => handleSelect(vehicle)}
+                    className="cursor-pointer hover:bg-transparent" // Override any specific styles if needed
+                    footer={
+                        <div className="flex items-center gap-2 mt-2">
+                           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                            {vehicle.current_status.replace('_', ' ')}
+                           </span>
+                        </div>
+                    }
+                  />
                 </div>
               ))}
             </div>

@@ -601,7 +601,7 @@ function NavigationCard({
       className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${
         disabled
           ? 'cursor-not-allowed opacity-60'
-          : 'cursor-pointer hover:scale-[1.02] hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]'
+          : 'cursor-pointer hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
       }`}
       onClick={handleClick}
     >
