@@ -1,9 +1,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Modal, ModalContent, ModalTitle, ModalDescription, ModalHeader, ModalFooter } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
@@ -248,46 +248,6 @@ const VehicleDetailsModal = ({
 
   return (
     <Modal open={open} onOpenChange={(open) => !open && onClose()}>
-      {/*
-        Move navigation buttons to a Portal so they are direct children of body.
-        This ensures they are outside any transform/overflow context of the Modal.
-        We only render them on client-side (useEffect/Portal).
-      */}
-      {typeof document !== 'undefined' && createPortal(
-        <>
-          {canNavigatePrev && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.nativeEvent.stopImmediatePropagation();
-                onNavigate?.('prev');
-              }}
-              aria-label="Previous vehicle"
-              className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[9999] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex cursor-pointer"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
-            </button>
-          )}
-
-          {canNavigateNext && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.nativeEvent.stopImmediatePropagation();
-                onNavigate?.('next');
-              }}
-              aria-label="Next vehicle"
-              className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[9999] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex cursor-pointer"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
-            </button>
-          )}
-        </>,
-        document.body
-      )}
-
       <ModalContent
         className="sm:max-w-5xl max-h-[85dvh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
@@ -304,6 +264,33 @@ const VehicleDetailsModal = ({
           </ModalDescription>
         </ModalHeader>
 
+        {/* Side Navigation Arrows - Responsive positioning */}
+        {canNavigatePrev && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate?.('prev');
+            }}
+            aria-label="Previous vehicle"
+            className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
+          >
+            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
+          </button>
+        )}
+
+        {canNavigateNext && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigate?.('next');
+            }}
+            aria-label="Next vehicle"
+            className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
+          >
+            <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
+          </button>
+        )}
+
         {/* Content */}
         <div className="p-6">
           <div className="grid md:grid-cols-2 gap-6">
@@ -317,7 +304,7 @@ const VehicleDetailsModal = ({
                   className="w-full h-full object-cover"
                 />
 
-                {/* Mobile Navigation Arrows Overlay on Image - Keep these inside as they work with touch/mobile layout */}
+                {/* Mobile Navigation Arrows Overlay on Image */}
                 <div className="absolute inset-0 flex items-center justify-between px-2 md:hidden z-20 pointer-events-none">
                   {canNavigatePrev ? (
                     <button

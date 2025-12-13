@@ -1,25 +1,18 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
 import { Fuel, Wrench } from 'lucide-react'
 import { useVehicles, Vehicle } from '../../../lib/hooks/useVehicles'
 import { SelectVehicleDialog } from './SelectVehicleDialog'
 import { AddFuelDialog } from '@/features/fuel/components'
-import { AddServiceDialog, ServiceCategory, ServiceItem } from '@/features/service/components/AddServiceDialog'
-import { supabase } from '@/lib/supabase'
+import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
 
 export function GarageQuickActions() {
   const router = useRouter()
   const { data, isLoading } = useVehicles()
-
-  // State for sorted vehicles
-  const [sortedVehicles, setSortedVehicles] = useState<Vehicle[]>([])
-
-  // State for service data pre-fetching
-  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([])
-  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([])
+  const vehicles = data?.vehicles || []
 
   const [isSelectVehicleOpen, setIsSelectVehicleOpen] = useState(false)
   const [selectedAction, setSelectedAction] = useState<'fuel' | 'service' | null>(null)
@@ -28,90 +21,20 @@ export function GarageQuickActions() {
   const [isServiceLogOpen, setIsServiceLogOpen] = useState(false)
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
 
-  // Sort vehicles whenever data changes
-  useEffect(() => {
-    if (!data?.vehicles) {
-      setSortedVehicles([])
-      return
-    }
-
-    const vehicles = data.vehicles
-    const active = vehicles.filter(v => v.current_status === 'daily_driver')
-    const stored = vehicles.filter(v => v.current_status !== 'daily_driver')
-
-    let sortedStored = [...stored]
-
-    try {
-      if (typeof window !== 'undefined') {
-        const sortMode = localStorage.getItem('garage-sort-mode')
-
-        if (sortMode === 'custom') {
-           const manualOrder = JSON.parse(localStorage.getItem('garage-manual-order') || '[]') as string[]
-           const orderMap = new Map(manualOrder.map((id, index) => [id, index]))
-           sortedStored.sort((a, b) => {
-             const idxA = orderMap.has(a.id) ? orderMap.get(a.id)! : 999999
-             const idxB = orderMap.has(b.id) ? orderMap.get(b.id)! : 999999
-             return idxA - idxB
-           })
-        } else {
-           // Default: Last Edited (desc)
-           // Use updated_at or last_event_at or created_at
-           sortedStored.sort((a, b) => {
-             const tA = new Date(a.updated_at || a.last_event_at || a.created_at || 0).getTime()
-             const tB = new Date(b.updated_at || b.last_event_at || b.created_at || 0).getTime()
-             return tB - tA
-           })
-        }
-      }
-    } catch (e) {
-      console.error('Error sorting vehicles:', e)
-    }
-
-    setSortedVehicles([...active, ...sortedStored])
-  }, [data?.vehicles])
-
-  // Pre-fetch service categories and items to avoid modal hang
-  useEffect(() => {
-    async function fetchServiceData() {
-      try {
-        const { data: cats } = await supabase
-          .from('service_categories')
-          .select('id, name')
-          .order('name')
-
-        if (cats) {
-          setServiceCategories(cats)
-        }
-
-        const { data: items } = await supabase
-          .from('service_items')
-          .select('id, name, description, category_id')
-          .order('name')
-
-        if (items) {
-          setServiceItems(items)
-        }
-      } catch (err) {
-        console.error('Error fetching service data:', err)
-      }
-    }
-
-    fetchServiceData()
-  }, [])
-
   const handleActionClick = (action: 'fuel' | 'service') => {
     if (isLoading) return
 
-    if (sortedVehicles.length === 0) {
+    if (vehicles.length === 0) {
+      // If no vehicles, maybe redirect to garage to add one?
       if (confirm('No vehicles found. Would you like to go to your Garage to add one?')) {
         router.push('/garage')
       }
       return
     }
 
-    if (sortedVehicles.length === 1) {
+    if (vehicles.length === 1) {
       // Auto-select the only vehicle
-      const vehicle = sortedVehicles[0]
+      const vehicle = vehicles[0]
       if (vehicle) {
         setSelectedVehicle(vehicle)
         if (action === 'fuel') setIsFuelLogOpen(true)
@@ -158,7 +81,7 @@ export function GarageQuickActions() {
       <SelectVehicleDialog
         isOpen={isSelectVehicleOpen}
         onClose={() => setIsSelectVehicleOpen(false)}
-        vehicles={sortedVehicles}
+        vehicles={vehicles}
         onSelect={handleVehicleSelect}
         actionLabel={selectedAction === 'fuel' ? 'log fuel' : 'log service'}
       />
@@ -176,8 +99,6 @@ export function GarageQuickActions() {
             isOpen={isServiceLogOpen}
             onClose={() => setIsServiceLogOpen(false)}
             vehicleId={selectedVehicle.id}
-            initialCategories={serviceCategories}
-            initialItems={serviceItems}
           />
         </>
       )}
