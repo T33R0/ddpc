@@ -37,9 +37,11 @@ export function GarageQuickActions() {
     if (vehicles.length === 1) {
       // Auto-select the only vehicle
       const vehicle = vehicles[0]
-      setSelectedVehicle(vehicle)
-      if (action === 'fuel') setIsFuelLogOpen(true)
-      if (action === 'service') setIsServiceLogOpen(true)
+      if (vehicle) {
+        setSelectedVehicle(vehicle)
+        if (action === 'fuel') setIsFuelLogOpen(true)
+        if (action === 'service') setIsServiceLogOpen(true)
+      }
     } else {
       // Multiple vehicles, open selection dialog
       setSelectedAction(action)
