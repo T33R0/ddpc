@@ -598,18 +598,12 @@ function NavigationCard({
 
   return (
     <Card
-      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${
+        disabled
+          ? 'cursor-not-allowed opacity-60'
+          : 'cursor-pointer hover:scale-[1.02] hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]'
+      }`}
       onClick={handleClick}
-      onMouseEnter={disabled ? undefined : (e) => {
-        e.currentTarget.style.transform = 'scale(1.02)'
-        e.currentTarget.style.borderColor = 'hsl(var(--accent))'
-        e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.3)'
-      }}
-      onMouseLeave={disabled ? undefined : (e) => {
-        e.currentTarget.style.transform = 'scale(1)'
-        e.currentTarget.style.borderColor = 'hsl(var(--border))'
-        e.currentTarget.style.boxShadow = 'none'
-      }}
     >
       <CardContent className="p-0 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-3">

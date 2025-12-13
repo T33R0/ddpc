@@ -21,7 +21,6 @@ const UserAvatarIcon = ({ size }: { size?: number }) => {
         src={avatarUrl}
         alt="Profile"
         className="w-full h-full object-cover rounded-full"
-        style={{ borderRadius: '50%' }}
       />
     );
   }
@@ -126,7 +125,7 @@ export default function HubPage() {
 
   // Theme-aware glow styles matching app consistency
   // Neon Green for dark theme, Neon Blue for light theme
-  const cardHoverClass = "hover:border-blue-500/50 hover:shadow-[0_0_30px_#3b82f6] dark:hover:border-green-500/50 dark:hover:shadow-[0_0_30px_#22c55e]";
+  const cardHoverClass = "hover:border-blue-500/50 hover:shadow-[0_0_30px_theme(colors.blue.500)] dark:hover:border-green-500/50 dark:hover:shadow-[0_0_30px_theme(colors.green.500)]";
 
   return (
     <div className="min-h-screen p-4 flex flex-col">

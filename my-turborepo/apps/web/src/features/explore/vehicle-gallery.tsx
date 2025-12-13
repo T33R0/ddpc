@@ -29,20 +29,7 @@ function VehicleCard({ vehicle }: { vehicle: VehicleSummary }) {
       className="group transition-all duration-300"
     >
       <div
-        className="bg-card rounded-2xl p-6 text-foreground flex flex-col gap-6 cursor-pointer border border-border"
-        style={{
-          transition: 'all 0.3s ease-out',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.borderColor = 'hsl(var(--accent))';
-          e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.6)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.borderColor = '';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
+        className="bg-card rounded-2xl p-6 text-foreground flex flex-col gap-6 cursor-pointer border border-border transition-all duration-300 ease-out group-hover:scale-105 group-hover:border-accent group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
       >
         <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10 relative">
           <ImageWithTimeoutFallback
