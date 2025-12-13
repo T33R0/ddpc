@@ -14,6 +14,7 @@ import { useSearch } from '../../lib/hooks/useSearch';
 import { searchConsoleVehicle } from '../../lib/search';
 import { useConsoleStats } from '../../lib/hooks/useConsoleStats';
 import { getVehicleSlug } from '../../lib/vehicle-utils-client';
+import { DashboardCard } from '@/components/dashboard-card';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
@@ -173,14 +174,10 @@ export default function ConsolePage() {
                   return (
                     <div
                       key={vehicle.id}
-                      className="group transition-all duration-300 cursor-pointer"
                       onClick={() => router.push(`/vehicle/${encodeURIComponent(slug)}`)}
                     >
-                      <div
-                        className="bg-card backdrop-blur-lg rounded-2xl p-6 flex flex-col gap-4 border border-border hover:border-primary hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]"
-                        style={{
-                          transition: 'all 0.3s ease-out',
-                        }}
+                      <DashboardCard
+                        className="backdrop-blur-lg p-6 flex flex-col gap-4"
                       >
                         <div className="flex justify-between items-start">
                           <div>
@@ -267,7 +264,7 @@ export default function ConsolePage() {
                             Mods
                           </Button>
                         </div>
-                      </div>
+                      </DashboardCard>
                     </div>
                   );
                 })}

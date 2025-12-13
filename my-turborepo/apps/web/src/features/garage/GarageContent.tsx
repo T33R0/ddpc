@@ -8,131 +8,11 @@ import { Card, CardContent } from '@repo/ui/card'
 import AddVehicleModal from './add-vehicle-modal'
 import { AuthProvider } from '@repo/ui/auth-context'
 import { RealtimeChannel } from '@supabase/supabase-js'
-import { Plus, ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { VehicleWithOdometer } from '@repo/types'
 import { supabase } from '@/lib/supabase'
-import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback';
 import { getVehicleSlug } from '@/lib/vehicle-utils-client'
-
-function VehicleCard({
-  vehicle,
-  allVehicles,
-  onDragStart,
-  onDragEnd,
-  isDragging
-}: {
-  vehicle: VehicleWithOdometer
-  allVehicles: VehicleWithOdometer[]
-  onDragStart?: () => void
-  onDragEnd?: () => void
-  isDragging?: boolean
-}) {
-  const router = useRouter()
-
-  // Format status for display
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case 'daily_driver':
-        return 'Active'
-      case 'parked':
-        return 'Parked'
-      case 'listed':
-        return 'Listed'
-      case 'sold':
-        return 'Sold'
-      case 'retired':
-        return 'Retired'
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1)
-    }
-  }
-
-  // Get status color for the indicator dot
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'daily_driver':
-        return 'bg-green-500' // Active - green
-      case 'parked':
-      case 'listed':
-        return 'bg-yellow-500' // Parked/Listed - yellow
-      case 'sold':
-      case 'retired':
-        return 'bg-red-500' // Sold/Retired - red
-      default:
-        return 'bg-gray-500'
-    }
-  }
-
-  const handleClick = () => {
-    // Use smart slug generation
-    const urlSlug = getVehicleSlug(vehicle, allVehicles)
-    router.push(`/vehicle/${urlSlug}`)
-  }
-
-  return (
-    <div
-      className={`group transition-all duration-300 cursor-pointer ${isDragging ? 'opacity-50' : ''}`}
-      onClick={handleClick}
-      draggable={!!onDragStart}
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = 'move'
-        e.dataTransfer.setData('vehicleId', vehicle.id)
-        e.dataTransfer.setData('currentStatus', vehicle.current_status)
-        onDragStart?.()
-      }}
-      onDragEnd={() => {
-        onDragEnd?.()
-      }}
-    >
-      <div
-        className={`bg-card rounded-2xl p-4 text-foreground flex flex-col gap-4 border border-border transition-all duration-300 ease-out ${
-          !isDragging
-            ? 'group-hover:scale-105 group-hover:border-accent group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
-            : ''
-        }`}
-      >
-        <div className="absolute top-2 left-2 z-10 flex gap-1">
-          <span className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.current_status)}`}></span>
-        </div>
-        {onDragStart && (
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded p-1 cursor-grab active:cursor-grabbing text-white">
-            <GripVertical size={16} />
-          </div>
-        )}
-        <div className="w-full aspect-video overflow-hidden rounded-lg bg-white/10 relative">
-          <ImageWithTimeoutFallback
-            src={vehicle.vehicle_image || vehicle.image_url || "/branding/fallback-logo.png"}
-            fallbackSrc="/branding/fallback-logo.png"
-            alt={`${vehicle.name} vehicle`}
-            className="w-full h-full object-cover"
-          />
-          {!vehicle.vehicle_image && !vehicle.image_url && (
-            <>
-              <div className="absolute inset-0 bg-black/40" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white text-lg font-semibold tracking-wide">Vehicle Image Missing</span>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="flex flex-col gap-1 items-start">
-          <h3 className="font-bold text-lg text-foreground">{vehicle.nickname || vehicle.name}</h3>
-          <div className="text-sm text-muted-foreground">
-            {vehicle.ymmt}
-          </div>
-        </div>
-        <div className="flex justify-between items-center mt-2">
-          <div className="text-xs text-muted-foreground">
-            {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
-          </div>
-          <div className="text-xs text-muted-foreground font-semibold">
-            {formatStatus(vehicle.current_status)}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { VehicleCard } from '@/components/vehicle-card'
 
 function AddVehicleCard({ onClick }: { onClick: () => void }) {
   return (
@@ -184,6 +64,7 @@ function VehicleGallery({
   const [isExpanded, setIsExpanded] = useState(true)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [draggingVehicleId, setDraggingVehicleId] = useState<string | null>(null)
+  const router = useRouter()
 
   // Infinite scroll logic
   const handleScroll = useCallback(() => {
@@ -232,11 +113,6 @@ function VehicleGallery({
     const currentStatus = e.dataTransfer.getData('currentStatus')
 
     if (vehicleId) {
-       // Check if we are reordering within the same gallery
-       // Simple heuristic: If galleryType is stored and vehicle is stored, it's reorder
-       // But we don't have vehicle status easily here without lookup.
-       // We rely on the parent handler to differentiate or pass metadata.
-
        if (onDrop) {
           // Status change logic
           const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
@@ -247,16 +123,6 @@ function VehicleGallery({
              return
           }
        }
-
-       // If same status, it might be a reorder
-       // We need the target element to know where it dropped
-       // But HTML5 DnD 'drop' event is on the container here.
-       // Reordering is usually handled by dropping ON another card.
-       // Since this drop handler is on the CONTAINER, it handles moves between lists well.
-       // For reordering, we need individual card drop zones or a library.
-       // However, we can implement basic "append" or "prepend" if dropped on container? No.
-       // Let's rely on the cards themselves handling drop for reorder if needed?
-       // For now, simpler implementation: Drop on container = Move between galleries (Status Change).
     }
     setDraggingVehicleId(null)
   }
@@ -282,6 +148,23 @@ function VehicleGallery({
     }
     setIsDraggingOver(false)
     setDraggingVehicleId(null)
+  }
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case 'daily_driver':
+        return 'Active'
+      case 'parked':
+        return 'Parked'
+      case 'listed':
+        return 'Listed'
+      case 'sold':
+        return 'Sold'
+      case 'retired':
+        return 'Retired'
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1)
+    }
   }
 
   return (
@@ -334,11 +217,33 @@ function VehicleGallery({
                 onDrop={(e) => handleCardDrop(e, vehicle.id)}
             >
                 <VehicleCard
-                    vehicle={vehicle}
-                    allVehicles={allVehicles}
-                    onDragStart={() => setDraggingVehicleId(vehicle.id)}
-                    onDragEnd={() => setDraggingVehicleId(null)}
+                    title={vehicle.nickname || vehicle.name}
+                    subtitle={vehicle.ymmt}
+                    status={vehicle.current_status}
+                    imageUrl={vehicle.vehicle_image || vehicle.image_url}
+                    onClick={() => {
+                        const urlSlug = getVehicleSlug(vehicle, allVehicles)
+                        router.push(`/vehicle/${urlSlug}`)
+                    }}
+                    footer={
+                        <>
+                            <div className="text-xs text-muted-foreground">
+                                {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-semibold">
+                                {formatStatus(vehicle.current_status)}
+                            </div>
+                        </>
+                    }
                     isDragging={draggingVehicleId === vehicle.id}
+                    onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move'
+                        e.dataTransfer.setData('vehicleId', vehicle.id)
+                        e.dataTransfer.setData('currentStatus', vehicle.current_status)
+                        setDraggingVehicleId(vehicle.id)
+                    }}
+                    onDragEnd={() => setDraggingVehicleId(null)}
+                    showDragHandle={true}
                 />
             </div>
             ))}
