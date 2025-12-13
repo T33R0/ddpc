@@ -259,10 +259,12 @@ const VehicleDetailsModal = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
                 onNavigate?.('prev');
               }}
               aria-label="Previous vehicle"
               className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[9999] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
             >
               <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
             </button>
@@ -272,6 +274,7 @@ const VehicleDetailsModal = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
                 onNavigate?.('next');
               }}
               aria-label="Next vehicle"
