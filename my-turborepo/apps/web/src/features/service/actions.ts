@@ -230,6 +230,7 @@ export async function duplicateJobPlan(originalJobPlanId: string, newName: strin
       job_plan_id: newJobPlan.id,
       step_order: step.step_order,
       description: step.description,
+      notes: step.notes,
       is_completed: false, // Reset completion status
       is_completed_reassembly: false,
     }))
