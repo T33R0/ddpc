@@ -383,18 +383,18 @@ export default function AccountPage() {
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case 'free': return 'text-gray-400';
-      case 'builder': return 'text-blue-400';
-      case 'pro': return 'text-yellow-400';
+      case 'builder': return 'text-red-500'; // Updated to match Builder branding
+      case 'pro': return 'text-red-500';
       default: return 'text-gray-400';
     }
   };
 
   const getPlanIcon = (plan: string) => {
     switch (plan) {
-      case 'free': return '🆓';
-      case 'builder': return '🔧';
-      case 'pro': return '👑';
-      default: return '🆓';
+      case 'free': return '🧱'; // Foundation/Maintainer
+      case 'builder': return '🔧'; // Builder
+      case 'pro': return '🔧';
+      default: return '🧱';
     }
   };
 
@@ -428,7 +428,7 @@ export default function AccountPage() {
                   <div className="flex items-center gap-2">
                     <Crown className={`h-4 w-4 ${getPlanColor(user.plan)}`} />
                     <span className={`text-sm font-medium ${getPlanColor(user.plan)}`}>
-                      {getPlanIcon(user.plan)} {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
+                      {getPlanIcon(user.plan)} {user.plan === 'free' ? 'Maintainer' : 'Builder'} Plan
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -705,12 +705,11 @@ export default function AccountPage() {
                         <div className="text-2xl">{getPlanIcon(user.plan)}</div>
                         <div>
                           <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
-                            {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
+                            {user.plan === 'free' ? 'Maintainer' : 'Builder'} Plan
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {user.plan === 'free' && 'Basic features with limited usage'}
-                            {user.plan === 'builder' && 'Enhanced features for enthusiasts'}
-                            {user.plan === 'pro' && 'Full access to all premium features'}
+                            {user.plan === 'free' && 'Essential tools for maintaining your daily drivers and weekend toys.'}
+                            {(user.plan === 'builder' || user.plan === 'pro') && 'Advanced tools for serious builds, detailed planning, and total cost tracking.'}
                           </p>
                         </div>
                       </div>
@@ -724,26 +723,20 @@ export default function AccountPage() {
                       <ul className="text-sm text-muted-foreground space-y-1">
                         {user.plan === 'free' && (
                           <>
-                            <li>• Access to basic vehicle database</li>
-                            <li>• Limited garage size (5 vehicles)</li>
-                            <li>• Basic search and filtering</li>
+                            <li>• Vehicle Cap: 3 Active Vehicles</li>
+                            <li>• Fuel Logging: MPG tracking and cost analysis</li>
+                            <li>• Service Logging: Maintenance records</li>
+                            <li>• The Garage: Basic vehicle profile and specs</li>
+                            <li>• Community Access</li>
                           </>
                         )}
-                        {user.plan === 'builder' && (
+                        {(user.plan === 'builder' || user.plan === 'pro') && (
                           <>
-                            <li>• Everything in Free</li>
-                            <li>• Unlimited garage size</li>
-                            <li>• Advanced search and filtering</li>
-                            <li>• Export capabilities</li>
-                          </>
-                        )}
-                        {user.plan === 'pro' && (
-                          <>
-                            <li>• Everything in Builder</li>
-                            <li>• Priority support</li>
-                            <li>• Advanced analytics</li>
-                            <li>• API access</li>
-                            <li>• Custom integrations</li>
+                            <li>• Vehicle Cap: Unlimited</li>
+                            <li>• Mod Registry: Detailed modification tracking</li>
+                            <li>• The Plans: Build planning and Jobs management</li>
+                            <li>• The Console: Advanced analytics & TCO</li>
+                            <li>• Priority Support</li>
                           </>
                         )}
                       </ul>
