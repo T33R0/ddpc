@@ -9,8 +9,6 @@ import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
 import { ActiveFiltersDisplay } from "../../features/explore/active-filters-display";
 import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
-import { AuthProvider } from '../../lib/auth';
-import { supabase } from '../../lib/supabase';
 import type { FilterState } from '../../features/explore/vehicle-filters-modal';
 import { useDebounce } from '../../lib/hooks/useDebounce';
 import { useExploreStore } from '../../features/explore/explore-store';
@@ -27,7 +25,7 @@ type FilterOptions = {
 
 const PAGE_SIZE = 24;
 
-function ExploreContent() {
+export default function Explore() {
   // Use global store with granular selectors to avoid unnecessary re-renders
   // especially when scrollPosition changes (which we don't select here)
   const vehicles = useExploreStore(state => state.vehicles);
@@ -222,13 +220,5 @@ function ExploreContent() {
         )}
       </div>
     </section>
-  );
-}
-
-export default function Explore() {
-  return (
-    <AuthProvider supabase={supabase}>
-      <ExploreContent />
-    </AuthProvider>
   );
 }
