@@ -125,8 +125,8 @@ export default function HubPage() {
   const displayName = profile?.username || user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
 
   // Theme-aware glow styles matching app consistency
-  // Using primary color for glow
-  const cardHoverClass = "hover:border-primary/50 hover:shadow-[0_0_30px_hsl(var(--primary)/0.2)] dark:hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]";
+  // Neon Green for dark theme, Neon Blue for light theme
+  const cardHoverClass = "hover:border-blue-500/50 hover:shadow-[0_0_30px_#3b82f6] dark:hover:border-green-500/50 dark:hover:shadow-[0_0_30px_#22c55e]";
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
@@ -151,7 +151,7 @@ export default function HubPage() {
             >
               {/* Background Image */}
               <div
-                className="absolute inset-0 z-0 transition-all duration-500 group-hover:scale-105 group-hover:brightness-50 brightness-[0.3]"
+                className="absolute inset-0 z-0 transition-all duration-500 group-hover:scale-105 group-hover:brightness-50 brightness-90 dark:brightness-[0.3]"
                 style={{
                   backgroundImage: `url('${node.image}')`,
                   backgroundSize: 'cover',

@@ -26,8 +26,6 @@ export function GarageQuickActions() {
 
     if (vehicles.length === 0) {
       // If no vehicles, maybe redirect to garage to add one?
-      // For now, just alert or do nothing.
-      // Better: router.push('/garage') and showing a toast would be ideal, but keeping it simple.
       if (confirm('No vehicles found. Would you like to go to your Garage to add one?')) {
         router.push('/garage')
       }
@@ -56,17 +54,15 @@ export function GarageQuickActions() {
     setSelectedAction(null)
   }
 
+  // Wrap in a div that stops propagation to prevent bubbling to the parent Card's onClick
   return (
-    <>
+    <div onClick={(e) => e.stopPropagation()}>
       <div className="flex gap-2 mt-4 z-20 relative">
         <Button
           variant="secondary"
           size="sm"
           className="flex-1 bg-background/80 backdrop-blur-sm hover:bg-background/90 text-xs sm:text-sm h-9"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleActionClick('fuel')
-          }}
+          onClick={() => handleActionClick('fuel')}
         >
           <Fuel className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
           Log Fuel
@@ -75,10 +71,7 @@ export function GarageQuickActions() {
           variant="secondary"
           size="sm"
           className="flex-1 bg-background/80 backdrop-blur-sm hover:bg-background/90 text-xs sm:text-sm h-9"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleActionClick('service')
-          }}
+          onClick={() => handleActionClick('service')}
         >
           <Wrench className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
           Log Service
@@ -109,6 +102,6 @@ export function GarageQuickActions() {
           />
         </>
       )}
-    </>
+    </div>
   )
 }
