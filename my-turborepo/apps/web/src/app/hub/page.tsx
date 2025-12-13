@@ -1,131 +1,113 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { useAuth } from '../../lib/auth';
-import DDPCDashboardOrbital from '../../components/ddpc-dashboard-orbital';
-import { useRouter } from 'next/navigation';
-import { Car, Settings, MonitorPlay, Warehouse, SlidersHorizontal } from 'lucide-react';
-
-const UserAvatarIcon = ({ size }: { size?: number }) => {
-  const { user } = useAuth();
-  const avatarUrl = user?.user_metadata?.avatar_url;
-
-  if (avatarUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={avatarUrl}
-        alt="Profile"
-        className="w-full h-full object-cover rounded-full"
-        style={{ borderRadius: '50%' }}
-      />
-    );
-  }
-
-  // Fallback to Settings icon with original size
-  return <Settings size={size} />;
-};
+import React from 'react'
+import { useRouter } from 'next/navigation'
+import { GarageQuickActions } from './components/GarageQuickActions'
+import { Car, Compass, Users } from 'lucide-react'
+// import { DDPCDashboardOrbital } from '@/components/ddpc-dashboard-orbital'
+import { useAuth } from '@/lib/auth'
+import { AuthProvider } from '@repo/ui/auth-context'
+import { supabase } from '@/lib/supabase'
+import { DashboardCard } from '@/components/dashboard-card'
 
 export default function HubPage() {
-  const { user, profile, loading } = useAuth();
-  const router = useRouter();
+  const router = useRouter()
+  const { user } = useAuth()
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-foreground">Loading...</div>
-      </div>
-    );
+  const handleNavigate = (path: string) => {
+    router.push(path)
   }
 
-  if (!user) {
-    return null;
-  }
-
-  // Hub navigation nodes
-  const hubNodes = [
-    {
-      id: 1,
-      title: "Account",
-      route: "/account",
-      description: "Manage your profile, security settings, and account preferences. Update your personal information and customize your DDPC experience.",
-      icon: UserAvatarIcon,
-      category: "Account",
-      relatedIds: [2, 3],
-      status: "available" as const,
-      color: "#3b82f6"
-    },
-    {
-      id: 2,
-      title: "Explore",
-      route: "/explore",
-      description: "Browse and research vehicles in our comprehensive database. Find your next project or learn about different models.",
-      icon: Car,
-      category: "Explore",
-      relatedIds: [1, 3, 5],
-      status: "featured" as const,
-      color: "#10b981"
-    },
-    {
-      id: 3,
-      title: "Garage",
-      route: "/garage",
-      description: "View and manage your personal vehicle collection. Track maintenance, modifications, and build progress for each vehicle.",
-      icon: Warehouse,
-      category: "Garage",
-      relatedIds: [1, 2, 4],
-      status: "available" as const,
-      color: "#8b5cf6"
-    },
-    {
-      id: 4,
-      title: "Console",
-      route: "/console",
-      description: "Connect with other enthusiasts and share builds. Join discussions, get advice, and showcase your projects.",
-      icon: SlidersHorizontal,
-      category: "Social",
-      relatedIds: [3, 5],
-      status: "available" as const,
-      color: "#8b5cf6" // Purple
-    },
-    {
-      id: 5,
-      title: "ddsr",
-      route: "/ddsr",
-      description: "the next extension of ddpc",
-      icon: MonitorPlay,
-      category: "Sim",
-      relatedIds: [2, 3, 4],
-      status: "new" as const,
-      color: "#06b6d4" // Cyan
-    },
-  ];
-
-  const displayName = profile?.username || user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0];
+  // Admin check (using breakglass logic from memory)
+  const isAdmin = user?.email === 'myddpc@gmail.com' || (user as any)?.role === 'admin'
 
   return (
-    <div className="min-h-screen p-4 flex flex-col">
-      <div className="max-w-6xl w-full mx-auto pt-24">
-        {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-foreground lowercase">
-            welcome back, {displayName}!
-          </h1>
-          <p className="text-muted-foreground text-lg lowercase">
-            manage your vehicles and track your builds.
-          </p>
+    <AuthProvider supabase={supabase}>
+      <main className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
+        {/* Ambient background effects */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/20 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-purple-500/20 blur-[120px]" />
         </div>
-      </div>
 
-      <div className="flex-grow flex items-center justify-center">
-        <DDPCDashboardOrbital nodes={hubNodes} />
-      </div>
-    </div>
-  );
+        <div className="container relative z-10 flex min-h-screen flex-col items-center justify-center py-12">
+          {/* Orbital Visualization */}
+          {/* <div className="mb-12 scale-75 md:scale-100">
+             <DDPCDashboardOrbital />
+          </div> */}
+
+          <div className="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
+            {/* Garage Card */}
+            <DashboardCard
+              className="bg-card/50 p-6 h-[320px] flex flex-col"
+              onClick={() => handleNavigate('/garage')}
+            >
+              <div className="absolute inset-0 bg-[url('/images/hub/garage-bg.jpg')] bg-cover bg-center opacity-20 transition-opacity duration-300 group-hover:opacity-10" />
+              <div className="relative z-10 flex flex-1 flex-col items-center justify-start pt-8">
+                <div className="mb-4 rounded-full bg-background/80 p-4 shadow-lg ring-1 ring-border">
+                  <Car className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="mb-2 text-2xl font-bold">My Garage</h2>
+                <p className="text-center text-sm text-muted-foreground">
+                  Manage your fleet, track mods, and log service history.
+                </p>
+
+                {/* Quick Actions (Buttons) */}
+                <div className="mt-auto w-full pt-4">
+                   <GarageQuickActions />
+                </div>
+              </div>
+            </DashboardCard>
+
+            {/* Explore Card */}
+            <DashboardCard
+              className="bg-card/50 p-6 h-[320px] flex flex-col"
+              onClick={() => handleNavigate('/explore')}
+            >
+              <div className="absolute inset-0 bg-[url('/images/hub/explore-bg.jpg')] bg-cover bg-center opacity-20 transition-opacity duration-300 group-hover:opacity-10" />
+              <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
+                <div className="mb-4 rounded-full bg-background/80 p-4 shadow-lg ring-1 ring-border">
+                  <Compass className="h-8 w-8 text-secondary" />
+                </div>
+                <h2 className="mb-2 text-2xl font-bold">Explore</h2>
+                <p className="text-center text-sm text-muted-foreground">
+                  Discover builds, get inspired, and find your next project.
+                </p>
+              </div>
+            </DashboardCard>
+
+            {/* Community Card */}
+            <DashboardCard
+              className="bg-card/50 p-6 h-[320px] flex flex-col"
+              onClick={() => handleNavigate('/community')}
+            >
+              <div className="absolute inset-0 bg-[url('/images/hub/community-bg.jpg')] bg-cover bg-center opacity-20 transition-opacity duration-300 group-hover:opacity-10" />
+              <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
+                <div className="mb-4 rounded-full bg-background/80 p-4 shadow-lg ring-1 ring-border">
+                  <Users className="h-8 w-8 text-accent-foreground" />
+                </div>
+                <h2 className="mb-2 text-2xl font-bold">Community</h2>
+                <p className="text-center text-sm text-muted-foreground">
+                  Connect with other enthusiasts and share your journey.
+                </p>
+              </div>
+            </DashboardCard>
+
+            {/* Admin Card (Conditional) */}
+            {isAdmin && (
+              <DashboardCard
+                 className="bg-card/50 p-6 h-[320px] flex flex-col md:col-span-3 lg:col-span-1"
+                 onClick={() => handleNavigate('/console')}
+              >
+                  <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
+                    <h2 className="text-2xl font-bold text-destructive">Admin Console</h2>
+                  </div>
+              </DashboardCard>
+            )}
+
+          </div>
+        </div>
+      </main>
+    </AuthProvider>
+  )
 }

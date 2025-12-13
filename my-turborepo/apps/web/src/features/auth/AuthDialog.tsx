@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '../../lib/auth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalBody } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
@@ -85,14 +85,14 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center">
+    <Modal open={isOpen} onOpenChange={onClose}>
+      <ModalContent className="sm:max-w-md">
+        <ModalHeader>
+          <ModalTitle className="text-center">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
-          </DialogTitle>
-        </DialogHeader>
-        <DialogBody>
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -186,8 +186,8 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
               {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>
           </div>
-        </DialogBody>
-      </DialogContent>
-    </Dialog>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }

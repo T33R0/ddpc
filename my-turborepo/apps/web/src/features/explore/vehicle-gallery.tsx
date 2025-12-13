@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VehicleSummary } from '@/lib/types';
 import VehicleDetailsModal from './vehicle-details-modal';
-import { ImageWithTimeoutFallback } from '../../components/image-with-timeout-fallback';
+import { VehicleCard } from '@/components/vehicle-card';
 
 interface FilterOptions {
   years: number[];
@@ -20,60 +20,6 @@ interface SelectedVehicle {
   summary: VehicleSummary;
   initialTrimId?: string;
   index: number;
-}
-
-// VehicleCard component definition
-function VehicleCard({ vehicle }: { vehicle: VehicleSummary }) {
-  return (
-    <div
-      className="group transition-all duration-300"
-    >
-      <div
-        className="bg-card rounded-2xl p-6 text-foreground flex flex-col gap-6 cursor-pointer border border-border"
-        style={{
-          transition: 'all 0.3s ease-out',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.borderColor = 'hsl(var(--accent))';
-          e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.6)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.borderColor = '';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
-      >
-        <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10 relative">
-          <ImageWithTimeoutFallback
-            src={vehicle.heroImage || vehicle.trims[0]?.image_url || "/branding/fallback-logo.png"}
-            fallbackSrc="/branding/fallback-logo.png"
-            alt={`${vehicle.make} ${vehicle.model}`}
-            className="w-full h-full object-cover"
-            showMissingText={false}
-          />
-          {!vehicle.heroImage && !vehicle.trims[0]?.image_url && (
-            <>
-              <div className="absolute inset-0 bg-black/40" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white text-lg font-semibold tracking-wide">Vehicle Image Missing</span>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="flex flex-col gap-1 items-start">
-          <h3 className="font-bold text-lg text-foreground">
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </h3>
-          {vehicle.trims && vehicle.trims.length > 0 && (
-            <div className="text-sm text-muted-foreground">
-              {vehicle.trims.length} Trim{vehicle.trims.length !== 1 ? 's' : ''} Available
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 interface VehicleGalleryProps {
@@ -112,10 +58,14 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
         {vehicles.map((vehicle, index) => (
           <div
             key={vehicle.id}
-            onClick={() => setSelectedVehicle({ summary: vehicle, index })}
-            className="cursor-pointer"
           >
-            <VehicleCard vehicle={vehicle} />
+            <VehicleCard
+                title={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                subtitle={vehicle.trims && vehicle.trims.length > 0 ? `${vehicle.trims.length} Trim${vehicle.trims.length !== 1 ? 's' : ''} Available` : undefined}
+                imageUrl={vehicle.heroImage || vehicle.trims[0]?.image_url}
+                onClick={() => setSelectedVehicle({ summary: vehicle, index })}
+                className="cursor-pointer"
+            />
           </div>
         ))}
       </div>
@@ -146,6 +96,21 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
           open={!!selectedVehicle}
           onClose={() => setSelectedVehicle(null)}
           summary={selectedVehicle.summary}
+          canNavigatePrev={selectedVehicle.index > 0}
+          canNavigateNext={selectedVehicle.index < vehicles.length - 1}
+          onNavigate={(direction) => {
+            const newIndex = direction === 'next' ? selectedVehicle.index + 1 : selectedVehicle.index - 1;
+            if (newIndex >= 0 && newIndex < vehicles.length) {
+              const nextVehicle = vehicles[newIndex];
+              if (nextVehicle) {
+                setSelectedVehicle({
+                  summary: nextVehicle,
+                  index: newIndex,
+                  initialTrimId: undefined // Reset trim selection when navigating
+                });
+              }
+            }
+          }}
         />
       )}
     </>

@@ -24,8 +24,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="flex flex-col min-h-screen bg-black text-white">
-          <header className="border-b border-gray-800">
+        <div className="flex flex-col min-h-screen bg-background text-foreground">
+          <header className="border-b border-border">
             <div className="container mx-auto px-4 py-4">
               <h1 className="text-2xl font-bold">DDPC Documentation</h1>
             </div>
@@ -33,8 +33,8 @@ export default function RootLayout({
           <main className="flex-grow container mx-auto px-4 py-8">
             {children}
           </main>
-          <footer className="border-t border-gray-800 py-8">
-            <div className="container mx-auto px-4 text-center text-gray-400">
+          <footer className="border-t border-border py-8">
+            <div className="container mx-auto px-4 text-center text-muted-foreground">
               <p>&copy; 2024 DDPC. All rights reserved.</p>
             </div>
           </footer>

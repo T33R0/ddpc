@@ -3,14 +3,14 @@ import Link from 'next/link';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-black text-white p-4">
+    <div className="min-h-screen bg-background text-foreground p-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">Terms of Service</h1>
-          <p className="text-gray-400 mb-8">Last updated: October 2024</p>
+          <p className="text-muted-foreground mb-8">Last updated: October 2024</p>
         </div>
 
-        <div className="prose prose-invert max-w-none space-y-6">
+        <div className="prose dark:prose-invert max-w-none space-y-6">
           <section>
             <h2 className="text-2xl font-semibold mb-4">Acceptance of Terms</h2>
             <p>
@@ -57,7 +57,7 @@ export default function TermsPage() {
         <div className="text-center mt-12">
           <Link
             href="/"
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="inline-block bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Return Home
           </Link>

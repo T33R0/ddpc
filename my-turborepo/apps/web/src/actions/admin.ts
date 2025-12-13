@@ -225,7 +225,7 @@ export async function getIssueReports(page = 0, pageSize = 50, filter: 'all' | '
 
   let query = adminClient
     .from('issue_reports')
-    .select('id, user_email, page_url, description, screenshot_url, resolved, created_at', {
+    .select('id, user_email, page_url, description, screenshot_url, resolved, created_at, admin_notes', {
       count: 'exact',
     })
     .order('created_at', { ascending: false })
@@ -271,5 +271,33 @@ export async function toggleIssueResolution(issueId: string, resolved: boolean) 
   revalidatePath('/admin/issues')
 }
 
+export async function updateIssueNotes(issueId: string, notes: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Unauthorized')
+
+  // Verify admin
+  const { data: profile } = await supabase
+    .from('user_profile')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
+    throw new Error('Unauthorized')
+  }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .from('issue_reports')
+    .update({ admin_notes: notes })
+    .eq('id', issueId)
+
+  if (error) throw error
+
+  revalidatePath('/admin/issues')
+}
 
 

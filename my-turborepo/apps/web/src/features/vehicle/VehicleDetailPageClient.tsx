@@ -7,12 +7,14 @@ import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalDescription } from '@repo/ui/modal'
 import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, ChevronLeft } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { Badge } from '@repo/ui/badge'
 import { DropdownMenu } from '@repo/ui/dropdown-menu'
+import { OnboardingModal } from './components/OnboardingModal'
+import { format } from 'date-fns'
 
 type ImageWithTimeoutFallbackProps = {
   src: string
@@ -522,14 +524,14 @@ function VehicleHeader({
       </div>
 
       {isOwner && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">Edit Vehicle Nickname</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
+        <Modal open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <ModalContent className="bg-card border-border">
+            <ModalHeader>
+              <ModalTitle className="text-foreground">Edit Vehicle Nickname</ModalTitle>
+              <ModalDescription className="text-muted-foreground">
                 Change the nickname for this vehicle. Leave empty to remove the nickname.
-              </DialogDescription>
-            </DialogHeader>
+              </ModalDescription>
+            </ModalHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="nickname" className="text-foreground">Nickname</Label>
@@ -550,7 +552,7 @@ function VehicleHeader({
                 <p className="text-sm text-destructive">{error}</p>
               )}
             </div>
-            <DialogFooter>
+            <ModalFooter>
               <Button
                 variant="ghost"
                 onClick={() => setIsEditDialogOpen(false)}
@@ -566,9 +568,9 @@ function VehicleHeader({
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
     </>
   )
@@ -596,18 +598,12 @@ function NavigationCard({
 
   return (
     <Card
-      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${
+        disabled
+          ? 'cursor-not-allowed opacity-60'
+          : 'cursor-pointer hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
+      }`}
       onClick={handleClick}
-      onMouseEnter={disabled ? undefined : (e) => {
-        e.currentTarget.style.transform = 'scale(1.02)'
-        e.currentTarget.style.borderColor = 'hsl(var(--accent))'
-        e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.3)'
-      }}
-      onMouseLeave={disabled ? undefined : (e) => {
-        e.currentTarget.style.transform = 'scale(1)'
-        e.currentTarget.style.borderColor = 'hsl(var(--border))'
-        e.currentTarget.style.boxShadow = 'none'
-      }}
     >
       <CardContent className="p-0 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-3">
@@ -627,6 +623,15 @@ function NavigationCard({
   )
 }
 
+// Extended vehicle type to include onboarding fields
+type VehicleWithOnboarding = Vehicle & {
+  is_onboarding_completed?: boolean
+  acquisition_date?: string
+  ownership_end_date?: string
+  acquisition_type?: string
+  acquisition_cost?: number
+}
+
 type VehicleDetailPageClientProps = {
   vehicle: Vehicle
   vehicleNickname?: string | null
@@ -638,11 +643,13 @@ type VehicleDetailPageClientProps = {
   }
 }
 
-export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwner }: VehicleDetailPageClientProps) {
+export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickname, stats, isOwner }: VehicleDetailPageClientProps) {
+  const vehicle = initialVehicle as VehicleWithOnboarding
   const router = useRouter()
   const [currentNickname, setCurrentNickname] = useState(vehicleNickname || vehicle.name || null)
   const [currentStatus, setCurrentStatus] = useState(vehicle.current_status || 'parked')
   const [currentPrivacy, setCurrentPrivacy] = useState<'PUBLIC' | 'PRIVATE'>(vehicle.privacy || 'PRIVATE')
+  const [showOnboarding, setShowOnboarding] = useState(!vehicle.is_onboarding_completed)
 
   // Use nickname for URLs if available, otherwise fall back to ID
   const urlSlug = currentNickname || vehicle.id
@@ -652,8 +659,31 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
     router.push(path)
   }
 
+  // Safe date formatting helper
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return ''
+    try {
+      // Handle YYYY-MM-DD explicitly to avoid timezone shifts
+      const [year, month, day] = dateStr.split('-').map(Number)
+      if (year && month) {
+        const date = new Date(year, month - 1, day || 1)
+        return format(date, 'MMM yyyy')
+      }
+      return format(new Date(dateStr), 'MMM yyyy')
+    } catch (e) {
+      return ''
+    }
+  }
+
   return (
     <div className="min-h-screen text-foreground pb-20 pt-16">
+      {isOwner && !vehicle.is_onboarding_completed && (
+        <OnboardingModal
+          vehicleId={vehicle.id}
+          open={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+        />
+      )}
       {/* Sticky Header */}
       <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <VehicleHeader
@@ -687,6 +717,12 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               <p className="text-muted-foreground text-lg">
                 {[vehicle.body_type, vehicle.drive_type, vehicle.transmission].filter(Boolean).join(' • ')}
               </p>
+
+              {vehicle.acquisition_date && (
+                <p className="text-sm font-medium text-muted-foreground mt-2">
+                  Owned: <span className="text-foreground">{formatDate(vehicle.acquisition_date)}</span> – <span className="text-foreground">{vehicle.ownership_end_date ? formatDate(vehicle.ownership_end_date) : 'Present'}</span>
+                </p>
+              )}
             </div>
 
             {/* Quick Stats */}

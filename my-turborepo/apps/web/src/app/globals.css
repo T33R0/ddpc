@@ -1,55 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
+/* Import shared theme definitions from packages/ui - MUST be before tailwind */
+@import '../../../../packages/ui/src/globals.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-    --primary: 358.3 100% 44.1%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 100% 50%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 195 100% 65%;
-    --accent-foreground: 0 0% 10%;
-    --destructive: 358.3 100% 44.1%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 85%;
-    --input: 0 0% 95%;
-    --ring: 195 100% 65%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 11.8%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 358.3 100% 44.1%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 100% 50%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 16.9%;
-    --muted-foreground: 0 0% 74.5%;
-    --accent: 79.1 100% 50%;
-    --accent-foreground: 0 0% 3.9%;
-    --destructive: 358.3 100% 44.1%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 16.9%;
-    --input: 0 0% 16.9%;
-    --ring: 358.3 100% 44.1%;
-  }
-}
 
 @layer base {
   * {
@@ -105,83 +61,5 @@
   transition-duration: 1000ms;
 }
 
-/* Backdrop blur */
-.backdrop-blur-lg {
-  backdrop-filter: blur(16px);
-}
-
-/* Custom gradients */
-.bg-gradient-orbital {
-  background: linear-gradient(to bottom right, #6366f1, #3b82f6, #14b8a6);
-}
-
-/* Z-index utilities */
-.z-10 {
-  z-index: 10;
-}
-
-.z-50 {
-  z-index: 50;
-}
-
-/* Custom shadows */
-.shadow-orbital {
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-}
-
-/* Custom transforms */
-.scale-125 {
-  transform: scale(1.25);
-}
-
-.scale-150 {
-  transform: scale(1.5);
-}
-
-/* Custom opacity values */
-.opacity-70 {
-  opacity: 0.7;
-}
-
-.opacity-50 {
-  opacity: 0.5;
-}
-
-/* Custom border opacity */
-.border-white\/10 {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.border-white\/20 {
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.border-white\/30 {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.border-white\/40 {
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-/* Custom background opacity */
-.bg-black\/90 {
-  background-color: rgba(0, 0, 0, 0.9);
-}
-
-.bg-white\/50 {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
-.bg-white\/80 {
-  background-color: rgba(255, 255, 255, 0.8);
-}
-
-/* Custom text opacity */
-.text-white\/70 {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.text-white\/80 {
-  color: rgba(255, 255, 255, 0.8);
-}
+/* Backdrop blur, Z-index, Transforms, Opacity, etc. are provided by Tailwind utilities. */
+/* Custom gradients and shadows are configured in tailwind.config.ts */

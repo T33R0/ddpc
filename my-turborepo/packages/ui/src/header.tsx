@@ -25,6 +25,7 @@ interface HeaderProps {
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
   onReportProblem?: () => void;
+  onGiveTestimonial?: () => void;
   userBasePath?: string;
   theme?: string;
   onThemeChange?: (theme: string) => void;
@@ -38,6 +39,7 @@ export function Header({
   onEmailSignUp,
   onEmailSignIn,
   onReportProblem,
+  onGiveTestimonial,
   userBasePath,
   theme,
   onThemeChange,
@@ -121,6 +123,7 @@ export function Header({
                 theme={theme}
                 onThemeChange={onThemeChange}
                 onReportProblem={onReportProblem}
+                onGiveTestimonial={onGiveTestimonial}
               />
             ) : (
               <Button onClick={() => setAuthModalOpen(true)}>Sign In</Button>

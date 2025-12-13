@@ -1,11 +1,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@repo/ui/dialog';
+import { Modal, ModalContent, ModalTitle, ModalDescription, ModalHeader, ModalFooter } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
 import { AuthModal } from '@/features/auth/AuthModal';
@@ -120,11 +120,45 @@ const VehicleDetailsModal = ({
     setSelectedTrimId(initialTrimId ?? summary.trims[0]?.id ?? '');
   }, [summary, initialTrimId]);
 
+  // Group trims by name
+  const groupedTrims = useMemo(() => {
+    const groups: Record<string, TrimVariant[]> = {};
+    summary.trims.forEach(trim => {
+      // Use trim name as key, fallback to model if trim name is missing
+      const key = trim.trim || trim.model;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(trim);
+    });
+    return groups;
+  }, [summary]);
+
   const selectedTrim = useMemo<TrimVariant | null>(() => {
     return summary.trims.find((trim) => trim.id === selectedTrimId) ?? summary.trims[0] ?? null;
   }, [summary, selectedTrimId]);
 
-  const handleTrimChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  // Derive selected trim name from selectedTrim
+  const selectedTrimName = useMemo(() => {
+    if (!selectedTrim) return '';
+    return selectedTrim.trim || selectedTrim.model;
+  }, [selectedTrim]);
+
+  // Get variants for the current trim name
+  const currentTrimVariants = useMemo(() => {
+    return groupedTrims[selectedTrimName] || [];
+  }, [groupedTrims, selectedTrimName]);
+
+  const handleTrimNameChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newTrimName = event.target.value;
+    const variants = groupedTrims[newTrimName];
+    if (variants && variants.length > 0 && variants[0]) {
+      // Auto-select the first variant in the group
+      setSelectedTrimId(variants[0].id);
+    }
+  };
+
+  const handleTrimVariantChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTrimId(event.target.value);
   };
 
@@ -178,15 +212,14 @@ const VehicleDetailsModal = ({
       setIsAddedToGarage(true);
       toast.success('Vehicle successfully added to your garage!');
 
-      // Redirect to vehicle page after a short delay if this was a pending add (meaning user just signed up/in)
-      if (pendingAdd && result.vehicleId) {
+      if (result.vehicleId) {
+        // Always redirect to the new vehicle page
         window.location.href = `/vehicle/${result.vehicleId}`;
-        return;
+      } else {
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       }
-
-      setTimeout(() => {
-        onClose();
-      }, 2000);
     } catch (error) {
       console.error('Error adding vehicle to garage:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');
@@ -214,49 +247,62 @@ const VehicleDetailsModal = ({
   const primaryImageUrl = summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
+    <Modal open={open} onOpenChange={(open) => !open && onClose()}>
+      {/*
+        Move navigation buttons to a Portal so they are direct children of body.
+        This ensures they are outside any transform/overflow context of the Modal.
+        We only render them on client-side (useEffect/Portal).
+      */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          {canNavigatePrev && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+                onNavigate?.('prev');
+              }}
+              aria-label="Previous vehicle"
+              className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[9999] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
+            </button>
+          )}
+
+          {canNavigateNext && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+                onNavigate?.('next');
+              }}
+              aria-label="Next vehicle"
+              className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[9999] p-2 md:p-4 bg-background border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
+            </button>
+          )}
+        </>,
+        document.body
+      )}
+
+      <ModalContent
         className="sm:max-w-5xl max-h-[85dvh] overflow-y-auto p-0"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {/* Header */}
-        <DialogHeader className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
-          <DialogTitle className="text-2xl font-bold text-foreground text-left">
+        <ModalHeader className="sticky top-0 z-10 bg-background border-b border-border">
+          <ModalTitle className="text-2xl font-bold text-foreground text-left">
             {summary.year} {summary.make} {summary.model}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
+          </ModalTitle>
+          <ModalDescription className="sr-only">
             Vehicle details and specifications for {summary.year} {summary.make} {summary.model}
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Side Navigation Arrows - Responsive positioning */}
-        {canNavigatePrev && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigate?.('prev');
-            }}
-            aria-label="Previous vehicle"
-            className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
-          >
-            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
-          </button>
-        )}
-
-        {canNavigateNext && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigate?.('next');
-            }}
-            aria-label="Next vehicle"
-            className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[60] p-2 md:p-4 bg-background/80 backdrop-blur-lg border border-border rounded-full hover:bg-muted transition-colors shadow-lg hidden md:flex"
-          >
-            <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-foreground" />
-          </button>
-        )}
+          </ModalDescription>
+        </ModalHeader>
 
         {/* Content */}
         <div className="p-6">
@@ -271,7 +317,7 @@ const VehicleDetailsModal = ({
                   className="w-full h-full object-cover"
                 />
 
-                {/* Mobile Navigation Arrows Overlay on Image */}
+                {/* Mobile Navigation Arrows Overlay on Image - Keep these inside as they work with touch/mobile layout */}
                 <div className="absolute inset-0 flex items-center justify-between px-2 md:hidden z-20 pointer-events-none">
                   {canNavigatePrev ? (
                     <button
@@ -301,23 +347,47 @@ const VehicleDetailsModal = ({
                 </div>
               </div>
 
-              {/* Trim Selector */}
-              <div className="space-y-2">
-                <label htmlFor="trim-select" className="text-sm text-muted-foreground block">
-                  Select Trim:
-                </label>
-                <select
-                  id="trim-select"
-                  value={selectedTrimId}
-                  onChange={handleTrimChange}
-                  className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {summary.trims.map((trim) => (
-                    <option key={trim.id} value={trim.id} className="bg-background text-foreground">
-                      {trim.trim || trim.trim_description || trim.model}
-                    </option>
-                  ))}
-                </select>
+              {/* Trim Selectors */}
+              <div className="space-y-4">
+                {/* Primary Trim Selector */}
+                <div className="space-y-2">
+                  <label htmlFor="trim-name-select" className="text-sm text-muted-foreground block">
+                    Select Trim:
+                  </label>
+                  <select
+                    id="trim-name-select"
+                    value={selectedTrimName}
+                    onChange={handleTrimNameChange}
+                    className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {Object.keys(groupedTrims).map((trimName) => (
+                      <option key={trimName} value={trimName} className="bg-background text-foreground">
+                        {trimName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Secondary Configuration Selector (Conditional) */}
+                {currentTrimVariants.length > 1 && (
+                  <div className="space-y-2">
+                    <label htmlFor="trim-variant-select" className="text-sm text-muted-foreground block">
+                      Configuration:
+                    </label>
+                    <select
+                      id="trim-variant-select"
+                      value={selectedTrimId}
+                      onChange={handleTrimVariantChange}
+                      className="max-w-xs flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {currentTrimVariants.map((variant) => (
+                        <option key={variant.id} value={variant.id} className="bg-background text-foreground">
+                          {variant.trim_description || 'Standard'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -439,7 +509,7 @@ const VehicleDetailsModal = ({
               {selectedTrim.total_seating && (
                 <div className="space-y-1">
                   <div className="text-muted-foreground text-sm">Seating:</div>
-                  <div className="text-foreground">{selectedTrim.total_seating} passengers</div>
+                  <div className="text-foreground">{parseFloat(selectedTrim.total_seating).toFixed(0)} passengers</div>
                 </div>
               )}
 
@@ -459,7 +529,7 @@ const VehicleDetailsModal = ({
           </div>
 
           {/* Action Buttons */}
-          <DialogFooter className="pt-6 sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 -mx-6 px-6 border-t border-border mt-auto">
+          <ModalFooter className="pt-6 sticky bottom-0 bg-background pb-4 -mx-6 px-6 border-t border-border mt-auto">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full">
               <Button
                 onClick={handleAddToGarage}
@@ -486,9 +556,9 @@ const VehicleDetailsModal = ({
                 </Link>
               </Button>
             </div>
-          </DialogFooter>
+          </ModalFooter>
         </div>
-      </DialogContent >
+      </ModalContent >
 
       <AuthModal
         isOpen={showAuthModal}
@@ -497,7 +567,7 @@ const VehicleDetailsModal = ({
         description="Sign up or sign in to add this vehicle to your garage and track its history."
         onSuccess={() => setShowAuthModal(false)}
       />
-    </Dialog >
+    </Modal >
   );
 };
 

@@ -10,6 +10,7 @@ export interface VehicleEvent {
   odometer?: number
   status?: string
   event_date?: Date // For mods table
+  service_provider?: string // Added for detailed view
 }
 
 export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[]> {
@@ -106,10 +107,11 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
         id: `maintenance-${log.id}`,
         date: new Date(log.event_date),
         title: serviceItemName || 'Maintenance Service',
-        description: log.notes || log.service_provider || '',
+        description: log.notes || '', // Notes are description
         type: 'maintenance',
         cost: log.cost || undefined,
         odometer: log.odometer || undefined,
+        service_provider: log.service_provider, // Explicitly mapped
       })
     })
   }
@@ -172,4 +174,3 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
 
   return events
 }
-

@@ -6,7 +6,7 @@ import { Button } from '@repo/ui/button'
 import { Plus, RotateCcw, Copy, GripVertical } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { JobStep, JobStepData } from './JobStep'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@repo/ui/dialog'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from '@repo/ui/modal'
 import { Label } from '@repo/ui/label'
 import { useRouter } from 'next/navigation'
 import {
@@ -528,11 +528,11 @@ export function JobPlanBuilder({
       )}
 
       {/* Duplicate Dialog */}
-      <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Duplicate Job Plan</DialogTitle>
-          </DialogHeader>
+      <Modal open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>Duplicate Job Plan</ModalTitle>
+          </ModalHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="duplicate-name">New Job Name</Label>
@@ -544,7 +544,7 @@ export function JobPlanBuilder({
               />
             </div>
           </div>
-          <DialogFooter>
+          <ModalFooter>
             <Button
               variant="outline"
               onClick={() => setIsDuplicateDialogOpen(false)}
@@ -555,9 +555,9 @@ export function JobPlanBuilder({
             <Button onClick={handleDuplicateJob} disabled={isDuplicating || !duplicateName.trim()}>
               {isDuplicating ? 'Duplicating...' : 'Duplicate'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }

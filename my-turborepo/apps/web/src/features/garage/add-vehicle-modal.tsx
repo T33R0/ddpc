@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@repo/ui/dialog';
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+} from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Search } from 'lucide-react';
@@ -323,20 +323,25 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
         onVehicleAdded();
       }
 
-      setTimeout(() => {
-        onOpenChange(false);
-        // Reset state
-        setVin('');
-        setVinVehicleData(null);
-        setSelectedVinTrimId('');
-        setSelectedYear('');
-        setSelectedMake('');
-        setSelectedModel('');
-        setSelectedTrimId('');
-        setManualVehicleData(null);
-        setIsAddedToGarage(false);
-        setActiveTab('vin');
-      }, 2000);
+      if (result.vehicleId) {
+        // Always redirect to the new vehicle page
+        window.location.href = `/vehicle/${result.vehicleId}`;
+      } else {
+        setTimeout(() => {
+          onOpenChange(false);
+          // Reset state
+          setVin('');
+          setVinVehicleData(null);
+          setSelectedVinTrimId('');
+          setSelectedYear('');
+          setSelectedMake('');
+          setSelectedModel('');
+          setSelectedTrimId('');
+          setManualVehicleData(null);
+          setIsAddedToGarage(false);
+          setActiveTab('vin');
+        }, 2000);
+      }
     } catch (error) {
       console.error('Error adding vehicle to garage:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');
@@ -361,14 +366,14 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
   const canAddToGarage = !!(selectedTrim && !isAddingToGarage && !isAddedToGarage);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader>
-          <DialogTitle>Add a Vehicle to Your Garage</DialogTitle>
-          <DialogDescription>
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+        <ModalHeader>
+          <ModalTitle>Add a Vehicle to Your Garage</ModalTitle>
+          <ModalDescription>
             Search our database by VIN or by Year, Make, and Model.
-          </DialogDescription>
-        </DialogHeader>
+          </ModalDescription>
+        </ModalHeader>
 
         {/* Tab Navigation */}
         <div className="px-6 pt-4">
@@ -614,7 +619,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
           )}
         </div>
 
-        <DialogFooter>
+        <ModalFooter>
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-between items-center">
             <div className="hidden sm:block">
               <Button
@@ -645,9 +650,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
               </Button>
             </div>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 

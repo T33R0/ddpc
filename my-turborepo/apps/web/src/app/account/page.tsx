@@ -450,23 +450,23 @@ export default function AccountPage() {
               onValueChange={(value) => value && setActiveTab(value as TabType)}
               className="justify-start"
             >
-              <ToggleGroupItem value="profile" className="data-[state=on]:bg-gray-700">
+              <ToggleGroupItem value="profile" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
                 <User className="h-4 w-4 mr-2" />
                 Profile
               </ToggleGroupItem>
-              <ToggleGroupItem value="security" className="data-[state=on]:bg-gray-700">
+              <ToggleGroupItem value="security" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
                 <Shield className="h-4 w-4 mr-2" />
                 Security
               </ToggleGroupItem>
-              <ToggleGroupItem value="billing" className="data-[state=on]:bg-gray-700">
+              <ToggleGroupItem value="billing" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
                 <CreditCard className="h-4 w-4 mr-2" />
                 Billing
               </ToggleGroupItem>
-              <ToggleGroupItem value="account" className="data-[state=on]:bg-gray-700">
+              <ToggleGroupItem value="account" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
                 <Settings className="h-4 w-4 mr-2" />
                 Account
               </ToggleGroupItem>
-              <ToggleGroupItem value="theme" className="data-[state=on]:bg-gray-700">
+              <ToggleGroupItem value="theme" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
                 <Palette className="h-4 w-4 mr-2" />
                 Theme
               </ToggleGroupItem>
@@ -700,38 +700,28 @@ export default function AccountPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div
-                      className="flex items-center justify-between p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                      style={{
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
+                    <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="text-2xl">{getPlanIcon(user.plan)}</div>
                         <div>
                           <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
                             {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
                           </h3>
-                          <p className="text-sm text-gray-400">
+                          <p className="text-sm text-muted-foreground">
                             {user.plan === 'free' && 'Basic features with limited usage'}
                             {user.plan === 'builder' && 'Enhanced features for enthusiasts'}
                             {user.plan === 'pro' && 'Full access to all premium features'}
                           </p>
                         </div>
                       </div>
-                      <Button variant="outline" disabled>
+                      <Button variant="outline" disabled className="border-border text-muted-foreground">
                         Current Plan
                       </Button>
                     </div>
 
-                    <div
-                      className="mt-4 p-4 bg-black/30 backdrop-blur-sm rounded-lg"
-                      style={{
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      <h4 className="font-medium mb-2">Plan Features</h4>
-                      <ul className="text-sm text-gray-400 space-y-1">
+                    <div className="mt-4 p-4 bg-card border border-border rounded-lg">
+                      <h4 className="font-medium mb-2 text-foreground">Plan Features</h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
                         {user.plan === 'free' && (
                           <>
                             <li>• Access to basic vehicle database</li>
@@ -871,14 +861,9 @@ export default function AccountPage() {
                       </Button>
                     </div>
 
-                    <div
-                      className="mt-4 p-4 bg-red-900/20 rounded-lg"
-                      style={{
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                      }}
-                    >
-                      <h4 className="font-medium text-red-400 mb-2">Danger Zone</h4>
-                      <p className="text-sm text-gray-400">
+                    <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
+                      <p className="text-sm text-muted-foreground">
                         Account deletion and data export features are coming soon. These actions cannot be undone.
                       </p>
                     </div>

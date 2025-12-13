@@ -1,0 +1,95 @@
+
+> web@0.1.0 dev
+> next dev --turbopack --port 3000
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles:
+   * /app/my-turborepo/package-lock.json
+
+   ▲ Next.js 15.5.7 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 573ms
+ ✓ Ready in 2.2s
+ ○ Compiling /explore ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled /explore in 7.7s
+ GET /explore 200 in 8919ms
+ ○ Compiling /api/explore/vehicles ...
+ ✓ Compiled /api/explore/vehicles in 2.1s
+ GET /api/garage/vehicles 401 in 2289ms
+ GET /api/garage/vehicles 401 in 2245ms
+ GET /api/explore/filters 200 in 3543ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 3790ms
+ GET /explore 200 in 269ms
+ GET /api/explore/filters 200 in 606ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 760ms
+ GET /api/garage/vehicles 401 in 369ms
+ GET /api/garage/vehicles 401 in 370ms
+ ✓ Compiled in 569ms
+ ✓ Compiled /explore in 29ms
+ GET /explore 200 in 252ms
+ GET /api/explore/filters 200 in 561ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 918ms
+ GET /api/garage/vehicles 401 in 410ms
+ GET /api/garage/vehicles 401 in 400ms
+ ○ Compiling /hub ...
+ ✓ Compiled /hub in 1022ms
+ GET /hub 200 in 1444ms
+ ○ Compiling / ...
+ GET /api/garage/vehicles 401 in 540ms
+ GET /api/garage/vehicles 401 in 498ms
+ GET /explore 200 in 734ms
+ ✓ Compiled / in 1990ms
+ GET /api/explore/filters 200 in 616ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 837ms
+ GET /api/garage/vehicles 401 in 356ms
+ GET /api/garage/vehicles 401 in 358ms
+ GET /explore 200 in 1009ms
+ GET /api/explore/filters 200 in 540ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 714ms
+ GET /api/garage/vehicles 401 in 363ms
+ GET /api/garage/vehicles 401 in 355ms
+ GET /hub 200 in 195ms
+ GET / 200 in 148ms
+ GET /explore 200 in 222ms
+ GET /api/explore/filters 200 in 642ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 659ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 827ms
+ GET /api/garage/vehicles 401 in 369ms
+ GET /api/garage/vehicles 401 in 366ms
+ GET /explore 200 in 967ms
+ GET /api/explore/filters 200 in 550ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 824ms
+ GET /api/garage/vehicles 401 in 432ms
+ GET /api/garage/vehicles 401 in 434ms
+ GET /hub 200 in 253ms
+ GET / 200 in 173ms
+ GET /explore 200 in 245ms
+ GET /api/explore/filters 200 in 752ms
+ GET /api/garage/vehicles 401 in 403ms
+ GET /api/garage/vehicles 401 in 405ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 806ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 994ms
+ GET /explore 200 in 969ms
+ GET /api/explore/filters 200 in 482ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 700ms
+ GET /api/garage/vehicles 401 in 361ms
+ GET /api/garage/vehicles 401 in 361ms
+ GET /hub 200 in 253ms
+ GET / 200 in 164ms
+ GET /explore 200 in 231ms
+ GET /api/explore/filters 200 in 650ms
+ GET /api/garage/vehicles 401 in 431ms
+ GET /api/garage/vehicles 401 in 433ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 1812ms
+ GET /api/explore/vehicles?page=1&pageSize=24 200 in 1738ms

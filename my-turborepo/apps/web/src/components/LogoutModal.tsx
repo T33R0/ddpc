@@ -3,33 +3,33 @@
 import React from 'react';
 import { Button } from '@repo/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@repo/ui/dialog';
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+} from '@repo/ui/modal';
 import { useAuth } from '@/lib/auth';
 
 export function LogoutModal() {
   const { showLogoutModal, setShowLogoutModal } = useAuth();
 
   return (
-    <Dialog open={showLogoutModal} onOpenChange={setShowLogoutModal}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Logout Successful</DialogTitle>
-          <DialogDescription>
+    <Modal open={showLogoutModal} onOpenChange={setShowLogoutModal}>
+      <ModalContent>
+        <ModalHeader>
+          <ModalTitle>Logout Successful</ModalTitle>
+          <ModalDescription>
             You have successfully logged out of your account.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+          </ModalDescription>
+        </ModalHeader>
+        <ModalFooter>
           <Button variant="outline" onClick={() => setShowLogoutModal(false)}>
             Thanks!
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
