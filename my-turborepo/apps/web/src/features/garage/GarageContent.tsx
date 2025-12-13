@@ -85,22 +85,11 @@ function VehicleCard({
       }}
     >
       <div
-        className="bg-card rounded-2xl p-4 text-foreground flex flex-col gap-4 border border-border"
-        style={{
-          transition: 'all 0.3s ease-out',
-        }}
-        onMouseEnter={(e) => {
-          if (!isDragging) {
-            e.currentTarget.style.transform = 'scale(1.05)'
-            e.currentTarget.style.borderColor = 'hsl(var(--accent))'
-            e.currentTarget.style.boxShadow = '0 0 30px hsl(var(--accent) / 0.6)'
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)'
-          e.currentTarget.style.borderColor = 'hsl(var(--border))'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
+        className={`bg-card rounded-2xl p-4 text-foreground flex flex-col gap-4 border border-border transition-all duration-300 ease-out ${
+          !isDragging
+            ? 'group-hover:scale-105 group-hover:border-accent group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
+            : ''
+        }`}
       >
         <div className="absolute top-2 left-2 z-10 flex gap-1">
           <span className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.current_status)}`}></span>

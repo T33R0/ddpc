@@ -15,6 +15,12 @@ const config: Pick<Config, "content" | "presets" | "theme"> = {
       },
     },
     extend: {
+      backgroundImage: {
+        'gradient-orbital': 'linear-gradient(to bottom right, theme("colors.indigo.500"), theme("colors.blue.500"), theme("colors.teal.500"))',
+      },
+      boxShadow: {
+        'orbital': '0 0 15px rgba(255, 255, 255, 0.1)',
+      },
       fontFamily: {
         sans: ['var(--font-inter)'],
       },
