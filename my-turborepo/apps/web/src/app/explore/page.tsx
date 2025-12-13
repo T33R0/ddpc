@@ -9,11 +9,11 @@ import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
 import { ActiveFiltersDisplay } from "../../features/explore/active-filters-display";
 import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
-import type { VehicleSummary } from "@repo/types";
-import { AuthProvider } from '@repo/ui/auth-context';
+import { AuthProvider } from '../../lib/auth';
 import { supabase } from '../../lib/supabase';
 import type { FilterState } from '../../features/explore/vehicle-filters-modal';
 import { useDebounce } from '../../lib/hooks/useDebounce';
+import { useExploreStore } from '../../features/explore/explore-store';
 
 type FilterOptions = {
   years: number[];
@@ -28,125 +28,139 @@ type FilterOptions = {
 const PAGE_SIZE = 24;
 
 function ExploreContent() {
-  const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
+  // Use global store with granular selectors to avoid unnecessary re-renders
+  // especially when scrollPosition changes (which we don't select here)
+  const vehicles = useExploreStore(state => state.vehicles);
+  const page = useExploreStore(state => state.page);
+  const hasMore = useExploreStore(state => state.hasMore);
+  const filters = useExploreStore(state => state.filters);
+  const searchQuery = useExploreStore(state => state.searchQuery);
+  const isRestored = useExploreStore(state => state.isRestored);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const setVehicles = useExploreStore(state => state.setVehicles);
+  const appendVehicles = useExploreStore(state => state.appendVehicles);
+  const setFilters = useExploreStore(state => state.setFilters);
+  const setSearchQuery = useExploreStore(state => state.setSearchQuery);
+  const setScrollPosition = useExploreStore(state => state.setScrollPosition);
+
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // We no longer use client-side filtering
-  const vehicles = allVehicles;
-
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(vehicles.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterState>({
-    minYear: null,
-    maxYear: null,
-    make: null,
-    model: null,
-    engineType: null,
-    fuelType: null,
-    drivetrain: null,
-    doors: null,
-    vehicleType: null
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const isInitialLoadRef = useRef(true);
 
-  const loadVehicles = useCallback(async (page: number, append: boolean = false) => {
+  // Restore scroll position on mount if we have vehicles or restored state
+  useEffect(() => {
+    // Read from state directly to avoid reactivity loop
+    const currentScroll = useExploreStore.getState().scrollPosition;
+
+    if ((isRestored || vehicles.length > 0) && currentScroll > 0) {
+      // Small timeout to allow render
+      setTimeout(() => {
+        window.scrollTo({ top: currentScroll, behavior: 'instant' });
+      }, 50);
+    }
+  }, [isRestored, vehicles.length]);
+
+  // Save scroll position on unmount/scroll with debounce
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    const handleScroll = () => {
+      // Debounce writing to store to prevent performance regression
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setScrollPosition(window.scrollY);
+      }, 200);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [setScrollPosition]);
+
+  const loadVehicles = useCallback(async (pageNum: number, append: boolean = false) => {
     try {
       if (append) {
         setLoadingMore(true);
       } else {
         setLoading(true);
-        setError(null); // Clear previous errors when starting a new load
+        setError(null);
       }
 
-      const vehicleData = await getVehicleSummaries(page, PAGE_SIZE, { ...filters, search: debouncedSearch });
+      const vehicleData = await getVehicleSummaries(pageNum, PAGE_SIZE, { ...filters, search: debouncedSearch });
+      const newHasMore = vehicleData.length === PAGE_SIZE;
 
-      setHasMore(vehicleData.length === PAGE_SIZE);
-
-      setAllVehicles(prev => append ? [...prev, ...vehicleData] : vehicleData);
+      if (append) {
+        appendVehicles(vehicleData, newHasMore, pageNum);
+      } else {
+        setVehicles(vehicleData, newHasMore, pageNum);
+      }
     } catch (err) {
       console.error('Failed to fetch vehicles:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load vehicles';
       setError(errorMessage);
-      // Set empty arrays on error so UI can show error state
       if (!append) {
-        setAllVehicles([]);
+        setVehicles([], false, 1);
       }
-      setHasMore(false);
     } finally {
       setLoadingMore(false);
       if (!append) {
         setLoading(false);
       }
     }
-  }, [debouncedSearch, filters]);
+  }, [debouncedSearch, filters, setVehicles, appendVehicles]);
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) {
       return;
     }
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
+    const nextPage = page + 1;
     loadVehicles(nextPage, true);
-  }, [currentPage, hasMore, loadVehicles, loading, loadingMore]);
+  }, [page, hasMore, loadVehicles, loading, loadingMore]);
 
-  // Effect to reload vehicles when filters or search changes
+  // Handle data fetching
   useEffect(() => {
+    // If we already have vehicles (restored from store), don't fetch initially unless filters changed
+
+    // Check if this is the initial mount
     if (isInitialLoadRef.current) {
-      return;
-    }
-
-    setCurrentPage(1);
-    loadVehicles(1, false);
-  }, [loadVehicles]);
-
-  useEffect(() => {
-    if (!isInitialLoadRef.current) {
-      return;
-    }
-
-    loadVehicles(1, false).finally(() => {
       isInitialLoadRef.current = false;
-    });
-  }, [loadVehicles]);
 
-  // Load filter options immediately (doesn't block UI)
+      // If we have data, we might skip fetch unless inputs changed externally
+      if (vehicles.length > 0) {
+        setLoading(false);
+        return;
+      }
+
+      // No data, fetch page 1
+      loadVehicles(1, false);
+      return;
+    }
+
+    // Subsequent updates (search or filter changes)
+    loadVehicles(1, false);
+  }, [debouncedSearch, filters, loadVehicles]);
+
+  // Load filter options immediately
   useEffect(() => {
     async function loadFilters() {
       try {
         const options = await getVehicleFilterOptions();
-
-        // Validate that we got a proper response
         if (options && typeof options === 'object') {
           setFilterOptions(options);
         } else {
-          console.error('Invalid filter options format:', options);
           setFilterOptions({
-            years: [],
-            makes: [],
-            models: [],
-            engineTypes: [],
-            fuelTypes: [],
-            drivetrains: [],
-            bodyTypes: []
+            years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: []
           });
         }
       } catch (err) {
         console.error('Failed to load filter options:', err);
-        // Set empty arrays on error so UI doesn't break
         setFilterOptions({
-          years: [],
-          makes: [],
-          models: [],
-          engineTypes: [],
-          fuelTypes: [],
-          drivetrains: [],
-          bodyTypes: []
+          years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: []
         });
       }
     }
@@ -155,21 +169,19 @@ function ExploreContent() {
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-    // Reset to page 1 is handled by the effect on debouncedSearch
-  }, []);
+  }, [setSearchQuery]);
 
   const handleClearFilter = useCallback((key: keyof FilterState) => {
-    setFilters(prev => ({ ...prev, [key]: null }));
-  }, []);
+    setFilters({ ...filters, [key]: null });
+  }, [filters, setFilters]);
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
-  }, []);
+  }, [setSearchQuery]);
 
   return (
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
-        {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold text-foreground">Explore</h1>
           <Link href="/community">
@@ -180,7 +192,6 @@ function ExploreContent() {
           </Link>
         </div>
 
-        {/* Action Buttons - Always show immediately */}
         <ExploreActionButtons
           filters={filters}
           onFilterChange={setFilters}
@@ -188,7 +199,6 @@ function ExploreContent() {
           onSearch={handleSearch}
         />
 
-        {/* Active Filters/Search Display */}
         <ActiveFiltersDisplay
           filters={filters}
           searchQuery={searchQuery}
@@ -196,7 +206,6 @@ function ExploreContent() {
           onClearSearch={handleClearSearch}
         />
 
-        {/* Gallery or Loading State */}
         {error ? (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-red-400 text-lg">Error: {error}</div>
