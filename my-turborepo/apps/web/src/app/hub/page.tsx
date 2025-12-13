@@ -2,112 +2,139 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { GarageQuickActions } from './components/GarageQuickActions'
-import { Car, Compass, Users } from 'lucide-react'
-// import { DDPCDashboardOrbital } from '@/components/ddpc-dashboard-orbital'
+import { User, Compass, Car, Terminal, Monitor } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
-import { AuthProvider } from '@repo/ui/auth-context'
-import { supabase } from '@/lib/supabase'
 import { DashboardCard } from '@/components/dashboard-card'
 
 export default function HubPage() {
   const router = useRouter()
   const { user } = useAuth()
 
+  const displayName = user?.user_metadata?.full_name?.split(' ')[0]?.toLowerCase() || 'me myself and i'
+
+  // Admin logic: Role is 'admin' OR email is 'myddpc@gmail.com'
+  const isAdmin = user?.email === 'myddpc@gmail.com' || (user as any)?.role === 'admin'
+
   const handleNavigate = (path: string) => {
     router.push(path)
   }
 
-  // Admin check (using breakglass logic from memory)
-  const isAdmin = user?.email === 'myddpc@gmail.com' || (user as any)?.role === 'admin'
-
   return (
-    <AuthProvider supabase={supabase}>
-      <main className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
-        {/* Ambient background effects */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/20 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-purple-500/20 blur-[120px]" />
+    <main className="min-h-screen w-full bg-background text-foreground p-6 md:p-12">
+      <div className="mx-auto max-w-7xl space-y-8">
+
+        {/* Header */}
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-4xl font-light tracking-tight text-foreground">
+            welcome back, <span className="font-medium">{displayName}</span>
+          </h1>
+          <p className="text-muted-foreground">
+            select a destination to begin
+          </p>
         </div>
 
-        <div className="container relative z-10 flex min-h-screen flex-col items-center justify-center py-12">
-          {/* Orbital Visualization */}
-          {/* <div className="mb-12 scale-75 md:scale-100">
-             <DDPCDashboardOrbital />
-          </div> */}
+        {/* Grid */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
 
-          <div className="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
-            {/* Garage Card */}
-            <DashboardCard
-              className="bg-card/50 p-6 h-[320px] flex flex-col"
-              onClick={() => handleNavigate('/garage')}
-            >
-              <div className="absolute inset-0 bg-[url('/images/hub/garage-bg.jpg')] bg-cover bg-center opacity-20 transition-opacity duration-300 group-hover:opacity-10" />
-              <div className="relative z-10 flex flex-1 flex-col items-center justify-start pt-8">
-                <div className="mb-4 rounded-full bg-background/80 p-4 shadow-lg ring-1 ring-border">
-                  <Car className="h-8 w-8 text-primary" />
+          {/* 1. Account */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/account')}
+          >
+             <div className="absolute inset-0 bg-[url('/images/hub/account.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+
+             <div className="relative z-10 flex h-full flex-col justify-end p-6">
+                <div className="mb-2 flex items-center space-x-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-bold uppercase tracking-wide">Account</h3>
                 </div>
-                <h2 className="mb-2 text-2xl font-bold">My Garage</h2>
-                <p className="text-center text-sm text-muted-foreground">
-                  Manage your fleet, track mods, and log service history.
+                <p className="text-sm text-muted-foreground">
+                  Manage your profile and settings.
                 </p>
+             </div>
+          </DashboardCard>
 
-                {/* Quick Actions (Buttons) */}
-                <div className="mt-auto w-full pt-4">
-                   <GarageQuickActions />
-                </div>
-              </div>
-            </DashboardCard>
+          {/* 2. Explore */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/explore')}
+          >
+             <div className="absolute inset-0 bg-[url('/images/hub/explore.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-            {/* Explore Card */}
-            <DashboardCard
-              className="bg-card/50 p-6 h-[320px] flex flex-col"
-              onClick={() => handleNavigate('/explore')}
-            >
-              <div className="absolute inset-0 bg-[url('/images/hub/explore-bg.jpg')] bg-cover bg-center opacity-20 transition-opacity duration-300 group-hover:opacity-10" />
-              <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
-                <div className="mb-4 rounded-full bg-background/80 p-4 shadow-lg ring-1 ring-border">
-                  <Compass className="h-8 w-8 text-secondary" />
+             <div className="relative z-10 flex h-full flex-col justify-end p-6">
+                <div className="mb-2 flex items-center space-x-2">
+                  <Compass className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-bold uppercase tracking-wide">Explore</h3>
                 </div>
-                <h2 className="mb-2 text-2xl font-bold">Explore</h2>
-                <p className="text-center text-sm text-muted-foreground">
-                  Discover builds, get inspired, and find your next project.
+                <p className="text-sm text-muted-foreground">
+                  Discover builds and get inspired.
                 </p>
-              </div>
-            </DashboardCard>
+             </div>
+          </DashboardCard>
 
-            {/* Community Card */}
-            <DashboardCard
-              className="bg-card/50 p-6 h-[320px] flex flex-col"
-              onClick={() => handleNavigate('/community')}
-            >
-              <div className="absolute inset-0 bg-[url('/images/hub/community-bg.jpg')] bg-cover bg-center opacity-20 transition-opacity duration-300 group-hover:opacity-10" />
-              <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
-                <div className="mb-4 rounded-full bg-background/80 p-4 shadow-lg ring-1 ring-border">
-                  <Users className="h-8 w-8 text-accent-foreground" />
+          {/* 3. Garage */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/garage')}
+          >
+             <div className="absolute inset-0 bg-[url('/images/hub/garage.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+
+             <div className="relative z-10 flex h-full flex-col justify-end p-6">
+                <div className="mb-2 flex items-center space-x-2">
+                  <Car className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-bold uppercase tracking-wide">Garage</h3>
                 </div>
-                <h2 className="mb-2 text-2xl font-bold">Community</h2>
-                <p className="text-center text-sm text-muted-foreground">
-                  Connect with other enthusiasts and share your journey.
+                <p className="text-sm text-muted-foreground">
+                  Manage your fleet and service history.
                 </p>
-              </div>
-            </DashboardCard>
+             </div>
+          </DashboardCard>
 
-            {/* Admin Card (Conditional) */}
-            {isAdmin && (
-              <DashboardCard
-                 className="bg-card/50 p-6 h-[320px] flex flex-col md:col-span-3 lg:col-span-1"
-                 onClick={() => handleNavigate('/console')}
-              >
-                  <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
-                    <h2 className="text-2xl font-bold text-destructive">Admin Console</h2>
+          {/* 4. Console (Admin Only) */}
+          {isAdmin && (
+            <DashboardCard
+              className="h-[320px] p-0"
+              onClick={() => handleNavigate('/console')}
+            >
+              <div className="absolute inset-0 bg-[url('/images/hub/console.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+
+              <div className="relative z-10 flex h-full flex-col justify-end p-6">
+                  <div className="mb-2 flex items-center space-x-2">
+                    <Terminal className="h-5 w-5 text-primary" />
+                    <h3 className="text-xl font-bold uppercase tracking-wide">Console</h3>
                   </div>
-              </DashboardCard>
-            )}
+                  <p className="text-sm text-muted-foreground">
+                    Administrative controls and reports.
+                  </p>
+              </div>
+            </DashboardCard>
+          )}
 
-          </div>
+          {/* 5. ddsr (Daily Driven Sim Rig) */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/ddsr')}
+          >
+             <div className="absolute inset-0 bg-[url('/images/hub/ddsr.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+
+             <div className="relative z-10 flex h-full flex-col justify-end p-6">
+                <div className="mb-2 flex items-center space-x-2">
+                  <Monitor className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-bold uppercase tracking-wide">ddsr</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Daily Driven Sim Rig configurations.
+                </p>
+             </div>
+          </DashboardCard>
+
         </div>
-      </main>
-    </AuthProvider>
+      </div>
+    </main>
   )
 }
