@@ -106,7 +106,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                 <Label htmlFor="acquisitionType">How did you acquire it?</Label>
                 <select
                   id="acquisitionType"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={acquisitionType}
                   onChange={(e) => setAcquisitionType(e.target.value)}
                 >
@@ -168,7 +168,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                   <Label htmlFor="status">Current Status</Label>
                   <select
                     id="status"
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >
@@ -196,7 +196,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                     <Label htmlFor="endStatus">Final Status</Label>
                     <select
                       id="endStatus"
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={endStatus}
                       onChange={(e) => setEndStatus(e.target.value)}
                     >

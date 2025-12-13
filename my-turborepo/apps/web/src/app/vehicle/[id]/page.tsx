@@ -302,6 +302,18 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.privacy = vehicle.privacy || 'PRIVATE'
   vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 
+  // Add onboarding and ownership fields
+  // @ts-ignore - Extending vehicle type with new fields
+  vehicleWithData.is_onboarding_completed = vehicle.is_onboarding_completed
+  // @ts-ignore
+  vehicleWithData.acquisition_date = vehicle.acquisition_date
+  // @ts-ignore
+  vehicleWithData.ownership_end_date = vehicle.ownership_end_date
+  // @ts-ignore
+  vehicleWithData.acquisition_type = vehicle.acquisition_type
+  // @ts-ignore
+  vehicleWithData.acquisition_cost = vehicle.acquisition_cost
+
   // --- 4. Redirect to canonical URL if needed ---
   // Use the canonical slug resolved by resolveVehicleSlug (or public utils)
   // This handles nickname changes, duplicate nicknames (forcing YMMT), etc.
