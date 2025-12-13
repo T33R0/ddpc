@@ -38,12 +38,12 @@ interface AddServiceDialogProps {
   initialItems?: ServiceItem[] // Pre-loaded items from server
 }
 
-interface ServiceCategory {
+export interface ServiceCategory {
   id: string
   name: string
 }
 
-interface ServiceItem {
+export interface ServiceItem {
   id: string
   name: string
   description: string | null
