@@ -323,20 +323,25 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
         onVehicleAdded();
       }
 
-      setTimeout(() => {
-        onOpenChange(false);
-        // Reset state
-        setVin('');
-        setVinVehicleData(null);
-        setSelectedVinTrimId('');
-        setSelectedYear('');
-        setSelectedMake('');
-        setSelectedModel('');
-        setSelectedTrimId('');
-        setManualVehicleData(null);
-        setIsAddedToGarage(false);
-        setActiveTab('vin');
-      }, 2000);
+      if (result.vehicleId) {
+        // Always redirect to the new vehicle page
+        window.location.href = `/vehicle/${result.vehicleId}`;
+      } else {
+        setTimeout(() => {
+          onOpenChange(false);
+          // Reset state
+          setVin('');
+          setVinVehicleData(null);
+          setSelectedVinTrimId('');
+          setSelectedYear('');
+          setSelectedMake('');
+          setSelectedModel('');
+          setSelectedTrimId('');
+          setManualVehicleData(null);
+          setIsAddedToGarage(false);
+          setActiveTab('vin');
+        }, 2000);
+      }
     } catch (error) {
       console.error('Error adding vehicle to garage:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to add vehicle to garage');

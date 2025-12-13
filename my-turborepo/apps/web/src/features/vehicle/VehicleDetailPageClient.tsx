@@ -13,6 +13,8 @@ import { Vehicle } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { Badge } from '@repo/ui/badge'
 import { DropdownMenu } from '@repo/ui/dropdown-menu'
+import { OnboardingModal } from './components/OnboardingModal'
+import { format } from 'date-fns'
 
 type ImageWithTimeoutFallbackProps = {
   src: string
@@ -627,6 +629,15 @@ function NavigationCard({
   )
 }
 
+// Extended vehicle type to include onboarding fields
+type VehicleWithOnboarding = Vehicle & {
+  is_onboarding_completed?: boolean
+  acquisition_date?: string
+  ownership_end_date?: string
+  acquisition_type?: string
+  acquisition_cost?: number
+}
+
 type VehicleDetailPageClientProps = {
   vehicle: Vehicle
   vehicleNickname?: string | null
@@ -638,11 +649,13 @@ type VehicleDetailPageClientProps = {
   }
 }
 
-export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwner }: VehicleDetailPageClientProps) {
+export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickname, stats, isOwner }: VehicleDetailPageClientProps) {
+  const vehicle = initialVehicle as VehicleWithOnboarding
   const router = useRouter()
   const [currentNickname, setCurrentNickname] = useState(vehicleNickname || vehicle.name || null)
   const [currentStatus, setCurrentStatus] = useState(vehicle.current_status || 'parked')
   const [currentPrivacy, setCurrentPrivacy] = useState<'PUBLIC' | 'PRIVATE'>(vehicle.privacy || 'PRIVATE')
+  const [showOnboarding, setShowOnboarding] = useState(!vehicle.is_onboarding_completed)
 
   // Use nickname for URLs if available, otherwise fall back to ID
   const urlSlug = currentNickname || vehicle.id
@@ -652,8 +665,31 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
     router.push(path)
   }
 
+  // Safe date formatting helper
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return ''
+    try {
+      // Handle YYYY-MM-DD explicitly to avoid timezone shifts
+      const [year, month, day] = dateStr.split('-').map(Number)
+      if (year && month) {
+        const date = new Date(year, month - 1, day || 1)
+        return format(date, 'MMM yyyy')
+      }
+      return format(new Date(dateStr), 'MMM yyyy')
+    } catch (e) {
+      return ''
+    }
+  }
+
   return (
     <div className="min-h-screen text-foreground pb-20 pt-16">
+      {isOwner && !vehicle.is_onboarding_completed && (
+        <OnboardingModal
+          vehicleId={vehicle.id}
+          open={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+        />
+      )}
       {/* Sticky Header */}
       <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <VehicleHeader
@@ -687,6 +723,12 @@ export function VehicleDetailPageClient({ vehicle, vehicleNickname, stats, isOwn
               <p className="text-muted-foreground text-lg">
                 {[vehicle.body_type, vehicle.drive_type, vehicle.transmission].filter(Boolean).join(' • ')}
               </p>
+
+              {vehicle.acquisition_date && (
+                <p className="text-sm font-medium text-muted-foreground mt-2">
+                  Owned: <span className="text-foreground">{formatDate(vehicle.acquisition_date)}</span> – <span className="text-foreground">{vehicle.ownership_end_date ? formatDate(vehicle.ownership_end_date) : 'Present'}</span>
+                </p>
+              )}
             </div>
 
             {/* Quick Stats */}
