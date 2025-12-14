@@ -61,7 +61,7 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
   }
 
   return (
-    <main className="min-h-screen w-full text-foreground p-6 md:p-12 pt-24">
+    <main className="min-h-screen w-full text-foreground px-6 pb-6 pt-24 md:px-12 md:pb-12 md:pt-32">
       <div className="mx-auto max-w-7xl space-y-8">
 
         {/* Header */}
