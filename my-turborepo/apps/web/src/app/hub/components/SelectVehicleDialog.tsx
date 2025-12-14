@@ -3,7 +3,6 @@
 import React from 'react'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from '@repo/ui/modal'
 import { Vehicle } from '../../../lib/hooks/useVehicles'
-import { cn } from '@repo/ui/lib/utils'
 import { VehicleCard } from '@/components/vehicle-card'
 
 interface SelectVehicleDialogProps {
