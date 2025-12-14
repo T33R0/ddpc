@@ -1,14 +1,14 @@
 import { redirect } from 'next/navigation'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string
     page: string[]
-  }
+  }>
 }
 
-export default function UsernamePage({ params }: PageProps) {
-  const { page } = params
+export default async function UsernamePage({ params }: PageProps) {
+  const { page } = await params
   const path = page.join('/')
 
   // Redirect to the non-prefixed path

@@ -36,8 +36,7 @@ export function HeaderWithAuth() {
     (user?.user_metadata?.user_name as string | undefined) ??
     (user?.email ? user.email.split('@')[0] : undefined);
 
-  const usernameSlug = rawUsername ? toUsernameSlug(rawUsername) : null;
-  const userBasePath = usernameSlug ? `/${usernameSlug}` : undefined;
+  const userBasePath = undefined;
 
   const handleGoogleSignIn = () => {
     signInWithGoogle();
