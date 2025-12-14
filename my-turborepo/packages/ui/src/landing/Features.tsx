@@ -87,7 +87,7 @@ export function Features() {
                 Join Our Growing Community
               </h3>
               <p className="text-muted-foreground mb-6 text-lg">
-                We're in active development and love getting feedback from early adopters. Help shape the future of vehicle management while keeping your garage organized.
+                We&apos;re in active development and love getting feedback from early adopters. Help shape the future of vehicle management while keeping your garage organized.
               </p>
               <div className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">

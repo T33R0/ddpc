@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Trash2, Loader2, Package } from 'lucide-react'
 import { Button } from '@repo/ui/button'
 import {
@@ -23,7 +23,7 @@ export function JobParts({ maintenanceLogId }: JobPartsProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
 
-  const fetchParts = async () => {
+  const fetchParts = useCallback(async () => {
     try {
       const result = await getJobParts(maintenanceLogId)
       if (result.success && result.data) {
@@ -34,11 +34,11 @@ export function JobParts({ maintenanceLogId }: JobPartsProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [maintenanceLogId])
 
   useEffect(() => {
     fetchParts()
-  }, [maintenanceLogId])
+  }, [fetchParts])
 
   const handleAddPart = async (part: PartInventory, quantity: number) => {
     setIsUpdating(true)
@@ -105,7 +105,7 @@ export function JobParts({ maintenanceLogId }: JobPartsProps) {
           <Package className="h-10 w-10 text-muted-foreground mb-4" />
           <h4 className="text-lg font-medium text-muted-foreground">No parts added</h4>
           <p className="text-sm text-muted-foreground text-center max-w-sm mt-2">
-            Click "Add Part" to record parts used from your inventory or create new ones.
+            Click &quot;Add Part&quot; to record parts used from your inventory or create new ones.
           </p>
         </div>
       ) : (

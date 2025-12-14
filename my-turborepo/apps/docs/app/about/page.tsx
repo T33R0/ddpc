@@ -7,12 +7,12 @@ export default function About() {
 
           <div className="prose prose-invert max-w-none">
             <p className="text-lg text-gray-300 mb-6">
-              DDPC (Don't Drive Poor Cars) is your ultimate destination for automotive enthusiasts who refuse to settle for anything less than exceptional.
+              DDPC (Don&apos;t Drive Poor Cars) is your ultimate destination for automotive enthusiasts who refuse to settle for anything less than exceptional.
             </p>
 
             <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
             <p className="text-gray-300 mb-6">
-              We're building the world's most comprehensive platform for car enthusiasts, collectors, and builders. Whether you're looking to explore rare vehicles, connect with fellow enthusiasts, or showcase your own collection, DDPC is your home.
+              We&apos;re building the world&apos;s most comprehensive platform for car enthusiasts, collectors, and builders. Whether you&apos;re looking to explore rare vehicles, connect with fellow enthusiasts, or showcase your own collection, DDPC is your home.
             </p>
 
             <h2 className="text-2xl font-semibold mb-4">What We Offer</h2>

@@ -303,15 +303,15 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 
   // Add onboarding and ownership fields
-  // @ts-ignore - Extending vehicle type with new fields
+  // @ts-expect-error - Extending vehicle type with new fields
   vehicleWithData.is_onboarding_completed = vehicle.is_onboarding_completed
-  // @ts-ignore
+  // @ts-expect-error - Extending vehicle type with new fields
   vehicleWithData.acquisition_date = vehicle.acquisition_date
-  // @ts-ignore
+  // @ts-expect-error - Extending vehicle type with new fields
   vehicleWithData.ownership_end_date = vehicle.ownership_end_date
-  // @ts-ignore
+  // @ts-expect-error - Extending vehicle type with new fields
   vehicleWithData.acquisition_type = vehicle.acquisition_type
-  // @ts-ignore
+  // @ts-expect-error - Extending vehicle type with new fields
   vehicleWithData.acquisition_cost = vehicle.acquisition_cost
 
   // --- 4. Redirect to canonical URL if needed ---

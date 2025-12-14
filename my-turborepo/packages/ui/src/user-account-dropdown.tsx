@@ -6,7 +6,6 @@ import { useClickOutside } from './hooks/use-click-outside';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from './avatar';
 import {
-  User,
   LayoutDashboard,
   Settings,
   LogOut,
@@ -15,7 +14,6 @@ import {
   Sparkles,
   AlertCircle
 } from 'lucide-react';
-import { Switch } from './switch';
 
 interface UserAccountDropdownProps {
   user?: {

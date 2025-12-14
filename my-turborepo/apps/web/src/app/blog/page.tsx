@@ -16,7 +16,7 @@ export default function BlogPage() {
             <span className="text-sm text-muted-foreground mb-2 block">October 15, 2024</span>
             <h2 className="text-2xl font-semibold mb-4">Introducing DDPC 2.0</h2>
             <p className="text-muted-foreground mb-4">
-              We're excited to announce the latest version of our platform, featuring improved performance,
+              We&apos;re excited to announce the latest version of our platform, featuring improved performance,
               a new mobile-friendly design, and enhanced vehicle tracking capabilities.
             </p>
             <span className="text-primary cursor-pointer hover:underline">Read more &rarr;</span>
@@ -26,7 +26,7 @@ export default function BlogPage() {
             <span className="text-sm text-muted-foreground mb-2 block">September 28, 2024</span>
             <h2 className="text-2xl font-semibold mb-4">Community Spotlight: Project E30</h2>
             <p className="text-muted-foreground mb-4">
-              This month we're highlighting an incredible BMW E30 restoration project managed entirely through DDPC.
+              This month we&apos;re highlighting an incredible BMW E30 restoration project managed entirely through DDPC.
               See how the owner kept track of over 500 individual parts.
             </p>
             <span className="text-primary cursor-pointer hover:underline">Read more &rarr;</span>

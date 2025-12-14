@@ -1,11 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
 import { Badge } from '@repo/ui/badge';
 import { Button } from '@repo/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
 import {
   History,
   Wrench,
@@ -20,16 +17,13 @@ import {
   Plus
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { VehicleCard } from '@/components/vehicle-card';
-import { DashboardCard } from '@/components/dashboard-card';
 
 interface ConsoleClientProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   vehicles: any[];
-  user: User;
-  isAdmin: boolean;
 }
 
-export function ConsoleClient({ vehicles, user, isAdmin }: ConsoleClientProps) {
+export function ConsoleClient({ vehicles }: ConsoleClientProps) {
   const router = useRouter();
 
   // Mock data for financial snapshot - in a real app this would come from the DB

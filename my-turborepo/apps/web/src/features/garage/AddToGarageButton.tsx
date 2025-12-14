@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@repo/ui/button';
 import { useAuth } from '@/lib/auth';
 import { AuthModal } from '@/features/auth/AuthModal';
-import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
@@ -27,7 +26,6 @@ export function AddToGarageButton({ vehicleId, vehicleName }: AddToGarageButtonP
       return;
     }
 
-    setIsAdding(true);
     setIsAdding(true);
     try {
       // Use Server Action directly

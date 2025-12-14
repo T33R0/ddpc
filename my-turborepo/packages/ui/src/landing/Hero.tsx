@@ -17,7 +17,7 @@ export function Hero() {
           Stop <span className="text-red-500">Winging</span> It.
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Your build is more than a list of parts. It's a project. A legacy. Stop tracking it in notebooks and spreadsheets. ddpc is the source of truth for your garage, where every part, every repair, and every mile is logged and ready.
+          Your build is more than a list of parts. It&apos;s a project. A legacy. Stop tracking it in notebooks and spreadsheets. ddpc is the source of truth for your garage, where every part, every repair, and every mile is logged and ready.
         </p>
         <div className="text-lg font-medium text-muted-foreground">
           ↓ Scroll to explore ddpc
