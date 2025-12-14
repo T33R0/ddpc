@@ -56,7 +56,7 @@ export default function CareersPage() {
 
         <div className="text-center">
           <p className="text-muted-foreground mb-6">
-            Don't see a role that fits? We're always looking for talent.
+            Don&apos;t see a role that fits? We&apos;re always looking for talent.
             <br />
             Email us at <a href="mailto:careers@ddpc.com" className="text-primary hover:underline">careers@ddpc.com</a>
           </p>

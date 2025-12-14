@@ -49,7 +49,7 @@ export function DropdownMenu({ options, children, className }: DropdownMenuProps
             transition={{ duration: 0.2 }}
             className="absolute z-10 w-48 mt-2 p-1 bg-black/80 backdrop-blur-md rounded-md shadow-lg flex flex-col gap-1 max-h-60 overflow-y-auto overscroll-contain"
           >
-            {options.map((option, index) => (
+            {options.map((option) => (
               <motion.button
                 key={option.label}
                 onClick={() => {

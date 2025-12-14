@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Modal, ModalContent, ModalTitle, ModalDescription, ModalHeader, ModalFooter } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
@@ -226,7 +225,7 @@ const VehicleDetailsModal = ({
     } finally {
       setIsAddingToGarage(false);
     }
-  }, [selectedTrim, user, pendingAdd, onClose]);
+  }, [selectedTrim, user, onClose]);
 
   // Auto-trigger add to garage when user signs in if pending
   useEffect(() => {

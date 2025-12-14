@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { getAllTestimonials, toggleTestimonialApproval } from '@/actions/testimonials';
-import { Button } from '@repo/ui/button';
 import { Switch } from '@repo/ui/switch';
 import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
 export default function TestimonialsAdminPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,7 +41,7 @@ export default function TestimonialsAdminPage() {
         throw new Error(result.error);
       }
       toast.success(currentStatus ? 'Testimonial hidden' : 'Testimonial approved');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update status');
       // Revert optimistic update
       setTestimonials(prev => prev.map(t =>
@@ -103,7 +103,7 @@ export default function TestimonialsAdminPage() {
                   </div>
 
                   <div className="p-4 bg-muted/50 rounded-md text-sm mt-2">
-                    "{testimonial.content}"
+                    &quot;{testimonial.content}&quot;
                   </div>
                 </div>
               </div>

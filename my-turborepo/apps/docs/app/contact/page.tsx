@@ -7,7 +7,7 @@ export default function Contact() {
 
           <div className="prose prose-invert max-w-none">
             <p className="text-lg text-gray-300 mb-8">
-              Have questions, feedback, or want to get in touch? We'd love to hear from you.
+              Have questions, feedback, or want to get in touch? We&apos;d love to hear from you.
             </p>
 
             <div className="grid md:grid-cols-2 gap-8">
