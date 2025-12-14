@@ -13,6 +13,7 @@ import {
   DDSRButton,
   Toaster
 } from '../components/DynamicLayout';
+import { ScrollToTop } from '../components/ScrollToTop';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   {children}
                 </main>
                 <FooterWrapper />
+                <ScrollToTop />
               </div>
               <LogoutModal />
               <DDSRButton />
