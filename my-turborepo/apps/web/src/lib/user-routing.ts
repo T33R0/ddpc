@@ -69,6 +69,14 @@ export const stripUsernamePrefixFromPathname = (pathname: string) => {
     }
   }
 
+  // Prevent stripping if the first segment is a reserved root route (like 'admin')
+  if (segments[0] === 'admin') {
+    return {
+      pathname,
+      stripped: false,
+    }
+  }
+
   if (!isKnownAppSegment(segments[1])) {
     return {
       pathname,
