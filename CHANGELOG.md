@@ -8,4 +8,4 @@ Notes / Observations from repository scan
 - No existing CHANGELOG.md at repo root — the above entry is formatted for appending to a newly created file.
 - Ensure all changelog additions are appended; agents must never edit prior changelog entries, only add new lines.
 
-[2025-02-26] [Database] [FIX] Updated get_unique_vehicles_with_trims function to use a Functional GIN Index (tsvector) for robust combination search without migration timeouts.
+[2025-02-26] [Database] [FIX] Updated get_unique_vehicles_with_trims function to use an Expression Index (GIN) on to_tsvector to ensure query plan alignment and prevent backfill timeouts.
