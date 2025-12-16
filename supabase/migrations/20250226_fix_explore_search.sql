@@ -1,12 +1,18 @@
--- Optimize Explore Search with Expression Index
+-- Optimize Explore Search with Expression Index (Fix Dependency Error)
 -- This strategy creates an index directly on the computed expression to avoid backfill timeouts
--- and ensure the query planner uses the index.
+-- and ensures the query planner uses the index.
 
 -- 1. Cleanup previous attempts
+-- We must drop the index first because it depends on the function (if v6 was applied)
+DROP INDEX IF EXISTS idx_vehicle_data_fts;
+
+-- Now safe to drop the function
+DROP FUNCTION IF EXISTS get_vehicle_tsvector(vehicle_data);
+
+-- Cleanup other attempts (v4/v5)
 ALTER TABLE vehicle_data DROP COLUMN IF EXISTS search_vector;
 DROP TRIGGER IF EXISTS tsvectorupdate ON vehicle_data;
 DROP FUNCTION IF EXISTS vehicle_data_search_vector_update();
-DROP FUNCTION IF EXISTS get_vehicle_tsvector(vehicle_data);
 
 -- 2. Create GIN Index on the expression
 -- We use to_tsvector('simple', ...) to parse the concatenated text.
