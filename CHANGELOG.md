@@ -9,3 +9,4 @@ Notes / Observations from repository scan
 - Ensure all changelog additions are appended; agents must never edit prior changelog entries, only add new lines.
 
 [2025-02-26] [Database] [FIX] Updated get_unique_vehicles_with_trims function to use a Functional GIN Index (IMMUTABLE wrapper) to resolve index expression immutability requirements and prevent dependency errors.
+[2025-02-27] [Database] [OPTIMIZE] Refined explore search strategy: Reduced index scope to core attributes (Year, Make, Model, Engine, etc.) excluding bulk text (Pros/Cons) for better performance. Implemented new `get_vehicle_tsvector` IMMUTABLE function and GIN index. Added robust query parsing (handling dots, hyphens, and units like "2.0L").
