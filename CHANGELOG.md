@@ -7,3 +7,5 @@ Notes / Observations from repository scan
 - Supabase configuration folder exists at supabase/ (no remote DB access; schema must be supplied or migrations created for changes).
 - No existing CHANGELOG.md at repo root — the above entry is formatted for appending to a newly created file.
 - Ensure all changelog additions are appended; agents must never edit prior changelog entries, only add new lines.
+
+[2025-02-26] [Database] [FIX] Updated get_unique_vehicles_with_trims function to support combination search terms using ILIKE with term splitting logic.
