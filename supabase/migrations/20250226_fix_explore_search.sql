@@ -1,51 +1,62 @@
--- Optimize Explore Search with Expression Index (Fix Dependency Error)
--- This strategy creates an index directly on the computed expression to avoid backfill timeouts
--- and ensures the query planner uses the index.
+-- Optimize Explore Search with Functional GIN Index
+-- Strategies:
+-- 1. Functional Index (prevents backfill timeouts, solves immutability check)
+-- 2. Cleanup Order (prevents dependency errors)
+-- 3. Explicit Casting (prevents type errors)
 
--- 1. Cleanup previous attempts
--- We must drop the index first because it depends on the function (if v6 was applied)
-DROP INDEX IF EXISTS idx_vehicle_data_fts;
+-- 1. Cleanup previous attempts (Ordered for safety)
+DROP INDEX IF EXISTS idx_vehicle_data_fts_expr; -- From v7/v8 attempt
+DROP INDEX IF EXISTS idx_vehicle_data_fts;      -- From v6 attempt
 
 -- Now safe to drop the function
 DROP FUNCTION IF EXISTS get_vehicle_tsvector(vehicle_data);
 
--- Cleanup other attempts (v4/v5)
+-- Cleanup column-based attempts (v4/v5)
 ALTER TABLE vehicle_data DROP COLUMN IF EXISTS search_vector;
 DROP TRIGGER IF EXISTS tsvectorupdate ON vehicle_data;
 DROP FUNCTION IF EXISTS vehicle_data_search_vector_update();
 
--- 2. Create GIN Index on the expression
--- We use to_tsvector('simple', ...) to parse the concatenated text.
--- 'simple' configuration is used to match exact words (case-insensitive) without aggressive stemming.
-CREATE INDEX IF NOT EXISTS idx_vehicle_data_fts_expr
-ON vehicle_data
-USING GIN (
-  to_tsvector('simple',
+-- 2. Create IMMUTABLE helper function for the index
+-- We mark it IMMUTABLE because we use a fixed 'simple' config and deterministic concatenation.
+-- This allows us to index it.
+CREATE OR REPLACE FUNCTION get_vehicle_tsvector(vd vehicle_data)
+RETURNS tsvector
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+  RETURN to_tsvector('simple',
     CONCAT_WS(' ',
-      year,
-      make,
-      model,
-      "trim",
-      trim_description,
-      body_type,
-      fuel_type,
-      drive_type,
-      cylinders,
-      horsepower_hp,
-      country_of_origin,
-      car_classification,
-      platform_code_generation,
-      pros,
-      cons
+      vd.year::text,
+      vd.make::text,
+      vd.model::text,
+      vd."trim"::text,
+      vd.trim_description::text,
+      vd.body_type::text,
+      vd.fuel_type::text,
+      vd.drive_type::text,
+      vd.cylinders::text,
+      vd.horsepower_hp::text,
+      vd.country_of_origin::text,
+      vd.car_classification::text,
+      vd.platform_code_generation::text,
+      vd.pros::text,
+      vd.cons::text
     )
-  )
-);
+  );
+END;
+$$;
 
--- 3. Drop existing function signatures
+-- 3. Create GIN Index on the function result
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_fts
+ON vehicle_data
+USING GIN (get_vehicle_tsvector(vehicle_data));
+
+-- 4. Drop existing function signatures
 DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text);
 DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text, text);
 
--- 4. Recreate main query function
+-- 5. Recreate main query function
 CREATE OR REPLACE FUNCTION get_unique_vehicles_with_trims(
   limit_param integer DEFAULT 50,
   offset_param integer DEFAULT 0,
@@ -74,8 +85,7 @@ BEGIN
   -- Handle empty search
   IF search_query IS NOT NULL AND trim(search_query) <> '' THEN
     -- Clean the search query
-    -- Replace non-alphanumeric/hyphen with space to avoid merging words (e.g. "BMW/Audi" -> "BMW Audi")
-    -- Preserve hyphens for model names like F-150
+    -- Replace non-alphanumeric/hyphen with space
     clean_search_query := regexp_replace(trim(search_query), '[^a-zA-Z0-9\-\s]', ' ', 'g');
 
     -- Normalize spaces
@@ -103,29 +113,10 @@ BEGIN
       AND (fuel_type_param IS NULL OR vd.fuel_type = fuel_type_param)
       AND (drivetrain_param IS NULL OR vd.drive_type = drivetrain_param)
       AND (vehicle_type_param IS NULL OR vd.body_type = vehicle_type_param)
-      -- Search Logic using Expression Index
-      -- This expression MUST match the CREATE INDEX definition exactly
+      -- Search Logic using Functional Index
       AND (
         ts_query IS NULL OR
-        to_tsvector('simple',
-          CONCAT_WS(' ',
-            vd.year,
-            vd.make,
-            vd.model,
-            vd."trim",
-            vd.trim_description,
-            vd.body_type,
-            vd.fuel_type,
-            vd.drive_type,
-            vd.cylinders,
-            vd.horsepower_hp,
-            vd.country_of_origin,
-            vd.car_classification,
-            vd.platform_code_generation,
-            vd.pros,
-            vd.cons
-          )
-        ) @@ ts_query
+        get_vehicle_tsvector(vd) @@ ts_query
       )
     GROUP BY vd.year, vd.make, vd.model
     ORDER BY vd.year DESC, vd.make ASC, vd.model ASC
