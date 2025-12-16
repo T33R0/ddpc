@@ -1,34 +1,73 @@
--- Drop existing function to allow signature change
-DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(
-  integer,
-  integer,
-  integer,
-  integer,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text
-);
+-- Optimize Explore Search with Full Text Search (FTS)
+-- This migration adds a search_vector column and index to vehicle_data for high-performance searching.
 
--- Also drop the version with search_query if it exists (to avoid ambiguity)
-DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(
-  integer,
-  integer,
-  integer,
-  integer,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text
-);
+-- 1. Add search_vector column if it doesn't exist
+ALTER TABLE vehicle_data ADD COLUMN IF NOT EXISTS search_vector tsvector;
 
+-- 2. Create function to update search_vector
+CREATE OR REPLACE FUNCTION vehicle_data_search_vector_update() RETURNS trigger AS $$
+BEGIN
+  NEW.search_vector := to_tsvector('simple',
+    CONCAT_WS(' ',
+      NEW.year,
+      NEW.make,
+      NEW.model,
+      NEW."trim",
+      NEW.trim_description,
+      NEW.body_type,
+      NEW.fuel_type,
+      NEW.drive_type,
+      NEW.cylinders,
+      NEW.horsepower_hp,
+      NEW.country_of_origin,
+      NEW.car_classification,
+      NEW.platform_code_generation,
+      NEW.pros::text,
+      NEW.cons::text
+    )
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Recreate optimized function with Search Logic
+-- 3. Create Trigger to keep search_vector updated
+DROP TRIGGER IF EXISTS tsvectorupdate ON vehicle_data;
+CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE ON vehicle_data
+FOR EACH ROW EXECUTE FUNCTION vehicle_data_search_vector_update();
+
+-- 4. Backfill data (update all rows to populate the new column)
+-- Using a DO block to ensure it runs even if trigger was just created
+DO $$
+BEGIN
+  UPDATE vehicle_data SET search_vector = to_tsvector('simple',
+    CONCAT_WS(' ',
+      year,
+      make,
+      model,
+      "trim",
+      trim_description,
+      body_type,
+      fuel_type,
+      drive_type,
+      cylinders,
+      horsepower_hp,
+      country_of_origin,
+      car_classification,
+      platform_code_generation,
+      pros::text,
+      cons::text
+    )
+  ) WHERE search_vector IS NULL;
+END $$;
+
+-- 5. Create GIN Index for fast searching
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_search_vector ON vehicle_data USING GIN (search_vector);
+
+-- 6. Drop existing function signatures to ensure clean replacement
+DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text);
+DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text, text);
+
+-- 7. Recreate function using the optimized search_vector
 CREATE OR REPLACE FUNCTION get_unique_vehicles_with_trims(
   limit_param integer DEFAULT 50,
   offset_param integer DEFAULT 0,
@@ -50,11 +89,25 @@ RETURNS TABLE(
   hero_image text,
   trims jsonb
 ) LANGUAGE plpgsql STABLE AS $$
+DECLARE
+  ts_query tsquery;
+  clean_search_query text;
 BEGIN
+  -- Handle empty search
+  IF search_query IS NOT NULL AND trim(search_query) <> '' THEN
+    -- Clean the search query (remove special chars that might break tsquery syntax, allow spaces)
+    -- We keep alphanumeric and spaces.
+    clean_search_query := regexp_replace(trim(search_query), '[^a-zA-Z0-9\s]', '', 'g');
+
+    -- Construct TS Query for partial matching: "2008 BMW" -> "2008:* & BMW:*"
+    SELECT string_agg(token || ':*', ' & ')::tsquery
+    INTO ts_query
+    FROM unnest(string_to_array(clean_search_query, ' ')) AS token
+    WHERE token <> '';
+  END IF;
+
   RETURN QUERY
   WITH visible_groups AS (
-    -- 1. Identify the specific Year/Make/Model groups to display FIRST
-    -- This applies the LIMIT/OFFSET before joining heavy data
     SELECT vd.year, vd.make, vd.model
     FROM vehicle_data vd
     WHERE (min_year_param IS NULL OR vd.year::integer >= min_year_param)
@@ -65,50 +118,26 @@ BEGIN
       AND (fuel_type_param IS NULL OR vd.fuel_type = fuel_type_param)
       AND (drivetrain_param IS NULL OR vd.drive_type = drivetrain_param)
       AND (vehicle_type_param IS NULL OR vd.body_type = vehicle_type_param)
-      -- Search Logic
+      -- Search Logic using GIN Index
       AND (
-        search_query IS NULL OR search_query = '' OR
-        (
-          SELECT bool_and(
-            CONCAT_WS(' ',
-              vd.year,
-              vd.make,
-              vd.model,
-              vd."trim",
-              vd.trim_description,
-              vd.body_type,
-              vd.fuel_type,
-              vd.drive_type,
-              vd.cylinders,
-              vd.horsepower_hp,
-              vd.country_of_origin,
-              vd.car_classification,
-              vd.platform_code_generation,
-              vd.pros::text,
-              vd.cons::text
-            ) ILIKE ('%' || word || '%')
-          )
-          FROM unnest(string_to_array(trim(search_query), ' ')) AS word
-        )
+        ts_query IS NULL OR
+        vd.search_vector @@ ts_query
       )
     GROUP BY vd.year, vd.make, vd.model
     ORDER BY vd.year DESC, vd.make ASC, vd.model ASC
     LIMIT limit_param OFFSET offset_param
   ),
   relevant_vehicles AS (
-    -- 2. Fetch only the vehicles belonging to the visible groups
     SELECT vd.*
     FROM vehicle_data vd
     JOIN visible_groups vg ON vd.year = vg.year AND vd.make = vg.make AND vd.model = vg.model
   ),
   images AS (
-    -- 3. Fetch images only for the relevant vehicles
     SELECT DISTINCT ON (vpi.vehicle_id) vpi.vehicle_id, vpi.url
     FROM vehicle_primary_image vpi
     JOIN relevant_vehicles rv ON vpi.vehicle_id = rv.id
     ORDER BY vpi.vehicle_id
   )
-  -- 4. Aggregate the results
   SELECT
     CONCAT(rv.year, '-', rv.make, '-', rv.model) AS id,
     rv.make,
