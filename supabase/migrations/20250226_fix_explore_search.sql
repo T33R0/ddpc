@@ -1,73 +1,52 @@
--- Optimize Explore Search with Full Text Search (FTS)
--- This migration adds a search_vector column and index to vehicle_data for high-performance searching.
+-- Optimize Explore Search with Functional GIN Index
+-- This avoids heavy backfill updates by using a functional index on the computed tsvector.
 
--- 1. Add search_vector column if it doesn't exist
-ALTER TABLE vehicle_data ADD COLUMN IF NOT EXISTS search_vector tsvector;
+-- 1. Cleanup previous attempts (if any)
+ALTER TABLE vehicle_data DROP COLUMN IF EXISTS search_vector;
+DROP TRIGGER IF EXISTS tsvectorupdate ON vehicle_data;
+DROP FUNCTION IF EXISTS vehicle_data_search_vector_update();
 
--- 2. Create function to update search_vector
-CREATE OR REPLACE FUNCTION vehicle_data_search_vector_update() RETURNS trigger AS $$
+-- 2. Create IMMUTABLE helper function for the index
+-- Accepts the vehicle_data row and returns the computed tsvector
+CREATE OR REPLACE FUNCTION get_vehicle_tsvector(vd vehicle_data)
+RETURNS tsvector
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
 BEGIN
-  NEW.search_vector := to_tsvector('simple',
+  RETURN to_tsvector('simple',
     CONCAT_WS(' ',
-      NEW.year,
-      NEW.make,
-      NEW.model,
-      NEW."trim",
-      NEW.trim_description,
-      NEW.body_type,
-      NEW.fuel_type,
-      NEW.drive_type,
-      NEW.cylinders,
-      NEW.horsepower_hp,
-      NEW.country_of_origin,
-      NEW.car_classification,
-      NEW.platform_code_generation,
-      NEW.pros::text,
-      NEW.cons::text
+      vd.year,
+      vd.make,
+      vd.model,
+      vd."trim",
+      vd.trim_description,
+      vd.body_type,
+      vd.fuel_type,
+      vd.drive_type,
+      vd.cylinders,
+      vd.horsepower_hp,
+      vd.country_of_origin,
+      vd.car_classification,
+      vd.platform_code_generation,
+      array_to_string(vd.pros, ' '),
+      array_to_string(vd.cons, ' ')
     )
   );
-  RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
--- 3. Create Trigger to keep search_vector updated
-DROP TRIGGER IF EXISTS tsvectorupdate ON vehicle_data;
-CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE ON vehicle_data
-FOR EACH ROW EXECUTE FUNCTION vehicle_data_search_vector_update();
+-- 3. Create GIN Index on the function result
+-- This builds the index without needing to store the vector in the table, preventing timeouts during backfill
+CREATE INDEX IF NOT EXISTS idx_vehicle_data_fts
+ON vehicle_data
+USING GIN (get_vehicle_tsvector(vehicle_data));
 
--- 4. Backfill data (update all rows to populate the new column)
--- Using a DO block to ensure it runs even if trigger was just created
-DO $$
-BEGIN
-  UPDATE vehicle_data SET search_vector = to_tsvector('simple',
-    CONCAT_WS(' ',
-      year,
-      make,
-      model,
-      "trim",
-      trim_description,
-      body_type,
-      fuel_type,
-      drive_type,
-      cylinders,
-      horsepower_hp,
-      country_of_origin,
-      car_classification,
-      platform_code_generation,
-      pros::text,
-      cons::text
-    )
-  ) WHERE search_vector IS NULL;
-END $$;
-
--- 5. Create GIN Index for fast searching
-CREATE INDEX IF NOT EXISTS idx_vehicle_data_search_vector ON vehicle_data USING GIN (search_vector);
-
--- 6. Drop existing function signatures to ensure clean replacement
+-- 4. Drop existing function signatures to ensure clean replacement
 DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text);
 DROP FUNCTION IF EXISTS get_unique_vehicles_with_trims(integer, integer, integer, integer, text, text, text, text, text, text, text);
 
--- 7. Recreate function using the optimized search_vector
+-- 5. Recreate main query function using the functional index
 CREATE OR REPLACE FUNCTION get_unique_vehicles_with_trims(
   limit_param integer DEFAULT 50,
   offset_param integer DEFAULT 0,
@@ -95,15 +74,18 @@ DECLARE
 BEGIN
   -- Handle empty search
   IF search_query IS NOT NULL AND trim(search_query) <> '' THEN
-    -- Clean the search query (remove special chars that might break tsquery syntax, allow spaces)
-    -- We keep alphanumeric and spaces.
+    -- Clean the search query (keep alphanumeric and spaces)
     clean_search_query := regexp_replace(trim(search_query), '[^a-zA-Z0-9\s]', '', 'g');
 
-    -- Construct TS Query for partial matching: "2008 BMW" -> "2008:* & BMW:*"
-    SELECT string_agg(token || ':*', ' & ')::tsquery
-    INTO ts_query
-    FROM unnest(string_to_array(clean_search_query, ' ')) AS token
-    WHERE token <> '';
+    -- Construct TS Query for partial matching
+    -- e.g. "2008 BMW" -> "2008:* & BMW:*"
+    -- We ensure at least one token exists to avoid syntax errors
+    IF clean_search_query <> '' THEN
+      SELECT string_agg(token || ':*', ' & ')::tsquery
+      INTO ts_query
+      FROM unnest(string_to_array(clean_search_query, ' ')) AS token
+      WHERE token <> '';
+    END IF;
   END IF;
 
   RETURN QUERY
@@ -118,10 +100,10 @@ BEGIN
       AND (fuel_type_param IS NULL OR vd.fuel_type = fuel_type_param)
       AND (drivetrain_param IS NULL OR vd.drive_type = drivetrain_param)
       AND (vehicle_type_param IS NULL OR vd.body_type = vehicle_type_param)
-      -- Search Logic using GIN Index
+      -- Search Logic using GIN Functional Index
       AND (
         ts_query IS NULL OR
-        vd.search_vector @@ ts_query
+        get_vehicle_tsvector(vd) @@ ts_query
       )
     GROUP BY vd.year, vd.make, vd.model
     ORDER BY vd.year DESC, vd.make ASC, vd.model ASC
