@@ -1,5 +1,6 @@
--- Optimize Explore Search with Functional GIN Index
--- This avoids heavy backfill updates by using a functional index on the computed tsvector.
+-- Optimize Explore Search with Functional GIN Index (Fix Type Error)
+-- This avoids heavy backfill updates by using a functional index.
+-- Fixed: Removed array_to_string since pros/cons are text columns.
 
 -- 1. Cleanup previous attempts (if any)
 ALTER TABLE vehicle_data DROP COLUMN IF EXISTS search_vector;
@@ -29,15 +30,15 @@ BEGIN
       vd.country_of_origin,
       vd.car_classification,
       vd.platform_code_generation,
-      array_to_string(vd.pros, ' '),
-      array_to_string(vd.cons, ' ')
+      vd.pros,
+      vd.cons
     )
   );
 END;
 $$;
 
 -- 3. Create GIN Index on the function result
--- This builds the index without needing to store the vector in the table, preventing timeouts during backfill
+-- This builds the index without needing to store the vector in the table
 CREATE INDEX IF NOT EXISTS idx_vehicle_data_fts
 ON vehicle_data
 USING GIN (get_vehicle_tsvector(vehicle_data));
@@ -79,7 +80,6 @@ BEGIN
 
     -- Construct TS Query for partial matching
     -- e.g. "2008 BMW" -> "2008:* & BMW:*"
-    -- We ensure at least one token exists to avoid syntax errors
     IF clean_search_query <> '' THEN
       SELECT string_agg(token || ':*', ' & ')::tsquery
       INTO ts_query
