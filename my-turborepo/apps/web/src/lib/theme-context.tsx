@@ -31,19 +31,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Load theme from DB when user logs in, or default to dark if not logged in
     useEffect(() => {
         if (!mounted) return;
-
-        // Wait for loading to finish to ensure we have the correct user state
         if (loading) return;
 
         const syncTheme = async () => {
+            // Log to confirm trigger source
+            console.log(`ThemeProvider: syncTheme running. User ID: ${user?.id}`);
+
             if (!user) {
                 console.log('ThemeProvider: No user logged in, enforcing dark mode.');
                 setThemeState('dark');
-                setResolvedTheme('dark'); // Force resolved immediately
+                setResolvedTheme('dark');
                 return;
             }
 
-            console.log('ThemeProvider: User logged in, fetching theme from DB for user:', user.id);
             try {
                 // Check if we can select 'theme' from user_profile
                 const { data, error } = await supabase
@@ -83,7 +83,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         };
 
         syncTheme();
-    }, [user, loading, mounted]);
+    // Dependency on user.id (primitive) instead of user object to prevent unnecessary re-runs/reverts
+    }, [user?.id, loading, mounted]);
 
     // Resolve theme based on current setting and system preference
     useEffect(() => {
@@ -147,24 +148,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     const saveTheme = async (newTheme: Theme) => {
-        console.log(`ThemeProvider: saving theme: ${newTheme} for user: ${user?.id}`);
+        console.log(`ThemeProvider: saveTheme called: ${newTheme}. User: ${user?.id}`);
         setThemeState(newTheme);
 
         if (user) {
             try {
-                // Perform update and select returned data to verify it actually happened
+                console.log('ThemeProvider: Initiating Supabase update...');
                 const { data, error } = await supabase
                     .from('user_profile')
                     .update({ theme: newTheme })
                     .eq('user_id', user.id)
-                    .select(); // Important: verify we got data back
+                    .select();
+
+                console.log('ThemeProvider: Supabase update result:', { data, error });
 
                 if (error) {
                     console.error('ThemeProvider: Error saving theme to DB:', error);
                 } else if (!data || data.length === 0) {
                     console.error(`ThemeProvider: Update succeeded but no rows were affected for user ${user.id}. Check RLS or existence of user_profile row.`);
                 } else {
-                    console.log('ThemeProvider: Successfully saved theme to DB. Returned data:', data);
+                    console.log('ThemeProvider: Successfully saved theme to DB.');
                 }
             } catch (err) {
                 console.error('ThemeProvider: Unexpected error saving theme:', err);
