@@ -23,6 +23,6 @@ DROP POLICY IF EXISTS up_update_admin ON public.user_profile;
 -- Recreate the policy using the safe function
 CREATE POLICY up_update_admin ON public.user_profile
 FOR UPDATE
-TO permissive
+TO public
 USING (is_admin())
 WITH CHECK (is_admin());
