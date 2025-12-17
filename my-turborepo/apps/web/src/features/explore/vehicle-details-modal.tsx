@@ -242,8 +242,8 @@ const VehicleDetailsModal = ({
     return null;
   }
 
-  // Use the same image priority as the gallery card: heroImage first, then selected trim's image_url
-  const primaryImageUrl = summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
+  // Use heroImage or selected trim image. Fallback is handled by the Image component (DDPC logo)
+  const primaryImageUrl = summary.heroImage || selectedTrim.image_url || null;
 
   return (
     <Modal open={open} onOpenChange={(open) => !open && onClose()}>
@@ -297,10 +297,11 @@ const VehicleDetailsModal = ({
             <div className="space-y-4">
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10 relative group">
                 <ImageWithTimeoutFallback
-                  src={primaryImageUrl}
+                  src={primaryImageUrl || "/branding/fallback-logo.png"}
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
                   className="w-full h-full object-cover"
+                  showMissingText={!primaryImageUrl}
                 />
 
                 {/* Mobile Navigation Arrows Overlay on Image */}

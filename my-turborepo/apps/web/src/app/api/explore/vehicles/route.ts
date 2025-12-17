@@ -63,8 +63,6 @@ export async function GET(request: NextRequest) {
 
         // OPTIMIZATION: Only use computed numeric columns (_num) for range comparisons (gt, lt).
         // For equality (eq, neq) and text search (ilike), use the raw text column.
-        // This allows Postgres to potentially use indexes on the raw columns and avoids
-        // the overhead of regexp_replace on every row for simple checks.
         const isRangeOp = ['gt', 'lt'].includes(op);
 
         if (isView && NUMERIC_COLUMNS.includes(column) && isRangeOp) {
@@ -97,16 +95,8 @@ export async function GET(request: NextRequest) {
     query = applyFilters(query, true);
     query = query.range(offset, offset + fetchLimit - 1);
 
-    // Sort by year desc, make, model (default sort)
-    // Use year_num for sorting if using view to ensure 2000 < 2010
-    // Note: sorting also uses the computed column, which might be slow if no index.
-    // If we want speed, we might sort by raw 'year' but 'year' is text.
-    // Text sort "2000" vs "1999" is correct.
-    // "2000" vs "999" (unlikely for cars) is wrong.
-    // We stick to year_num for correctness, but this might be a bottleneck.
-    // Optimizing sort: If we use raw 'year', we avoid regex.
-    // Most car years are 4 digits. Text sort is fine.
-    // Let's swap to raw 'year' for sorting to gain speed.
+    // Sort by raw 'year' to avoid regex overhead during sort, unless strict numeric sort is needed.
+    // Given most data is consistent, text sort is acceptable for performance.
     query = query.order('year', { ascending: false }).order('make').order('model');
 
     let { data, error } = await query;
@@ -118,7 +108,6 @@ export async function GET(request: NextRequest) {
       query = supabase.from('vehicle_data').select('*');
       query = applyFilters(query, false);
       query = query.range(offset, offset + fetchLimit - 1);
-      // Sort using text columns
       query = query.order('year', { ascending: false }).order('make').order('model');
 
       const res = await query;
@@ -135,31 +124,62 @@ export async function GET(request: NextRequest) {
        return NextResponse.json({ data: [], page, pageSize: pageSizeParam });
     }
 
+    // --- Image Resolution ---
+    // Fetch primary images from the dedicated table to ensure high quality results
+    const vehicleIds = data.map((v: any) => v.id);
+    const imageMap = new Map<string, string>();
+
+    if (vehicleIds.length > 0) {
+      try {
+        const { data: images } = await supabase
+          .from('vehicle_primary_image')
+          .select('vehicle_id, url')
+          .in('vehicle_id', vehicleIds);
+
+        if (images) {
+          images.forEach((img: any) => {
+            if (img.url) imageMap.set(img.vehicle_id, img.url);
+          });
+        }
+      } catch (imgError) {
+        console.warn('Failed to fetch primary images:', imgError);
+        // Continue without primary images (fallbacks will apply)
+      }
+    }
+
     // Grouping Logic
     const vehicleMap = new Map<string, VehicleSummary>();
 
     data.forEach((row: any) => {
       // Create a unique key for grouping
-      const key = `${row.year}-${row.make}-${row.model}`; // Use raw values (text)
+      const key = `${row.year}-${row.make}-${row.model}`;
 
-      // Robust image resolution
-      // Check multiple possible image columns
-      const resolvedImage = row.image_url || row.images_url || row.vehicle_image || row.hero_image;
+      // Robust image resolution:
+      // 1. vehicle_primary_image (Best)
+      // 2. vehicle_data.image_url
+      // 3. vehicle_data.images_url (Sometimes holds the list)
+      // 4. vehicle_data.vehicle_image
+      // 5. vehicle_data.hero_image
+      const primaryUrl = imageMap.get(row.id);
+      const resolvedImage = primaryUrl || row.image_url || row.images_url || row.vehicle_image || row.hero_image || null;
 
       if (!vehicleMap.has(key)) {
         vehicleMap.set(key, {
-          id: row.id || key, // Use first trim ID or key
+          id: row.id || key,
           year: String(row.year),
           make: row.make,
           model: row.model,
-          heroImage: resolvedImage,
+          heroImage: resolvedImage, // Use first found image as hero for the group
           trims: [],
         });
       }
 
       const summary = vehicleMap.get(key)!;
 
-      // Add trim
+      // If summary doesn't have a hero image yet, but this trim has one, update it?
+      // Usually the first trim dictates the group image, but if it's missing, we could try others.
+      // But keeping it simple: first trim wins (consistent with map insertion order usually).
+
       summary.trims.push({
         ...row,
         id: row.id,
@@ -174,7 +194,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: summaries,
       page,
-      pageSize: pageSizeParam, // Note: We return fewer items than fetchLimit
+      pageSize: pageSizeParam,
     });
 
   } catch (err) {
