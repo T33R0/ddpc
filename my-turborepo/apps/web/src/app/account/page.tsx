@@ -60,7 +60,37 @@ export default function AccountPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const fetchUserProfile = useCallback(async () => {
+    if (!session?.access_token) return;
 
+    try {
+      const response = await fetch('/api/account/profile', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        // Populate form fields
+        setUsername(data.user.username || '');
+        setDisplayName(data.user.displayName || '');
+        setLocation(data.user.location || '');
+        setWebsite(data.user.website || '');
+        setBio(data.user.bio || '');
+        setAvatarUrl(data.user.avatarUrl || '');
+        setIsPublic(data.user.isPublic);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Profile fetch failed:', errorData);
+        toast.error('Failed to load profile data');
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error('Failed to load profile data');
+    }
+  }, [session?.access_token]);
 
   useEffect(() => {
     if (!loading && !authUser) {
@@ -141,37 +171,6 @@ export default function AccountPage() {
     }
   };
 
-  const fetchUserProfile = useCallback(async () => {
-    if (!session?.access_token) return;
-
-    try {
-      const response = await fetch('/api/account/profile', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        // Populate form fields
-        setUsername(data.user.username || '');
-        setDisplayName(data.user.displayName || '');
-        setLocation(data.user.location || '');
-        setWebsite(data.user.website || '');
-        setBio(data.user.bio || '');
-        setAvatarUrl(data.user.avatarUrl || '');
-        setIsPublic(data.user.isPublic);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Profile fetch failed:', errorData);
-        toast.error('Failed to load profile data');
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast.error('Failed to load profile data');
-    }
-  }, [session?.access_token]);
 
   const syncAuthMetadata = useCallback(
     async (nextUsername: string, nextDisplayName?: string, nextAvatarUrl?: string) => {
