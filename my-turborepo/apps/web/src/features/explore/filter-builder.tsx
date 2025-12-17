@@ -13,7 +13,14 @@ interface FilterBuilderProps {
   options: FilterOptions;
 }
 
-const COLUMNS = [
+type ColumnDef = {
+  label: string;
+  value: string;
+  type: 'numeric' | 'text';
+  optionsKey?: keyof FilterOptions;
+};
+
+const COLUMNS: ColumnDef[] = [
   { label: 'Year', value: 'year', type: 'numeric' },
   { label: 'Make', value: 'make', type: 'text', optionsKey: 'makes' },
   { label: 'Model', value: 'model', type: 'text', optionsKey: 'models' },
@@ -29,7 +36,7 @@ const COLUMNS = [
   { label: 'Width (in)', value: 'width_in', type: 'numeric' },
   { label: 'Height (in)', value: 'height_in', type: 'numeric' },
   { label: 'Country', value: 'country_of_origin', type: 'text', optionsKey: 'countries' },
-] as const;
+];
 
 const OPERATORS_TEXT: { label: string; value: FilterOperator }[] = [
   { label: 'Equals', value: 'eq' },
@@ -87,18 +94,23 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
     const col = COLUMNS.find((c) => c.value === columnValue);
     if (!col || !col.optionsKey) return null;
 
-    // @ts-ignore - Dynamic access to options
-    const rawOptions = options[col.optionsKey];
+    // TS needs to know optionsKey is valid here
+    const key = col.optionsKey;
+    const rawOptions = options[key];
 
     if (columnValue === 'model') {
-      // Special handling for models to show Make
-      return rawOptions.map((m: { make: string; model: string }) => ({
+      // Special handling for models to show Make. Assumes rawOptions is the models array.
+      // We need to cast rawOptions because Typescript doesn't know which key maps to which type exactly
+      const models = rawOptions as { make: string; model: string }[];
+      return models.map((m) => ({
         label: `${m.make} ${m.model}`,
         value: m.model,
       }));
     }
 
-    return rawOptions.map((opt: string | number) => ({
+    // For other arrays (string[] | number[])
+    const simpleOptions = rawOptions as (string | number)[];
+    return simpleOptions.map((opt) => ({
       label: String(opt),
       value: String(opt),
     }));
