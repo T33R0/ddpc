@@ -4,7 +4,6 @@ import React from 'react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
-import { DropdownMenu } from '@repo/ui/dropdown-menu';
 import type { SupabaseFilter, FilterOptions, FilterOperator } from './types';
 
 interface FilterBuilderProps {
@@ -72,10 +71,9 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
         if (f.id !== id) return f;
         const updated = { ...f, ...updates };
 
-        // Reset value if column changes to prevent type mismatch (e.g. text value in numeric field)
+        // Reset value if column changes to prevent type mismatch
         if (updates.column && updates.column !== f.column) {
           updated.value = '';
-          // Reset operator to default for new type
           const colDef = COLUMNS.find(c => c.value === updates.column);
           updated.operator = colDef?.type === 'numeric' ? 'eq' : 'eq';
         }
@@ -94,21 +92,25 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
     const col = COLUMNS.find((c) => c.value === columnValue);
     if (!col || !col.optionsKey) return null;
 
-    // TS needs to know optionsKey is valid here
     const key = col.optionsKey;
+    // @ts-ignore - Index access safe due to type definition
     const rawOptions = options[key];
 
     if (columnValue === 'model') {
-      // Special handling for models to show Make. Assumes rawOptions is the models array.
-      // We need to cast rawOptions because Typescript doesn't know which key maps to which type exactly
       const models = rawOptions as { make: string; model: string }[];
+      // If we have a Make filter in ANY row, filtering models would be nice, but row-based is independent.
+      // However, showing 70k models is bad.
+      // We should probably filter models if the CURRENT row has a sibling filter for Make?
+      // Or just show all (which is heavy)?
+      // For now, we list all models, but distinct names?
+      // The API returns distinct {make, model}.
+      // We'll show "Make Model" in the dropdown.
       return models.map((m) => ({
         label: `${m.make} ${m.model}`,
-        value: m.model,
+        value: m.model, // Filtering by model name
       }));
     }
 
-    // For other arrays (string[] | number[])
     const simpleOptions = rawOptions as (string | number)[];
     return simpleOptions.map((opt) => ({
       label: String(opt),
@@ -117,7 +119,7 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
   };
 
   return (
-    <div className="flex flex-col gap-3 min-w-[300px] sm:min-w-[600px] p-1">
+    <div className="flex flex-col gap-3 min-w-[300px] w-full p-1">
       {filters.map((filter) => {
         const colDef = COLUMNS.find((c) => c.value === filter.column);
         const operators = getOperators(filter.column);
@@ -127,44 +129,50 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
           <div key={filter.id} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-secondary/20 p-2 rounded-md">
             {/* Column Select */}
             <div className="w-full sm:w-1/3">
-              <DropdownMenu
-                options={COLUMNS.map((c) => ({
-                  label: c.label,
-                  onClick: () => updateFilter(filter.id, { column: c.value }),
-                }))}
+              <select
+                value={filter.column}
+                onChange={(e) => updateFilter(filter.id, { column: e.target.value })}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                {colDef?.label || filter.column}
-              </DropdownMenu>
+                {COLUMNS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Operator Select */}
             <div className="w-full sm:w-[140px]">
-              <DropdownMenu
-                options={operators.map((op) => ({
-                  label: op.label,
-                  onClick: () => updateFilter(filter.id, { operator: op.value }),
-                }))}
+              <select
+                value={filter.operator}
+                // @ts-ignore - value cast
+                onChange={(e) => updateFilter(filter.id, { operator: e.target.value as FilterOperator })}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                {operators.find((op) => op.value === filter.operator)?.label || filter.operator}
-              </DropdownMenu>
+                {operators.map((op) => (
+                  <option key={op.value} value={op.value}>
+                    {op.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Value Input/Select */}
             <div className="flex-1 w-full min-w-0">
               {valueOptions ? (
-                <DropdownMenu
-                  className="w-full"
-                  options={[
-                      { label: "Any", onClick: () => updateFilter(filter.id, { value: '' }) },
-                      ...valueOptions.map((opt: { label: string; value: string }) => ({
-                    label: opt.label,
-                    onClick: () => updateFilter(filter.id, { value: opt.value }),
-                  }))]}
+                <select
+                  value={filter.value}
+                  onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
-                  <span className="block truncate">
-                    {filter.value || 'Select...'}
-                  </span>
-                </DropdownMenu>
+                  <option value="">Any</option>
+                  {valueOptions.map((opt) => (
+                    <option key={opt.value + opt.label} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <Input
                   value={filter.value}

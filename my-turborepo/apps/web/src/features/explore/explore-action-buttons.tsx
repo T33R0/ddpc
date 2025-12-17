@@ -71,7 +71,7 @@ export function ExploreActionButtons({
       </div>
 
       <Modal open={showFilter} onOpenChange={setShowFilter}>
-        <ModalContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <ModalContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <ModalHeader>
             <ModalTitle>Filter Options</ModalTitle>
           </ModalHeader>
