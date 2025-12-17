@@ -51,7 +51,7 @@ export function ExploreActionButtons({
             className="flex items-center justify-center gap-2 bg-secondary/50 border-border hover:bg-secondary text-foreground flex-1 sm:flex-none sm:w-[150px]"
           >
             <Filter className="w-4 h-4" />
-            Filter
+            Advanced Filters
             {filters.length > 0 && (
               <span className="ml-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
                 {filters.length}
@@ -73,7 +73,7 @@ export function ExploreActionButtons({
       <Modal open={showFilter} onOpenChange={setShowFilter}>
         <ModalContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <ModalHeader>
-            <ModalTitle>Filter Vehicles</ModalTitle>
+            <ModalTitle>Filter Options</ModalTitle>
           </ModalHeader>
           <ModalBody className="px-6 pb-6 overflow-y-auto">
              <FilterBuilder
