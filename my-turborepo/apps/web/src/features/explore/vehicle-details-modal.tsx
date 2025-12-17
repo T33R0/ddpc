@@ -297,10 +297,11 @@ const VehicleDetailsModal = ({
             <div className="space-y-4">
               <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted/10 relative group">
                 <ImageWithTimeoutFallback
-                  src={primaryImageUrl}
+                  src={primaryImageUrl || "/branding/fallback-logo.png"}
                   fallbackSrc="/branding/fallback-logo.png"
                   alt={`${summary.make} ${summary.model}`}
                   className="w-full h-full object-cover"
+                  showMissingText={!primaryImageUrl}
                 />
 
                 {/* Mobile Navigation Arrows Overlay on Image */}
