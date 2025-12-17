@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './auth';
 import { supabase } from './supabase';
+import { updateUserTheme } from '../actions/user-profile';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -153,24 +154,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         if (user) {
             try {
-                console.log('ThemeProvider: Initiating Supabase update...');
-                const { data, error } = await supabase
-                    .from('user_profile')
-                    .update({ theme: newTheme })
-                    .eq('user_id', user.id)
-                    .select();
+                console.log('ThemeProvider: Initiating Server Action update...');
+                const result = await updateUserTheme(newTheme);
 
-                console.log('ThemeProvider: Supabase update result:', { data, error });
+                console.log('ThemeProvider: Server Action result:', result);
 
-                if (error) {
-                    console.error('ThemeProvider: Error saving theme to DB:', error);
-                } else if (!data || data.length === 0) {
-                    console.error(`ThemeProvider: Update succeeded but no rows were affected for user ${user.id}. Check RLS or existence of user_profile row.`);
+                if (!result.success) {
+                    console.error('ThemeProvider: Error saving theme via Server Action:', result.error);
                 } else {
-                    console.log('ThemeProvider: Successfully saved theme to DB.');
+                    console.log('ThemeProvider: Successfully saved theme via Server Action.');
                 }
             } catch (err) {
-                console.error('ThemeProvider: Unexpected error saving theme:', err);
+                console.error('ThemeProvider: Unexpected error calling server action:', err);
             }
         } else {
             console.warn('ThemeProvider: Attempted to save theme but no user is logged in.');
