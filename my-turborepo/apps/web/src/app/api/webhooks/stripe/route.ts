@@ -73,8 +73,9 @@ export async function POST(req: NextRequest) {
         // Check status
         if (['active', 'trialing'].includes(subscription.status)) {
            // Ensure items exist
-           if (subscription.items.data.length > 0) {
-             const priceId = subscription.items.data[0].price.id;
+           const firstItem = subscription.items.data[0];
+           if (firstItem) {
+             const priceId = firstItem.price.id;
              const plan = getPlanFromPriceId(priceId);
 
              if (plan === 'free') {
