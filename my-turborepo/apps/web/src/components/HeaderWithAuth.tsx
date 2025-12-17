@@ -14,7 +14,7 @@ import { TestimonialModal } from './TestimonialModal';
 export function HeaderWithAuth() {
   const pathname = usePathname() || '/';
   const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, saveTheme } = useTheme();
   const { open: openReportModal } = useReportModal();
   const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
 
@@ -63,7 +63,7 @@ export function HeaderWithAuth() {
         onGiveTestimonial={() => setTestimonialModalOpen(true)}
         userBasePath={userBasePath}
         theme={theme}
-        onThemeChange={(newTheme) => setTheme(newTheme as Theme)}
+        onThemeChange={(newTheme) => saveTheme(newTheme as Theme)}
       />
 
       {user && (

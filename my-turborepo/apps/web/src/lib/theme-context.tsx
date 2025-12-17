@@ -63,6 +63,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 console.log('ThemeProvider: Fetched theme from DB:', data?.theme);
 
                 if (data?.theme && ['light', 'dark', 'auto'].includes(data.theme)) {
+                    console.log(`ThemeProvider: Setting local state to '${data.theme}' from DB.`);
                     setThemeState(data.theme as Theme);
                 } else {
                     console.log(`ThemeProvider: No valid theme found in DB (got '${data?.theme}'), defaulting to dark and saving.`);
