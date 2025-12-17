@@ -64,7 +64,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (data?.theme && ['light', 'dark', 'auto'].includes(data.theme)) {
                     setThemeState(data.theme as Theme);
                 } else {
-                    console.log('ThemeProvider: No valid theme found in DB, defaulting to dark and saving.');
+                    console.log(`ThemeProvider: No valid theme found in DB (got '${data?.theme}'), defaulting to dark and saving.`);
                     setThemeState('dark');
                     // Attempt to save default
                     const { error: updateError } = await supabase
@@ -147,7 +147,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     const saveTheme = async (newTheme: Theme) => {
-        console.log('ThemeProvider: saving theme:', newTheme);
+        console.log(`ThemeProvider: saving theme: ${newTheme} for user: ${user?.id}`);
         setThemeState(newTheme);
 
         if (user) {
@@ -162,13 +162,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (error) {
                     console.error('ThemeProvider: Error saving theme to DB:', error);
                 } else if (!data || data.length === 0) {
-                    console.error('ThemeProvider: Update succeeded but no rows were affected. Check RLS or existence of user_profile row.');
+                    console.error(`ThemeProvider: Update succeeded but no rows were affected for user ${user.id}. Check RLS or existence of user_profile row.`);
                 } else {
                     console.log('ThemeProvider: Successfully saved theme to DB. Returned data:', data);
                 }
             } catch (err) {
                 console.error('ThemeProvider: Unexpected error saving theme:', err);
             }
+        } else {
+            console.warn('ThemeProvider: Attempted to save theme but no user is logged in.');
         }
     };
 
