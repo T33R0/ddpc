@@ -72,31 +72,30 @@ export async function POST(req: NextRequest) {
 
         // Check status
         if (['active', 'trialing'].includes(subscription.status)) {
-           const priceId = subscription.items.data[0].price.id;
-           const plan = getPlanFromPriceId(priceId);
+           // Ensure items exist
+           if (subscription.items.data.length > 0) {
+             const priceId = subscription.items.data[0].price.id;
+             const plan = getPlanFromPriceId(priceId);
 
-           if (plan === 'free') {
-             // If mapped to free (unknown price), we might not want to overwrite 'builder' if it was valid?
-             // But here we assume if we get an update, it is the truth.
-             // However, if the user has multiple subscriptions (rare but possible), this logic is simplistic.
-             // We assume 1 active subscription per user.
-             console.log(`Price ID ${priceId} mapped to free plan.`);
-           }
+             if (plan === 'free') {
+               console.log(`Price ID ${priceId} mapped to free plan.`);
+             }
 
-           // Update user plan
-           const { data: user } = await supabase
-             .from('user_profile')
-             .select('user_id')
-             .eq('stripe_customer_id', customerId)
-             .single();
-
-           if (user) {
-             await supabase
+             // Update user plan
+             const { data: user } = await supabase
                .from('user_profile')
-               .update({ plan })
-               .eq('user_id', user.user_id);
-           } else {
-             console.warn(`User not found for customer ${customerId} in subscription update`);
+               .select('user_id')
+               .eq('stripe_customer_id', customerId)
+               .single();
+
+             if (user) {
+               await supabase
+                 .from('user_profile')
+                 .update({ plan })
+                 .eq('user_id', user.user_id);
+             } else {
+               console.warn(`User not found for customer ${customerId} in subscription update`);
+             }
            }
         } else {
            // If status is incomplete, past_due, canceled... we might handle it.
