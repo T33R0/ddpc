@@ -35,3 +35,34 @@ export async function updateUserTheme(theme: 'light' | 'dark' | 'auto') {
         return { success: false, error: 'Unexpected error occurred' };
     }
 }
+
+export async function getUserTheme() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { theme: 'dark' };
+
+    try {
+        const { data, error } = await supabase
+            .from('user_profile')
+            .select('theme')
+            .eq('user_id', user.id)
+            .single();
+
+        if (error) {
+            // It's common to not have a profile yet or RLS error, defaulting is safe
+            return { theme: 'dark' };
+        }
+
+        // Ensure valid value
+        const theme = data?.theme;
+        if (theme && ['light', 'dark', 'auto'].includes(theme)) {
+            return { theme };
+        }
+
+        return { theme: 'dark' };
+    } catch (err) {
+        console.error('getUserTheme: Unexpected error', err);
+        return { theme: 'dark' };
+    }
+}
