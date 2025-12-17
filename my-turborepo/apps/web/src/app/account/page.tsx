@@ -10,7 +10,7 @@ import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
 import { AuthModal } from '@repo/ui/auth-modal';
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
   User,
@@ -36,7 +36,9 @@ export default function AccountPage() {
   const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle, refreshProfile } = useAuth();
   const { theme, setTheme, saveTheme } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -70,6 +72,74 @@ export default function AccountPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser, loading, session?.access_token, router]);
+
+  useEffect(() => {
+    const billingStatus = searchParams?.get('billing_status');
+    if (billingStatus === 'success') {
+      toast.success('Subscription updated successfully!');
+      // Refresh profile to get new plan
+      if (session?.access_token) {
+        fetchUserProfile();
+      }
+      // Clean up URL
+      router.replace('/account');
+    } else if (billingStatus === 'canceled') {
+      toast.error('Subscription update canceled');
+      router.replace('/account');
+    }
+  }, [searchParams, router, fetchUserProfile, session?.access_token]);
+
+  const handleManageBilling = async () => {
+    setIsRedirecting(true);
+    try {
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error('Failed to redirect to billing portal');
+        setIsRedirecting(false);
+      }
+    } catch (error) {
+      console.error('Error redirecting to portal:', error);
+      toast.error('Failed to redirect to billing portal');
+      setIsRedirecting(false);
+    }
+  };
+
+  const handleUpgrade = async (priceId: string) => {
+    if (!priceId) {
+      toast.error('Plan configuration missing');
+      return;
+    }
+    setIsRedirecting(true);
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error('Failed to redirect to checkout');
+        setIsRedirecting(false);
+      }
+    } catch (error) {
+      console.error('Error redirecting to checkout:', error);
+      toast.error('Failed to redirect to checkout');
+      setIsRedirecting(false);
+    }
+  };
 
   const fetchUserProfile = useCallback(async () => {
     if (!session?.access_token) return;
@@ -713,8 +783,13 @@ export default function AccountPage() {
                           </p>
                         </div>
                       </div>
-                      <Button variant="outline" disabled className="border-border text-muted-foreground">
-                        Current Plan
+                      <Button
+                        variant="outline"
+                        onClick={handleManageBilling}
+                        disabled={isRedirecting}
+                        className="border-border hover:bg-muted"
+                      >
+                        {isRedirecting ? 'Loading...' : 'Manage Billing'}
                       </Button>
                     </div>
 
@@ -752,13 +827,65 @@ export default function AccountPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-400 mb-4">
-                        Billing management and plan upgrades coming soon!
-                      </p>
-                      <Button variant="outline" disabled>
-                        Manage Billing
-                      </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Builder Plan Option */}
+                      {user.plan === 'free' && (
+                        <div className="p-6 border border-border rounded-xl bg-card hover:border-accent transition-colors">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">🔧</span>
+                            <h3 className="text-xl font-bold text-red-500">Builder</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            For serious builds and project management.
+                          </p>
+                          <ul className="text-sm text-muted-foreground space-y-2 mb-6">
+                            <li>• Unlimited Vehicles</li>
+                            <li>• Detailed Build Planning</li>
+                            <li>• Mod Registry</li>
+                          </ul>
+                          <Button
+                            className="w-full"
+                            onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUILDER || '')}
+                            disabled={isRedirecting}
+                          >
+                            Upgrade to Builder
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Pro Plan Option (Assuming Pro exists and is higher than Builder) */}
+                      {user.plan !== 'pro' && (
+                        <div className="p-6 border border-border rounded-xl bg-card hover:border-accent transition-colors">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">⚡</span>
+                            <h3 className="text-xl font-bold text-red-500">Pro</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            The ultimate toolkit for automotive enthusiasts.
+                          </p>
+                          <ul className="text-sm text-muted-foreground space-y-2 mb-6">
+                            <li>• All Builder Features</li>
+                            <li>• Advanced Analytics</li>
+                            <li>• Priority Support</li>
+                          </ul>
+                          <Button
+                            className="w-full"
+                            onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || '')}
+                            disabled={isRedirecting}
+                          >
+                            Upgrade to Pro
+                          </Button>
+                        </div>
+                      )}
+
+                      {user.plan === 'pro' && (
+                         <div className="col-span-2 text-center py-8">
+                            <p className="text-muted-foreground">You are on the highest plan!</p>
+                            <Button variant="outline" onClick={handleManageBilling} className="mt-4">
+                              Manage Subscription
+                            </Button>
+                         </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
