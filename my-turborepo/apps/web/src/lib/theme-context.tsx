@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './auth';
 import { supabase } from './supabase';
-import { updateUserTheme } from '../actions/user-profile';
+import { updateUserTheme, getUserTheme } from '../actions/user-profile';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -17,8 +17,8 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setThemeState] = useState<Theme>('dark');
+export function ThemeProvider({ children, initialTheme }: { children: React.ReactNode; initialTheme?: Theme }) {
+    const [theme, setThemeState] = useState<Theme>(initialTheme || 'dark');
     const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
@@ -46,37 +46,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             }
 
             try {
-                // Check if we can select 'theme' from user_profile
-                const { data, error } = await supabase
-                    .from('user_profile')
-                    .select('theme')
-                    .eq('user_id', user.id)
-                    .single();
+                // Use Server Action to fetch theme to avoid client-side RLS/network issues
+                console.log('ThemeProvider: Fetching theme via Server Action...');
+                const { theme: fetchedTheme } = await getUserTheme();
 
-                if (error) {
-                    console.error('ThemeProvider: Error fetching theme:', error);
-                    // Fallback to dark if error
-                    setThemeState('dark');
-                    return;
-                }
+                console.log('ThemeProvider: Server Action returned theme:', fetchedTheme);
 
-                console.log('ThemeProvider: Fetched theme from DB:', data?.theme);
-
-                if (data?.theme && ['light', 'dark', 'auto'].includes(data.theme)) {
-                    console.log(`ThemeProvider: Setting local state to '${data.theme}' from DB.`);
-                    setThemeState(data.theme as Theme);
+                if (fetchedTheme && ['light', 'dark', 'auto'].includes(fetchedTheme)) {
+                    console.log(`ThemeProvider: Setting local state to '${fetchedTheme}' from Server Action.`);
+                    setThemeState(fetchedTheme as Theme);
                 } else {
-                    console.log(`ThemeProvider: No valid theme found in DB (got '${data?.theme}'), defaulting to dark and saving.`);
+                    console.log(`ThemeProvider: Invalid or missing theme from Server Action ('${fetchedTheme}'), defaulting to dark.`);
                     setThemeState('dark');
-                    // Attempt to save default
-                    const { error: updateError } = await supabase
-                        .from('user_profile')
-                        .update({ theme: 'dark' })
-                        .eq('user_id', user.id);
-
-                    if (updateError) {
-                        console.error('ThemeProvider: Error saving default theme:', updateError);
-                    }
                 }
             } catch (err) {
                 console.error('ThemeProvider: Unexpected error syncing theme:', err);
