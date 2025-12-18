@@ -7,3 +7,6 @@ Notes / Observations from repository scan
 - Supabase configuration folder exists at supabase/ (no remote DB access; schema must be supplied or migrations created for changes).
 - No existing CHANGELOG.md at repo root — the above entry is formatted for appending to a newly created file.
 - Ensure all changelog additions are appended; agents must never edit prior changelog entries, only add new lines.
+
+[2025-05-24] [docs] [ADD] Added packages/ui/COMPONENT_BIBLE.md (UI standardization guide)
+[2025-05-24] [docs] [ADD] Added ddpc_audit_report.md (Repo audit for dead code and redundancy)
