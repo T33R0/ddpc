@@ -6,7 +6,8 @@ ALTER VIEW IF EXISTS public.v_vehicle_data_typed SET (security_invoker = true);
 
 -- 2. Fix 'materialized_view_in_api' warning for mv_vehicle_filter_options
 -- Revoke access from API roles since it is not intended for direct public access.
-REVOKE ALL ON MATERIALIZED VIEW public.mv_vehicle_filter_options FROM anon, authenticated;
+-- Note: 'TABLE' keyword is used for tables, views, and materialized views in REVOKE.
+REVOKE ALL ON TABLE public.mv_vehicle_filter_options FROM anon, authenticated;
 
 -- 3. Fix 'function_search_path_mutable' warnings
 -- Explicitly set search_path to public for security definer functions or just general hygiene.
