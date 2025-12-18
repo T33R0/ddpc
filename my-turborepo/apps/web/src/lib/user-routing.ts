@@ -16,7 +16,6 @@ const USERNAME_SCOPED_SEGMENTS = new Set([
   'policy',
   'pricing',
   'privacy',
-  'scrutineer',
   'terms',
   'vehicle',
 ])
