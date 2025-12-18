@@ -16,19 +16,21 @@ ALTER FUNCTION public.get_vehicle_countries() SET search_path = public;
 
 ALTER FUNCTION public.get_maintenance_due_vehicles() SET search_path = public;
 
--- Function signature from database-performance-fix_v2.sql
-ALTER FUNCTION public.get_unique_vehicles_with_trims(
-  integer,
-  integer,
-  integer,
-  integer,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text
-) SET search_path = public;
+-- Fix 'function_search_path_mutable' for get_unique_vehicles_with_trims dynamically
+-- using a DO block because the signature varies between environments.
+DO $$
+DECLARE
+    func_record record;
+BEGIN
+    FOR func_record IN
+        SELECT oid::regprocedure::text as func_signature
+        FROM pg_proc
+        WHERE proname = 'get_unique_vehicles_with_trims'
+        AND pronamespace = 'public'::regnamespace
+    LOOP
+        EXECUTE format('ALTER FUNCTION %s SET search_path = public', func_record.func_signature);
+    END LOOP;
+END $$;
 
 -- 4. Fix 'function_search_path_mutable' for get_vehicle_tsvector dynamically
 -- Since the signature is not in the codebase, we use a DO block to find and alter it.
