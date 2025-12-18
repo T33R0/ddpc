@@ -12,3 +12,4 @@ Notes / Observations from repository scan
 [2025-05-24] [docs] [ADD] Added ddpc_audit_report.md (Repo audit for dead code and redundancy)
 [2025-05-24] [maintenance] [REMOVE] Removed openai dependency, Scrutineer ghosts, and cleaned up broken UI exports.
 [2025-05-24] [ui] [REFACTOR] Deleted duplicate apps/web/src/components/ui and refactored VehicleCard to Gold Standard.
+[2025-05-24] [docs] [AUDIT] Added Phase 2 UI Compliance findings (financials-dashboard and ModCard) to ddpc_audit_report.md
