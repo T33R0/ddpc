@@ -73,3 +73,32 @@ npm uninstall openai
 ---
 
 **Status:** AWAITING EXECUTION
+
+## 5. Phase 2 Audit Findings (UI Compliance)
+**Date:** 2025-05-24
+**Focus:** Hardcoded Colors, Magic Numbers, and Component Primitive Usage.
+
+### High-Impact Violations
+The following components require immediate refactoring to meet the Gold Standard:
+
+1.  **`apps/web/src/features/mods/components/ModCard.tsx`**
+    *   **Violations:**
+        *   Hardcoded colors: `text-green-500`, `text-blue-500`, `text-destructive`.
+        *   Redundant styles: `bg-card` (already handled by Primitive).
+        *   Magic classes: `rounded-2xl` (should use Primitive defaults).
+    *   **Remediation:** Refactor to use `<Card>` properly, replace colors with `text-muted-foreground` or Badge variants.
+
+2.  **`apps/web/src/features/financials/financials-dashboard.tsx`**
+    *   **Violations:**
+        *   **Severe Theme Breaking:** Uses hardcoded Dark Mode colors (`bg-gray-900/50`, `text-white`, `text-gray-300`), making it illegible in Light Mode.
+        *   **Chart Colors:** Inline hex codes (`#10B981`) instead of CSS variables.
+        *   **Primitives:** Uses raw HTML `<table>` instead of `@repo/ui/table`.
+    *   **Remediation:** Full refactor to use Semantic Tokens (`bg-card`, `text-foreground`), `@repo/ui/table`, and Recharts CSS variable integration.
+
+3.  **`apps/web/src/features/admin/AdminUserTable.tsx`**
+    *   **Violations:** Hardcoded colors and custom table implementation.
+    *   **Remediation:** Migrate to `@repo/ui/table`.
+
+### Action Plan
+1.  **Immediate:** Refactor `ModCard.tsx` (Low effort, high consistency gain).
+2.  **Next:** Refactor `financials-dashboard.tsx` (High effort, critical for theming).

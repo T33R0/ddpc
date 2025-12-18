@@ -40,13 +40,11 @@ const getStatusIcon = (status: VehicleMod['status']) => {
 
 export function ModCard({ mod }: ModCardProps) {
   return (
-    <Card
-      className="bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border"
-    >
+    <Card className="hover:border-accent transition-colors duration-300">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg text-foreground mb-1">{mod.title}</CardTitle>
+            <CardTitle className="text-lg mb-1">{mod.title}</CardTitle>
             {mod.description && (
               <p className="text-sm text-muted-foreground">{mod.description}</p>
             )}
@@ -63,13 +61,13 @@ export function ModCard({ mod }: ModCardProps) {
         <div className="grid grid-cols-2 gap-4 text-sm">
           {mod.cost && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <DollarSign className="h-4 w-4 text-primary" />
               <span>${mod.cost.toLocaleString()}</span>
             </div>
           )}
           {mod.odometer && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Gauge className="h-4 w-4 text-blue-500" />
+              <Gauge className="h-4 w-4 text-primary" />
               <span>{mod.odometer.toLocaleString()} mi</span>
             </div>
           )}
@@ -87,7 +85,7 @@ export function ModCard({ mod }: ModCardProps) {
             <h4 className="text-sm font-medium text-muted-foreground mb-2">Parts Used:</h4>
             <div className="space-y-1">
               {mod.parts.map((part) => (
-                <div key={part.id} className="flex items-center justify-between text-sm bg-muted/50 backdrop-blur-sm rounded px-2 py-1 border border-border">
+                <div key={part.id} className="flex items-center justify-between text-sm bg-muted/50 rounded px-2 py-1 border border-border">
                   <div className="flex-1">
                     <span className="text-foreground">{part.name}</span>
                     {part.vendor && (
@@ -98,7 +96,7 @@ export function ModCard({ mod }: ModCardProps) {
                     )}
                   </div>
                   {part.cost && (
-                    <span className="text-green-500 font-medium">
+                    <span className="text-primary font-medium">
                       ${(part.cost * part.quantity).toLocaleString()}
                     </span>
                   )}
@@ -114,11 +112,11 @@ export function ModCard({ mod }: ModCardProps) {
             <h4 className="text-sm font-medium text-muted-foreground mb-2">Outcome:</h4>
             <div className="flex items-center gap-2 text-sm">
               {mod.outcome.success ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-primary" />
               ) : (
                 <XCircle className="h-4 w-4 text-destructive" />
               )}
-              <span className={mod.outcome.success ? 'text-green-500' : 'text-destructive'}>
+              <span className={mod.outcome.success ? 'text-primary' : 'text-destructive'}>
                 {mod.outcome.success ? 'Successful' : 'Issues Encountered'}
               </span>
             </div>
@@ -131,4 +129,3 @@ export function ModCard({ mod }: ModCardProps) {
     </Card>
   )
 }
-
