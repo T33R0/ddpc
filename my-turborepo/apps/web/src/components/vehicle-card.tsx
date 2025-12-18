@@ -2,6 +2,8 @@ import React from 'react'
 import { cn } from '@repo/ui/lib/utils'
 import { ImageWithTimeoutFallback } from './image-with-timeout-fallback'
 import { GripVertical } from 'lucide-react'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@repo/ui/card'
+import { Badge } from '@repo/ui/badge'
 
 interface VehicleCardProps {
   title: string
@@ -30,17 +32,20 @@ export function VehicleCard({
   onDragEnd,
   showDragHandle
 }: VehicleCardProps) {
-  // Status color logic
-  const getStatusColor = (s?: string) => {
+  // Map legacy status strings to standard Badge variants
+  const getStatusVariant = (s?: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (s) {
-      case 'daily_driver': return 'bg-green-500'
-      case 'parked': return 'bg-yellow-500'
-      case 'listed': return 'bg-yellow-500'
+      case 'daily_driver': return 'default'
+      case 'parked': return 'secondary'
+      case 'listed': return 'outline'
       case 'sold':
-      case 'retired': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'retired': return 'destructive'
+      default: return 'secondary'
     }
   }
+
+  // Format status text (replace underscores with spaces)
+  const formatStatus = (s: string) => s.replace(/_/g, ' ')
 
   return (
     <div
@@ -50,52 +55,60 @@ export function VehicleCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      <div className={cn(
-        "bg-card rounded-2xl p-4 text-foreground flex flex-col gap-4 border border-border transition-all duration-300 ease-out",
+      <Card className={cn(
+        "h-full overflow-hidden transition-all duration-300 ease-out border-border",
         !isDragging && "group-hover:scale-105 group-hover:border-accent group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
       )}>
-        <div className="relative w-full aspect-video overflow-hidden rounded-lg bg-muted/10">
-          {/* Status Dot */}
-          {status && (
-            <div className="absolute top-2 left-2 z-10 flex gap-1">
-              <span className={cn("w-3 h-3 rounded-full shadow-sm", getStatusColor(status))} />
-            </div>
-          )}
-
-          {/* Drag Handle */}
-          {showDragHandle && (
-            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded p-1 cursor-grab active:cursor-grabbing text-white">
-              <GripVertical size={16} />
-            </div>
-          )}
-
-          <ImageWithTimeoutFallback
-            src={imageUrl || "/branding/fallback-logo.png"}
-            fallbackSrc="/branding/fallback-logo.png"
-            alt={`${title} vehicle`}
-            className="w-full h-full object-cover"
-          />
-          {!imageUrl && (
-            <>
-              <div className="absolute inset-0 bg-black/40" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white text-lg font-semibold tracking-wide">Vehicle Image Missing</span>
+        {/* Image Section */}
+        <div className="relative w-full aspect-video bg-muted/10 p-4 pb-0">
+           <div className="relative w-full h-full overflow-hidden rounded-lg">
+            {/* Status Badge */}
+            {status && (
+              <div className="absolute top-2 left-2 z-10">
+                <Badge variant={getStatusVariant(status)} className="capitalize shadow-sm">
+                  {formatStatus(status)}
+                </Badge>
               </div>
-            </>
-          )}
-        </div>
+            )}
 
-        <div className="flex flex-col gap-1 items-start">
-          <h3 className="font-bold text-lg text-foreground line-clamp-1">{title}</h3>
-          {subtitle && <div className="text-sm text-muted-foreground line-clamp-1">{subtitle}</div>}
-        </div>
+            {/* Drag Handle */}
+            {showDragHandle && (
+              <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded p-1 cursor-grab active:cursor-grabbing text-foreground shadow-sm">
+                <GripVertical size={16} />
+              </div>
+            )}
 
-        {footer && (
-          <div className="flex justify-between items-center mt-auto pt-2">
-            {footer}
+            <ImageWithTimeoutFallback
+              src={imageUrl || "/branding/fallback-logo.png"}
+              fallbackSrc="/branding/fallback-logo.png"
+              alt={`${title} vehicle`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+
+            {/* Missing Image Placeholder */}
+            {!imageUrl && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted/50 backdrop-blur-sm">
+                <span className="text-muted-foreground text-sm font-semibold tracking-wide">Image Missing</span>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Content Section */}
+        <CardHeader className="p-4 pt-4">
+          <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
+          {subtitle && <CardDescription className="line-clamp-1">{subtitle}</CardDescription>}
+        </CardHeader>
+
+        {/* Footer Section */}
+        {footer && (
+          <CardFooter className="p-4 pt-0 mt-auto">
+            <div className="w-full flex justify-between items-center">
+              {footer}
+            </div>
+          </CardFooter>
         )}
-      </div>
+      </Card>
     </div>
   )
 }
