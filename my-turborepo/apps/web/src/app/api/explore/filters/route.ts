@@ -23,6 +23,7 @@ type FilterOptionsResponse = {
   fuelTypes: string[];
   drivetrains: string[];
   bodyTypes: string[];
+  countries: string[];
 };
 
 const CACHE_HEADERS = {
@@ -37,7 +38,10 @@ const emptyResponse: FilterOptionsResponse = {
   fuelTypes: [],
   drivetrains: [],
   bodyTypes: [],
+  countries: [],
 };
+
+const FALLBACK_COUNTRIES = ['Germany', 'Japan', 'United States', 'Italy', 'United Kingdom', 'Sweden', 'South Korea', 'France', 'China'];
 
 const CACHE_DURATION_MS = 1000 * 60 * 30; // 30 minutes
 let cachedFilters: FilterOptionsResponse | null = null;
@@ -59,7 +63,7 @@ const sanitizeStrings = (values: unknown[]) => {
     normalized.push(cleaned);
   });
 
-  return normalized;
+  return normalized.sort();
 };
 
 const sanitizeYears = (values: unknown[]) => {
@@ -91,7 +95,14 @@ export async function GET() {
   }
 
   try {
-    const { data, error } = await supabase.rpc('get_vehicle_filter_options');
+    const [filterOptionsResult, countriesResult] = await Promise.all([
+      supabase.rpc('get_vehicle_filter_options'),
+      supabase.rpc('get_vehicle_countries')
+    ]);
+
+    const data = filterOptionsResult.data;
+    const countriesData = countriesResult.data;
+    const error = filterOptionsResult.error;
 
     if (error) {
       console.error('Failed to fetch filter options', error);
@@ -114,15 +125,23 @@ export async function GET() {
       });
     }
 
+    // Process countries: use RPC result or fallback
+    let countries: string[] = [];
+    if (countriesData && Array.isArray(countriesData)) {
+      countries = sanitizeStrings(countriesData.map((c: any) => c.country));
+    } else {
+      countries = FALLBACK_COUNTRIES.sort();
+    }
+
     const response: FilterOptionsResponse = {
       years: sanitizeYears(Array.isArray(data.years) ? data.years : []),
       makes: sanitizeStrings(Array.isArray(data.makes) ? data.makes : []),
-      // Pass models through directly as they are now objects
       models: Array.isArray(data.models) ? data.models : [],
       engineTypes: sanitizeStrings(Array.isArray(data.engineTypes) ? data.engineTypes : []),
       fuelTypes: sanitizeStrings(Array.isArray(data.fuelTypes) ? data.fuelTypes : []),
       drivetrains: sanitizeStrings(Array.isArray(data.drivetrains) ? data.drivetrains : []),
       bodyTypes: sanitizeStrings(Array.isArray(data.bodyTypes) ? data.bodyTypes : []),
+      countries: countries,
     };
 
     cachedFilters = response;

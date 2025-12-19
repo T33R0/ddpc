@@ -33,20 +33,16 @@ export * from './auth-modal';
 export * from './user-account-dropdown';
 
 // Chat Components
-export * from './chat-window';
-export * from './chat-drawer';
 
 // Page Components
 export * from './header';
 export * from './footer';
-export * from './pricing-page';
 
 // Landing Page Components
 export * from './landing';
 
 // Utility Components
 export * from './logo';
-export * from './scrutineer-popup';
 
 // Hooks
 export * from './hooks/use-click-outside';

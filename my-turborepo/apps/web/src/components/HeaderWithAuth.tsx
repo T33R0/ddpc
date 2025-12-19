@@ -14,7 +14,7 @@ import { TestimonialModal } from './TestimonialModal';
 export function HeaderWithAuth() {
   const pathname = usePathname() || '/';
   const { user, profile, signOut, signUp, signIn, signInWithGoogle } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, saveTheme } = useTheme();
   const { open: openReportModal } = useReportModal();
   const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
 
@@ -36,8 +36,7 @@ export function HeaderWithAuth() {
     (user?.user_metadata?.user_name as string | undefined) ??
     (user?.email ? user.email.split('@')[0] : undefined);
 
-  const usernameSlug = rawUsername ? toUsernameSlug(rawUsername) : null;
-  const userBasePath = usernameSlug ? `/${usernameSlug}` : undefined;
+  const userBasePath = undefined;
 
   const handleGoogleSignIn = () => {
     signInWithGoogle();
@@ -64,7 +63,7 @@ export function HeaderWithAuth() {
         onGiveTestimonial={() => setTestimonialModalOpen(true)}
         userBasePath={userBasePath}
         theme={theme}
-        onThemeChange={(newTheme) => setTheme(newTheme as Theme)}
+        onThemeChange={(newTheme) => saveTheme(newTheme as Theme)}
       />
 
       {user && (

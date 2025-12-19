@@ -1,5 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { Vehicle, VehicleSummary } from '@repo/types'
+import type { SupabaseFilter, FilterOptions } from '../features/explore/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -12,65 +13,19 @@ type VehicleSummaryResponse = {
   pageSize: number
 }
 
-type FilterOptions = {
-  years: number[]
-  makes: string[]
-  models: { make: string; model: string }[]
-  engineTypes: string[]
-  fuelTypes: string[]
-  drivetrains: string[]
-  bodyTypes: string[]
-}
-
 export async function getVehicleSummaries(
   page = 1,
   pageSize = 24,
-  filters?: {
-    minYear?: number | null;
-    maxYear?: number | null;
-    make?: string | null;
-    model?: string | null;
-    engineType?: string | null;
-    fuelType?: string | null;
-    drivetrain?: string | null;
-    vehicleType?: string | null;
-    search?: string | null;
-  }
+  filters: SupabaseFilter[] = []
 ): Promise<VehicleSummary[]> {
   const searchParams = new URLSearchParams({
     page: page.toString(),
     pageSize: pageSize.toString(),
   })
 
-  // Add filter parameters if provided
-  if (filters) {
-    if (filters.search) {
-      searchParams.set('search', filters.search);
-    }
-    if (filters.minYear !== null && filters.minYear !== undefined) {
-      searchParams.set('minYear', filters.minYear.toString());
-    }
-    if (filters.maxYear !== null && filters.maxYear !== undefined) {
-      searchParams.set('maxYear', filters.maxYear.toString());
-    }
-    if (filters.make) {
-      searchParams.set('make', filters.make);
-    }
-    if (filters.model) {
-      searchParams.set('model', filters.model);
-    }
-    if (filters.engineType) {
-      searchParams.set('engineType', filters.engineType);
-    }
-    if (filters.fuelType) {
-      searchParams.set('fuelType', filters.fuelType);
-    }
-    if (filters.drivetrain) {
-      searchParams.set('drivetrain', filters.drivetrain);
-    }
-    if (filters.vehicleType) {
-      searchParams.set('vehicleType', filters.vehicleType);
-    }
+  // Add filters as JSON string
+  if (filters.length > 0) {
+    searchParams.set('filters', JSON.stringify(filters));
   }
 
   const response = await fetch(`/api/explore/vehicles?${searchParams.toString()}`, {
@@ -123,6 +78,3 @@ export async function getVehicleById(id: string): Promise<Vehicle | null> {
 
   return data as Vehicle
 }
-
-// Note: addVehicleToGarage is now implemented as an API route
-// in /api/garage/add-vehicle for better error handling and security

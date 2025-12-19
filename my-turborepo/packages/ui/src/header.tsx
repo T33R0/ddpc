@@ -22,7 +22,9 @@ interface HeaderProps {
   activeVehiclesCount?: number;
   onSignOut?: () => Promise<void> | void;
   onGoogleSignIn?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
   onReportProblem?: () => void;
   onGiveTestimonial?: () => void;
@@ -33,7 +35,6 @@ interface HeaderProps {
 
 export function Header({
   user,
-  activeVehiclesCount,
   onSignOut,
   onGoogleSignIn,
   onEmailSignUp,

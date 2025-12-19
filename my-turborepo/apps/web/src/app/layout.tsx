@@ -13,6 +13,7 @@ import {
   DDSRButton,
   Toaster
 } from '../components/DynamicLayout';
+import { ScrollToTop } from '../components/ScrollToTop';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -34,11 +35,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Only get session if user is validated
   const session = user ? (await supabase.auth.getSession()).data.session : null;
 
+  // Fetch initial theme server-side to prevent flash and ensure source of truth
+  let initialTheme: 'light' | 'dark' | 'auto' = 'dark';
+  if (user) {
+    try {
+      const { data } = await supabase
+        .from('user_profile')
+        .select('theme')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.theme && ['light', 'dark', 'auto'].includes(data.theme)) {
+        initialTheme = data.theme as 'light' | 'dark' | 'auto';
+      }
+    } catch (error) {
+      // Fallback to default if fetch fails
+      console.error('Error fetching initial theme:', error);
+    }
+  }
+
   return (
     <html lang="en" className={`${inter.variable} font-sans`} suppressHydrationWarning>
       <body>
         <AuthProvider initialSession={session}>
-          <ThemeProvider>
+          <ThemeProvider initialTheme={initialTheme}>
             <ReportModalProvider>
               <div className="relative flex flex-col min-h-screen">
                 <div
@@ -54,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   {children}
                 </main>
                 <FooterWrapper />
+                <ScrollToTop />
               </div>
               <LogoutModal />
               <DDSRButton />

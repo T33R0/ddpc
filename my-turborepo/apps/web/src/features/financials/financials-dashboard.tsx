@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/table';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '@repo/ui/auth-context';
@@ -121,10 +122,17 @@ export function FinancialsDashboard() {
     };
   }, [financials]);
 
+  // Chart Colors (Semantic)
+  const COLORS = {
+    mods: 'hsl(var(--accent))',
+    maintenance: 'hsl(var(--secondary))',
+    bar: 'hsl(var(--primary))'
+  };
+
   // Prepare chart data
   const spendingByCategoryData = [
-    { name: 'Mods', value: overallStats.totalModsSpend, color: '#10B981' },
-    { name: 'Maintenance', value: overallStats.totalMaintenanceSpend, color: '#3B82F6' },
+    { name: 'Mods', value: overallStats.totalModsSpend, color: COLORS.mods },
+    { name: 'Maintenance', value: overallStats.totalMaintenanceSpend, color: COLORS.maintenance },
   ].filter(item => item.value > 0);
 
   const vehicleCostData = financials
@@ -139,7 +147,7 @@ export function FinancialsDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="text-white">Loading financial data...</div>
+        <div className="text-muted-foreground">Loading financial data...</div>
       </div>
     );
   }
@@ -147,11 +155,11 @@ export function FinancialsDashboard() {
   if (error) {
     return (
       <div className="text-center py-16">
-        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <DollarSign className="w-8 h-8 text-red-400" />
+        <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <DollarSign className="w-8 h-8 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold text-white mb-2">Unable to Load Financial Data</h3>
-        <p className="text-gray-400">{error}</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Unable to Load Financial Data</h3>
+        <p className="text-muted-foreground">{error}</p>
       </div>
     );
   }
@@ -160,57 +168,57 @@ export function FinancialsDashboard() {
     <div className="space-y-8">
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-sm font-medium flex items-center">
+            <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
               <Car className="w-4 h-4 mr-2" />
               Total Vehicles
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">{overallStats.totalVehicles}</div>
+            <div className="text-3xl font-bold">{overallStats.totalVehicles}</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-sm font-medium flex items-center">
+            <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
               <DollarSign className="w-4 h-4 mr-2" />
               Total Spent
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">
+            <div className="text-3xl font-bold text-primary">
               ${overallStats.totalSpend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-sm font-medium flex items-center">
+            <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
               <TrendingUp className="w-4 h-4 mr-2" />
               Avg Cost/Mile
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">
+            <div className="text-3xl font-bold">
               ${overallStats.averageCostPerMile.toFixed(2)}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-white text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Highest Cost Vehicle
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm font-medium text-white">
+            <div className="text-sm font-medium">
               {overallStats.highestCostVehicle?.nickname || 'N/A'}
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted-foreground">
               ${overallStats.highestCostVehicle?.total_spend.toFixed(0) || 0} total
             </div>
           </CardContent>
@@ -220,9 +228,9 @@ export function FinancialsDashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Spending Breakdown */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white text-lg flex items-center">
+            <CardTitle className="text-lg flex items-center">
               <BarChart3 className="w-5 h-5 mr-2" />
               Spending Breakdown
             </CardTitle>
@@ -247,10 +255,12 @@ export function FinancialsDashboard() {
                   <Tooltip
                     formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #374151',
+                      backgroundColor: 'hsl(var(--card))',
+                      borderColor: 'hsl(var(--border))',
                       borderRadius: '8px',
+                      color: 'hsl(var(--foreground))'
                     }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -262,7 +272,7 @@ export function FinancialsDashboard() {
                     className="w-3 h-3 rounded-full mr-2"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-muted-foreground">
                     {item.name}: ${(item.value as number).toLocaleString()}
                   </span>
                 </div>
@@ -272,9 +282,9 @@ export function FinancialsDashboard() {
         </Card>
 
         {/* Vehicle Costs Comparison */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white text-lg flex items-center">
+            <CardTitle className="text-lg flex items-center">
               <TrendingUp className="w-5 h-5 mr-2" />
               Vehicle Costs Comparison
             </CardTitle>
@@ -283,17 +293,17 @@ export function FinancialsDashboard() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={vehicleCostData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis
                     dataKey="name"
-                    stroke="#9CA3AF"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis
-                    stroke="#9CA3AF"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tickFormatter={(value) => `$${value}`}
                   />
@@ -303,12 +313,15 @@ export function FinancialsDashboard() {
                       name === 'cost' ? 'Total Cost' : 'Cost per Mile'
                     ]}
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #374151',
+                      backgroundColor: 'hsl(var(--card))',
+                      borderColor: 'hsl(var(--border))',
                       borderRadius: '8px',
+                      color: 'hsl(var(--foreground))'
                     }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                    cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
                   />
-                  <Bar dataKey="cost" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cost" fill={COLORS.bar} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -317,69 +330,67 @@ export function FinancialsDashboard() {
       </div>
 
       {/* Detailed Table */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-white text-lg">Detailed Breakdown</CardTitle>
-          <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+          <CardTitle className="text-lg">Detailed Breakdown</CardTitle>
+          <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-white">
-              <thead>
-                <tr className="border-b border-gray-600">
-                  <th className="text-left py-3 px-4">Vehicle</th>
-                  <th className="text-left py-3 px-4">Details</th>
-                  <th className="text-right py-3 px-4">Mileage</th>
-                  <th className="text-right py-3 px-4">Total Spend</th>
-                  <th className="text-right py-3 px-4">Mods</th>
-                  <th className="text-right py-3 px-4">Maintenance</th>
-                  <th className="text-right py-3 px-4">Cost/Mile</th>
-                </tr>
-              </thead>
-              <tbody>
-                {financials.map((vehicle) => (
-                  <tr key={vehicle.vehicle_id} className="border-b border-gray-700 hover:bg-gray-800/50">
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-white">{vehicle.nickname}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="text-sm text-gray-400">{vehicle.ymmt}</div>
-                    </td>
-                    <td className="text-right py-3 px-4 text-gray-300">
-                      {vehicle.odometer.toLocaleString()} mi
-                    </td>
-                    <td className="text-right py-3 px-4">
-                      <span className="font-medium text-green-400">
-                        ${vehicle.total_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </span>
-                    </td>
-                    <td className="text-right py-3 px-4 text-orange-400">
-                      ${vehicle.mods_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="text-right py-3 px-4 text-blue-400">
-                      ${vehicle.maintenance_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="text-right py-3 px-4">
-                      <span className={`font-medium ${vehicle.cost_per_mile > overallStats.averageCostPerMile ? 'text-red-400' : 'text-green-400'
-                        }`}>
-                        ${vehicle.cost_per_mile.toFixed(2)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {financials.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="text-center py-8 text-gray-400">
-                      No financial data available. Add some maintenance or modification records to get started.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Vehicle</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead className="text-right">Mileage</TableHead>
+                <TableHead className="text-right">Total Spend</TableHead>
+                <TableHead className="text-right">Mods</TableHead>
+                <TableHead className="text-right">Maintenance</TableHead>
+                <TableHead className="text-right">Cost/Mile</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {financials.map((vehicle) => (
+                <TableRow key={vehicle.vehicle_id}>
+                  <TableCell>
+                    <div className="font-medium">{vehicle.nickname}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-muted-foreground">{vehicle.ymmt}</div>
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {vehicle.odometer.toLocaleString()} mi
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="font-medium text-primary">
+                      ${vehicle.total_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right text-orange-600 dark:text-orange-400">
+                    ${vehicle.mods_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell className="text-right text-blue-600 dark:text-blue-400">
+                    ${vehicle.maintenance_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={`font-medium ${vehicle.cost_per_mile > overallStats.averageCostPerMile ? 'text-destructive' : 'text-green-600 dark:text-green-400'
+                      }`}>
+                      ${vehicle.cost_per_mile.toFixed(2)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {financials.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No financial data available. Add some maintenance or modification records to get started.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

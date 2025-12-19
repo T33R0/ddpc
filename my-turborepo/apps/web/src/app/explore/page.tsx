@@ -7,80 +7,28 @@ import { Button } from '@repo/ui/button';
 import { ExploreActionButtons } from "../../features/explore/explore-action-buttons";
 import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
-import { ActiveFiltersDisplay } from "../../features/explore/active-filters-display";
 import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
-import type { FilterState } from '../../features/explore/vehicle-filters-modal';
-import { useDebounce } from '../../lib/hooks/useDebounce';
-import { useExploreStore } from '../../features/explore/explore-store';
-
-type FilterOptions = {
-  years: number[];
-  makes: string[];
-  models: { make: string; model: string }[];
-  engineTypes: string[];
-  fuelTypes: string[];
-  drivetrains: string[];
-  bodyTypes: string[];
-};
+import type { VehicleSummary } from "@repo/types";
+import { AuthProvider } from '@repo/ui/auth-context';
+import { supabase } from '../../lib/supabase';
+import type { SupabaseFilter, FilterOptions } from '../../features/explore/types';
 
 const PAGE_SIZE = 24;
 
-export default function Explore() {
-  // Use global store with granular selectors to avoid unnecessary re-renders
-  // especially when scrollPosition changes (which we don't select here)
-  const vehicles = useExploreStore(state => state.vehicles);
-  const page = useExploreStore(state => state.page);
-  const hasMore = useExploreStore(state => state.hasMore);
-  const filters = useExploreStore(state => state.filters);
-  const searchQuery = useExploreStore(state => state.searchQuery);
-  const isRestored = useExploreStore(state => state.isRestored);
-
-  const setVehicles = useExploreStore(state => state.setVehicles);
-  const appendVehicles = useExploreStore(state => state.appendVehicles);
-  const setFilters = useExploreStore(state => state.setFilters);
-  const setSearchQuery = useExploreStore(state => state.setSearchQuery);
-  const setScrollPosition = useExploreStore(state => state.setScrollPosition);
-
-  const debouncedSearch = useDebounce(searchQuery, 500);
-
+function ExploreContent() {
+  const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
-  const [loading, setLoading] = useState(vehicles.length === 0);
+  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [filters, setFilters] = useState<SupabaseFilter[]>([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const isInitialLoadRef = useRef(true);
 
-  // Restore scroll position on mount if we have vehicles or restored state
-  useEffect(() => {
-    // Read from state directly to avoid reactivity loop
-    const currentScroll = useExploreStore.getState().scrollPosition;
-
-    if ((isRestored || vehicles.length > 0) && currentScroll > 0) {
-      // Small timeout to allow render
-      setTimeout(() => {
-        window.scrollTo({ top: currentScroll, behavior: 'instant' });
-      }, 50);
-    }
-  }, [isRestored, vehicles.length]);
-
-  // Save scroll position on unmount/scroll with debounce
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    const handleScroll = () => {
-      // Debounce writing to store to prevent performance regression
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setScrollPosition(window.scrollY);
-      }, 200);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timeoutId);
-    };
-  }, [setScrollPosition]);
-
-  const loadVehicles = useCallback(async (pageNum: number, append: boolean = false) => {
+  const loadVehicles = useCallback(async (page: number, append: boolean = false) => {
     try {
       if (append) {
         setLoadingMore(true);
@@ -89,61 +37,57 @@ export default function Explore() {
         setError(null);
       }
 
-      const vehicleData = await getVehicleSummaries(pageNum, PAGE_SIZE, { ...filters, search: debouncedSearch });
-      const newHasMore = vehicleData.length === PAGE_SIZE;
+      const vehicleData = await getVehicleSummaries(page, PAGE_SIZE, filters);
 
-      if (append) {
-        appendVehicles(vehicleData, newHasMore, pageNum);
-      } else {
-        setVehicles(vehicleData, newHasMore, pageNum);
-      }
+      setHasMore(vehicleData.length === PAGE_SIZE); // Approximation
+
+      setAllVehicles(prev => append ? [...prev, ...vehicleData] : vehicleData);
     } catch (err) {
       console.error('Failed to fetch vehicles:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load vehicles';
       setError(errorMessage);
       if (!append) {
-        setVehicles([], false, 1);
+        setAllVehicles([]);
       }
+      setHasMore(false);
     } finally {
       setLoadingMore(false);
       if (!append) {
         setLoading(false);
       }
     }
-  }, [debouncedSearch, filters, setVehicles, appendVehicles]);
+  }, [filters]);
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) {
       return;
     }
-    const nextPage = page + 1;
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
     loadVehicles(nextPage, true);
-  }, [page, hasMore, loadVehicles, loading, loadingMore]);
+  }, [currentPage, hasMore, loadVehicles, loading, loadingMore]);
 
-  // Handle data fetching
+  // Initial load and subsequent reloads handled by manual Apply
   useEffect(() => {
-    // If we already have vehicles (restored from store), don't fetch initially unless filters changed
-
-    // Check if this is the initial mount
     if (isInitialLoadRef.current) {
-      isInitialLoadRef.current = false;
+      return;
+    }
+    // When filters change, we reset to page 1
+    setCurrentPage(1);
+    loadVehicles(1, false);
+  }, [loadVehicles]); // loadVehicles depends on filters
 
-      // If we have data, we might skip fetch unless inputs changed externally
-      if (vehicles.length > 0) {
-        setLoading(false);
-        return;
-      }
-
-      // No data, fetch page 1
-      loadVehicles(1, false);
+  useEffect(() => {
+    if (!isInitialLoadRef.current) {
       return;
     }
 
-    // Subsequent updates (search or filter changes)
-    loadVehicles(1, false);
-  }, [debouncedSearch, filters, loadVehicles]);
+    loadVehicles(1, false).finally(() => {
+      isInitialLoadRef.current = false;
+    });
+  }, [loadVehicles]);
 
-  // Load filter options immediately
+  // Load filter options
   useEffect(() => {
     async function loadFilters() {
       try {
@@ -152,34 +96,45 @@ export default function Explore() {
           setFilterOptions(options);
         } else {
           setFilterOptions({
-            years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: []
+            years: [],
+            makes: [],
+            models: [],
+            engineTypes: [],
+            fuelTypes: [],
+            drivetrains: [],
+            bodyTypes: [],
+            countries: [],
           });
         }
       } catch (err) {
         console.error('Failed to load filter options:', err);
         setFilterOptions({
-          years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: []
+          years: [],
+          makes: [],
+          models: [],
+          engineTypes: [],
+          fuelTypes: [],
+          drivetrains: [],
+          bodyTypes: [],
+          countries: [],
         });
       }
     }
     loadFilters();
   }, []);
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, [setSearchQuery]);
-
-  const handleClearFilter = useCallback((key: keyof FilterState) => {
-    setFilters({ ...filters, [key]: null });
-  }, [filters, setFilters]);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
-  }, [setSearchQuery]);
+  const handleApplyFilters = useCallback(() => {
+    // This function is called when the user clicks "Apply" in the modal.
+    // The state update in setFilters triggers the useEffect above.
+    // We can also force a reload here if needed, but the effect is sufficient.
+    // However, if filters didn't effectively change (same content), effect might not fire if React is smart?
+    // Arrays are new references, so effect fires.
+  }, []);
 
   return (
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
+        {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold text-foreground">Explore</h1>
           <Link href="/community">
@@ -193,17 +148,14 @@ export default function Explore() {
         <ExploreActionButtons
           filters={filters}
           onFilterChange={setFilters}
-          filterOptions={filterOptions || { years: [], makes: [], models: [], engineTypes: [], fuelTypes: [], drivetrains: [], bodyTypes: [] }}
-          onSearch={handleSearch}
+          filterOptions={filterOptions || {
+            years: [], makes: [], models: [], engineTypes: [],
+            fuelTypes: [], drivetrains: [], bodyTypes: [], countries: []
+          }}
+          onApply={handleApplyFilters}
         />
 
-        <ActiveFiltersDisplay
-          filters={filters}
-          searchQuery={searchQuery}
-          onClearFilter={handleClearFilter}
-          onClearSearch={handleClearSearch}
-        />
-
+        {/* Gallery or Loading State */}
         {error ? (
           <div className="flex items-center justify-center min-h-[50vh]">
             <div className="text-red-400 text-lg">Error: {error}</div>
@@ -212,7 +164,7 @@ export default function Explore() {
           <GalleryLoadingSkeleton />
         ) : (
           <VehicleGallery
-            vehicles={vehicles}
+            vehicles={allVehicles}
             onLoadMore={loadMore}
             loadingMore={loadingMore}
             hasMore={hasMore}
@@ -220,5 +172,13 @@ export default function Explore() {
         )}
       </div>
     </section>
+  );
+}
+
+export default function Explore() {
+  return (
+    <AuthProvider supabase={supabase}>
+      <ExploreContent />
+    </AuthProvider>
   );
 }

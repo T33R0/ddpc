@@ -187,9 +187,9 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
 
               {/* Labels */}
               <text x={label75.x} y={label75.y} textAnchor="start" dominantBaseline="middle" className="text-[10px] fill-muted-foreground font-medium">75%</text>
-              <text x={label80.x} y={label80.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-54, ${label80.x}, ${label80.y}) translate(0, -5)`}>80%</text>
-              <text x={label90.x} y={label90.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-18, ${label90.x}, ${label90.y}) translate(0, -5)`}>90%</text>
-              <text x={label100.x} y={label100.y} textAnchor="middle" dominantBaseline="bottom" className="text-[10px] fill-blue-500 font-bold" transform={`rotate(18, ${label100.x}, ${label100.y}) translate(0, -5)`}>Factory</text>
+              <text x={label80.x} y={label80.y} textAnchor="middle" dominantBaseline="auto" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-54, ${label80.x}, ${label80.y}) translate(0, -5)`}>80%</text>
+              <text x={label90.x} y={label90.y} textAnchor="middle" dominantBaseline="auto" className="text-[10px] fill-muted-foreground font-medium" transform={`rotate(-18, ${label90.x}, ${label90.y}) translate(0, -5)`}>90%</text>
+              <text x={label100.x} y={label100.y} textAnchor="middle" dominantBaseline="auto" className="text-[10px] fill-blue-500 font-bold" transform={`rotate(18, ${label100.x}, ${label100.y}) translate(0, -5)`}>Factory</text>
               <text x={label110.x} y={label110.y} textAnchor="end" dominantBaseline="middle" className="text-[10px] fill-muted-foreground font-medium">110%</text>
 
               {/* Needle */}

@@ -15,8 +15,8 @@ export default function FeaturesPage() {
           <div className="bg-card text-card-foreground p-6 rounded-lg border border-border">
             <h2 className="text-2xl font-semibold mb-4">Vehicle Tracking</h2>
             <p className="text-muted-foreground">
-              Keep detailed records of your vehicle's history, modifications, and maintenance logs.
-              Never lose track of what you've done to your car.
+              Keep detailed records of your vehicle&apos;s history, modifications, and maintenance logs.
+              Never lose track of what you&apos;ve done to your car.
             </p>
           </div>
 

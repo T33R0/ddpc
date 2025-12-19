@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "check-types": "tsc --noEmit"
   },
@@ -16,9 +16,9 @@
     "@repo/types": "*",
     "@repo/ui": "*",
     "@vercel/speed-insights": "*",
-    "next": "^15.5.7",
-    "react": "^19.1.2",
-    "react-dom": "^19.1.2"
+    "next": "^16.0.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
@@ -26,8 +26,8 @@
     "@repo/tailwind-config": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^22.15.3",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.19",
     "eslint": "^9.34.0",
     "postcss": "^8.4.38",

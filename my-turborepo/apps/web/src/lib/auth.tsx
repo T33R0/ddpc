@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { useRouter } from 'next/navigation';
 import { signOut as signOutAction } from '../actions/auth';
 
 interface UserProfile {
@@ -50,7 +49,6 @@ export function AuthProvider({
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(!initialSession);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const router = useRouter();
 
   const mapProfileRow = (row: UserProfileRow): UserProfile => ({
     id: row.user_id,

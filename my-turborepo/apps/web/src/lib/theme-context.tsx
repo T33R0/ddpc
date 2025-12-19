@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './auth';
 import { supabase } from './supabase';
+import { updateUserTheme, getUserTheme } from '../actions/user-profile';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -16,8 +17,8 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setThemeState] = useState<Theme>('dark');
+export function ThemeProvider({ children, initialTheme }: { children: React.ReactNode; initialTheme?: Theme }) {
+    const [theme, setThemeState] = useState<Theme>(initialTheme || 'dark');
     const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
@@ -31,50 +32,32 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Load theme from DB when user logs in, or default to dark if not logged in
     useEffect(() => {
         if (!mounted) return;
-
-        // Wait for loading to finish to ensure we have the correct user state
         if (loading) return;
 
         const syncTheme = async () => {
+            // Log to confirm trigger source
+            console.log(`ThemeProvider: syncTheme running. User ID: ${user?.id}`);
+
             if (!user) {
                 console.log('ThemeProvider: No user logged in, enforcing dark mode.');
                 setThemeState('dark');
-                setResolvedTheme('dark'); // Force resolved immediately
+                setResolvedTheme('dark');
                 return;
             }
 
-            console.log('ThemeProvider: User logged in, fetching theme from DB for user:', user.id);
             try {
-                // Check if we can select 'theme' from user_profile
-                const { data, error } = await supabase
-                    .from('user_profile')
-                    .select('theme')
-                    .eq('user_id', user.id)
-                    .single();
+                // Use Server Action to fetch theme to avoid client-side RLS/network issues
+                console.log('ThemeProvider: Fetching theme via Server Action...');
+                const { theme: fetchedTheme } = await getUserTheme();
 
-                if (error) {
-                    console.error('ThemeProvider: Error fetching theme:', error);
-                    // Fallback to dark if error
-                    setThemeState('dark');
-                    return;
-                }
+                console.log('ThemeProvider: Server Action returned theme:', fetchedTheme);
 
-                console.log('ThemeProvider: Fetched theme from DB:', data?.theme);
-
-                if (data?.theme && ['light', 'dark', 'auto'].includes(data.theme)) {
-                    setThemeState(data.theme as Theme);
+                if (fetchedTheme && ['light', 'dark', 'auto'].includes(fetchedTheme)) {
+                    console.log(`ThemeProvider: Setting local state to '${fetchedTheme}' from Server Action.`);
+                    setThemeState(fetchedTheme as Theme);
                 } else {
-                    console.log('ThemeProvider: No valid theme found in DB, defaulting to dark and saving.');
+                    console.log(`ThemeProvider: Invalid or missing theme from Server Action ('${fetchedTheme}'), defaulting to dark.`);
                     setThemeState('dark');
-                    // Attempt to save default
-                    const { error: updateError } = await supabase
-                        .from('user_profile')
-                        .update({ theme: 'dark' })
-                        .eq('user_id', user.id);
-
-                    if (updateError) {
-                        console.error('ThemeProvider: Error saving default theme:', updateError);
-                    }
                 }
             } catch (err) {
                 console.error('ThemeProvider: Unexpected error syncing theme:', err);
@@ -83,7 +66,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         };
 
         syncTheme();
-    }, [user, loading, mounted]);
+    // Dependency on user.id (primitive) instead of user object to prevent unnecessary re-runs/reverts
+    }, [user?.id, loading, mounted]);
 
     // Resolve theme based on current setting and system preference
     useEffect(() => {
@@ -147,28 +131,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     const saveTheme = async (newTheme: Theme) => {
-        console.log('ThemeProvider: saving theme:', newTheme);
+        console.log(`ThemeProvider: saveTheme called: ${newTheme}. User: ${user?.id}`);
         setThemeState(newTheme);
 
         if (user) {
             try {
-                // Perform update and select returned data to verify it actually happened
-                const { data, error } = await supabase
-                    .from('user_profile')
-                    .update({ theme: newTheme })
-                    .eq('user_id', user.id)
-                    .select(); // Important: verify we got data back
+                console.log('ThemeProvider: Initiating Server Action update...');
+                const result = await updateUserTheme(newTheme);
 
-                if (error) {
-                    console.error('ThemeProvider: Error saving theme to DB:', error);
-                } else if (!data || data.length === 0) {
-                    console.error('ThemeProvider: Update succeeded but no rows were affected. Check RLS or existence of user_profile row.');
+                console.log('ThemeProvider: Server Action result:', result);
+
+                if (!result.success) {
+                    console.error('ThemeProvider: Error saving theme via Server Action:', result.error);
                 } else {
-                    console.log('ThemeProvider: Successfully saved theme to DB. Returned data:', data);
+                    console.log('ThemeProvider: Successfully saved theme via Server Action.');
                 }
             } catch (err) {
-                console.error('ThemeProvider: Unexpected error saving theme:', err);
+                console.error('ThemeProvider: Unexpected error calling server action:', err);
             }
+        } else {
+            console.warn('ThemeProvider: Attempted to save theme but no user is logged in.');
         }
     };
 

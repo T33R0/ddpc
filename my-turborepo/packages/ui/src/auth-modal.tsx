@@ -16,7 +16,9 @@ import { AtSignIcon, Eye, EyeOff, Lock } from 'lucide-react';
 
 type AuthModalProps = Omit<React.ComponentProps<typeof Modal>, 'children'> & {
   onGoogleSignIn?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEmailSignUp?: (email: string, password: string) => Promise<{ error?: any }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEmailSignIn?: (email: string, password: string) => Promise<{ error?: any }>;
   initialMode?: 'signin' | 'signup';
 };

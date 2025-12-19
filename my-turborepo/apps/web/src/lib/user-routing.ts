@@ -16,7 +16,6 @@ const USERNAME_SCOPED_SEGMENTS = new Set([
   'policy',
   'pricing',
   'privacy',
-  'scrutineer',
   'terms',
   'vehicle',
 ])
@@ -63,6 +62,14 @@ export const stripUsernamePrefixFromPathname = (pathname: string) => {
   const segments = pathname.split('/').filter(Boolean)
 
   if (segments.length < 2) {
+    return {
+      pathname,
+      stripped: false,
+    }
+  }
+
+  // Prevent stripping if the first segment is a reserved root route (like 'admin')
+  if (segments[0] === 'admin') {
     return {
       pathname,
       stripped: false,
