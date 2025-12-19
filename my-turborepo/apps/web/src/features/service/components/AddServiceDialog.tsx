@@ -61,6 +61,9 @@ interface FormData {
   plan_item_id?: string | null
 }
 
+const DEFAULT_CATEGORIES: ServiceCategory[] = []
+const DEFAULT_ITEMS: ServiceItem[] = []
+
 export function AddServiceDialog({
   isOpen,
   onClose,
@@ -71,8 +74,8 @@ export function AddServiceDialog({
   lockStatusToHistory = false,
   prefillServiceItemId,
   prefillStatus = 'History',
-  initialCategories = [],
-  initialItems = []
+  initialCategories = DEFAULT_CATEGORIES,
+  initialItems = DEFAULT_ITEMS
 }: AddServiceDialogProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1)
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -220,6 +220,8 @@ export function AuthProvider({
 
     // 2. Call Server Action to clear cookies and redirect
     await signOutAction();
+    // 3. Force hard navigation as a fallback/guarantee
+    window.location.href = '/';
   };
 
   const value = {
