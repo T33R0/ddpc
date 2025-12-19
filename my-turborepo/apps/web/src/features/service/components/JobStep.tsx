@@ -151,8 +151,8 @@ export function JobStep({
           <>
             <span
               className={`flex-1 transition-all ${isCompleted
-                  ? 'text-muted-foreground'
-                  : 'text-foreground'
+                ? 'text-muted-foreground'
+                : 'text-foreground'
                 }`}
               style={isCompleted ? {
                 textDecoration: 'line-through',
@@ -206,7 +206,7 @@ export function JobStep({
 
       {/* Notes Dialog */}
       <Modal open={isNotesOpen} onOpenChange={setIsNotesOpen}>
-        <ModalContent className="sm:max-w-md">
+        <ModalContent className="sm:max-w-lg">
           <ModalHeader>
             <ModalTitle>Step Notes</ModalTitle>
           </ModalHeader>

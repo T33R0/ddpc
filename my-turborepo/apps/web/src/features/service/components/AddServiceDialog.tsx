@@ -482,7 +482,7 @@ export function AddServiceDialog({
 
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-md p-0">
+      <ModalContent className="sm:max-w-lg p-0">
         {isInitializing ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <ModalTitle className="sr-only">Loading</ModalTitle>

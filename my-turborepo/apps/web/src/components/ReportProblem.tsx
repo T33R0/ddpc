@@ -31,7 +31,7 @@ export function ReportProblemModal({ isOpen, onOpenChange }: ReportProblemModalP
 
   return (
     <Modal open={isOpen} onOpenChange={onOpenChange}>
-      <ModalContent className="sm:max-w-md text-left">
+      <ModalContent className="sm:max-w-lg text-left">
         <ModalHeader>
           <ModalTitle>Report a Problem</ModalTitle>
           <ModalDescription>

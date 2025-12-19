@@ -79,7 +79,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
 
   return (
     <Modal open={open} onOpenChange={(val) => !val && onClose()}>
-      <ModalContent className="sm:max-w-md bg-card text-card-foreground border-border">
+      <ModalContent className="sm:max-w-lg bg-card text-card-foreground border-border">
         <ModalHeader>
           <ModalTitle>Setup Your Vehicle</ModalTitle>
           <ModalDescription>
@@ -142,8 +142,8 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                     type="button"
                     variant={stillOwn === true ? 'default' : 'outline'}
                     onClick={() => {
-                        setStillOwn(true)
-                        setStatus('daily_driver')
+                      setStillOwn(true)
+                      setStatus('daily_driver')
                     }}
                     className="flex-1"
                   >
@@ -153,8 +153,8 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                     type="button"
                     variant={stillOwn === false ? 'default' : 'outline'}
                     onClick={() => {
-                        setStillOwn(false)
-                        setEndStatus('sold')
+                      setStillOwn(false)
+                      setEndStatus('sold')
                     }}
                     className="flex-1"
                   >
@@ -212,7 +212,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
 
         <ModalFooter>
           {step === 2 && (
-             <Button variant="outline" onClick={() => setStep(1)} disabled={isSubmitting}>Back</Button>
+            <Button variant="outline" onClick={() => setStep(1)} disabled={isSubmitting}>Back</Button>
           )}
           <Button onClick={step === 1 ? handleNext : handleSubmit} disabled={isSubmitting}>
             {step === 1 ? 'Next' : (isSubmitting ? 'Saving...' : 'Finish')}

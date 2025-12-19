@@ -133,7 +133,7 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
           Add Part
         </Button>
       </ModalTrigger>
-      <ModalContent className="sm:max-w-[500px]">
+      <ModalContent className="sm:max-w-lg">
         <ModalHeader>
           <ModalTitle>Add Part to Job</ModalTitle>
           <ModalDescription>
@@ -168,11 +168,10 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
                   {searchResults.map((part) => (
                     <div
                       key={part.id}
-                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer border ${
-                        selectedPart?.id === part.id
+                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer border ${selectedPart?.id === part.id
                           ? 'bg-accent border-primary'
                           : 'hover:bg-muted border-transparent'
-                      }`}
+                        }`}
                       onClick={() => handleSelectPart(part)}
                     >
                       <div>
@@ -227,9 +226,9 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
             )}
 
             <ModalFooter>
-               <Button onClick={handleAddSelected} disabled={!selectedPart}>
-                 Add Selected
-               </Button>
+              <Button onClick={handleAddSelected} disabled={!selectedPart}>
+                Add Selected
+              </Button>
             </ModalFooter>
           </TabsContent>
 

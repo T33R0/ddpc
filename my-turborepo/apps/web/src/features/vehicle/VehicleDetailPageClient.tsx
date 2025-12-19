@@ -524,7 +524,7 @@ function VehicleHeader({
 
       {isOwner && (
         <Modal open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <ModalContent className="bg-card border-border">
+          <ModalContent className="sm:max-w-md bg-card border-border">
             <ModalHeader>
               <ModalTitle className="text-foreground">Edit Vehicle Nickname</ModalTitle>
               <ModalDescription className="text-muted-foreground">
@@ -598,8 +598,8 @@ function NavigationCard({
   return (
     <Card
       className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${disabled
-          ? 'cursor-not-allowed opacity-60'
-          : 'cursor-pointer hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
+        ? 'cursor-not-allowed opacity-60'
+        : 'cursor-pointer hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
         }`}
       onClick={handleClick}
     >

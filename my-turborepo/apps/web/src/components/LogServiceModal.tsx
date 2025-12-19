@@ -98,7 +98,7 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
 
   return (
     <Modal open={open} onOpenChange={handleOpenChange}>
-      <ModalContent className="max-w-2xl">
+      <ModalContent className="sm:max-w-2xl">
         <ModalHeader>
           <ModalTitle>Log Service</ModalTitle>
         </ModalHeader>

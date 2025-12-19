@@ -118,7 +118,7 @@ export function AddFuelEntryDialog({ open, onOpenChange, onSuccess }: AddFuelEnt
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent className="sm:max-w-[425px]">
+      <ModalContent className="sm:max-w-md">
         <ModalHeader>
           <ModalTitle>Add Fuel Entry</ModalTitle>
           <ModalDescription>

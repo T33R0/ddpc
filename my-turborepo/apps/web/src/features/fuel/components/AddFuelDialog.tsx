@@ -120,7 +120,7 @@ export function AddFuelDialog({
 
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-md p-0">
+      <ModalContent className="sm:max-w-lg p-0">
         <ModalHeader>
           <ModalTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5" />

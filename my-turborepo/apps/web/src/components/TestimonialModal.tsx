@@ -64,7 +64,7 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
 
   return (
     <Modal open={isOpen} onOpenChange={onOpenChange}>
-      <ModalContent className="sm:max-w-[425px]">
+      <ModalContent className="sm:max-w-md">
         <ModalHeader>
           <ModalTitle>Give a Testimonial</ModalTitle>
           <ModalDescription>
@@ -72,40 +72,40 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
           </ModalDescription>
         </ModalHeader>
         <ModalBody>
-            <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
             <div className="flex items-center gap-4 mb-4">
-                <Avatar className="h-12 w-12">
+              <Avatar className="h-12 w-12">
                 {user.avatarUrl && <AvatarImage src={user.avatarUrl} />}
                 <AvatarFallback>{user.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
+              </Avatar>
+              <div className="flex-1">
                 <Label htmlFor="displayName" className="text-xs text-muted-foreground">Display Name</Label>
                 <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="h-8"
+                  id="displayName"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="h-8"
                 />
-                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <select
+              <Label htmlFor="role">Role</Label>
+              <select
                 id="role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                >
+              >
                 {ROLES.map((r) => (
-                    <option key={r} value={r} className="bg-popover text-popover-foreground">{r}</option>
+                  <option key={r} value={r} className="bg-popover text-popover-foreground">{r}</option>
                 ))}
-                </select>
+              </select>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="content">Your Feedback</Label>
-                <Textarea
+              <Label htmlFor="content">Your Feedback</Label>
+              <Textarea
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -113,18 +113,18 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
                 className="min-h-[100px]"
                 maxLength={500}
                 required
-                />
-                <div className="text-xs text-right text-muted-foreground">
+              />
+              <div className="text-xs text-right text-muted-foreground">
                 {content.length}/500
-                </div>
+              </div>
             </div>
 
             <ModalFooter>
-                <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting...' : 'Submit Testimonial'}
-                </Button>
+              </Button>
             </ModalFooter>
-            </form>
+          </form>
         </ModalBody>
       </ModalContent>
     </Modal>

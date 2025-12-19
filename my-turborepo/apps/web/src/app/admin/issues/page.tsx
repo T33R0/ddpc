@@ -147,7 +147,7 @@ export default function IssuesPage() {
     <div className="space-y-6 pt-8">
       {/* Modal for Issue Details */}
       <Modal open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
-        <ModalContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <ModalContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <ModalHeader>
             <ModalTitle>Issue Details</ModalTitle>
             <ModalDescription>
