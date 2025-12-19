@@ -4,6 +4,7 @@ import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { FuelEntry } from '../lib/getVehicleFuelData'
+import { TrendingUp } from 'lucide-react'
 
 interface FuelHistoryChartProps {
   fuelEntries: FuelEntry[]
@@ -60,9 +61,7 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
         <CardContent>
           <div className="flex items-center justify-center h-64 text-muted-foreground">
             <div className="text-center">
-              <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+              <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50 text-muted-foreground" />
               <p className="text-sm">No fuel data available</p>
               <p className="text-xs mt-1">Add fuel entries to see your efficiency trend</p>
             </div>

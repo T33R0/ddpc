@@ -324,7 +324,7 @@ function PrivacyBadge({
   isOwner: boolean
 }) {
   const router = useRouter()
-  
+
   if (!isOwner) {
     return (
       <Badge
@@ -492,7 +492,7 @@ function VehicleHeader({
             <ChevronLeft className="w-6 h-6" />
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold truncate max-w-[200px] md:max-w-md">{vehicle.name || 'Unnamed Vehicle'}</h1>
+            <h1 className="text-xl font-bold truncate max-w-48 md:max-w-md">{vehicle.name || 'Unnamed Vehicle'}</h1>
             {isOwner && (
               <Button
                 variant="ghost"
@@ -597,11 +597,10 @@ function NavigationCard({
 
   return (
     <Card
-      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${
-        disabled
+      className={`bg-card rounded-2xl p-6 text-foreground transition-all duration-300 h-full border border-border group ${disabled
           ? 'cursor-not-allowed opacity-60'
           : 'cursor-pointer hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]'
-      }`}
+        }`}
       onClick={handleClick}
     >
       <CardContent className="p-0 h-full flex flex-col">

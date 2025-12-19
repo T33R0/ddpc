@@ -17,7 +17,7 @@ import { VehicleCard } from '@/components/vehicle-card'
 function AddVehicleCard({ onClick }: { onClick: () => void }) {
   return (
     <Card
-      className="min-h-[250px] border-2 border-dashed border-border bg-transparent hover:bg-card/50 hover:border-accent/50 transition-colors duration-300 cursor-pointer"
+      className="min-h-64 border-2 border-dashed border-border bg-transparent hover:bg-card/50 hover:border-accent/50 transition-colors duration-300 cursor-pointer"
       onClick={onClick}
     >
       <CardContent className="flex items-center justify-center h-full p-6">
@@ -113,16 +113,16 @@ function VehicleGallery({
     const currentStatus = e.dataTransfer.getData('currentStatus')
 
     if (vehicleId) {
-       if (onDrop) {
-          // Status change logic
-          const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
-          // If status is different, it's a move between galleries
-          if (currentStatus !== newStatus) {
-             onDrop(vehicleId, newStatus)
-             setDraggingVehicleId(null)
-             return
-          }
-       }
+      if (onDrop) {
+        // Status change logic
+        const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+        // If status is different, it's a move between galleries
+        if (currentStatus !== newStatus) {
+          onDrop(vehicleId, newStatus)
+          setDraggingVehicleId(null)
+          return
+        }
+      }
     }
     setDraggingVehicleId(null)
   }
@@ -138,13 +138,13 @@ function VehicleGallery({
     const isDraggedInGallery = vehicles.find(v => v.id === draggedId)
 
     if (isTargetInGallery && isDraggedInGallery && onManualReorder) {
-        onManualReorder(draggedId, targetVehicleId)
+      onManualReorder(draggedId, targetVehicleId)
     } else if (onDrop && galleryType) {
-        // Fallback to status change if moving between galleries
-         const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
-         if (draggedStatus !== newStatus) {
-            onDrop(draggedId, newStatus)
-         }
+      // Fallback to status change if moving between galleries
+      const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+      if (draggedStatus !== newStatus) {
+        onDrop(draggedId, newStatus)
+      }
     }
     setIsDraggingOver(false)
     setDraggingVehicleId(null)
@@ -174,83 +174,83 @@ function VehicleGallery({
           className={`flex items-center gap-2 ${isCollapsible ? 'cursor-pointer select-none hover:text-accent transition-colors' : ''}`}
           onClick={() => isCollapsible && setIsExpanded(!isExpanded)}
         >
-            <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-            {isCollapsible && (
-              isExpanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />
-            )}
+          <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+          {isCollapsible && (
+            isExpanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />
+          )}
         </div>
 
         {/* Sort Controls - only show when expanded and sortable */}
         {isExpanded && onSortChange && (
-            <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground hidden sm:inline">Sort by:</label>
-                <select
-                    className="bg-card border border-border rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                    value={currentSort}
-                    onChange={(e) => onSortChange(e.target.value)}
-                >
-                    <option value="last_edited">Last Edited</option>
-                    <option value="year">Year</option>
-                    <option value="status">Status</option>
-                    <option value="ownership_period">Ownership Period</option>
-                    <option value="custom">Manual</option>
-                </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground hidden sm:inline">Sort by:</label>
+            <select
+              className="bg-card border border-border rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              value={currentSort}
+              onChange={(e) => onSortChange(e.target.value)}
+            >
+              <option value="last_edited">Last Edited</option>
+              <option value="year">Year</option>
+              <option value="status">Status</option>
+              <option value="ownership_period">Ownership Period</option>
+              <option value="custom">Manual</option>
+            </select>
+          </div>
         )}
       </div>
 
       {isExpanded && (
         <div
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
             }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
-            {vehicles.map((vehicle) => (
+          {vehicles.map((vehicle) => (
             <div
-                key={vehicle.id}
-                onDragOver={(e) => {
-                     e.preventDefault() // Allow drop
-                     e.stopPropagation()
-                }}
-                onDrop={(e) => handleCardDrop(e, vehicle.id)}
+              key={vehicle.id}
+              onDragOver={(e) => {
+                e.preventDefault() // Allow drop
+                e.stopPropagation()
+              }}
+              onDrop={(e) => handleCardDrop(e, vehicle.id)}
             >
-                <VehicleCard
-                    title={vehicle.nickname || vehicle.name}
-                    subtitle={vehicle.ymmt}
-                    status={vehicle.current_status}
-                    imageUrl={vehicle.vehicle_image || vehicle.image_url}
-                    onClick={() => {
-                        const urlSlug = getVehicleSlug(vehicle, allVehicles)
-                        router.push(`/vehicle/${urlSlug}`)
-                    }}
-                    footer={
-                        <>
-                            <div className="text-xs text-muted-foreground">
-                                {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-semibold">
-                                {formatStatus(vehicle.current_status)}
-                            </div>
-                        </>
-                    }
-                    isDragging={draggingVehicleId === vehicle.id}
-                    onDragStart={(e) => {
-                        e.dataTransfer.effectAllowed = 'move'
-                        e.dataTransfer.setData('vehicleId', vehicle.id)
-                        e.dataTransfer.setData('currentStatus', vehicle.current_status)
-                        setDraggingVehicleId(vehicle.id)
-                    }}
-                    onDragEnd={() => setDraggingVehicleId(null)}
-                    showDragHandle={true}
-                />
+              <VehicleCard
+                title={vehicle.nickname || vehicle.name}
+                subtitle={vehicle.ymmt}
+                status={vehicle.current_status}
+                imageUrl={vehicle.vehicle_image || vehicle.image_url}
+                onClick={() => {
+                  const urlSlug = getVehicleSlug(vehicle, allVehicles)
+                  router.push(`/vehicle/${urlSlug}`)
+                }}
+                footer={
+                  <>
+                    <div className="text-xs text-muted-foreground">
+                      {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-semibold">
+                      {formatStatus(vehicle.current_status)}
+                    </div>
+                  </>
+                }
+                isDragging={draggingVehicleId === vehicle.id}
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = 'move'
+                  e.dataTransfer.setData('vehicleId', vehicle.id)
+                  e.dataTransfer.setData('currentStatus', vehicle.current_status)
+                  setDraggingVehicleId(vehicle.id)
+                }}
+                onDragEnd={() => setDraggingVehicleId(null)}
+                showDragHandle={true}
+              />
             </div>
-            ))}
+          ))}
 
-            {showAddCard && (
+          {showAddCard && (
             <AddVehicleCard onClick={onAddClick || (() => { })} />
-            )}
+          )}
         </div>
       )}
 
@@ -292,8 +292,8 @@ export function GarageContent({
     hasMore,
     loadMore
   } = useStoredVehicles({
-      sort_by: storedSortBy,
-      sort_direction: storedSortBy === 'year' || storedSortBy === 'last_edited' ? 'desc' : 'asc'
+    sort_by: storedSortBy,
+    sort_direction: storedSortBy === 'year' || storedSortBy === 'last_edited' ? 'desc' : 'asc'
   })
 
   const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false)
@@ -354,137 +354,137 @@ export function GarageContent({
   // If we are in manual mode, we need to respect the saved order
   // And merge in new vehicles
   useEffect(() => {
-     if (!isManualSort) return
+    if (!isManualSort) return
 
-     // Merge current fetched vehicles into manual list
-     // Logic:
-     // 1. Start with existing manualOrderVehicles (if any) or create from saved order
-     // 2. Add any new vehicles from storedVehicles that aren't in the list
-     // 3. Update data for existing vehicles in the list
+    // Merge current fetched vehicles into manual list
+    // Logic:
+    // 1. Start with existing manualOrderVehicles (if any) or create from saved order
+    // 2. Add any new vehicles from storedVehicles that aren't in the list
+    // 3. Update data for existing vehicles in the list
 
-     setManualOrderVehicles(prev => {
-        let baseList = prev
+    setManualOrderVehicles(prev => {
+      let baseList = prev
 
-        // If list is empty, try to load from saved order + storedVehicles
-        if (baseList.length === 0) {
-           try {
-              const savedOrder = JSON.parse(localStorage.getItem('garage-manual-order') || '[]') as string[]
-              if (savedOrder.length > 0) {
-                 // Sort storedVehicles according to savedOrder
-                 // Vehicles not in savedOrder go to the end
-                 const vehicleMap = new Map(storedVehicles.map(v => [v.id, v]))
-                 const ordered: VehicleWithOdometer[] = []
-                 const usedIds = new Set<string>()
+      // If list is empty, try to load from saved order + storedVehicles
+      if (baseList.length === 0) {
+        try {
+          const savedOrder = JSON.parse(localStorage.getItem('garage-manual-order') || '[]') as string[]
+          if (savedOrder.length > 0) {
+            // Sort storedVehicles according to savedOrder
+            // Vehicles not in savedOrder go to the end
+            const vehicleMap = new Map(storedVehicles.map(v => [v.id, v]))
+            const ordered: VehicleWithOdometer[] = []
+            const usedIds = new Set<string>()
 
-                 savedOrder.forEach(id => {
-                    const v = vehicleMap.get(id)
-                    if (v) {
-                       ordered.push(v)
-                       usedIds.add(id)
-                    }
-                 })
-
-                 storedVehicles.forEach(v => {
-                    if (!usedIds.has(v.id)) {
-                       ordered.push(v)
-                    }
-                 })
-
-                 baseList = ordered
-              } else {
-                 baseList = storedVehicles
+            savedOrder.forEach(id => {
+              const v = vehicleMap.get(id)
+              if (v) {
+                ordered.push(v)
+                usedIds.add(id)
               }
-           } catch {
-              baseList = storedVehicles
-           }
-        } else {
-            // Update existing items in baseList with new data from storedVehicles
-            // And append new items
-            const currentIds = new Set(baseList.map(v => v.id))
-            const newItems = storedVehicles.filter(v => !currentIds.has(v.id))
-
-            baseList = baseList.map(v => {
-               const updated = storedVehicles.find(sv => sv.id === v.id)
-               return updated ? updated : v
             })
 
-            if (newItems.length > 0) {
-               baseList = [...baseList, ...newItems]
-            }
-        }
+            storedVehicles.forEach(v => {
+              if (!usedIds.has(v.id)) {
+                ordered.push(v)
+              }
+            })
 
-        // Filter out vehicles that moved to active
-        // (This is handled by effectiveStoredVehicles logic usually, but here we manage the source list)
-        return baseList
-     })
+            baseList = ordered
+          } else {
+            baseList = storedVehicles
+          }
+        } catch {
+          baseList = storedVehicles
+        }
+      } else {
+        // Update existing items in baseList with new data from storedVehicles
+        // And append new items
+        const currentIds = new Set(baseList.map(v => v.id))
+        const newItems = storedVehicles.filter(v => !currentIds.has(v.id))
+
+        baseList = baseList.map(v => {
+          const updated = storedVehicles.find(sv => sv.id === v.id)
+          return updated ? updated : v
+        })
+
+        if (newItems.length > 0) {
+          baseList = [...baseList, ...newItems]
+        }
+      }
+
+      // Filter out vehicles that moved to active
+      // (This is handled by effectiveStoredVehicles logic usually, but here we manage the source list)
+      return baseList
+    })
   }, [storedVehicles, isManualSort])
 
   const effectiveStoredVehicles = React.useMemo(() => {
-      if (isManualSort && manualOrderVehicles.length > 0) {
-          return manualOrderVehicles.filter(v =>
-              v.current_status !== 'daily_driver' &&
-              !activeVehicles.find(av => av.id === v.id)
-          );
-      }
-
-      // Standard mode: Merge local optimistic updates + hook data
-      const filteredFromHook = storedVehicles.filter(v =>
+    if (isManualSort && manualOrderVehicles.length > 0) {
+      return manualOrderVehicles.filter(v =>
         v.current_status !== 'daily_driver' &&
         !activeVehicles.find(av => av.id === v.id)
-      )
+      );
+    }
 
-      // Keep vehicles that were optimistically added but aren't in hook yet
-      const optimisticOnly = storedVehiclesLocal.filter(lv =>
-        lv.current_status !== 'daily_driver' &&
-        !activeVehicles.find(av => av.id === lv.id) &&
-        !filteredFromHook.find(hv => hv.id === lv.id)
-      )
+    // Standard mode: Merge local optimistic updates + hook data
+    const filteredFromHook = storedVehicles.filter(v =>
+      v.current_status !== 'daily_driver' &&
+      !activeVehicles.find(av => av.id === v.id)
+    )
 
-      // Combine: optimistic-only vehicles + hook vehicles (avoiding duplicates)
-      const combined = [...optimisticOnly]
-      filteredFromHook.forEach(hv => {
-        if (!combined.find(cv => cv.id === hv.id)) {
-          combined.push(hv)
-        }
-      })
+    // Keep vehicles that were optimistically added but aren't in hook yet
+    const optimisticOnly = storedVehiclesLocal.filter(lv =>
+      lv.current_status !== 'daily_driver' &&
+      !activeVehicles.find(av => av.id === lv.id) &&
+      !filteredFromHook.find(hv => hv.id === lv.id)
+    )
 
-      return combined;
+    // Combine: optimistic-only vehicles + hook vehicles (avoiding duplicates)
+    const combined = [...optimisticOnly]
+    filteredFromHook.forEach(hv => {
+      if (!combined.find(cv => cv.id === hv.id)) {
+        combined.push(hv)
+      }
+    })
+
+    return combined;
   }, [storedVehicles, storedVehiclesLocal, activeVehicles, isManualSort, manualOrderVehicles])
 
   const handleSortChange = (newSort: string) => {
-      if (newSort === 'custom') {
-          setIsManualSort(true)
-          // Trigger the useEffect to populate manualOrderVehicles
-          setManualOrderVehicles([]) // Reset to trigger reconstruction from current data + storage
-      } else {
-          setIsManualSort(false)
-          setStoredSortBy(newSort)
-      }
+    if (newSort === 'custom') {
+      setIsManualSort(true)
+      // Trigger the useEffect to populate manualOrderVehicles
+      setManualOrderVehicles([]) // Reset to trigger reconstruction from current data + storage
+    } else {
+      setIsManualSort(false)
+      setStoredSortBy(newSort)
+    }
   }
 
   const handleManualReorder = (draggedId: string, targetId: string) => {
-      // Switch to manual sort if not already
-      if (!isManualSort) {
-          setIsManualSort(true)
-          setManualOrderVehicles([...effectiveStoredVehicles])
+    // Switch to manual sort if not already
+    if (!isManualSort) {
+      setIsManualSort(true)
+      setManualOrderVehicles([...effectiveStoredVehicles])
+    }
+
+    setManualOrderVehicles(prev => {
+      // If prev is empty (first drag), initialize it
+      const list = prev.length > 0 ? prev : [...effectiveStoredVehicles]
+
+      const currentIndex = list.findIndex(v => v.id === draggedId)
+      const targetIndex = list.findIndex(v => v.id === targetId)
+
+      if (currentIndex === -1 || targetIndex === -1) return list
+
+      const newList = [...list]
+      const [movedItem] = newList.splice(currentIndex, 1)
+      if (movedItem) {
+        newList.splice(targetIndex, 0, movedItem)
       }
-
-      setManualOrderVehicles(prev => {
-          // If prev is empty (first drag), initialize it
-          const list = prev.length > 0 ? prev : [...effectiveStoredVehicles]
-
-          const currentIndex = list.findIndex(v => v.id === draggedId)
-          const targetIndex = list.findIndex(v => v.id === targetId)
-
-          if (currentIndex === -1 || targetIndex === -1) return list
-
-          const newList = [...list]
-          const [movedItem] = newList.splice(currentIndex, 1)
-          if (movedItem) {
-            newList.splice(targetIndex, 0, movedItem)
-          }
-          return newList
-      })
+      return newList
+    })
   }
 
   // All known vehicles for slug generation context
@@ -617,15 +617,15 @@ export function GarageContent({
 
     // Update manual list if in manual mode
     if (isManualSort) {
-         setManualOrderVehicles((prev) => {
-              if (!isActive) {
-                   const exists = prev.find(v => v.id === vehicleId)
-                   if (exists) return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
-                   return [...prev, updatedVehicle]
-              } else {
-                   return prev.filter(v => v.id !== vehicleId)
-              }
-         })
+      setManualOrderVehicles((prev) => {
+        if (!isActive) {
+          const exists = prev.find(v => v.id === vehicleId)
+          if (exists) return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
+          return [...prev, updatedVehicle]
+        } else {
+          return prev.filter(v => v.id !== vehicleId)
+        }
+      })
     }
 
     // Then update via API
@@ -650,11 +650,11 @@ export function GarageContent({
           statusText: response.statusText,
           error: result
         })
-        
+
         // Show user-friendly error message
         const errorMessage = result.error || result.details || 'Unknown error'
         alert(`Failed to update vehicle status: ${errorMessage}${result.hint ? '\n\n' + result.hint : ''}`)
-        
+
         // Revert optimistic update on error
         router.refresh()
         return

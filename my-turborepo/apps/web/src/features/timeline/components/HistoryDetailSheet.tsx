@@ -25,16 +25,16 @@ export function HistoryDetailSheet({ event, isOpen, onClose }: HistoryDetailShee
     <Drawer direction="right" open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerPortal>
         <DrawerOverlay className="fixed inset-0 bg-black/40" />
-        <DrawerContent className="bg-background flex flex-col fixed bottom-0 right-0 h-full w-[85vw] sm:w-[500px] mt-0 border-l rounded-none shadow-xl outline-none z-50 overflow-hidden">
+        <DrawerContent className="bg-background flex flex-col fixed bottom-0 right-0 h-full w-full sm:max-w-lg mt-0 border-l rounded-none shadow-xl outline-none z-50 overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             {event && (
               <>
                 <DrawerHeader className="px-6 py-4 border-b">
                   <div className="flex items-center justify-between">
                     <DrawerTitle className="text-xl font-bold">
-                       {event.type === 'maintenance' ? 'Maintenance Detail' :
+                      {event.type === 'maintenance' ? 'Maintenance Detail' :
                         event.type === 'modification' ? 'Modification Detail' :
-                        'Mileage Detail'}
+                          'Mileage Detail'}
                     </DrawerTitle>
                     <DrawerClose asChild>
                       <button className="rounded-full p-2 hover:bg-muted transition-colors">

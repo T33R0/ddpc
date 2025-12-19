@@ -3,6 +3,7 @@
 // MPG Health Dial Component - Displays average MPG vs factory rating with visual gauge
 // CRITICAL: This file MUST be committed to git for Vercel build to succeed
 // File: my-turborepo/apps/web/src/features/fuel/components/MpgHealthDial.tsx
+// NOTE: Contains complex SVG visualizations and dynamic styles which are valid exceptions to the Component Bible.
 // ============================================================================
 //another comment
 import React from 'react'
@@ -209,7 +210,7 @@ export function MpgHealthDial({ averageMpg, factoryMpg }: MpgHealthDialProps) {
           {/* Current MPG Display */}
           <div className="mt-2 text-center">
             <p className="text-sm text-muted-foreground mb-1">Your Average MPG</p>
-            <p className="text-3xl font-bold" style={{ color: needleColor }}>
+            <p className="text-3xl font-bold" style={{ color: needleColor /* Justification: Dynamic value not mappable to standard tokens */ }}>
               {averageMpg.toFixed(1)}
             </p>
             {difference !== 0 && (

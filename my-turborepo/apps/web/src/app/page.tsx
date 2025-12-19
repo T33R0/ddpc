@@ -47,7 +47,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
           welcome to ddpc
         </h1>
-        <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+        <p className="max-w-2xl text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
           the digital platform for auto enthusiasts
         </p>
         <div className="flex flex-col gap-4 min-[400px]:flex-row">
