@@ -8,7 +8,7 @@ import { Input } from '@repo/ui/input';
 import { Badge } from '@repo/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Search, Plus, AlertTriangle, Calendar, FileText, BarChart, Receipt, Download, Car, Activity, Wrench, Fuel, Settings } from 'lucide-react';
-import { LogServiceModal } from '../../components/LogServiceModal';
+
 import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleton';
 import { useSearch } from '../../lib/hooks/useSearch';
 import { searchConsoleVehicle } from '../../lib/search';
@@ -30,7 +30,7 @@ export default function ConsolePage() {
   } = useSearch(vehicles, searchConsoleVehicle);
 
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [logServiceModalOpen, setLogServiceModalOpen] = useState(false);
+
 
   if (authLoading) {
     return (
@@ -112,7 +112,7 @@ export default function ConsolePage() {
             <span className="text-lg font-medium text-foreground">Manage your vehicles:</span>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => setLogServiceModalOpen(true)}
+              onClick={() => router.push('/hub')}
             >
               <Plus className="w-4 h-4 mr-2" />
               Log New Entry
@@ -395,11 +395,7 @@ export default function ConsolePage() {
         </div>
       </div>
 
-      {/* Log Service Modal */}
-      <LogServiceModal
-        open={logServiceModalOpen}
-        onOpenChange={setLogServiceModalOpen}
-      />
+
     </section>
   );
 }
