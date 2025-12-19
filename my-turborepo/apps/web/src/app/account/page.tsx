@@ -554,209 +554,214 @@ export default function AccountPage() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Profile Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Profile Information
-                    </CardTitle>
-                    <CardDescription>
-                      Update your public profile information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="username" className="text-foreground">Username *</Label>
-                      <Input
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
-                        placeholder="your_username"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="displayName" className="text-foreground">Display Name</Label>
-                      <Input
-                        id="displayName"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
-                        placeholder="Your Display Name"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="location" className="text-foreground">Location</Label>
-                      <Input
-                        id="location"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
-                        placeholder="City, Country"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="website" className="text-foreground">Website</Label>
-                      <Input
-                        id="website"
-                        type="url"
-                        value={website}
-                        onChange={(e) => setWebsite(e.target.value)}
-                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
-                        placeholder="https://yourwebsite.com"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bio" className="text-foreground">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
-                        placeholder="Tell us about yourself..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <Button
-                      onClick={handleUpdateProfile}
-                      disabled={isLoading || isUpdated}
-                      className="w-full"
-                    >
-                      {isLoading ? 'Updating...' : isUpdated ? 'Updated' : 'Update Profile'}
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Avatar & Privacy Settings */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <ImageIcon className="h-5 w-5" />
-                      Avatar & Privacy
-                    </CardTitle>
-                    <CardDescription>
-                      Manage your profile picture and privacy settings
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="avatarUrl" className="text-foreground">Avatar URL</Label>
-                      <Input
-                        id="avatarUrl"
-                        type="url"
-                        value={avatarUrl}
-                        onChange={(e) => setAvatarUrl(e.target.value)}
-                        className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
-                        placeholder="https://example.com/avatar.jpg"
-                      />
-                    </div>
-
-                    {avatarUrl && (
-                      <div className="flex justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={avatarUrl}
-                          alt="Avatar preview"
-                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
+                {/* Profile Information - Left Column */}
+                <div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <User className="h-5 w-5" />
+                        Profile Information
+                      </CardTitle>
+                      <CardDescription>
+                        Update your public profile information
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="username" className="text-foreground">Username *</Label>
+                        <Input
+                          id="username"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
+                          placeholder="your_username"
                         />
                       </div>
-                    )}
 
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="isPublic"
-                        checked={isPublic}
-                        onChange={(e) => setIsPublic(e.target.checked)}
-                        className="w-4 h-4 rounded border-white/30 bg-black/30 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-                      />
-                      <Label htmlFor="isPublic" className="text-sm text-gray-300">
-                        Make profile public
-                      </Label>
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="displayName" className="text-foreground">Display Name</Label>
+                        <Input
+                          id="displayName"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
+                          placeholder="Your Display Name"
+                        />
+                      </div>
 
-                    <div className="text-xs text-gray-400">
-                      {isPublic ? (
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          Your profile is visible to other users
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <EyeOff className="h-3 w-3" />
-                          Your profile is private
+                      <div className="space-y-2">
+                        <Label htmlFor="location" className="text-foreground">Location</Label>
+                        <Input
+                          id="location"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
+                          placeholder="City, Country"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="website" className="text-foreground">Website</Label>
+                        <Input
+                          id="website"
+                          type="url"
+                          value={website}
+                          onChange={(e) => setWebsite(e.target.value)}
+                          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
+                          placeholder="https://yourwebsite.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bio" className="text-foreground">Bio</Label>
+                        <Textarea
+                          id="bio"
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
+                          placeholder="Tell us about yourself..."
+                          rows={3}
+                        />
+                      </div>
+
+                      <Button
+                        onClick={handleUpdateProfile}
+                        disabled={isLoading || isUpdated}
+                        className="w-full"
+                      >
+                        {isLoading ? 'Updating...' : isUpdated ? 'Updated' : 'Update Profile'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Right Column - Avatar & Privacy + Email Preferences */}
+                <div className="space-y-6">
+                  {/* Avatar & Privacy Settings */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5" />
+                        Avatar & Privacy
+                      </CardTitle>
+                      <CardDescription>
+                        Manage your profile picture and privacy settings
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="avatarUrl" className="text-foreground">Avatar URL</Label>
+                        <Input
+                          id="avatarUrl"
+                          type="url"
+                          value={avatarUrl}
+                          onChange={(e) => setAvatarUrl(e.target.value)}
+                          className="bg-background backdrop-blur-sm border-border text-foreground placeholder-muted-foreground focus:border-accent px-3 py-2"
+                          placeholder="https://example.com/avatar.jpg"
+                        />
+                      </div>
+
+                      {avatarUrl && (
+                        <div className="flex justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={avatarUrl}
+                            alt="Avatar preview"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                         </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Email Preferences - Always visible, content depends on role */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="h-5 w-5" />
-                      Email Preferences
-                    </CardTitle>
-                    <CardDescription>
-                      Manage your email notification settings
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {user.role === 'admin' ? (
-                      <>
-                        <div className="flex items-center justify-between space-x-2">
-                          <Label htmlFor="notifyOnNewUser" className="flex flex-col space-y-1">
-                            <span>New User Signup</span>
-                            <span className="font-normal text-xs text-muted-foreground">
-                              Receive an email when a new user creates an account
-                            </span>
-                          </Label>
-                          <Switch
-                            id="notifyOnNewUser"
-                            checked={notifyOnNewUser}
-                            onCheckedChange={setNotifyOnNewUser}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between space-x-2">
-                          <Label htmlFor="notifyOnIssueReport" className="flex flex-col space-y-1">
-                            <span>New Issue Report</span>
-                            <span className="font-normal text-xs text-muted-foreground">
-                              Receive an email when a user reports an issue
-                            </span>
-                          </Label>
-                          <Switch
-                            id="notifyOnIssueReport"
-                            checked={notifyOnIssueReport}
-                            onCheckedChange={setNotifyOnIssueReport}
-                          />
-                        </div>
-                        <div className="pt-4">
-                           <Button
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="isPublic"
+                          checked={isPublic}
+                          onChange={(e) => setIsPublic(e.target.checked)}
+                          className="w-4 h-4 rounded border-white/30 bg-black/30 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                        />
+                        <Label htmlFor="isPublic" className="text-sm text-gray-300">
+                          Make profile public
+                        </Label>
+                      </div>
+
+                      <div className="text-xs text-gray-400">
+                        {isPublic ? (
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            Your profile is visible to other users
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <EyeOff className="h-3 w-3" />
+                            Your profile is private
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Email Preferences - Always visible, content depends on role */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Email Preferences
+                      </CardTitle>
+                      <CardDescription>
+                        Manage your email notification settings
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {user.role === 'admin' ? (
+                        <>
+                          <div className="flex items-center justify-between space-x-2">
+                            <Label htmlFor="notifyOnNewUser" className="flex flex-col space-y-1">
+                              <span>New User Signup</span>
+                              <span className="font-normal text-xs text-muted-foreground">
+                                Receive an email when a new user creates an account
+                              </span>
+                            </Label>
+                            <Switch
+                              id="notifyOnNewUser"
+                              checked={notifyOnNewUser}
+                              onCheckedChange={setNotifyOnNewUser}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between space-x-2">
+                            <Label htmlFor="notifyOnIssueReport" className="flex flex-col space-y-1">
+                              <span>New Issue Report</span>
+                              <span className="font-normal text-xs text-muted-foreground">
+                                Receive an email when a user reports an issue
+                              </span>
+                            </Label>
+                            <Switch
+                              id="notifyOnIssueReport"
+                              checked={notifyOnIssueReport}
+                              onCheckedChange={setNotifyOnIssueReport}
+                            />
+                          </div>
+                          <div className="pt-4">
+                            <Button
                               onClick={handleUpdateProfile}
                               disabled={isLoading || isUpdated}
                               className="w-full"
                             >
                               {isLoading ? 'Updating...' : isUpdated ? 'Saved' : 'Save Preferences'}
                             </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-muted-foreground text-center py-6">
+                          No email preferences available for your account type.
                         </div>
-                      </>
-                    ) : (
-                      <div className="text-sm text-muted-foreground text-center py-6">
-                        No email preferences available for your account type.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             )}
 

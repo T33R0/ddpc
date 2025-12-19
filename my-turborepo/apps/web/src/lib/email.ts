@@ -19,8 +19,16 @@ export interface SendEmailParams {
 export async function sendEmail({ to, subject, html }: SendEmailParams) {
   const resend = getResend();
   if (!resend) {
+    console.error('[Email] Failed to initialize Resend: API key missing');
     return { success: false, error: 'Resend API key missing' };
   }
+
+  // Debug logging for email attempt
+  console.log('[Email] Attempting to send email:', {
+    to: Array.isArray(to) ? to.join(', ') : to,
+    subject,
+    from: 'monitor@myddpc.com'
+  });
 
   try {
     const data = await resend.emails.send({
@@ -31,13 +39,17 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
     });
 
     if (data.error) {
-      console.error('Error sending email:', data.error);
+      console.error('[Email] Resend API returned error:', JSON.stringify(data.error, null, 2));
       return { success: false, error: data.error };
     }
 
+    console.log('[Email] Email sent successfully:', data.data?.id);
     return { success: true, data };
   } catch (error) {
-    console.error('Unexpected error sending email:', error);
+    console.error('[Email] Unexpected exception during send:', error);
+    if (error instanceof Error) {
+       console.error('[Email] Error details:', error.message, error.stack);
+    }
     return { success: false, error: 'Unexpected error sending email' };
   }
 }
