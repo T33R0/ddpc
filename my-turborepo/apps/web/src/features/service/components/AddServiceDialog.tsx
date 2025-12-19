@@ -242,7 +242,8 @@ export function AddServiceDialog({
       console.log('Modal opened, fetching service categories...')
       fetchServiceCategories()
     }
-  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories, fetchServiceCategories, serviceCategories.length])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories])
 
   // Fetch service items when category is selected
   useEffect(() => {
