@@ -97,7 +97,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -113,7 +113,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -126,7 +126,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -137,7 +137,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
                     type={showPassword ? 'text' : 'password'}
@@ -158,10 +158,10 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-600" />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-black px-2 text-gray-400">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
             </div>
           </div>
 
@@ -176,12 +176,12 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
             Google
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm text-muted-foreground">
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               type="button"
               onClick={toggleMode}
-              className="text-blue-400 hover:text-blue-300 underline"
+              className="text-primary hover:underline font-medium"
             >
               {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>

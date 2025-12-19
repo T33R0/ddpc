@@ -108,17 +108,17 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               {/* Vehicle Selection */}
               <div className="md:col-span-2">
-                <Label htmlFor="vehicle-select" className="text-white">Vehicle *</Label>
+                <Label htmlFor="vehicle-select">Vehicle *</Label>
                 <select
                   id="vehicle-select"
                   value={formData.vehicleId}
                   onChange={(e) => handleInputChange('vehicleId', e.target.value)}
-                  className="w-full h-9 rounded-md border border-slate-700 bg-transparent px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
-                  <option value="" className="bg-gray-900 text-white">Select a vehicle</option>
+                  <option value="">Select a vehicle</option>
                   {vehicles.map((vehicle) => (
-                    <option key={vehicle.id} value={vehicle.id} className="bg-gray-900 text-white">
+                    <option key={vehicle.id} value={vehicle.id}>
                       {vehicle.name} ({vehicle.ymmt})
                     </option>
                   ))}
@@ -127,30 +127,29 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
 
               {/* Service Date */}
               <div>
-                <Label htmlFor="service-date" className="text-white">Date of Service *</Label>
+                <Label htmlFor="service-date">Date of Service *</Label>
                 <Input
                   id="service-date"
                   type="date"
                   value={formData.serviceDate}
                   onChange={(e) => handleInputChange('serviceDate', e.target.value)}
-                  className="bg-transparent border-slate-700 text-white"
                   required
                 />
               </div>
 
               {/* Service Type */}
               <div>
-                <Label htmlFor="service-type" className="text-white">Type of Service *</Label>
+                <Label htmlFor="service-type">Type of Service *</Label>
                 <select
                   id="service-type"
                   value={formData.serviceType}
                   onChange={(e) => handleInputChange('serviceType', e.target.value)}
-                  className="w-full h-9 rounded-md border border-slate-700 bg-transparent px-3 py-1 text-sm text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
-                  <option value="" className="bg-gray-900 text-white">Select service type</option>
+                  <option value="">Select service type</option>
                   {serviceTypes.map((type) => (
-                    <option key={type} value={type} className="bg-gray-900 text-white">
+                    <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
@@ -159,23 +158,22 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
 
               {/* Odometer Reading */}
               <div>
-                <Label htmlFor="odometer" className="text-white">Odometer Reading</Label>
+                <Label htmlFor="odometer">Odometer Reading</Label>
                 <Input
                   id="odometer"
                   type="number"
                   placeholder="e.g., 45123"
                   value={formData.odometer}
                   onChange={(e) => handleInputChange('odometer', e.target.value)}
-                  className="bg-transparent border-slate-700 text-white placeholder-gray-400"
                 />
               </div>
 
               {/* Cost */}
               <div>
-                <Label htmlFor="cost" className="text-white">Cost</Label>
+                <Label htmlFor="cost">Cost</Label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="text-sm text-gray-400">$</span>
+                    <span className="text-sm text-muted-foreground">$</span>
                   </div>
                   <Input
                     id="cost"
@@ -184,19 +182,18 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
                     placeholder="0.00"
                     value={formData.cost}
                     onChange={(e) => handleInputChange('cost', e.target.value)}
-                    className="pl-7 bg-transparent border-slate-700 text-white placeholder-gray-400"
+                    className="pl-7"
                   />
                 </div>
               </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-700">
+            <div className="flex items-center justify-end gap-3 pt-6 border-t">
               <ModalClose asChild>
                 <Button
                   type="button"
                   variant="outline"
-                  className="bg-transparent border-slate-700 hover:bg-slate-900/50"
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -204,7 +201,6 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
               </ModalClose>
               <Button
                 type="submit"
-                className="bg-red-600 hover:bg-red-700 text-white"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : 'Save'}
@@ -215,4 +211,5 @@ export function LogServiceModal({ open, onOpenChange }: LogServiceModalProps) {
       </ModalContent>
     </Modal>
   );
+
 }
