@@ -8,6 +8,7 @@ import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
+import { Switch } from '@repo/ui/switch';
 import { AuthModal } from '@repo/ui/auth-modal';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -54,6 +55,8 @@ export default function AccountPage() {
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const [notifyOnNewUser, setNotifyOnNewUser] = useState(false);
+  const [notifyOnIssueReport, setNotifyOnIssueReport] = useState(false);
 
   // Security form state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -81,6 +84,8 @@ export default function AccountPage() {
         setBio(data.user.bio || '');
         setAvatarUrl(data.user.avatarUrl || '');
         setIsPublic(data.user.isPublic);
+        setNotifyOnNewUser(data.user.notifyOnNewUser || false);
+        setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Profile fetch failed:', errorData);
@@ -248,6 +253,8 @@ export default function AccountPage() {
           bio,
           avatarUrl,
           isPublic,
+          notifyOnNewUser,
+          notifyOnIssueReport,
         }),
       });
 
@@ -690,6 +697,64 @@ export default function AccountPage() {
                         </div>
                       )}
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Email Preferences - Always visible, content depends on role */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5" />
+                      Email Preferences
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your email notification settings
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {user.role === 'admin' ? (
+                      <>
+                        <div className="flex items-center justify-between space-x-2">
+                          <Label htmlFor="notifyOnNewUser" className="flex flex-col space-y-1">
+                            <span>New User Signup</span>
+                            <span className="font-normal text-xs text-muted-foreground">
+                              Receive an email when a new user creates an account
+                            </span>
+                          </Label>
+                          <Switch
+                            id="notifyOnNewUser"
+                            checked={notifyOnNewUser}
+                            onCheckedChange={setNotifyOnNewUser}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between space-x-2">
+                          <Label htmlFor="notifyOnIssueReport" className="flex flex-col space-y-1">
+                            <span>New Issue Report</span>
+                            <span className="font-normal text-xs text-muted-foreground">
+                              Receive an email when a user reports an issue
+                            </span>
+                          </Label>
+                          <Switch
+                            id="notifyOnIssueReport"
+                            checked={notifyOnIssueReport}
+                            onCheckedChange={setNotifyOnIssueReport}
+                          />
+                        </div>
+                        <div className="pt-4">
+                           <Button
+                              onClick={handleUpdateProfile}
+                              disabled={isLoading || isUpdated}
+                              className="w-full"
+                            >
+                              {isLoading ? 'Updating...' : isUpdated ? 'Saved' : 'Save Preferences'}
+                            </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-muted-foreground text-center py-6">
+                        No email preferences available for your account type.
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>

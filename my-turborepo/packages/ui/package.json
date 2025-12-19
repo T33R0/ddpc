@@ -10,6 +10,7 @@
     "./textarea": "./src/textarea.tsx",
     "./toggle": "./src/toggle.tsx",
     "./toggle-group": "./src/toggle-group.tsx",
+    "./switch": "./src/switch.tsx",
     "./scroll-area": "./src/scroll-area.tsx",
     "./table": "./src/table.tsx",
     "./hooks/use-media-query": "./src/hooks/use-media-query.ts"
