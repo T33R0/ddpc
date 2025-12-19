@@ -9,6 +9,7 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
 type VehicleSummaryResponse = {
   data: VehicleSummary[]
+  hasMore: boolean
   page: number
   pageSize: number
 }
@@ -17,7 +18,7 @@ export async function getVehicleSummaries(
   page = 1,
   pageSize = 24,
   filters: SupabaseFilter[] = []
-): Promise<VehicleSummary[]> {
+): Promise<{ data: VehicleSummary[]; hasMore: boolean }> {
   const searchParams = new URLSearchParams({
     page: page.toString(),
     pageSize: pageSize.toString(),
@@ -43,7 +44,7 @@ export async function getVehicleSummaries(
   }
 
   const payload = (await response.json()) as VehicleSummaryResponse
-  return payload.data
+  return { data: payload.data, hasMore: payload.hasMore ?? (payload.data.length === pageSize) }
 }
 
 export async function getVehicleFilterOptions(): Promise<FilterOptions> {

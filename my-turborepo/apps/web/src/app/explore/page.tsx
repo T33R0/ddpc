@@ -37,9 +37,9 @@ function ExploreContent() {
         setError(null);
       }
 
-      const vehicleData = await getVehicleSummaries(page, PAGE_SIZE, filters);
+      const { data: vehicleData, hasMore: vehicleHasMore } = await getVehicleSummaries(page, PAGE_SIZE, filters);
 
-      setHasMore(vehicleData.length === PAGE_SIZE); // Approximation
+      setHasMore(vehicleHasMore);
 
       setAllVehicles(prev => append ? [...prev, ...vehicleData] : vehicleData);
     } catch (err) {

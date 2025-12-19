@@ -116,13 +116,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (error) {
-       console.error('Supabase error:', error);
-       return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Supabase error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     if (!data) {
-       return NextResponse.json({ data: [], page, pageSize: pageSizeParam });
+      return NextResponse.json({ data: [], page, pageSize: pageSizeParam });
     }
+
+    // Check if we got the full limit of rows, indicating more might exist
+    // Note: We fetched fetchLimit (pageSize * 5). If we got that many, there's likely more.
+    // If we got fewer than fetchLimit, we've exhausted the source for this query.
+    // This is still an approximation if the total count is exactly equal to fetchLimit, but "good enough" for infinite scroll.
+    const hasMore = (data?.length ?? 0) === fetchLimit;
 
     // --- Image Resolution ---
     // Fetch primary images from the dedicated table to ensure high quality results
@@ -193,6 +199,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: summaries,
+      hasMore,
       page,
       pageSize: pageSizeParam,
     });
