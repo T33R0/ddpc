@@ -102,16 +102,25 @@ export async function submitIssueReport(
 
         // --- NEW ISSUE NOTIFICATION ---
         try {
+            console.log('[Notification] Starting issue reporting notification flow...');
             // Find admins to notify
-            const { data: admins } = await supabase
+            const { data: admins, error: adminQueryError } = await supabase
                 .from('user_profile')
                 .select('user_id')
                 .eq('role', 'admin')
                 .eq('notify_on_issue_report', true);
 
+            if (adminQueryError) {
+                console.error('[Notification] Error fetching admin profiles:', adminQueryError);
+            }
+
+            console.log(`[Notification] Found ${admins?.length || 0} admins configured to receive issue reports.`);
+
             if (admins && admins.length > 0) {
                 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-                if (serviceRoleKey) {
+                if (!serviceRoleKey) {
+                     console.error('[Notification] Aborted: SUPABASE_SERVICE_ROLE_KEY missing.');
+                } else {
                     const adminClient = createServiceClient(
                         process.env.NEXT_PUBLIC_SUPABASE_URL!,
                         serviceRoleKey,
@@ -119,15 +128,20 @@ export async function submitIssueReport(
                     );
 
                     const adminIds = admins.map(a => a.user_id);
+                    // TODO: Pagination might be needed here if user base grows, but 1000 is fine for now
                     const { data: { users: allUsers }, error: listError } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
 
-                    if (!listError && allUsers) {
+                    if (listError) {
+                         console.error('[Notification] Error listing users from auth admin:', listError);
+                    } else if (allUsers) {
                         const adminEmails = allUsers
                             .filter(u => adminIds.includes(u.id) && u.email)
                             .map(u => u.email as string);
 
+                        console.log(`[Notification] Resolved ${adminEmails.length} admin email addresses.`);
+
                         if (adminEmails.length > 0) {
-                            await sendEmail({
+                            const emailResult = await sendEmail({
                                 to: adminEmails,
                                 subject: 'New Issue Reported - DDPC',
                                 html: `
@@ -138,12 +152,13 @@ export async function submitIssueReport(
                                     ${screenshotUrl ? `<p><strong>Screenshot:</strong> <a href="${screenshotUrl}">View Screenshot</a></p>` : ''}
                                 `
                             });
+                            console.log('[Notification] Send email result:', emailResult);
                         }
                     }
                 }
             }
         } catch (notifyError) {
-            console.error('Failed to send issue notification:', notifyError);
+            console.error('[Notification] CRITICAL FAILURE in notification flow:', notifyError);
         }
         // --- END NOTIFICATION ---
 
