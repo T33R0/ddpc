@@ -83,6 +83,8 @@ export async function GET(request: NextRequest) {
         role: 'user',
         plan: 'free',
         banned: false,
+        notify_on_new_user: false,
+        notify_on_issue_report: false,
       };
 
       const { data: newProfile, error: createError } = await supabase
@@ -123,6 +125,8 @@ export async function GET(request: NextRequest) {
       role: profile.role,
       plan: profile.plan,
       banned: profile.banned,
+      notifyOnNewUser: profile.notify_on_new_user,
+      notifyOnIssueReport: profile.notify_on_issue_report,
     };
 
     return NextResponse.json({ user: userData });
@@ -176,7 +180,9 @@ export async function PUT(request: NextRequest) {
       website,
       bio,
       avatarUrl,
-      isPublic
+      isPublic,
+      notifyOnNewUser,
+      notifyOnIssueReport
     } = body;
 
     // Note: email is not stored in user_profile table, it comes from auth.users
@@ -214,6 +220,29 @@ export async function PUT(request: NextRequest) {
       is_public: isPublic ?? true,
       updated_at: new Date().toISOString(),
     };
+
+    // Only allow updating notification settings if user is admin
+    // We check the role from the token or re-fetch it.
+    // Since 'user' object is from auth.getUser(), it might not have the role from user_profile.
+    // However, the role is typically stored in user_profile.
+    // We can fetch the current profile to check the role before updating if we want to be strict.
+    // Or, we can trust the UI state for now but enforcing at DB level is better.
+    // For now, let's just pass them if they are present.
+    // The requirement says "admins should have the new user and new error toggle options; all other users will currently have nothing".
+    // I will add them to the update payload. If we want to strictly enforce admin-only write, we would check the role here.
+    // Given the context, I will include them in the update.
+
+    // Fetch current role to verify if user is allowed to toggle notifications
+    const { data: currentRoleData } = await supabase
+        .from('user_profile')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+    if (currentRoleData?.role === 'admin') {
+        if (notifyOnNewUser !== undefined) updateData.notify_on_new_user = notifyOnNewUser;
+        if (notifyOnIssueReport !== undefined) updateData.notify_on_issue_report = notifyOnIssueReport;
+    }
 
     const { data: updatedProfile, error: updateError } = await supabase
       .from('user_profile')
@@ -259,6 +288,8 @@ export async function PUT(request: NextRequest) {
       role: updatedProfile.role,
       plan: updatedProfile.plan,
       banned: updatedProfile.banned,
+      notifyOnNewUser: updatedProfile.notify_on_new_user,
+      notifyOnIssueReport: updatedProfile.notify_on_issue_report,
     };
 
     return NextResponse.json({ user: userData });

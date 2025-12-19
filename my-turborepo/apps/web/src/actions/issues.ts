@@ -9,6 +9,7 @@ export type SubmitIssueState = {
 }
 
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { sendEmail } from '@/lib/email'
 
 export async function submitIssueReport(
     prevState: SubmitIssueState | null,
@@ -98,6 +99,53 @@ export async function submitIssueReport(
             console.error('Error submitting issue report:', error)
             return { error: 'Failed to submit report' }
         }
+
+        // --- NEW ISSUE NOTIFICATION ---
+        try {
+            // Find admins to notify
+            const { data: admins } = await supabase
+                .from('user_profile')
+                .select('user_id')
+                .eq('role', 'admin')
+                .eq('notify_on_issue_report', true);
+
+            if (admins && admins.length > 0) {
+                const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                if (serviceRoleKey) {
+                    const adminClient = createServiceClient(
+                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        serviceRoleKey,
+                        { auth: { autoRefreshToken: false, persistSession: false } }
+                    );
+
+                    const adminIds = admins.map(a => a.user_id);
+                    const { data: { users: allUsers }, error: listError } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+
+                    if (!listError && allUsers) {
+                        const adminEmails = allUsers
+                            .filter(u => adminIds.includes(u.id) && u.email)
+                            .map(u => u.email as string);
+
+                        if (adminEmails.length > 0) {
+                            await sendEmail({
+                                to: adminEmails,
+                                subject: 'New Issue Reported - DDPC',
+                                html: `
+                                    <h2>New Issue Reported</h2>
+                                    <p><strong>User:</strong> ${email || 'Anonymous'}</p>
+                                    <p><strong>Page:</strong> ${url}</p>
+                                    <p><strong>Description:</strong> ${description}</p>
+                                    ${screenshotUrl ? `<p><strong>Screenshot:</strong> <a href="${screenshotUrl}">View Screenshot</a></p>` : ''}
+                                `
+                            });
+                        }
+                    }
+                }
+            }
+        } catch (notifyError) {
+            console.error('Failed to send issue notification:', notifyError);
+        }
+        // --- END NOTIFICATION ---
 
         revalidatePath('/admin/issues')
         return { success: true }

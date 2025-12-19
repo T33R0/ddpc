@@ -13,6 +13,8 @@ export interface User {
   role: 'user' | 'helper' | 'admin';
   plan: 'free' | 'builder' | 'pro';
   banned: boolean;
+  notifyOnNewUser?: boolean;
+  notifyOnIssueReport?: boolean;
 }
 
 export interface Vehicle {
