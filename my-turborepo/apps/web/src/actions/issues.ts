@@ -128,16 +128,47 @@ export async function submitIssueReport(
                     );
 
                     const adminIds = admins.map(a => a.user_id);
-                    // TODO: Pagination might be needed here if user base grows, but 1000 is fine for now
-                    const { data: { users: allUsers }, error: listError } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+
+                    const adminEmails: string[] = [];
+                    const targetAdminIds = new Set(adminIds);
+                    let page = 1;
+                    const perPage = 1000;
+                    let hasMore = true;
+                    let listError = null;
+
+                    // Fetch users in pages until all admins are found or no more users
+                    while (hasMore && targetAdminIds.size > 0) {
+                        const { data: { users }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+
+                        if (error) {
+                            listError = error;
+                            console.error('[Notification] Error listing users from auth admin:', error);
+                            break;
+                        }
+
+                        if (!users || users.length === 0) {
+                            break;
+                        }
+
+                        for (const user of users) {
+                            if (targetAdminIds.has(user.id)) {
+                                if (user.email) {
+                                    adminEmails.push(user.email);
+                                }
+                                targetAdminIds.delete(user.id);
+                            }
+                        }
+
+                        if (users.length < perPage) {
+                            hasMore = false;
+                        } else {
+                            page++;
+                        }
+                    }
 
                     if (listError) {
-                         console.error('[Notification] Error listing users from auth admin:', listError);
-                    } else if (allUsers) {
-                        const adminEmails = allUsers
-                            .filter(u => adminIds.includes(u.id) && u.email)
-                            .map(u => u.email as string);
-
+                         // Error logged inside loop
+                    } else {
                         console.log(`[Notification] Resolved ${adminEmails.length} admin email addresses.`);
 
                         if (adminEmails.length > 0) {
