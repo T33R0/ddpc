@@ -20,10 +20,11 @@ function getServiceRoleClient() {
 }
 
 /**
- * Fetches a public user profile by username.
- * Returns null if the user does not exist or is not public.
+ * Fetches a user profile by username.
+ * Returns null if the user does not exist.
+ * Privacy checks must be handled by the caller.
  */
-export async function getPublicUserProfile(username: string): Promise<User | null> {
+export async function getUserProfileByUsername(username: string): Promise<User | null> {
   const supabase = getServiceRoleClient()
 
   // Normalize username handling - try exact match or case insensitive
@@ -31,11 +32,10 @@ export async function getPublicUserProfile(username: string): Promise<User | nul
     .from('user_profile')
     .select('*')
     .ilike('username', username)
-    .eq('is_public', true)
     .maybeSingle()
 
   if (error) {
-    console.error('Error fetching public user profile:', error)
+    console.error('Error fetching user profile:', error)
     return null
   }
 
@@ -71,7 +71,8 @@ export async function getPublicUserVehicles(ownerId: string): Promise<any[]> {
     .from('user_vehicle')
     .select(`
       *,
-      vehicle_data (*)
+      vehicle_data (*),
+      vehicle_primary_image (url)
     `)
     .eq('owner_id', ownerId)
     .eq('privacy', 'PUBLIC')

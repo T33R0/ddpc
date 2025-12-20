@@ -170,6 +170,7 @@ export default function ConsolePage() {
                   const status = getVehicleStatus(vehicle) || 'Active';
                   // Use the smart slug generation (nickname if unique, YMMT otherwise, ID as fallback)
                   const slug = getVehicleSlug(vehicle, vehicles);
+                  const imageUrl = vehicle.image_url || '/branding/fallback-logo.png';
 
                   return (
                     <div
@@ -177,44 +178,52 @@ export default function ConsolePage() {
                       onClick={() => router.push(`/vehicle/${encodeURIComponent(slug)}`)}
                     >
                       <DashboardCard
-                        className="backdrop-blur-lg p-6 flex flex-col gap-4"
+                        className="relative min-h-[240px] p-0 overflow-hidden flex flex-col justify-end"
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-lg font-semibold text-foreground">{vehicle.name}</h3>
-                            <p className="text-sm text-muted-foreground">{vehicle.ymmt}</p>
-                          </div>
-                          <Badge className={`text-xs ${getStatusColor(status)}`}>
-                            {status}
-                          </Badge>
-                        </div>
+                        {/* Background Image */}
+                        <div
+                          className="absolute inset-0 bg-cover bg-center transition-opacity duration-300 group-hover:opacity-30 opacity-40"
+                          style={{ backgroundImage: `url('${imageUrl}')` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <p className="text-xs text-muted-foreground">Odometer</p>
-                            <p className="text-sm font-medium text-foreground">
-                              {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : '---'}
-                            </p>
+                        <div className="relative z-10 p-6 flex flex-col gap-4 w-full">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-bold text-foreground drop-shadow-md">{vehicle.name}</h3>
+                              <p className="text-sm text-muted-foreground drop-shadow-sm">{vehicle.ymmt}</p>
+                            </div>
+                            <Badge className={`text-xs ${getStatusColor(status)}`}>
+                              {status}
+                            </Badge>
                           </div>
-                          <div className="text-center">
-                            <p className="text-xs text-muted-foreground">Fuel Level</p>
-                            <p className="text-sm font-medium text-foreground">
-                              {consoleStats?.vehicleStats?.[vehicle.id]?.fuelPercentage
-                                ? `${consoleStats.vehicleStats[vehicle.id]?.fuelPercentage}%`
-                                : '---'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs text-muted-foreground">Avg. MPG</p>
-                            <p className="text-sm font-medium text-foreground">
-                              {consoleStats?.vehicleStats?.[vehicle.id]?.avgMpg
-                                ? consoleStats.vehicleStats[vehicle.id]?.avgMpg?.toFixed(1)
-                                : '---'}
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center">
+                              <p className="text-xs text-muted-foreground">Odometer</p>
+                              <p className="text-sm font-medium text-foreground">
+                                {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : '---'}
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-muted-foreground">Fuel Level</p>
+                              <p className="text-sm font-medium text-foreground">
+                                {consoleStats?.vehicleStats?.[vehicle.id]?.fuelPercentage
+                                  ? `${consoleStats.vehicleStats[vehicle.id]?.fuelPercentage}%`
+                                  : '---'}
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-muted-foreground">Avg. MPG</p>
+                              <p className="text-sm font-medium text-foreground">
+                                {consoleStats?.vehicleStats?.[vehicle.id]?.avgMpg
+                                  ? consoleStats.vehicleStats[vehicle.id]?.avgMpg?.toFixed(1)
+                                  : '---'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -263,6 +272,7 @@ export default function ConsolePage() {
                             <Settings className="w-3 h-3 mr-1" />
                             Mods
                           </Button>
+                        </div>
                         </div>
                       </DashboardCard>
                     </div>

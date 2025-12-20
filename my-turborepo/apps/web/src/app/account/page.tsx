@@ -701,6 +701,17 @@ export default function AccountPage() {
                           </div>
                         )}
                       </div>
+
+                      <div className="pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => window.open(`/u/${username}`, '_blank')}
+                        >
+                          View Public Profile
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
 
