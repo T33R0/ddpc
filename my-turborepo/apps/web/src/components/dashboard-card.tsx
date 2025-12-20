@@ -14,6 +14,7 @@ interface DashboardCardProps extends React.ComponentProps<typeof Card> {
   title?: string
   description?: string
   badges?: string[]
+  priority?: boolean
 }
 
 export function DashboardCard({
@@ -25,6 +26,7 @@ export function DashboardCard({
   title,
   description,
   badges,
+  priority = false,
   ...props
 }: DashboardCardProps) {
 
@@ -47,7 +49,7 @@ export function DashboardCard({
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-40 group-hover:opacity-30"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority={false}
+            priority={priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
         </div>
