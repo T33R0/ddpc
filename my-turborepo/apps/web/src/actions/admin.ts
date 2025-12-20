@@ -3,10 +3,23 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
 const BREAKGLASS_EMAIL = 'myddpc@gmail.com'
 
 export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
+  const schema = z.object({
+    page: z.number().int().min(1),
+    pageSize: z.number().int().min(1).max(100),
+    query: z.string().max(100).optional()
+  });
+
+  const parse = schema.safeParse({ page, pageSize, query });
+  if (!parse.success) {
+    console.error('Validation error in getAdminUsers:', parse.error);
+    throw new Error('Invalid input');
+  }
+
   const supabase = await createClient()
 
   // Check auth
@@ -91,6 +104,17 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
 }
 
 export async function toggleUserSuspension(userId: string, shouldSuspend: boolean) {
+  const schema = z.object({
+    userId: z.string().uuid(),
+    shouldSuspend: z.boolean()
+  });
+
+  const parse = schema.safeParse({ userId, shouldSuspend });
+  if (!parse.success) {
+    console.error('Validation error in toggleUserSuspension:', parse.error);
+    throw new Error('Invalid input');
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -131,6 +155,17 @@ export async function toggleUserSuspension(userId: string, shouldSuspend: boolea
 }
 
 export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
+  const schema = z.object({
+    userId: z.string().uuid(),
+    makeAdmin: z.boolean()
+  });
+
+  const parse = schema.safeParse({ userId, makeAdmin });
+  if (!parse.success) {
+    console.error('Validation error in toggleAdminRole:', parse.error);
+    throw new Error('Invalid input');
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -205,6 +240,18 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
 }
 
 export async function getIssueReports(page = 0, pageSize = 50, filter: 'all' | 'unresolved' = 'unresolved') {
+  const schema = z.object({
+    page: z.number().int().min(0),
+    pageSize: z.number().int().min(1).max(100),
+    filter: z.enum(['all', 'unresolved'])
+  });
+
+  const parse = schema.safeParse({ page, pageSize, filter });
+  if (!parse.success) {
+    console.error('Validation error in getIssueReports:', parse.error);
+    throw new Error('Invalid input');
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -243,6 +290,17 @@ export async function getIssueReports(page = 0, pageSize = 50, filter: 'all' | '
 }
 
 export async function toggleIssueResolution(issueId: string, resolved: boolean) {
+  const schema = z.object({
+    issueId: z.string().uuid(),
+    resolved: z.boolean()
+  });
+
+  const parse = schema.safeParse({ issueId, resolved });
+  if (!parse.success) {
+    console.error('Validation error in toggleIssueResolution:', parse.error);
+    throw new Error('Invalid input');
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -272,6 +330,17 @@ export async function toggleIssueResolution(issueId: string, resolved: boolean) 
 }
 
 export async function updateIssueNotes(issueId: string, notes: string) {
+  const schema = z.object({
+    issueId: z.string().uuid(),
+    notes: z.string().max(2000)
+  });
+
+  const parse = schema.safeParse({ issueId, notes });
+  if (!parse.success) {
+    console.error('Validation error in updateIssueNotes:', parse.error);
+    throw new Error('Invalid input');
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -299,5 +368,3 @@ export async function updateIssueNotes(issueId: string, notes: string) {
 
   revalidatePath('/admin/issues')
 }
-
-
