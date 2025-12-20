@@ -1,11 +1,14 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Badge } from '@repo/ui/badge'
+import { Button } from '@repo/ui/button'
 import { VehicleMod } from '../lib/getVehicleModsData'
-import { Calendar, DollarSign, Gauge, Package, CheckCircle, XCircle, Wrench } from 'lucide-react'
+import { Calendar, DollarSign, Gauge, Package, CheckCircle, XCircle, Wrench, ClipboardList } from 'lucide-react'
+import Link from 'next/link'
 
 interface ModCardProps {
   mod: VehicleMod
+  onClick?: (mod: VehicleMod) => void
 }
 
 const getStatusBadgeVariant = (status: VehicleMod['status']) => {
@@ -38,9 +41,12 @@ const getStatusIcon = (status: VehicleMod['status']) => {
   }
 }
 
-export function ModCard({ mod }: ModCardProps) {
+export function ModCard({ mod, onClick }: ModCardProps) {
   return (
-    <Card className="hover:border-accent transition-colors duration-300">
+    <Card
+      className={`hover:border-accent transition-colors duration-300 ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={() => onClick?.(mod)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -125,6 +131,21 @@ export function ModCard({ mod }: ModCardProps) {
             )}
           </div>
         )}
+
+        {/* Plan Button */}
+        <div className="border-t border-border pt-3">
+          <Button
+            variant="outline"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            asChild
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Link href={`./mods/${mod.id}`}>
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Manage Plan
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

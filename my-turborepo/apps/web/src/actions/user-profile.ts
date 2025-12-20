@@ -14,10 +14,8 @@ export async function updateUserTheme(theme: 'light' | 'dark' | 'auto') {
     }
 
     try {
-        const { error } = await supabase
-            .from('user_profile')
-            .update({ theme })
-            .eq('user_id', user.id);
+        // Use RPC function to bypass RLS recursion issues
+        const { error } = await supabase.rpc('update_own_theme', { new_theme: theme });
 
         if (error) {
             console.error('updateUserTheme: DB Error', error);

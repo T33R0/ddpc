@@ -7,5 +7,49 @@ turbo 2.5.8
 • Packages in scope: @repo/assets, @repo/eslint-config, @repo/prettier-config, @repo/services, @repo/tailwind-config, @repo/types, @repo/typescript-config, @repo/ui, docs, web
 • Running dev in 10 packages
 • Remote caching disabled
-web:dev: cache bypass, force executing 00b11b2ea8b17d3a
-docs:dev: cache bypass, force executing fc6416806e1631f0
+web:dev: cache bypass, force executing 6068124c9f0d93d4
+docs:dev: cache bypass, force executing 89f64831590034e6
+web:dev:
+web:dev: > web@0.1.0 dev
+web:dev: > next dev --turbopack --port 3000
+web:dev:
+docs:dev:
+docs:dev: > docs@0.1.0 dev
+docs:dev: > next dev --turbopack --port 3001
+docs:dev:
+web:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+web:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+web:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+web:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+web:dev:  Detected additional lockfiles:
+web:dev:    * /app/my-turborepo/package-lock.json
+web:dev:
+web:dev:    ▲ Next.js 16.0.10 (Turbopack)
+web:dev:    - Local:         http://localhost:3000
+web:dev:    - Network:       http://192.168.0.2:3000
+web:dev:    - Environments: .env.local
+web:dev:    - Experiments (use with caution):
+web:dev:      · serverActions
+web:dev:
+web:dev:  ✓ Starting...
+docs:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+docs:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+docs:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+docs:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+docs:dev:  Detected additional lockfiles:
+docs:dev:    * /app/my-turborepo/package-lock.json
+docs:dev:
+docs:dev:    ▲ Next.js 16.0.10 (Turbopack)
+docs:dev:    - Local:         http://localhost:3001
+docs:dev:    - Network:       http://192.168.0.2:3001
+docs:dev:
+docs:dev:  ✓ Starting...
+docs:dev:  ✓ Ready in 742ms
+web:dev:  ✓ Ready in 1445ms
+web:dev: [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+web:dev:  ○ Compiling /vehicle/[id]/mods ...
+web:dev:  GET /vehicle/test-vehicle-id/mods 404 in 9.4s (compile: 8.4s, render: 936ms)
+web:dev:  GET /test-mods 200 in 2.2s (compile: 1506ms, render: 660ms)
+web:dev:  GET /api/garage/vehicles 401 in 1081ms (compile: 1046ms, render: 36ms)
+web:dev:  GET /api/garage/vehicles 200 in 1082ms (compile: 1075ms, render: 6ms)
+  x Internal errors encountered: external process killed a task

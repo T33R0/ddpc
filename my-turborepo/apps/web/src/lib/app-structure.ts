@@ -43,15 +43,14 @@ export const APP_ROUTES: AppRoute[] = [
     exposedIn: ['Footer'],
     access: 'public',
   },
-  // TODO: Implement public user profile route
-  // {
-  //   path: '/u/[username]',
-  //   name: 'Public User Profile',
-  //   parameters: ['username'],
-  //   description: 'Public view of a user profile',
-  //   exposedIn: ['Search', 'Direct Link'],
-  //   access: 'public',
-  // },
+  {
+    path: '/u/[username]',
+    name: 'Public User Profile',
+    parameters: ['username'],
+    description: 'Public view of a user profile',
+    exposedIn: ['Search', 'Direct Link'],
+    access: 'public',
+  },
   
   // App Core (Authenticated)
   {

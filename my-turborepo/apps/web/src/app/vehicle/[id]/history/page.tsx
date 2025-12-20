@@ -3,6 +3,10 @@ import { notFound, redirect } from 'next/navigation'
 import { TimelineFeed } from '@/features/timeline/components/TimelineFeed'
 import { getVehicleEvents, VehicleEvent } from '@/features/timeline/lib/getVehicleEvents'
 import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
+import { Card, CardContent } from '@repo/ui/card'
+import { Button } from '@repo/ui/button'
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import Link from 'next/link'
 
 interface VehicleHistoryPageProps {
   params: Promise<{ id: string }> // This can be nickname or UUID
@@ -31,12 +35,13 @@ export default async function VehicleHistoryPage({ params }: VehicleHistoryPageP
   }
 
   let events: VehicleEvent[] = []
+  let errorMessage: string | null = null
+
   try {
     events = await getVehicleEvents(vehicleId) // Use resolved UUID
   } catch (error) {
     console.error('Error fetching vehicle events:', error)
-    // For now, we'll show an empty state if there's an error
-    // TODO: Add proper error handling UI
+    errorMessage = error instanceof Error ? error.message : 'Failed to load vehicle history'
   }
 
   return (
@@ -56,7 +61,27 @@ export default async function VehicleHistoryPage({ params }: VehicleHistoryPageP
             <p className="text-lg text-muted-foreground mt-2">Complete maintenance and ownership history</p>
           </div>
 
-          <TimelineFeed events={events} />
+          {errorMessage ? (
+            <Card className="max-w-md mx-auto border-destructive/50 mt-12">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-destructive" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load history</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {errorMessage}
+                </p>
+                <Button asChild variant="outline">
+                  <Link href={`/vehicle/${vehicleSlug}/history`}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Try Again
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <TimelineFeed events={events} />
+          )}
         </div>
       </section>
     </>

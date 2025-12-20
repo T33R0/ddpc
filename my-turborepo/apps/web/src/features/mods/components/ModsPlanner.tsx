@@ -6,9 +6,10 @@ import { Clock, AlertCircle } from 'lucide-react'
 
 interface ModsPlannerProps {
   mods: VehicleMod[]
+  onModClick?: (mod: VehicleMod) => void
 }
 
-export function ModsPlanner({ mods }: ModsPlannerProps) {
+export function ModsPlanner({ mods, onModClick }: ModsPlannerProps) {
   const inProgressMods = mods.filter(mod =>
     ['planned', 'ordered'].includes(mod.status)
   )
@@ -34,7 +35,7 @@ export function ModsPlanner({ mods }: ModsPlannerProps) {
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {inProgressMods.map((mod) => (
-            <ModCard key={mod.id} mod={mod} />
+            <ModCard key={mod.id} mod={mod} onClick={onModClick} />
           ))}
         </div>
 
