@@ -122,6 +122,7 @@ export default function StructureDetailClient({ item }: { item: StructureItem })
 
     try {
       const file = e.target.files[0]
+      if (!file) return
       const publicUrl = await uploadBlob(file)
 
       toast({

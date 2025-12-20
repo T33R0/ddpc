@@ -13,6 +13,7 @@
     "./switch": "./src/switch.tsx",
     "./scroll-area": "./src/scroll-area.tsx",
     "./table": "./src/table.tsx",
+    "./use-toast": "./src/use-toast.ts",
     "./hooks/use-media-query": "./src/hooks/use-media-query.ts"
   },
   "scripts": {
