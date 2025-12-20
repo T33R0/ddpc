@@ -19,7 +19,7 @@ export interface VehicleMod {
   id: string
   title: string
   description?: string
-  status: 'planned' | 'ordered' | 'installed' | 'tuned'
+  status: 'planned' | 'ordered' | 'installed' | 'tuned' | 'archived'
   cost?: number
   odometer?: number
   event_date: Date

@@ -6,6 +6,7 @@ import { Calendar, DollarSign, Gauge, Package, CheckCircle, XCircle, Wrench } fr
 
 interface ModCardProps {
   mod: VehicleMod
+  onClick?: (mod: VehicleMod) => void
 }
 
 const getStatusBadgeVariant = (status: VehicleMod['status']) => {
@@ -38,9 +39,12 @@ const getStatusIcon = (status: VehicleMod['status']) => {
   }
 }
 
-export function ModCard({ mod }: ModCardProps) {
+export function ModCard({ mod, onClick }: ModCardProps) {
   return (
-    <Card className="hover:border-accent transition-colors duration-300">
+    <Card
+      className={`hover:border-accent transition-colors duration-300 ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={() => onClick?.(mod)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">

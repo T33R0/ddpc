@@ -6,9 +6,10 @@ import { CheckCircle, Wrench } from 'lucide-react'
 
 interface InstalledModsProps {
   mods: VehicleMod[]
+  onModClick?: (mod: VehicleMod) => void
 }
 
-export function InstalledMods({ mods }: InstalledModsProps) {
+export function InstalledMods({ mods, onModClick }: InstalledModsProps) {
   const installedMods = mods.filter(mod =>
     ['installed', 'tuned'].includes(mod.status)
   )
@@ -34,7 +35,7 @@ export function InstalledMods({ mods }: InstalledModsProps) {
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {installedMods.map((mod) => (
-            <ModCard key={mod.id} mod={mod} />
+            <ModCard key={mod.id} mod={mod} onClick={onModClick} />
           ))}
         </div>
 

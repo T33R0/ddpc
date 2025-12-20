@@ -3,11 +3,13 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
-import { Plus } from 'lucide-react'
-import { VehicleModsData } from '@/features/mods/lib/getVehicleModsData'
+import { Plus, ArchiveRestore, Archive } from 'lucide-react'
+import { VehicleModsData, VehicleMod } from '@/features/mods/lib/getVehicleModsData'
 import { ModsPlanner } from '@/features/mods/components/ModsPlanner'
 import { InstalledMods } from '@/features/mods/components/InstalledMods'
 import { AddModDialog } from '@/features/mods/components/AddModDialog'
+import { EditModDialog } from '@/features/mods/components/EditModDialog'
+import { ModCard } from '@/features/mods/components/ModCard'
 
 interface VehicleModsPageClientProps {
   modsData: VehicleModsData
@@ -15,10 +17,20 @@ interface VehicleModsPageClientProps {
 
 export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [selectedMod, setSelectedMod] = useState<VehicleMod | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+
   const router = useRouter()
 
   const { vehicle, mods } = modsData
   const vehicleId = vehicle.id
+
+  const activeMods = mods.filter(m => m.status !== 'archived')
+  const archivedMods = mods.filter(m => m.status === 'archived')
+
+  const handleModClick = (mod: VehicleMod) => {
+    setSelectedMod(mod)
+  }
 
   return (
     <>
@@ -39,13 +51,34 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
                 Modifications and upgrades tracking for {vehicle.name}
               </p>
             </div>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Mod
-            </Button>
+            <div className="flex gap-2">
+              {archivedMods.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="bg-background"
+                >
+                  {showArchived ? (
+                    <>
+                      <Archive className="h-4 w-4 mr-2" />
+                      Hide Archived
+                    </>
+                  ) : (
+                    <>
+                      <ArchiveRestore className="h-4 w-4 mr-2" />
+                      Show Archived
+                    </>
+                  )}
+                </Button>
+              )}
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Mod
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-8">
@@ -77,8 +110,20 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
               </div>
             </div>
 
-            <ModsPlanner mods={mods} />
-            <InstalledMods mods={mods} />
+            <ModsPlanner mods={activeMods} onModClick={handleModClick} />
+            <InstalledMods mods={activeMods} onModClick={handleModClick} />
+
+            {/* Archived Section */}
+            {showArchived && archivedMods.length > 0 && (
+              <div className="space-y-4 pt-4 border-t border-border">
+                <h2 className="text-2xl font-semibold text-muted-foreground">Archived Mods</h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 opacity-80">
+                  {archivedMods.map((mod) => (
+                    <ModCard key={mod.id} mod={mod} onClick={handleModClick} />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Empty State */}
             {mods.length === 0 && (
@@ -112,6 +157,17 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
         onClose={() => setIsAddDialogOpen(false)}
         onSuccess={() => router.refresh()}
         vehicleId={vehicleId}
+      />
+
+      <EditModDialog
+        isOpen={!!selectedMod}
+        onClose={() => setSelectedMod(null)}
+        onSuccess={() => {
+          setSelectedMod(null)
+          router.refresh()
+        }}
+        vehicleId={vehicleId}
+        mod={selectedMod}
       />
     </>
   )
