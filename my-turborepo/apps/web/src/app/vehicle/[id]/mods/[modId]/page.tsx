@@ -19,13 +19,32 @@ export default async function ModPlanPage({
     redirect('/auth/login')
   }
 
-  // 2. Fetch Vehicle
-  const { data: vehicle, error: vehicleError } = await supabase
-    .from('user_vehicle')
-    .select('id, nickname, year, make, model')
-    .eq('id', vehicleId)
-    .eq('owner_id', user.id)
-    .single()
+  // 2. Fetch Vehicle (handling UUID or Slug)
+  let vehicle = null
+  let vehicleError = null
+
+  // Try fetching by ID (UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidRegex.test(vehicleId)) {
+    const { data, error } = await supabase
+      .from('user_vehicle')
+      .select('id, nickname, year, make, model')
+      .eq('id', vehicleId)
+      .eq('owner_id', user.id)
+      .single()
+    vehicle = data
+    vehicleError = error
+  } else {
+    // Try fetching by nickname
+    const { data, error } = await supabase
+      .from('user_vehicle')
+      .select('id, nickname, year, make, model')
+      .eq('nickname', decodeURIComponent(vehicleId))
+      .eq('owner_id', user.id)
+      .single()
+    vehicle = data
+    vehicleError = error
+  }
 
   if (vehicleError || !vehicle) {
     notFound()
