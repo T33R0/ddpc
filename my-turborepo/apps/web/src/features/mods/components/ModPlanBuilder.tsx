@@ -60,12 +60,16 @@ export function ModPlanBuilder({
   const fetchOrCreateModPlan = React.useCallback(async () => {
     try {
       // First, try to find existing mod plan for this mod log
-      const { data: existingPlan } = await supabase
+      const { data: existingPlan, error: fetchError } = await supabase
         .from('mod_plans')
         .select('id')
         .eq('mod_log_id', modLogId) // Use mod_log_id as per prompt/schema
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+         console.error('Error fetching mod plan:', fetchError)
+      }
 
       if (existingPlan) {
         setModPlanId(existingPlan.id)
