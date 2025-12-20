@@ -159,6 +159,7 @@ export function AddFuelDialog({
             <Input
               id="odometer"
               type="number"
+              inputMode="numeric"
               value={formData.odometer}
               onChange={(e) => handleInputChange('odometer', e.target.value)}
               placeholder="e.g., 60500"
@@ -174,6 +175,7 @@ export function AddFuelDialog({
               id="gallons"
               type="number"
               step="0.001"
+              inputMode="decimal"
               value={formData.gallons}
               onChange={(e) => handleInputChange('gallons', e.target.value)}
               placeholder="e.g., 12.345"
@@ -189,6 +191,7 @@ export function AddFuelDialog({
               id="price_per_gallon"
               type="number"
               step="0.001"
+              inputMode="decimal"
               value={formData.price_per_gallon}
               onChange={(e) => handleInputChange('price_per_gallon', e.target.value)}
               placeholder="e.g., 3.459"
@@ -204,6 +207,7 @@ export function AddFuelDialog({
               id="trip_miles"
               type="number"
               step="0.1"
+              inputMode="decimal"
               value={formData.trip_miles}
               onChange={(e) => handleInputChange('trip_miles', e.target.value)}
               placeholder="e.g., 350.5"
@@ -222,6 +226,7 @@ export function AddFuelDialog({
               id="octane"
               type="number"
               step="1"
+              inputMode="numeric"
               value={formData.octane}
               onChange={(e) => handleInputChange('octane', e.target.value)}
               placeholder="e.g., 87, 91, 93"

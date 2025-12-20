@@ -633,6 +633,7 @@ export function AddServiceDialog({
                     <Input
                       id="odometer"
                       type="number"
+                      inputMode="numeric"
                       value={formData.odometer}
                       onChange={(e) => handleInputChange('odometer', e.target.value)}
                       placeholder="Current mileage"
@@ -648,6 +649,7 @@ export function AddServiceDialog({
                       id="cost"
                       type="number"
                       step="0.01"
+                      inputMode="decimal"
                       value={formData.cost}
                       onChange={(e) => handleInputChange('cost', e.target.value)}
                       placeholder="0.00"
