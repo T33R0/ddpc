@@ -99,13 +99,17 @@ export function AddServiceDialog({
   })
 
   const fetchServiceCategories = useCallback(async () => {
+    console.log('[AddServiceDialog] Fetching categories function started')
     setIsLoadingCategories(true)
     setError(null) // Clear any previous errors
     try {
+      console.log('[AddServiceDialog] About to await supabase select')
       const { data, error } = await supabase
         .from('service_categories')
         .select('id, name')
         .order('name', { ascending: true })
+
+      console.log('[AddServiceDialog] Supabase returned', { data, error })
 
       if (error) {
         console.error('Supabase error fetching service categories:', error)
@@ -119,6 +123,7 @@ export function AddServiceDialog({
         console.warn('No service categories found in database')
       }
     } catch (err) {
+      console.error('[AddServiceDialog] Catch error', err)
       console.error('Error fetching service categories:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to load service categories'
       setError(`Failed to load service categories: ${errorMessage}`)
@@ -506,7 +511,7 @@ export function AddServiceDialog({
 
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-lg p-0 border-2 border-red-500">
+      <ModalContent className="sm:max-w-lg p-0">
         {isInitializing ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <ModalTitle className="sr-only">Loading</ModalTitle>
