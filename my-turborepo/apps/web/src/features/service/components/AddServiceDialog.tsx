@@ -234,28 +234,43 @@ export function AddServiceDialog({
     }
   }, [initialItems, initialCategories, fetchServiceItems])
 
+  const categoriesFetchedRef = React.useRef(false)
+  const itemsFetchedRef = React.useRef<Set<string>>(new Set())
+
   // Initialize categories from props or fetch if needed
   useEffect(() => {
+    // If we have initial categories provided by parent (Service Page), use them
     if (initialCategories.length > 0) {
       setServiceCategories(initialCategories)
-    } else if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog && serviceCategories.length === 0) {
-      console.log('Modal opened, fetching service categories...')
+      return
+    }
+
+    // Otherwise (Hub Page), fetch from API if we haven't already
+    if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog && !categoriesFetchedRef.current) {
+      console.log('Fetching categories...')
+      categoriesFetchedRef.current = true // Lock immediately
       fetchServiceCategories()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories])
+  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories, fetchServiceCategories])
 
   // Fetch service items when category is selected
   useEffect(() => {
     if (selectedCategory && currentStep === 2) {
-      // First try to use initialItems if available
-      const itemsFromInitial = initialItems.filter(item => item.category_id === selectedCategory.id)
+      const categoryId = selectedCategory.id
+
+      // Check if we have items from initial props
+      const itemsFromInitial = initialItems.filter(item => item.category_id === categoryId)
       if (itemsFromInitial.length > 0) {
         setServiceItems(itemsFromInitial)
-        setIsLoadingItems(false)
-      } else {
-        // Fallback to fetching if not in initialItems
-        fetchServiceItems(selectedCategory.id)
+        return
+      }
+
+      // Check if we already fetched for this category to avoid re-fetching
+      if (!itemsFetchedRef.current.has(categoryId)) {
+        itemsFetchedRef.current.add(categoryId)
+        fetchServiceItems(categoryId).catch(() => {
+          itemsFetchedRef.current.delete(categoryId) // Retry on error
+        })
       }
     }
   }, [selectedCategory, currentStep, initialItems, fetchServiceItems])

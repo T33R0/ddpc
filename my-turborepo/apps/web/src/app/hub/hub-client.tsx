@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User as UserIcon, Compass, Car, Terminal, Monitor, Plus, Fuel, ShieldAlert } from 'lucide-react'
 import { User } from '@supabase/supabase-js'
@@ -49,25 +49,6 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
     setIsSelectVehicleOpen(true)
   }
 
-  // Service Data State
-  const [serviceCategories, setServiceCategories] = useState<{ id: string; name: string }[]>([])
-  const [serviceItems, setServiceItems] = useState<{ id: string; name: string; description: string | null; category_id: string }[]>([])
-
-  useEffect(() => {
-    const fetchServiceData = async () => {
-      const { supabase } = await import('@/lib/supabase')
-
-      const [categoriesResult, itemsResult] = await Promise.all([
-        supabase.from('service_categories').select('id, name').order('name', { ascending: true }),
-        supabase.from('service_items').select('id, name, description, category_id').order('name', { ascending: true })
-      ])
-
-      if (categoriesResult.data) setServiceCategories(categoriesResult.data)
-      if (itemsResult.data) setServiceItems(itemsResult.data)
-    }
-
-    fetchServiceData()
-  }, [])
 
   const handleVehicleSelect = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
@@ -255,8 +236,6 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             isOpen={isServiceLogOpen}
             onClose={() => setIsServiceLogOpen(false)}
             vehicleId={selectedVehicle.id}
-            initialCategories={serviceCategories}
-            initialItems={serviceItems}
           />
         </>
       )}
