@@ -10,7 +10,8 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "check-types": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "db:dump": "npx tsx scripts/dump-db.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
