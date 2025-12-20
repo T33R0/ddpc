@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getPlanForUser, requireFeature } from '@/lib/plan-utils';
+import { validateAndRecordOdometerReading } from '@/lib/odometer-service';
 import { z } from 'zod';
 import type { UpgradeRequiredError } from '@repo/types';
 
@@ -39,10 +40,46 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    // const { vehicleId, odometer } = validation.data;
+    const { vehicleId, odometer } = validation.data;
 
-    // TODO: In a real implementation, update vehicle odometer in database
-    // For now, return success
+    // Verify user owns this vehicle
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from('user_vehicle')
+      .select('id')
+      .eq('id', vehicleId)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (vehicleError || !vehicle) {
+      return NextResponse.json({ error: 'Vehicle not found or access denied' }, { status: 404 });
+    }
+
+    // Record the odometer reading in the log
+    const validationResult = await validateAndRecordOdometerReading(
+      supabase,
+      vehicleId,
+      odometer,
+      new Date().toISOString()
+    );
+
+    if (!validationResult.success) {
+      return NextResponse.json({
+        error: validationResult.error,
+        code: validationResult.code
+      }, { status: 400 });
+    }
+
+    // Update the vehicle's current odometer value
+    const { error: updateError } = await supabase
+      .from('user_vehicle')
+      .update({ odometer: odometer })
+      .eq('id', vehicleId);
+
+    if (updateError) {
+      console.error('Error updating vehicle odometer:', updateError);
+      // We don't fail the request here because the log entry was successful,
+      // but we should probably log it.
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
