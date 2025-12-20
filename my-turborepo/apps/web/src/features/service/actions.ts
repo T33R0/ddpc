@@ -438,3 +438,32 @@ export async function updateJobTitle(jobPlanId: string, newTitle: string, userId
 
   return { success: true }
 }
+
+export async function getServiceCategories() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('service_categories')
+    .select('id, name')
+    .order('name', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching categories:', error)
+    return []
+  }
+  return data
+}
+
+export async function getServiceItems(categoryId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('service_items')
+    .select('id, name, description, category_id')
+    .eq('category_id', categoryId)
+    .order('name', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching items:', error)
+    return []
+  }
+  return data
+}

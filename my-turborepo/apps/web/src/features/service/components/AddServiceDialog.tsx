@@ -10,7 +10,7 @@ import { Card, CardContent } from '@repo/ui/card'
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group'
 import { Plus, Wrench, ArrowLeft } from 'lucide-react'
 import { ServiceInterval } from '@repo/types'
-import { logPlannedService, logFreeTextService } from '../actions'
+import { logPlannedService, logFreeTextService, getServiceCategories, getServiceItems } from '../actions'
 import { ServiceLogInputs } from '../schema'
 import { supabase } from '@/lib/supabase'
 
@@ -99,35 +99,14 @@ export function AddServiceDialog({
   })
 
   const fetchServiceCategories = useCallback(async () => {
-    console.log('[AddServiceDialog] Fetching categories function started')
     setIsLoadingCategories(true)
-    setError(null) // Clear any previous errors
+    setError(null)
     try {
-      console.log('[AddServiceDialog] About to await supabase select')
-      const { data, error } = await supabase
-        .from('service_categories')
-        .select('id, name')
-        .order('name', { ascending: true })
-
-      console.log('[AddServiceDialog] Supabase returned', { data, error })
-
-      if (error) {
-        console.error('Supabase error fetching service categories:', error)
-        throw error
-      }
-
-      console.log('Fetched service categories:', data)
+      const data = await getServiceCategories()
       setServiceCategories(data || [])
-
-      if (!data || data.length === 0) {
-        console.warn('No service categories found in database')
-      }
     } catch (err) {
-      console.error('[AddServiceDialog] Catch error', err)
       console.error('Error fetching service categories:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load service categories'
-      setError(`Failed to load service categories: ${errorMessage}`)
-      setServiceCategories([]) // Ensure empty array on error
+      setError('Failed to load service categories')
     } finally {
       setIsLoadingCategories(false)
     }
@@ -145,28 +124,11 @@ export function AddServiceDialog({
         return
       }
 
-      // Fallback to fetching from Supabase
-      const { data, error } = await supabase
-        .from('service_items')
-        .select('id, name, description, category_id')
-        .eq('category_id', categoryId)
-        .order('name', { ascending: true })
-
-      if (error) {
-        console.error('Supabase error fetching service items:', error)
-        throw error
-      }
-
+      const data = await getServiceItems(categoryId)
       setServiceItems(data || [])
-
-      if (!data || data.length === 0) {
-        console.warn(`No service items found for category ${categoryId}`)
-      }
     } catch (err) {
       console.error('Error fetching service items:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load service items'
-      setError(`Failed to load service items: ${errorMessage}`)
-      setServiceItems([]) // Ensure empty array on error
+      setError('Failed to load service items')
     } finally {
       setIsLoadingItems(false)
     }
