@@ -3,6 +3,8 @@ import { notFound, redirect } from 'next/navigation'
 import { getVehicleModsData } from '@/features/mods/lib/getVehicleModsData'
 import { VehicleModsPageClient } from './VehicleModsPageClient'
 import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
+import { Alert, AlertTitle, AlertDescription } from '@repo/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 interface VehicleModsPageProps {
   params: Promise<{ id: string }> // This can be nickname or UUID
@@ -31,22 +33,35 @@ export default async function VehicleModsPage({ params }: VehicleModsPageProps) 
   }
 
   let modsData
+  let error = null
+
   try {
     modsData = await getVehicleModsData(vehicleId) // Use resolved UUID
-  } catch (error) {
-    console.error('Error fetching vehicle mods data:', error)
-    // For now, show empty state if there's an error
-    // TODO: Add proper error handling UI
-    modsData = {
-      vehicle: { id: vehicleId, name: 'Unknown Vehicle', ymmt: '', odometer: undefined },
-      mods: [],
-      summary: {
-        totalMods: 0,
-        totalCost: 0,
-        inProgressCount: 0,
-        completedCount: 0
-      }
-    }
+  } catch (err) {
+    console.error('Error fetching vehicle mods data:', err)
+    error = 'Failed to load vehicle modifications. Please try again later.'
+  }
+
+  if (error) {
+    return (
+      <section className="relative py-12 bg-background min-h-screen">
+        <div className="relative container px-4 md:px-6 pt-24">
+          <div className="max-w-2xl mx-auto">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (!modsData) {
+    return notFound()
   }
 
   return <VehicleModsPageClient modsData={modsData} />

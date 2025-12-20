@@ -6,6 +6,7 @@ export * from './textarea';
 export * from './card';
 export * from './badge';
 export * from './avatar';
+export * from './alert';
 
 // Layout Components
 export * from './dialog';
