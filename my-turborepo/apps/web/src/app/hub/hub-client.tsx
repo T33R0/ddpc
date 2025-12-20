@@ -100,10 +100,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/account')}
+            imageSrc="/images/timeo-buehrer-3Zqe69sBI0U-unsplash.jpg"
           >
-            <div className="absolute inset-0 bg-[url('/images/timeo-buehrer-3Zqe69sBI0U-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
             <div className="relative z-10 flex h-full flex-col justify-end p-6">
               <div className="mb-2 flex items-center space-x-2">
                 <UserIcon className="h-5 w-5 text-primary" />
@@ -119,10 +117,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/explore')}
+            imageSrc="/images/dylan-gillis-V8_s30ttQTk-unsplash.jpg"
           >
-            <div className="absolute inset-0 bg-[url('/images/dylan-gillis-V8_s30ttQTk-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
             <div className="relative z-10 flex h-full flex-col justify-end p-6">
               <div className="mb-2 flex items-center space-x-2">
                 <Compass className="h-5 w-5 text-primary" />
@@ -138,10 +134,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/garage')}
+            imageSrc="/images/felix-9Z2-hIOO0sk-unsplash.jpg"
           >
-            <div className="absolute inset-0 bg-[url('/images/felix-9Z2-hIOO0sk-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
             <div className="relative z-10 flex h-full flex-col justify-end p-6">
               <div className="mb-2 flex items-center space-x-2">
                 <Car className="h-5 w-5 text-primary" />
@@ -157,10 +151,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/console')}
+            imageSrc="/images/hub/console.png"
           >
-            <div className="absolute inset-0 bg-[url('/images/hub/console.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
             <div className="relative z-10 flex h-full flex-col justify-end p-6">
               <div className="mb-2 flex items-center space-x-2">
                 <Terminal className="h-5 w-5 text-primary" />
@@ -176,10 +168,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/ddsr')}
+            imageSrc="/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg"
           >
-            <div className="absolute inset-0 bg-[url('/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
             <div className="relative z-10 flex h-full flex-col justify-end p-6">
               <div className="mb-2 flex items-center space-x-2">
                 <Monitor className="h-5 w-5 text-primary" />
@@ -196,10 +186,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             <DashboardCard
               className="h-[320px] p-0"
               onClick={() => handleNavigate('/admin')}
+              imageSrc="/images/jakub-zerdzicki-pLD-QID7x3k-unsplash.jpg"
             >
-              <div className="absolute inset-0 bg-[url('/images/jakub-zerdzicki-pLD-QID7x3k-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
               <div className="relative z-10 flex h-full flex-col justify-end p-6">
                 <div className="mb-2 flex items-center space-x-2">
                   <ShieldAlert className="h-5 w-5 text-primary" />
