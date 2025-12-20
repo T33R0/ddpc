@@ -13,14 +13,30 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user tier for limits context
-    // const tier = await getPlanForUser(user.id);
+    // Call the RPC function to get actual usage from database
+    const { data: usageData, error: usageError } = await supabase
+      .rpc('get_my_usage_stats')
+      .single();
 
-    // TODO: In a real implementation, calculate actual usage from database
-    // For now, return mock data
+    if (usageError) {
+      console.error('Error fetching usage stats:', usageError);
+      // Return 0s in case of error to maintain UI stability
+      const usage: UsageStats = {
+        vehiclesUsed: 0,
+        storageUsedGB: 0,
+        aiTokensUsed: 0,
+      };
+      return NextResponse.json(usage);
+    }
+
+    // Cast the result to the expected type
+    const stats = usageData as { vehicles_count: number, storage_bytes: number };
+
+    // Calculate usage stats
     const usage: UsageStats = {
-      vehiclesUsed: 0,
-      storageUsedGB: 0,
+      vehiclesUsed: stats.vehicles_count,
+      // Convert bytes to GB
+      storageUsedGB: stats.storage_bytes / (1024 * 1024 * 1024),
       aiTokensUsed: 0,
     };
 
