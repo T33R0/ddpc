@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { User as UserIcon, Compass, Car, Terminal, Monitor, Plus, Fuel, ShieldAlert } from 'lucide-react'
 import { User } from '@supabase/supabase-js'
@@ -48,6 +48,26 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
     setSelectedAction(action)
     setIsSelectVehicleOpen(true)
   }
+
+  // Service Data State
+  const [serviceCategories, setServiceCategories] = useState<{ id: string; name: string }[]>([])
+  const [serviceItems, setServiceItems] = useState<{ id: string; name: string; description: string | null; category_id: string }[]>([])
+
+  useEffect(() => {
+    const fetchServiceData = async () => {
+      const { supabase } = await import('@/lib/supabase')
+
+      const [categoriesResult, itemsResult] = await Promise.all([
+        supabase.from('service_categories').select('id, name').order('name', { ascending: true }),
+        supabase.from('service_items').select('id, name, description, category_id').order('name', { ascending: true })
+      ])
+
+      if (categoriesResult.data) setServiceCategories(categoriesResult.data)
+      if (itemsResult.data) setServiceItems(itemsResult.data)
+    }
+
+    fetchServiceData()
+  }, [])
 
   const handleVehicleSelect = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
@@ -100,18 +120,18 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/account')}
           >
-             <div className="absolute inset-0 bg-[url('/images/timeo-buehrer-3Zqe69sBI0U-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+            <div className="absolute inset-0 bg-[url('/images/timeo-buehrer-3Zqe69sBI0U-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-             <div className="relative z-10 flex h-full flex-col justify-end p-6">
-                <div className="mb-2 flex items-center space-x-2">
-                  <UserIcon className="h-5 w-5 text-primary" />
-                  <h3 className="text-xl font-bold uppercase tracking-wide">Account</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Manage your profile and settings.
-                </p>
-             </div>
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <UserIcon className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Account</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Manage your profile and settings.
+              </p>
+            </div>
           </DashboardCard>
 
           {/* 2. Explore */}
@@ -119,18 +139,18 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/explore')}
           >
-             <div className="absolute inset-0 bg-[url('/images/dylan-gillis-V8_s30ttQTk-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+            <div className="absolute inset-0 bg-[url('/images/dylan-gillis-V8_s30ttQTk-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-             <div className="relative z-10 flex h-full flex-col justify-end p-6">
-                <div className="mb-2 flex items-center space-x-2">
-                  <Compass className="h-5 w-5 text-primary" />
-                  <h3 className="text-xl font-bold uppercase tracking-wide">Explore</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Discover builds and get inspired.
-                </p>
-             </div>
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Compass className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Explore</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Discover builds and get inspired.
+              </p>
+            </div>
           </DashboardCard>
 
           {/* 3. Garage */}
@@ -138,37 +158,37 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/garage')}
           >
-             <div className="absolute inset-0 bg-[url('/images/felix-9Z2-hIOO0sk-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+            <div className="absolute inset-0 bg-[url('/images/felix-9Z2-hIOO0sk-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-             <div className="relative z-10 flex h-full flex-col justify-end p-6">
-                <div className="mb-2 flex items-center space-x-2">
-                  <Car className="h-5 w-5 text-primary" />
-                  <h3 className="text-xl font-bold uppercase tracking-wide">Garage</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Manage your fleet and service history.
-                </p>
-             </div>
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Car className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Garage</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Manage your fleet and service history.
+              </p>
+            </div>
           </DashboardCard>
 
           {/* 4. Console */}
           <DashboardCard
-              className="h-[320px] p-0"
-              onClick={() => handleNavigate('/console')}
-            >
-              <div className="absolute inset-0 bg-[url('/images/hub/console.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/console')}
+          >
+            <div className="absolute inset-0 bg-[url('/images/hub/console.png')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-              <div className="relative z-10 flex h-full flex-col justify-end p-6">
-                  <div className="mb-2 flex items-center space-x-2">
-                    <Terminal className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-bold uppercase tracking-wide">Console</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Administrative controls and reports.
-                  </p>
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Terminal className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Console</h3>
               </div>
+              <p className="text-sm text-muted-foreground">
+                Administrative controls and reports.
+              </p>
+            </div>
           </DashboardCard>
 
           {/* 5. ddsr (Daily Driven Sim Rig) */}
@@ -176,18 +196,18 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/ddsr')}
           >
-             <div className="absolute inset-0 bg-[url('/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
-             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+            <div className="absolute inset-0 bg-[url('/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg')] bg-cover bg-center opacity-40 transition-opacity duration-300 group-hover:opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-             <div className="relative z-10 flex h-full flex-col justify-end p-6">
-                <div className="mb-2 flex items-center space-x-2">
-                  <Monitor className="h-5 w-5 text-primary" />
-                  <h3 className="text-xl font-bold uppercase tracking-wide">ddsr</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Daily Driven Sim Rig configurations.
-                </p>
-             </div>
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Monitor className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">ddsr</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Daily Driven Sim Rig configurations.
+              </p>
+            </div>
           </DashboardCard>
 
           {/* 6. Admin (Admin Only) */}
@@ -200,13 +220,13 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
               <div className="relative z-10 flex h-full flex-col justify-end p-6">
-                  <div className="mb-2 flex items-center space-x-2">
-                    <ShieldAlert className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-bold uppercase tracking-wide">Admin</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    System administration.
-                  </p>
+                <div className="mb-2 flex items-center space-x-2">
+                  <ShieldAlert className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-bold uppercase tracking-wide">Admin</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  System administration.
+                </p>
               </div>
             </DashboardCard>
           )}
@@ -235,6 +255,8 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             isOpen={isServiceLogOpen}
             onClose={() => setIsServiceLogOpen(false)}
             vehicleId={selectedVehicle.id}
+            initialCategories={serviceCategories}
+            initialItems={serviceItems}
           />
         </>
       )}
