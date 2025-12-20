@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getPublicUserProfile, getPublicUserVehicles } from '@/lib/public-profile'
+import { createClient } from '@/lib/supabase/server'
+import { getUserProfileByUsername, getPublicUserVehicles } from '@/lib/public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/avatar'
 import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
@@ -16,9 +17,20 @@ interface PageProps {
 
 export default async function PublicProfilePage({ params }: PageProps) {
   const { username } = await params
-  const user = await getPublicUserProfile(username)
+  const user = await getUserProfileByUsername(username)
+
+  // Check current user session
+  const supabase = await createClient()
+  const { data: { user: currentUser } } = await supabase.auth.getUser()
 
   if (!user) {
+    notFound()
+  }
+
+  // Allow access if public OR if viewer is the owner
+  const isOwner = currentUser?.id === user.id
+
+  if (!user.isPublic && !isOwner) {
     notFound()
   }
 
@@ -124,7 +136,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
               // Actually, the `Vehicle` interface in types.ts is confusingly named, it looks like vehicle_data.
               // I'll assume 'vehicle_data.image_url' is safe.
 
-              const displayImage = v.vehicle_data?.image_url || null
+              const primaryImage = Array.isArray(v.vehicle_primary_image)
+                ? v.vehicle_primary_image[0]
+                : v.vehicle_primary_image
+              const displayImage = primaryImage?.url || v.image_url || v.vehicle_data?.image_url || null
 
               return (
                 <Link key={v.id} href={`/vehicle/${v.id}`} className="block h-full">
