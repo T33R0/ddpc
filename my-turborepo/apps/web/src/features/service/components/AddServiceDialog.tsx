@@ -234,24 +234,29 @@ export function AddServiceDialog({
     }
   }, [initialItems, initialCategories, fetchServiceItems])
 
-  const categoriesFetchedRef = React.useRef(false)
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false)
   const itemsFetchedRef = React.useRef<Set<string>>(new Set())
 
   // Initialize categories from props or fetch if needed
   useEffect(() => {
+    // Debug logging
+    console.log('[AddServiceDialog] Effect checking. isOpen:', isOpen, 'Step:', currentStep, 'Cats:', serviceCategories.length, 'Attempted:', hasAttemptedFetch)
+
     // If we have initial categories provided by parent (Service Page), use them
     if (initialCategories.length > 0) {
-      setServiceCategories(initialCategories)
+      if (serviceCategories.length === 0) {
+        setServiceCategories(initialCategories)
+      }
       return
     }
 
     // Otherwise (Hub Page), fetch from API if we haven't already
-    if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog && !categoriesFetchedRef.current) {
-      console.log('Fetching categories...')
-      categoriesFetchedRef.current = true // Lock immediately
+    if (isOpen && currentStep === 1 && !prefillServiceItemId && !plannedLog && !hasAttemptedFetch) {
+      console.log('[AddServiceDialog] Starting fetch for service categories...')
+      setHasAttemptedFetch(true) // Lock immediately to prevent loops
       fetchServiceCategories()
     }
-  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories, fetchServiceCategories])
+  }, [isOpen, currentStep, prefillServiceItemId, plannedLog, initialCategories, serviceCategories.length, hasAttemptedFetch, fetchServiceCategories])
 
   // Fetch service items when category is selected
   useEffect(() => {
@@ -501,7 +506,7 @@ export function AddServiceDialog({
 
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-lg p-0">
+      <ModalContent className="sm:max-w-lg p-0 border-2 border-red-500">
         {isInitializing ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <ModalTitle className="sr-only">Loading</ModalTitle>
