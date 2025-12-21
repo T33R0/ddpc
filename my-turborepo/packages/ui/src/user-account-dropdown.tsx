@@ -125,19 +125,19 @@ export function UserAccountDropdown({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-10 right-0 w-64 mt-2 bg-black/90 backdrop-blur-md rounded-xl shadow-xl border border-neutral-800 overflow-hidden"
+            className="absolute z-10 right-0 w-64 mt-2 bg-popover backdrop-blur-md rounded-xl shadow-xl border border-border overflow-hidden"
           >
             {/* User Info Header */}
-            <div className="px-4 py-3 border-b border-neutral-800">
-              <p className="text-sm font-medium text-white truncate">{getDisplayName()}</p>
-              <p className="text-xs text-neutral-400 truncate">{user?.email}</p>
+            <div className="px-4 py-3 border-b border-border">
+              <p className="text-sm font-medium text-popover-foreground truncate">{getDisplayName()}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
 
             <div className="p-1">
               {/* Dashboard */}
               <Link
                 href={getScopedHref('/hub')}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <LayoutDashboard size={16} />
@@ -147,7 +147,7 @@ export function UserAccountDropdown({
               {/* Account Settings */}
               <Link
                 href={getScopedHref('/account')}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <Settings size={16} />
@@ -155,13 +155,13 @@ export function UserAccountDropdown({
               </Link>
 
               {/* Theme Switcher */}
-              <div className="flex items-center justify-between px-3 py-2 text-sm text-neutral-300 hover:bg-white/10 rounded-md transition-colors cursor-pointer" onClick={toggleTheme}>
+              <div className="flex items-center justify-between px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors cursor-pointer" onClick={toggleTheme}>
                 <div className="flex items-center gap-2">
                   {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
                   <span>Theme</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-500 capitalize">{theme}</span>
+                  <span className="text-xs text-muted-foreground capitalize">{theme}</span>
                 </div>
               </div>
 
@@ -172,7 +172,7 @@ export function UserAccountDropdown({
                     onGiveTestimonial();
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-colors w-full text-left"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors w-full text-left"
                 >
                   <Sparkles size={16} />
                   <span>Give Testimonial</span>
@@ -186,7 +186,7 @@ export function UserAccountDropdown({
                     onReportProblem();
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/10 rounded-md transition-all w-full text-left border border-[hsl(var(--accent))] shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-all w-full text-left border border-[hsl(var(--accent))] shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
                 >
                   <AlertCircle size={16} />
                   <span>Report / Feedback</span>
@@ -194,13 +194,13 @@ export function UserAccountDropdown({
               )}
             </div>
 
-            <div className="h-px bg-neutral-800 mx-1 my-1" />
+            <div className="h-px bg-border mx-1 my-1" />
 
             <div className="p-1">
               {/* Upgrade to Pro */}
               <Link
                 href="/pricing"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 rounded-md transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-accent rounded-md transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <Sparkles size={16} />
@@ -211,7 +211,7 @@ export function UserAccountDropdown({
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors w-full text-left disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-accent rounded-md transition-colors w-full text-left disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <LogOut size={16} />
                 <span>{isSigningOut ? 'Logging out...' : 'Log out'}</span>
