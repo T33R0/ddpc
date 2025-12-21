@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
 export type UpdateResult = {
   success: boolean
@@ -20,15 +21,33 @@ export async function updateMaintenanceLog(
     is_edited?: boolean
   }
 ): Promise<UpdateResult> {
+  const uuid = logId.replace('maintenance-', '')
+  const idSchema = z.string().uuid()
+
+  if (!idSchema.safeParse(uuid).success) {
+    return { success: false, error: 'Invalid Log ID' }
+  }
+
+  const dataSchema = z.object({
+    event_date: z.date(),
+    odometer: z.number().nonnegative().optional(),
+    cost: z.number().nonnegative().optional(),
+    service_provider: z.string().optional(),
+    notes: z.string().optional(),
+    title: z.string().min(1).optional(),
+    is_edited: z.boolean().optional()
+  })
+
+  if (!dataSchema.safeParse(data).success) {
+    return { success: false, error: 'Invalid input data' }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { success: false, error: 'Unauthorized' }
   }
-
-  // Parse the ID to get the UUID (assuming format "maintenance-{uuid}")
-  const uuid = logId.replace('maintenance-', '')
 
   // Verify ownership and fetch items
   const { data: log, error: fetchError } = await supabase
@@ -94,14 +113,32 @@ export async function updateMod(
     title?: string // Mod Item Name
   }
 ): Promise<UpdateResult> {
+  const uuid = modId.replace('mod-', '')
+  const idSchema = z.string().uuid()
+
+  if (!idSchema.safeParse(uuid).success) {
+    return { success: false, error: 'Invalid Mod ID' }
+  }
+
+  const dataSchema = z.object({
+    event_date: z.date(),
+    odometer: z.number().nonnegative().optional(),
+    cost: z.number().nonnegative().optional(),
+    status: z.string().optional(), // Status for mods is likely a string/enum but keeping it generic to avoid breaking if unknown
+    notes: z.string().optional(),
+    title: z.string().min(1).optional()
+  })
+
+  if (!dataSchema.safeParse(data).success) {
+    return { success: false, error: 'Invalid input data' }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { success: false, error: 'Unauthorized' }
   }
-
-  const uuid = modId.replace('mod-', '')
 
   // Verify ownership and get mod_item_id
   const { data: mod, error: fetchError } = await supabase
@@ -162,14 +199,28 @@ export async function updateMileage(
     odometer: number
   }
 ): Promise<UpdateResult> {
+  const uuid = logId.replace('mileage-', '')
+  const idSchema = z.string().uuid()
+
+  if (!idSchema.safeParse(uuid).success) {
+    return { success: false, error: 'Invalid Log ID' }
+  }
+
+  const dataSchema = z.object({
+    date: z.date(),
+    odometer: z.number().nonnegative()
+  })
+
+  if (!dataSchema.safeParse(data).success) {
+    return { success: false, error: 'Invalid input data' }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { success: false, error: 'Unauthorized' }
   }
-
-  const uuid = logId.replace('mileage-', '')
 
   // Verify ownership
   const { data: log, error: fetchError } = await supabase

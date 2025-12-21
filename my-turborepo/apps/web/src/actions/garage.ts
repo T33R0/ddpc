@@ -2,8 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
-
+import { z } from 'zod'
 
 export type AddVehicleState = {
     success?: boolean
@@ -14,6 +13,14 @@ export type AddVehicleState = {
 export async function addVehicleToGarage(
     vehicleDataId: string
 ): Promise<AddVehicleState> {
+    const schema = z.string().uuid()
+    const parse = schema.safeParse(vehicleDataId)
+
+    if (!parse.success) {
+        console.error('[addVehicleToGarage] Invalid vehicleDataId:', parse.error)
+        return { error: 'Invalid Vehicle ID' }
+    }
+
     console.log(`[addVehicleToGarage] Starting for vehicleDataId: ${vehicleDataId}`)
     const supabase = await createClient()
 
@@ -159,6 +166,21 @@ export type OnboardingData = {
 }
 
 export async function completeOnboarding(data: OnboardingData) {
+  const schema = z.object({
+    vehicleId: z.string().uuid(),
+    acquisitionDate: z.string().min(1),
+    acquisitionType: z.string().min(1),
+    acquisitionCost: z.number().nonnegative().optional(),
+    ownershipEndDate: z.string().optional(),
+    status: z.enum(['daily_driver', 'parked', 'listed', 'sold', 'retired']).optional()
+  })
+
+  const parse = schema.safeParse(data)
+  if (!parse.success) {
+    console.error('Validation error in completeOnboarding:', parse.error)
+    return { error: 'Invalid input data' }
+  }
+
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
