@@ -638,6 +638,9 @@ type VehicleDetailPageClientProps = {
     totalRecords?: number
     serviceCount?: number
     avgMpg?: number | null
+    lastServiceDate?: string | null
+    lastFuelDate?: string | null
+    nextServiceDate?: string | null
   }
 }
 
@@ -739,14 +742,6 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
               </div>
               <div className="p-4 rounded-xl bg-card border border-border">
                 <div className="text-sm text-muted-foreground">0-60 mph</div>
-                {/* Note: 0-60 might not be in the Vehicle type if it wasn't in the original page, checking... */}
-                {/* It seems 0-60 is not in the standard Vehicle type from the previous file view. 
-                                I will check if I can use a fallback or if it's available. 
-                                The new details page used `zero_to_60_mph`. 
-                                The `Vehicle` type in `page.tsx` didn't explicitly map it. 
-                                I'll omit it or put a placeholder if not available. 
-                                Actually, let's use Torque instead if 0-60 is missing, or just leave it blank.
-                            */}
                 <div className="text-xl font-bold">—</div>
               </div>
             </div>
@@ -760,7 +755,7 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
             title="History"
             onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
             stats={[
-              { label: 'Last Service', value: '---' },
+              { label: 'Last Service', value: stats?.lastServiceDate ? formatDate(stats.lastServiceDate) : '---' },
               { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }
             ]}
             disabled={!isOwner}
@@ -770,7 +765,7 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
             title="Service"
             onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/service`)}
             stats={[
-              { label: 'Next Service', value: '---' },
+              { label: 'Next Service', value: stats?.nextServiceDate ? formatDate(stats.nextServiceDate) : '---' },
               { label: 'Service Count', value: stats?.serviceCount?.toLocaleString() || '0' }
             ]}
             disabled={!isOwner}
@@ -780,8 +775,8 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
             title="Fuel"
             onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/fuel`)}
             stats={[
-              { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' },
-              { label: 'Last Fill-up', value: '---' }
+              { label: 'Last Fill-up', value: stats?.lastFuelDate ? formatDate(stats.lastFuelDate) : '---' },
+              { label: 'Avg MPG', value: stats?.avgMpg ? stats.avgMpg.toFixed(1) : '---' }
             ]}
             disabled={!isOwner}
           />
