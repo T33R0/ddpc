@@ -136,6 +136,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   let lastServiceDate: string | null = null
   let lastFuelDate: string | null = null
   let nextServiceDate: string | null = null
+  let totalCompletedMods = 0
+  let totalCompletedModCost = 0
 
   if (isOwner) {
     const { data: odometerData } = await supabase
@@ -148,14 +150,15 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
 
     latestOdometer = odometerData || null
 
-    const [maintenanceCount, modsCount, odometerCount, lastServiceResult, lastFuelResult, nextServiceResult] = await Promise.all([
+    const [maintenanceCount, modsResult, odometerCount, lastServiceResult, lastFuelResult, nextServiceResult] = await Promise.all([
       supabase
         .from('maintenance_log')
         .select('id', { count: 'exact', head: true })
         .eq('user_vehicle_id', vehicle.id),
+      // Fetch full mods list to calculate cost and count completed
       supabase
         .from('mods')
-        .select('id', { count: 'exact', head: true })
+        .select('id, status, cost')
         .eq('user_vehicle_id', vehicle.id),
       supabase
         .from('odometer_log')
@@ -188,7 +191,16 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         .maybeSingle()
     ])
 
-    totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
+    // Filter completed mods
+    const completedMods = (modsResult.data || []).filter((m: any) =>
+      ['installed', 'tuned'].includes(m.status)
+    )
+
+    totalCompletedMods = completedMods.length
+    totalCompletedModCost = completedMods.reduce((sum: number, m: any) => sum + (Number(m.cost) || 0), 0)
+
+    // Total records still includes all mods regardless of status
+    totalRecords = (maintenanceCount.count || 0) + ((modsResult.data || []).length || 0) + (odometerCount.count || 0)
     serviceCount = maintenanceCount.count || 0
     lastServiceDate = lastServiceResult.data?.event_date || null
     lastFuelDate = lastFuelResult.data?.event_date || null
@@ -373,6 +385,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         lastServiceDate,
         lastFuelDate,
         nextServiceDate,
+        totalCompletedMods,
+        totalCompletedModCost,
       }}
     />
   )
