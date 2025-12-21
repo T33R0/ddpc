@@ -13,6 +13,7 @@ import { Vehicle } from '@repo/types'
 import { Badge } from '@repo/ui/badge'
 import { DropdownMenu } from '@repo/ui/dropdown-menu'
 import { OnboardingModal } from './components/OnboardingModal'
+import { WishlistButton } from '@/features/wishlist/components/WishlistButton'
 import { format } from 'date-fns'
 
 type ImageWithTimeoutFallbackProps = {
@@ -507,6 +508,10 @@ function VehicleHeader({
         </div>
 
         <div className="flex items-center gap-2">
+          <WishlistButton
+            vehicleId={vehicleId}
+            isOwner={isOwner}
+          />
           <PrivacyBadge
             vehicleId={vehicleId}
             privacy={vehicle.privacy || 'PRIVATE'}
