@@ -60,8 +60,6 @@ const EXPLORE_SELECT_FIELDS = [
   'cargo_capacity_cuft',
   'max_cargo_capacity_cuft',
   'images_url',
-  'vehicle_image',
-  'hero_image',
   'base_msrp',
   'new_price_range',
   'used_price_range',
@@ -216,7 +214,7 @@ export async function GET(request: NextRequest) {
         imageUrl = imageUrl.split(';')[0];
       }
 
-      const resolvedImage = primaryUrl || imageUrl || row.vehicle_image || row.hero_image || null;
+      const resolvedImage = primaryUrl || imageUrl || null;
 
       if (!vehicleMap.has(key)) {
         vehicleMap.set(key, {
