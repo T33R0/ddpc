@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User as UserIcon, Compass, Car, Terminal, Monitor, Plus, Fuel, ShieldAlert } from 'lucide-react'
+import { User as UserIcon, Compass, Car, Terminal, Monitor, Plus, Fuel, ShieldAlert, ListTodo } from 'lucide-react'
 import { User } from '@supabase/supabase-js'
 import { DashboardCard } from '@/components/dashboard-card'
 import { Button } from '@repo/ui/button'
@@ -10,6 +10,7 @@ import { useVehicles, Vehicle } from '../../lib/hooks/useVehicles'
 import { SelectVehicleDialog } from './components/SelectVehicleDialog'
 import { AddFuelDialog } from '@/features/fuel/components'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
+import { AddWishlistDialog } from '@/features/wishlist/components/AddWishlistDialog'
 
 interface HubClientProps {
   user: User
@@ -27,12 +28,13 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
   const vehicles = allVehicles.filter(v => v.current_status !== 'sold' && v.current_status !== 'retired')
 
   const [isSelectVehicleOpen, setIsSelectVehicleOpen] = useState(false)
-  const [selectedAction, setSelectedAction] = useState<'fuel' | 'service' | null>(null)
+  const [selectedAction, setSelectedAction] = useState<'fuel' | 'service' | 'wishlist' | null>(null)
   const [isFuelLogOpen, setIsFuelLogOpen] = useState(false)
   const [isServiceLogOpen, setIsServiceLogOpen] = useState(false)
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false)
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
 
-  const handleActionClick = (action: 'fuel' | 'service') => {
+  const handleActionClick = (action: 'fuel' | 'service' | 'wishlist') => {
     if (isLoading) return
 
     if (vehicles.length === 0) {
@@ -54,6 +56,7 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
     setSelectedVehicle(vehicle)
     if (selectedAction === 'fuel') setIsFuelLogOpen(true)
     if (selectedAction === 'service') setIsServiceLogOpen(true)
+    if (selectedAction === 'wishlist') setIsWishlistOpen(true)
     setSelectedAction(null)
   }
 
@@ -89,6 +92,12 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
               className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
             >
               <Plus className="mr-2 h-4 w-4" /> Log Service
+            </Button>
+            <Button
+              onClick={() => handleActionClick('wishlist')}
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+            >
+              <ListTodo className="mr-2 h-4 w-4" /> Wishlist
             </Button>
           </div>
         </div>
@@ -208,7 +217,7 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
         onClose={() => setIsSelectVehicleOpen(false)}
         vehicles={vehicles}
         onSelect={handleVehicleSelect}
-        actionLabel={selectedAction === 'fuel' ? 'log fuel' : 'log service'}
+        actionLabel={selectedAction === 'fuel' ? 'log fuel' : selectedAction === 'service' ? 'log service' : 'add to wishlist'}
       />
 
       {selectedVehicle && (
@@ -223,6 +232,12 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <AddServiceDialog
             isOpen={isServiceLogOpen}
             onClose={() => setIsServiceLogOpen(false)}
+            vehicleId={selectedVehicle.id}
+          />
+
+          <AddWishlistDialog
+            isOpen={isWishlistOpen}
+            onClose={() => setIsWishlistOpen(false)}
             vehicleId={selectedVehicle.id}
           />
         </>
