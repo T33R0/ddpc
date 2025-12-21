@@ -110,8 +110,8 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
               </div>
             </div>
 
-            <ModsPlanner mods={activeMods} onModClick={handleModClick} />
-            <InstalledMods mods={activeMods} onModClick={handleModClick} />
+            <ModsPlanner mods={activeMods} vehicleId={vehicleId} onEdit={handleModClick} />
+            <InstalledMods mods={activeMods} vehicleId={vehicleId} onEdit={handleModClick} />
 
             {/* Archived Section */}
             {showArchived && archivedMods.length > 0 && (
@@ -119,7 +119,7 @@ export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) 
                 <h2 className="text-2xl font-semibold text-muted-foreground">Archived Mods</h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 opacity-80">
                   {archivedMods.map((mod) => (
-                    <ModCard key={mod.id} mod={mod} onClick={handleModClick} />
+                    <ModCard key={mod.id} mod={mod} vehicleId={vehicleId} onEdit={handleModClick} />
                   ))}
                 </div>
               </div>

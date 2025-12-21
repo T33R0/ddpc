@@ -1,12 +1,15 @@
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Badge } from '@repo/ui/badge'
+import { Button } from '@repo/ui/button'
 import { VehicleMod } from '../lib/getVehicleModsData'
-import { Calendar, DollarSign, Gauge, Package, CheckCircle, XCircle, Wrench } from 'lucide-react'
+import { Calendar, DollarSign, Gauge, Package, CheckCircle, XCircle, Wrench, Pencil } from 'lucide-react'
 
 interface ModCardProps {
   mod: VehicleMod
-  onClick?: (mod: VehicleMod) => void
+  vehicleId: string
+  onEdit?: (mod: VehicleMod) => void
 }
 
 const getStatusBadgeVariant = (status: VehicleMod['status']) => {
@@ -39,11 +42,22 @@ const getStatusIcon = (status: VehicleMod['status']) => {
   }
 }
 
-export function ModCard({ mod, onClick }: ModCardProps) {
+export function ModCard({ mod, vehicleId, onEdit }: ModCardProps) {
+  const router = useRouter()
+
+  const handleCardClick = () => {
+    router.push(`/vehicle/${vehicleId}/mods/${mod.id}`)
+  }
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onEdit?.(mod)
+  }
+
   return (
     <Card
-      className={`hover:border-accent transition-colors duration-300 ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={() => onClick?.(mod)}
+      className="hover:border-accent transition-colors duration-300 cursor-pointer"
+      onClick={handleCardClick}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -53,10 +67,22 @@ export function ModCard({ mod, onClick }: ModCardProps) {
               <p className="text-sm text-muted-foreground">{mod.description}</p>
             )}
           </div>
-          <Badge variant={getStatusBadgeVariant(mod.status)} className="ml-2 flex items-center gap-1">
-            {getStatusIcon(mod.status)}
-            {mod.status.charAt(0).toUpperCase() + mod.status.slice(1)}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={getStatusBadgeVariant(mod.status)} className="flex items-center gap-1">
+              {getStatusIcon(mod.status)}
+              {mod.status.charAt(0).toUpperCase() + mod.status.slice(1)}
+            </Badge>
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                onClick={handleEditClick}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 

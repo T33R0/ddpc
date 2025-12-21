@@ -59,7 +59,6 @@ const EXPLORE_SELECT_FIELDS = [
   'total_seating',
   'cargo_capacity_cuft',
   'max_cargo_capacity_cuft',
-  'image_url',
   'images_url',
   'vehicle_image',
   'hero_image',
@@ -210,7 +209,7 @@ export async function GET(request: NextRequest) {
       // 4. vehicle_data.vehicle_image
       // 5. vehicle_data.hero_image
       const primaryUrl = imageMap.get(row.id);
-      const resolvedImage = primaryUrl || row.image_url || row.images_url || row.vehicle_image || row.hero_image || null;
+      const resolvedImage = primaryUrl || row.images_url || row.vehicle_image || row.hero_image || null;
 
       if (!vehicleMap.has(key)) {
         vehicleMap.set(key, {
