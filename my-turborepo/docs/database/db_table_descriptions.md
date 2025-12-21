@@ -64,18 +64,6 @@ This document provides a detailed overview of the database tables, views, and th
 - `is_completed_reassembly` (boolean): Completion status for reassembly phase.
 - `created_at` (timestamp): Record creation timestamp.
 
-## 7. job_template_steps
-**Description:** Steps for a standardized job template.
-**Status:** **Unused** / Not found in current web application code (feature may be pending or legacy).
-**Columns:**
-- No column usage found in codebase.
-
-## 8. job_templates
-**Description:** Templates for common service jobs to be copied into user plans.
-**Status:** **Unused** / Not found in current web application code (feature may be pending or legacy).
-**Columns:**
-- No column usage found in codebase.
-
 ## 9. maintenance_log
 **Description:** Core table for vehicle service history, including planned, completed, and archived records.
 **Status:** Active

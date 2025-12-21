@@ -26,14 +26,7 @@ CREATE INDEX IF NOT EXISTS job_plans_user_id_idx
   ON public.job_plans (user_id);
 CREATE INDEX IF NOT EXISTS job_steps_job_plan_id_idx
   ON public.job_steps (job_plan_id);
-CREATE INDEX IF NOT EXISTS job_template_steps_template_id_idx
-  ON public.job_template_steps (job_template_id);
-CREATE INDEX IF NOT EXISTS job_templates_mod_item_id_idx
-  ON public.job_templates (mod_item_id);
-CREATE INDEX IF NOT EXISTS job_templates_service_item_id_idx
-  ON public.job_templates (service_item_id);
-CREATE INDEX IF NOT EXISTS job_templates_user_id_idx
-  ON public.job_templates (user_id);
+
 
 -- Maintenance + mods
 CREATE INDEX IF NOT EXISTS maintenance_log_user_vehicle_status_event_idx

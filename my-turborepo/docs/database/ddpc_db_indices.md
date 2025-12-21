@@ -29,12 +29,7 @@ ORDER BY tablename, indexname;
 | job_plans                 | job_plans_user_id_idx                         | CREATE INDEX job_plans_user_id_idx ON public.job_plans USING btree (user_id)                                                                |
 | job_steps                 | job_steps_job_plan_id_idx                     | CREATE INDEX job_steps_job_plan_id_idx ON public.job_steps USING btree (job_plan_id)                                                        |
 | job_steps                 | job_steps_pkey                                | CREATE UNIQUE INDEX job_steps_pkey ON public.job_steps USING btree (id)                                                                     |
-| job_template_steps        | job_template_steps_pkey                       | CREATE UNIQUE INDEX job_template_steps_pkey ON public.job_template_steps USING btree (id)                                                   |
-| job_template_steps        | job_template_steps_template_id_idx            | CREATE INDEX job_template_steps_template_id_idx ON public.job_template_steps USING btree (job_template_id)                                  |
-| job_templates             | job_templates_mod_item_id_idx                 | CREATE INDEX job_templates_mod_item_id_idx ON public.job_templates USING btree (mod_item_id)                                                |
-| job_templates             | job_templates_pkey                            | CREATE UNIQUE INDEX job_templates_pkey ON public.job_templates USING btree (id)                                                             |
-| job_templates             | job_templates_service_item_id_idx             | CREATE INDEX job_templates_service_item_id_idx ON public.job_templates USING btree (service_item_id)                                        |
-| job_templates             | job_templates_user_id_idx                     | CREATE INDEX job_templates_user_id_idx ON public.job_templates USING btree (user_id)                                                        |
+
 | maintenance_log           | maintenance_log_pkey                          | CREATE UNIQUE INDEX maintenance_log_pkey ON public.maintenance_log USING btree (id)                                                         |
 | maintenance_log           | maintenance_log_service_interval_id_idx       | CREATE INDEX maintenance_log_service_interval_id_idx ON public.maintenance_log USING btree (service_interval_id)                            |
 | maintenance_log           | maintenance_log_service_item_id_idx           | CREATE INDEX maintenance_log_service_item_id_idx ON public.maintenance_log USING btree (service_item_id)                                    |
