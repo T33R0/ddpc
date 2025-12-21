@@ -646,6 +646,8 @@ type VehicleDetailPageClientProps = {
     lastServiceDate?: string | null
     lastFuelDate?: string | null
     nextServiceDate?: string | null
+    totalCompletedMods?: number
+    totalCompletedModCost?: number
   }
 }
 
@@ -672,13 +674,23 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
       // Handle YYYY-MM-DD explicitly to avoid timezone shifts
       const [year, month, day] = dateStr.split('-').map(Number)
       if (year && month) {
+        // Month is 0-indexed in Date constructor
         const date = new Date(year, month - 1, day || 1)
-        return format(date, 'MMM yyyy')
+        return format(date, 'MMM d, yyyy')
       }
-      return format(new Date(dateStr), 'MMM yyyy')
+      return format(new Date(dateStr), 'MMM d, yyyy')
     } catch (e) {
       return ''
     }
+  }
+
+  // Helper for currency formatting
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(amount)
   }
 
   return (
@@ -790,8 +802,8 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
             title="Mods"
             onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/mods`)}
             stats={[
-              { label: 'Total Mods', value: '---' },
-              { label: 'Total Cost', value: '---' }
+              { label: 'Total Mods', value: stats?.totalCompletedMods?.toLocaleString() || '---' },
+              { label: 'Total Cost', value: stats?.totalCompletedModCost !== undefined ? formatCurrency(stats.totalCompletedModCost) : '---' }
             ]}
             disabled={!isOwner}
           />
