@@ -209,7 +209,14 @@ export async function GET(request: NextRequest) {
       // 4. vehicle_data.vehicle_image
       // 5. vehicle_data.hero_image
       const primaryUrl = imageMap.get(row.id);
-      const resolvedImage = primaryUrl || row.images_url || row.vehicle_image || row.hero_image || null;
+
+      let imageUrl = row.images_url;
+      // Handle images_url being a semicolon-separated string
+      if (typeof imageUrl === 'string' && imageUrl.includes(';')) {
+        imageUrl = imageUrl.split(';')[0];
+      }
+
+      const resolvedImage = primaryUrl || imageUrl || row.vehicle_image || row.hero_image || null;
 
       if (!vehicleMap.has(key)) {
         vehicleMap.set(key, {
