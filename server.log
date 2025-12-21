@@ -1,0 +1,60 @@
+npm warn Unknown cli config "--filter". This will stop working in the next major version of npm.
+
+> dev
+> turbo run dev
+
+turbo 2.5.8
+
+• Packages in scope: @repo/assets, @repo/eslint-config, @repo/prettier-config, @repo/services, @repo/tailwind-config, @repo/types, @repo/typescript-config, @repo/ui, docs, web
+• Running dev in 10 packages
+• Remote caching disabled
+docs:dev: cache bypass, force executing b81f4b0b348f9d10
+web:dev: cache bypass, force executing 4c584e86afbbff95
+docs:dev:
+docs:dev: > docs@0.1.0 dev
+docs:dev: > next dev --turbopack --port 3001
+docs:dev:
+web:dev:
+web:dev: > web@0.1.0 dev
+web:dev: > next dev --turbopack --port 3000
+web:dev:
+docs:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+docs:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+docs:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+docs:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+docs:dev:  Detected additional lockfiles:
+docs:dev:    * /app/my-turborepo/package-lock.json
+docs:dev:
+docs:dev:    ▲ Next.js 16.0.10 (Turbopack)
+docs:dev:    - Local:         http://localhost:3001
+docs:dev:    - Network:       http://192.168.0.2:3001
+docs:dev:
+docs:dev:  ✓ Starting...
+web:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+web:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+web:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+web:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+web:dev:  Detected additional lockfiles:
+web:dev:    * /app/my-turborepo/package-lock.json
+web:dev:
+web:dev:    ▲ Next.js 16.0.10 (Turbopack)
+web:dev:    - Local:         http://localhost:3000
+web:dev:    - Network:       http://192.168.0.2:3000
+web:dev:    - Environments: .env.local
+web:dev:    - Experiments (use with caution):
+web:dev:      · serverActions
+web:dev:
+web:dev:  ✓ Starting...
+docs:dev:  ✓ Ready in 1131ms
+web:dev:  ✓ Ready in 2.4s
+web:dev:  ○ Compiling /vehicle/[id]/mods/[modId] ...
+web:dev: [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+web:dev:  GET /vehicle/test-car/mods/test-mod 200 in 13.0s (compile: 11.9s, render: 1024ms)
+web:dev:  GET /api/garage/vehicles 200 in 1461ms (compile: 1432ms, render: 30ms)
+web:dev:  GET /api/garage/vehicles 200 in 1452ms (compile: 1444ms, render: 8ms)
+docs:dev: [?25h
+web:dev: [?25h
+
+ Tasks:    2 successful, 2 total
+Cached:    0 cached, 2 total
+  Time:    1m29.058s
