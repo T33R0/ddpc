@@ -96,78 +96,7 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
         {/* Grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
 
-          {/* 1. Garage */}
-          <DashboardCard
-            className="h-[320px] p-0"
-            onClick={() => handleNavigate('/garage')}
-            imageSrc="/images/felix-9Z2-hIOO0sk-unsplash.jpg"
-            priority={true}
-          >
-            <div className="relative z-10 flex h-full flex-col justify-end p-6">
-              <div className="mb-2 flex items-center space-x-2">
-                <Car className="h-5 w-5 text-primary" />
-                <h3 className="text-xl font-bold uppercase tracking-wide">Garage</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Manage your fleet and service history.
-              </p>
-            </div>
-          </DashboardCard>
-
-          {/* 2. Console */}
-          <DashboardCard
-            className="h-[320px] p-0"
-            onClick={() => handleNavigate('/console')}
-            imageSrc="/images/hub/console.png"
-            priority={true}
-          >
-            <div className="relative z-10 flex h-full flex-col justify-end p-6">
-              <div className="mb-2 flex items-center space-x-2">
-                <Terminal className="h-5 w-5 text-primary" />
-                <h3 className="text-xl font-bold uppercase tracking-wide">Console</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Administrative controls and reports.
-              </p>
-            </div>
-          </DashboardCard>
-
-          {/* 3. Explore */}
-          <DashboardCard
-            className="h-[320px] p-0"
-            onClick={() => handleNavigate('/explore')}
-            imageSrc="/images/dylan-gillis-V8_s30ttQTk-unsplash.jpg"
-            priority={true}
-          >
-            <div className="relative z-10 flex h-full flex-col justify-end p-6">
-              <div className="mb-2 flex items-center space-x-2">
-                <Compass className="h-5 w-5 text-primary" />
-                <h3 className="text-xl font-bold uppercase tracking-wide">Explore</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Discover builds and get inspired.
-              </p>
-            </div>
-          </DashboardCard>
-
-          {/* 4. ddsr (Daily Driven Sim Rig) */}
-          <DashboardCard
-            className="h-[320px] p-0"
-            onClick={() => handleNavigate('/ddsr')}
-            imageSrc="/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg"
-          >
-            <div className="relative z-10 flex h-full flex-col justify-end p-6">
-              <div className="mb-2 flex items-center space-x-2">
-                <Monitor className="h-5 w-5 text-primary" />
-                <h3 className="text-xl font-bold uppercase tracking-wide">ddsr</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Daily Driven Sim Rig configurations.
-              </p>
-            </div>
-          </DashboardCard>
-
-          {/* 5. Account */}
+          {/* 1. Account */}
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/account')}
@@ -180,6 +109,74 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
               </div>
               <p className="text-sm text-muted-foreground">
                 Manage your profile and settings.
+              </p>
+            </div>
+          </DashboardCard>
+
+          {/* 2. Explore */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/explore')}
+            imageSrc="/images/dylan-gillis-V8_s30ttQTk-unsplash.jpg"
+          >
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Compass className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Explore</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Discover builds and get inspired.
+              </p>
+            </div>
+          </DashboardCard>
+
+          {/* 3. Garage */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/garage')}
+            imageSrc="/images/felix-9Z2-hIOO0sk-unsplash.jpg"
+          >
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Car className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Garage</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Manage your fleet and service history.
+              </p>
+            </div>
+          </DashboardCard>
+
+          {/* 4. Console */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/console')}
+            imageSrc="/images/hub/console.png"
+          >
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Terminal className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">Console</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Administrative controls and reports.
+              </p>
+            </div>
+          </DashboardCard>
+
+          {/* 5. ddsr (Daily Driven Sim Rig) */}
+          <DashboardCard
+            className="h-[320px] p-0"
+            onClick={() => handleNavigate('/ddsr')}
+            imageSrc="/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg"
+          >
+            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+              <div className="mb-2 flex items-center space-x-2">
+                <Monitor className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold uppercase tracking-wide">ddsr</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Daily Driven Sim Rig configurations.
               </p>
             </div>
           </DashboardCard>
