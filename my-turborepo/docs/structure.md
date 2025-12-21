@@ -66,28 +66,7 @@ CREATE TABLE public.job_steps (
   CONSTRAINT job_steps_pkey PRIMARY KEY (id),
   CONSTRAINT job_steps_job_plan_id_fkey FOREIGN KEY (job_plan_id) REFERENCES public.job_plans(id)
 );
-CREATE TABLE public.job_template_steps (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  job_template_id uuid NOT NULL,
-  step_order integer NOT NULL,
-  description text NOT NULL,
-  notes text,
-  CONSTRAINT job_template_steps_pkey PRIMARY KEY (id),
-  CONSTRAINT job_template_steps_job_template_id_fkey FOREIGN KEY (job_template_id) REFERENCES public.job_templates(id)
-);
-CREATE TABLE public.job_templates (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  name text NOT NULL,
-  service_item_id uuid,
-  mod_item_id uuid,
-  is_public boolean NOT NULL DEFAULT false,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT job_templates_pkey PRIMARY KEY (id),
-  CONSTRAINT job_templates_mod_item_id_fkey FOREIGN KEY (mod_item_id) REFERENCES public.mod_items(id),
-  CONSTRAINT job_templates_service_item_id_fkey FOREIGN KEY (service_item_id) REFERENCES public.service_items(id),
-  CONSTRAINT job_templates_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
-);
+
 CREATE TABLE public.maintenance_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_vehicle_id uuid NOT NULL,

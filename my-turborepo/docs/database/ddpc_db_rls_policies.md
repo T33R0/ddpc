@@ -13,24 +13,7 @@
   WHERE ((jp.id = job_steps.job_plan_id) AND (jp.user_id = ( SELECT auth.uid() AS uid)))))                                                     | (EXISTS ( SELECT 1
    FROM job_plans jp
   WHERE ((jp.id = job_steps.job_plan_id) AND (jp.user_id = ( SELECT auth.uid() AS uid)))))                                                     |
-| public     | job_template_steps    | job_template_steps_delete_self                            | PERMISSIVE | DELETE | (EXISTS ( SELECT 1
-   FROM job_templates jt
-  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.user_id = ( SELECT auth.uid() AS uid)))))                                    | null                                                                                                                                                                                   |
-| public     | job_template_steps    | job_template_steps_insert_self                            | PERMISSIVE | INSERT | null                                                                                                                                                                                   | (EXISTS ( SELECT 1
-   FROM job_templates jt
-  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.user_id = ( SELECT auth.uid() AS uid)))))                                    |
-| public     | job_template_steps    | job_template_steps_select_combined                        | PERMISSIVE | SELECT | (EXISTS ( SELECT 1
-   FROM job_templates jt
-  WHERE ((jt.id = job_template_steps.job_template_id) AND ((jt.is_public = true) OR (jt.user_id = ( SELECT auth.uid() AS uid))))))         | null                                                                                                                                                                                   |
-| public     | job_template_steps    | job_template_steps_update_self                            | PERMISSIVE | UPDATE | (EXISTS ( SELECT 1
-   FROM job_templates jt
-  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.user_id = ( SELECT auth.uid() AS uid)))))                                    | (EXISTS ( SELECT 1
-   FROM job_templates jt
-  WHERE ((jt.id = job_template_steps.job_template_id) AND (jt.user_id = ( SELECT auth.uid() AS uid)))))                                    |
-| public     | job_templates         | job_templates_delete_self                                 | PERMISSIVE | DELETE | (user_id = ( SELECT auth.uid() AS uid))                                                                                                                                                | null                                                                                                                                                                                   |
-| public     | job_templates         | job_templates_insert_self                                 | PERMISSIVE | INSERT | null                                                                                                                                                                                   | (user_id = ( SELECT auth.uid() AS uid))                                                                                                                                                |
-| public     | job_templates         | job_templates_select_combined                             | PERMISSIVE | SELECT | ((is_public = true) OR (user_id = ( SELECT auth.uid() AS uid)))                                                                                                                        | null                                                                                                                                                                                   |
-| public     | job_templates         | job_templates_update_self                                 | PERMISSIVE | UPDATE | (user_id = ( SELECT auth.uid() AS uid))                                                                                                                                                | (user_id = ( SELECT auth.uid() AS uid))                                                                                                                                                |
+
 | public     | maintenance_log       | maintenance_log_insert_self                               | PERMISSIVE | INSERT | null                                                                                                                                                                                   | (EXISTS ( SELECT 1
    FROM user_vehicle uv
   WHERE ((uv.id = maintenance_log.user_vehicle_id) AND (uv.owner_id = auth.uid()))))                                                        |
