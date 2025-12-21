@@ -63,7 +63,7 @@ export default function AccountPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const fetchUserProfile = useCallback(async () => {
+  const fetchUserProfile = useCallback(async (retry = true) => {
     if (!session?.access_token) return;
 
     try {
@@ -86,6 +86,42 @@ export default function AccountPage() {
         setIsPublic(data.user.isPublic);
         setNotifyOnNewUser(data.user.notifyOnNewUser || false);
         setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
+      } else if (response.status === 401 && retry) {
+        // Attempt to refresh session and retry once
+        const { data: { session: newSession }, error } = await supabase.auth.refreshSession();
+        if (error || !newSession?.access_token) {
+          console.error('Session refresh failed:', error);
+          toast.error('Session expired, please sign in again');
+          signOut();
+          return;
+        }
+
+        // Update local session state if needed (optional, as useAuth should catch it)
+        // Retry the fetch with new token
+        const retryResponse = await fetch('/api/account/profile', {
+          headers: {
+            'Authorization': `Bearer ${newSession.access_token}`,
+          },
+        });
+
+        if (retryResponse.ok) {
+          const data = await retryResponse.json();
+          setUser(data.user);
+          // Populate form fields
+          setUsername(data.user.username || '');
+          setDisplayName(data.user.displayName || '');
+          setLocation(data.user.location || '');
+          setWebsite(data.user.website || '');
+          setBio(data.user.bio || '');
+          setAvatarUrl(data.user.avatarUrl || '');
+          setIsPublic(data.user.isPublic);
+          setNotifyOnNewUser(data.user.notifyOnNewUser || false);
+          setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
+        } else {
+          const errorData = await retryResponse.json().catch(() => ({}));
+          console.error('Profile fetch retry failed:', errorData);
+          toast.error('Failed to load profile data');
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Profile fetch failed:', errorData);
@@ -95,7 +131,7 @@ export default function AccountPage() {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile data');
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, signOut]);
 
   useEffect(() => {
     if (!loading && !authUser) {
