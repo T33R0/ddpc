@@ -124,6 +124,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                 <Input
                   id="acquisitionCost"
                   type="number"
+                  inputMode="decimal"
                   placeholder="0.00"
                   value={acquisitionCost}
                   onChange={(e) => setAcquisitionCost(e.target.value)}

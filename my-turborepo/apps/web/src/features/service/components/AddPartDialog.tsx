@@ -215,6 +215,7 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
                   <Input
                     id="quantity"
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     max={selectedPart.quantity > 0 ? selectedPart.quantity : undefined}
                     className="w-20"
@@ -256,6 +257,7 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
                 <Input
                   id="cost"
                   type="number"
+                  inputMode="decimal"
                   min="0"
                   step="0.01"
                   value={newPart.cost}
@@ -267,6 +269,7 @@ export function AddPartDialog({ onAddPart }: AddPartDialogProps) {
                 <Input
                   id="stock_qty"
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   value={newPart.quantity}
                   onChange={(e) => setNewPart({ ...newPart, quantity: e.target.value })}

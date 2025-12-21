@@ -237,6 +237,7 @@ export function EditModDialog({ isOpen, onClose, onSuccess, vehicleId, mod }: Ed
                     id="cost"
                     type="number"
                     step="0.01"
+                    inputMode="decimal"
                     defaultValue={mod.cost}
                     placeholder="0.00"
                   />
@@ -247,6 +248,7 @@ export function EditModDialog({ isOpen, onClose, onSuccess, vehicleId, mod }: Ed
                     name="odometer"
                     id="odometer"
                     type="number"
+                    inputMode="numeric"
                     defaultValue={mod.odometer}
                     placeholder="Current mileage"
                   />
