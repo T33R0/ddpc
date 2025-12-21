@@ -29,6 +29,49 @@ const NUMERIC_COLUMNS = [
   'height_in'
 ];
 
+// Bolt Optimization: Select only necessary columns to reduce payload size
+// Excluding: source_json, reviews, features lists, expert ratings, etc.
+const EXPLORE_SELECT_FIELDS = [
+  'id',
+  'year',
+  'make',
+  'model',
+  'trim',
+  'trim_description',
+  'body_type',
+  'drive_type',
+  'engine_size_l',
+  'cylinders',
+  'engine_type',
+  'fuel_type',
+  'horsepower_hp',
+  'horsepower_rpm',
+  'torque_ft_lbs',
+  'torque_rpm',
+  'transmission',
+  'curb_weight_lbs',
+  'suspension',
+  'epa_combined_mpg',
+  'epa_city_highway_mpg',
+  'fuel_tank_capacity_gal',
+  'ground_clearance_in',
+  'max_towing_capacity_lbs',
+  'total_seating',
+  'cargo_capacity_cuft',
+  'max_cargo_capacity_cuft',
+  'image_url',
+  'images_url',
+  'vehicle_image',
+  'hero_image',
+  'base_msrp',
+  'new_price_range',
+  'used_price_range',
+  'doors',
+  'length_in',
+  'width_in',
+  'height_in'
+];
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -50,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     // Try querying the View first (Typed columns)
     let usingView = true;
-    let query = supabase.from('v_vehicle_data_typed').select('*');
+    let query = supabase.from('v_vehicle_data_typed').select(EXPLORE_SELECT_FIELDS.join(','));
 
     // Apply Filters function
     const applyFilters = (q: any, isView: boolean) => {
@@ -105,7 +148,7 @@ export async function GET(request: NextRequest) {
     if (error && error.code === '42P01') {
       console.warn('View v_vehicle_data_typed not found, falling back to vehicle_data table. Numeric filters may be inaccurate.');
       usingView = false;
-      query = supabase.from('vehicle_data').select('*');
+      query = supabase.from('vehicle_data').select(EXPLORE_SELECT_FIELDS.join(','));
       query = applyFilters(query, false);
       query = query.range(offset, offset + fetchLimit - 1);
       query = query.order('year', { ascending: false }).order('make').order('model');
