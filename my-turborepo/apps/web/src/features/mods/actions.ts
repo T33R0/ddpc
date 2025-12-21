@@ -149,6 +149,55 @@ export async function reorderModSteps(updates: { id: string; step_order: number 
   revalidatePath('/vehicle/[id]/mods/[modId]', 'page')
 }
 
+export async function fetchOrCreateModPlanAction(modLogId: string, userId: string, modTitle: string): Promise<{ id: string | null, error?: string }> {
+  const supabase = await createClient()
+
+  try {
+    // 1. Check if plan exists
+    const { data: existingPlan, error: fetchError } = await supabase
+      .from('mod_plans')
+      .select('id')
+      .eq('mod_log_id', modLogId)
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+       console.error('Error fetching mod plan:', fetchError)
+       return { id: null, error: fetchError.message }
+    }
+
+    if (existingPlan) {
+      return { id: existingPlan.id }
+    }
+
+    // 2. Create if not exists
+    const { data: newPlan, error: createError } = await supabase
+      .from('mod_plans')
+      .insert({
+        user_id: userId,
+        mod_log_id: modLogId,
+        name: modTitle,
+      })
+      .select('id')
+      .maybeSingle()
+
+    if (createError) {
+      console.error('Error creating mod plan:', createError)
+      return { id: null, error: createError.message }
+    }
+
+    if (!newPlan) {
+        return { id: null, error: 'Failed to create plan (no data returned)' }
+    }
+
+    revalidatePath('/vehicle/[id]/mods/[modId]', 'page')
+    return { id: newPlan.id }
+  } catch (err: any) {
+    console.error('Unexpected error in fetchOrCreateModPlanAction:', err)
+    return { id: null, error: err.message || 'Unexpected error' }
+  }
+}
+
 export async function duplicateModPlan(originalModPlanId: string, newName: string, userId: string, targetModId: string): Promise<ModActionResponse> {
   const supabase = await createClient()
 
