@@ -41,7 +41,7 @@ export async function createWishlistItem(data: WishlistItemInput) {
 
   const parse = WishlistItemSchema.safeParse(data)
   if (!parse.success) {
-    return { success: false, error: parse.error.issues[0].message }
+    return { success: false, error: parse.error.issues[0]?.message || 'Invalid input' }
   }
 
   const { error } = await supabase
