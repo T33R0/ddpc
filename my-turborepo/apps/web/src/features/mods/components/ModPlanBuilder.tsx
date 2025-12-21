@@ -45,6 +45,7 @@ export function ModPlanBuilder({
   const [draggedStepId, setDraggedStepId] = useState<string | null>(null)
   const [modPlanId, setModPlanId] = useState<string | null>(initialModPlan?.id || null)
   const [isReassemblyMode, setIsReassemblyMode] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
 
   // Duplication State
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false)
@@ -121,18 +122,20 @@ export function ModPlanBuilder({
   }, [modPlanId, userId, modLogId, fetchOrCreateModPlan])
 
   const handleAddStep = async () => {
-    if (!stepInput.trim() || !modPlanId) return
+    if (!stepInput.trim() || !modPlanId || isAdding) return
 
+    setIsAdding(true)
     const maxOrder = steps.length > 0 ? Math.max(...steps.map(s => s.step_order)) : 0
     const newStepOrder = maxOrder + 1
 
     try {
       const tempId = crypto.randomUUID()
+      const currentInput = stepInput.trim() // Capture input
       const newStep: ModStepData = {
         id: tempId,
         mod_plan_id: modPlanId,
         step_order: newStepOrder,
-        description: stepInput.trim(),
+        description: currentInput,
         is_completed: false,
         is_completed_reassembly: false,
       } as any
@@ -140,12 +143,14 @@ export function ModPlanBuilder({
       setSteps(prev => [...prev, newStep])
       setStepInput('')
 
-      const data = await addModStep(modPlanId, stepInput.trim(), newStepOrder)
+      const data = await addModStep(modPlanId, currentInput, newStepOrder)
 
       setSteps(prev => prev.map(s => s.id === tempId ? data : s))
     } catch (error) {
       console.error('Error adding mod step:', error)
       fetchSteps()
+    } finally {
+      setIsAdding(false)
     }
   }
 
@@ -472,16 +477,17 @@ export function ModPlanBuilder({
               value={stepInput}
               onChange={(e) => setStepInput(e.target.value)}
               onKeyPress={handleKeyPress}
+              disabled={isAdding || !modPlanId}
               className="bg-transparent border-none shadow-none focus-visible:ring-0 px-0 h-auto placeholder:text-muted-foreground/70"
             />
             <Button
               onClick={handleAddStep}
-              disabled={!stepInput.trim() || !modPlanId}
+              disabled={!stepInput.trim() || !modPlanId || isAdding}
               size="sm"
               variant="ghost"
               className="hover:bg-primary/20 hover:text-primary"
             >
-               {isLoading || !modPlanId ? (
+               {isLoading || !modPlanId || isAdding ? (
                  <span className="w-5 h-5 block border-2 border-t-transparent border-primary rounded-full animate-spin"></span>
                ) : (
                  <Plus className="h-5 w-5" />

@@ -76,7 +76,7 @@ export default async function ModPlanPage({
     .select('*')
     .eq('mod_log_id', modId)
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (plan) {
       modTitle = plan.name // Prefer plan name if exists
