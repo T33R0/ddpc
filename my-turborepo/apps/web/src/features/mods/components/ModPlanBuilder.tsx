@@ -16,7 +16,8 @@ import {
   deleteModStep,
   reorderModSteps,
   duplicateModPlan,
-  duplicateModStep
+  duplicateModStep,
+  fetchOrCreateModPlanAction
 } from '../actions'
 
 interface ModPlanBuilderProps {
@@ -59,37 +60,19 @@ export function ModPlanBuilder({
 
   const fetchOrCreateModPlan = React.useCallback(async () => {
     try {
-      // First, try to find existing mod plan for this mod log
-      const { data: existingPlan, error: fetchError } = await supabase
-        .from('mod_plans')
-        .select('id')
-        .eq('mod_log_id', modLogId) // Use mod_log_id as per prompt/schema
-        .eq('user_id', userId)
-        .maybeSingle()
+      console.log('Fetching or creating mod plan...', { modLogId, userId })
+      const { id, error } = await fetchOrCreateModPlanAction(modLogId, userId, modTitle)
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-         console.error('Error fetching mod plan:', fetchError)
-      }
-
-      if (existingPlan) {
-        setModPlanId(existingPlan.id)
+      if (error) {
+        console.error('Error from server action:', error)
         return
       }
 
-      // If no plan exists, create one
-      const { data: newPlan, error: createError } = await supabase
-        .from('mod_plans')
-        .insert({
-          user_id: userId,
-          mod_log_id: modLogId,
-          name: modTitle,
-        })
-        .select('id')
-        .single()
-
-      if (createError) throw createError
-      if (newPlan) {
-        setModPlanId(newPlan.id)
+      if (id) {
+        console.log('Mod plan ID acquired:', id)
+        setModPlanId(id)
+      } else {
+        console.error('No ID returned from fetchOrCreateModPlanAction')
       }
     } catch (error) {
       console.error('Error fetching/creating mod plan:', error)
@@ -493,12 +476,16 @@ export function ModPlanBuilder({
             />
             <Button
               onClick={handleAddStep}
-              disabled={!stepInput.trim()}
+              disabled={!stepInput.trim() || !modPlanId}
               size="sm"
               variant="ghost"
               className="hover:bg-primary/20 hover:text-primary"
             >
-              <Plus className="h-5 w-5" />
+               {isLoading || !modPlanId ? (
+                 <span className="w-5 h-5 block border-2 border-t-transparent border-primary rounded-full animate-spin"></span>
+               ) : (
+                 <Plus className="h-5 w-5" />
+               )}
             </Button>
           </div>
         </div>
