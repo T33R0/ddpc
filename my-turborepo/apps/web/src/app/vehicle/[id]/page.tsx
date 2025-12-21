@@ -133,6 +133,9 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   let latestOdometer: OdometerRow | null = null
   let totalRecords = 0
   let serviceCount = 0
+  let lastServiceDate: string | null = null
+  let lastFuelDate: string | null = null
+  let nextServiceDate: string | null = null
 
   if (isOwner) {
     const { data: odometerData } = await supabase
@@ -145,7 +148,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
 
     latestOdometer = odometerData || null
 
-    const [maintenanceCount, modsCount, odometerCount] = await Promise.all([
+    const [maintenanceCount, modsCount, odometerCount, lastServiceResult, lastFuelResult, nextServiceResult] = await Promise.all([
       supabase
         .from('maintenance_log')
         .select('id', { count: 'exact', head: true })
@@ -158,10 +161,38 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         .from('odometer_log')
         .select('id', { count: 'exact', head: true })
         .eq('user_vehicle_id', vehicle.id),
+      // Fetch latest maintenance log date
+      supabase
+        .from('maintenance_log')
+        .select('event_date')
+        .eq('user_vehicle_id', vehicle.id)
+        .order('event_date', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Fetch latest fuel log date
+      supabase
+        .from('fuel_log')
+        .select('event_date')
+        .eq('user_vehicle_id', vehicle.id)
+        .order('event_date', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Fetch next service interval date
+      supabase
+        .from('service_intervals')
+        .select('due_date')
+        .eq('user_vehicle_id', vehicle.id)
+        .gt('due_date', new Date().toISOString())
+        .order('due_date', { ascending: true })
+        .limit(1)
+        .maybeSingle()
     ])
 
     totalRecords = (maintenanceCount.count || 0) + (modsCount.count || 0) + (odometerCount.count || 0)
     serviceCount = maintenanceCount.count || 0
+    lastServiceDate = lastServiceResult.data?.event_date || null
+    lastFuelDate = lastFuelResult.data?.event_date || null
+    nextServiceDate = nextServiceResult.data?.due_date || null
   }
 
   // Avg MPG (from user_vehicle table)
@@ -339,6 +370,9 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         totalRecords,
         serviceCount,
         avgMpg,
+        lastServiceDate,
+        lastFuelDate,
+        nextServiceDate,
       }}
     />
   )
