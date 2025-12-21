@@ -187,6 +187,7 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Remove filter"
               onClick={() => removeFilter(filter.id)}
               className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
             >

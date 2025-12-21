@@ -31,6 +31,7 @@ export function ScrollToTop() {
     <Button
       variant="secondary"
       size="icon"
+      aria-label="Scroll to top"
       className={cn(
         "fixed bottom-20 right-4 md:right-8 z-50 rounded-full shadow-lg transition-all duration-300 opacity-0 scale-0",
         show && "opacity-100 scale-100"

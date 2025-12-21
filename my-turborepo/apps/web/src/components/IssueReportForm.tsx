@@ -157,6 +157,7 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
                 type="button"
                 variant="ghost"
                 size="icon"
+                aria-label="Remove screenshot"
                 className="h-8 w-8"
                 onClick={() => setScreenshot(null)}
               >

@@ -142,6 +142,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 id="cost"
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 placeholder="0.00"
               />
             </div>
@@ -153,6 +154,7 @@ export function AddModDialog({ isOpen, onClose, onSuccess, vehicleId: propVehicl
                 name="odometer"
                 id="odometer"
                 type="number"
+                inputMode="numeric"
                 placeholder="Current mileage"
               />
             </div>

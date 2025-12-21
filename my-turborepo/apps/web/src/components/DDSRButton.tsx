@@ -15,6 +15,7 @@ export function DDSRButton() {
           onClick={() => setPopupOpen(true)}
           variant="outline"
           size="icon"
+          aria-label="Open DDSR Player"
           className="rounded-full w-12 h-12"
         >
           <MonitorPlay className="w-6 h-6" />
