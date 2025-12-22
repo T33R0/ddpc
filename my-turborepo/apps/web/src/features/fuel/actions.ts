@@ -177,3 +177,189 @@ export async function logFuel(data: FuelLogInputs) {
   }
 }
 
+//
+// ACTION: Update an existing fuel log
+//
+export async function updateFuelLog(logId: string, data: FuelLogInputs) {
+  try {
+    if (!logId) return { error: 'Log ID is required' }
+    if (!data || typeof data !== 'object') {
+      return { error: 'Invalid input data' }
+    }
+
+    // 1. Validate data
+    let validatedData
+    try {
+      validatedData = FuelLogSchema.parse(data)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return {
+          error: 'Validation failed.',
+          details: validationError.errors.map(err => ({
+            message: err.message,
+            path: err.path.map(String),
+          })),
+        }
+      }
+      throw validationError
+    }
+
+    const supabase = await createClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return { error: 'Unauthorized' }
+
+    // Verify ownership via vehicle
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from('user_vehicle')
+      .select('id')
+      .eq('id', validatedData.user_vehicle_id)
+      .eq('owner_id', user.id)
+      .single()
+
+    if (vehicleError || !vehicle) {
+      return { error: 'Vehicle not found or access denied' }
+    }
+
+    // --- CALCULATE FIELDS ---
+    // For updates, we rely on the input values.
+    // We do NOT automatically recalculate trip_miles from previous logs because
+    // changing dates/ordering makes that complex. We assume the user edits trip_miles if needed.
+    // However, we DO recalculate cost and mpg based on the edited numbers.
+
+    const total_cost = validatedData.gallons * validatedData.price_per_gallon
+
+    let mpg = null
+    // If trip_miles is provided and valid, calculate MPG
+    if (validatedData.trip_miles != null && validatedData.trip_miles > 0 && validatedData.gallons > 0) {
+      mpg = validatedData.trip_miles / validatedData.gallons
+    }
+
+    // --- UPDATE fuel_log ---
+    const { error: updateError } = await supabase
+      .from('fuel_log')
+      .update({
+        event_date: validatedData.event_date,
+        odometer: validatedData.odometer,
+        gallons: validatedData.gallons,
+        price_per_gallon: validatedData.price_per_gallon,
+        total_cost: total_cost,
+        trip_miles: validatedData.trip_miles ?? null,
+        mpg: mpg,
+        octane: validatedData.octane ?? null,
+      })
+      .eq('id', logId)
+      .eq('user_id', user.id) // Extra safety check
+
+    if (updateError) {
+      console.error('Error updating fuel log:', updateError)
+      return { error: 'Failed to update fuel log.' }
+    }
+
+    // --- RECALCULATE AVG MPG ---
+    // Fetch all fuel logs with MPG to calculate the new average
+    const { data: allFuelLogs } = await supabase
+      .from('fuel_log')
+      .select('mpg')
+      .eq('user_vehicle_id', validatedData.user_vehicle_id)
+      .not('mpg', 'is', null)
+
+    if (allFuelLogs && allFuelLogs.length > 0) {
+      const validMpgEntries = allFuelLogs
+        .map(log => log.mpg)
+        .filter((mpg): mpg is number => mpg != null && mpg > 0)
+
+      if (validMpgEntries.length > 0) {
+        const averageMpg = validMpgEntries.reduce((sum, mpg) => sum + mpg, 0) / validMpgEntries.length
+
+        await supabase
+          .from('user_vehicle')
+          .update({ avg_mpg: averageMpg })
+          .eq('id', validatedData.user_vehicle_id)
+          .eq('owner_id', user.id)
+      }
+    }
+
+    revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/fuel`)
+    revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)
+
+    return { success: true }
+  } catch (e) {
+    console.error('Unhandled error in updateFuelLog:', e)
+    const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.'
+    return { error: errorMessage }
+  }
+}
+
+//
+// ACTION: Delete a fuel log entry
+//
+export async function deleteFuelLog(logId: string, vehicleId: string) {
+  try {
+    if (!logId || !vehicleId) return { error: 'Missing required IDs' }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Unauthorized' }
+
+    // Verify ownership
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from('user_vehicle')
+      .select('id')
+      .eq('id', vehicleId)
+      .eq('owner_id', user.id)
+      .single()
+
+    if (vehicleError || !vehicle) {
+      return { error: 'Vehicle not found or access denied' }
+    }
+
+    // Delete the log
+    const { error: deleteError } = await supabase
+      .from('fuel_log')
+      .delete()
+      .eq('id', logId)
+      .eq('user_id', user.id)
+
+    if (deleteError) {
+      console.error('Error deleting fuel log:', deleteError)
+      return { error: 'Failed to delete fuel log' }
+    }
+
+    // --- RECALCULATE AVG MPG ---
+    const { data: allFuelLogs } = await supabase
+      .from('fuel_log')
+      .select('mpg')
+      .eq('user_vehicle_id', vehicleId)
+      .not('mpg', 'is', null)
+
+    if (allFuelLogs) { // Could be empty now
+      const validMpgEntries = allFuelLogs
+        .map(log => log.mpg)
+        .filter((mpg): mpg is number => mpg != null && mpg > 0)
+
+      let averageMpg = 0
+      if (validMpgEntries.length > 0) {
+        averageMpg = validMpgEntries.reduce((sum, mpg) => sum + mpg, 0) / validMpgEntries.length
+      }
+
+      // Update vehicle avg_mpg (if 0 entries, avg is 0 or null? Let's say 0 for now or keep previous logic which only updates if > 0. But if we delete the last one, we should probably set it to null or 0.
+      // If validMpgEntries is empty, let's set it to 0 or null.
+      await supabase
+        .from('user_vehicle')
+        .update({ avg_mpg: validMpgEntries.length > 0 ? averageMpg : null })
+        .eq('id', vehicleId)
+        .eq('owner_id', user.id)
+    }
+
+    revalidatePath(`/vehicle/${vehicleId}/fuel`)
+    revalidatePath(`/vehicle/${vehicleId}/service`)
+
+    return { success: true }
+  } catch (e) {
+    console.error('Unhandled error in deleteFuelLog:', e)
+    return { error: 'An unexpected error occurred' }
+  }
+}

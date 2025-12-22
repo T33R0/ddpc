@@ -6,15 +6,17 @@ import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalFo
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
-import { Fuel } from 'lucide-react'
-import { logFuel } from '../actions'
+import { Fuel, Trash2 } from 'lucide-react'
+import { logFuel, updateFuelLog, deleteFuelLog } from '../actions'
 import { FuelLogInputs } from '../schema'
+import { FuelEntry } from '../lib/getVehicleFuelData'
 
 type AddFuelDialogProps = {
   isOpen: boolean
   onClose: () => void
   vehicleId: string
   currentOdometer: number | null
+  initialData?: FuelEntry | null
 }
 
 interface FormData {
@@ -31,9 +33,11 @@ export function AddFuelDialog({
   onClose,
   vehicleId,
   currentOdometer,
+  initialData,
 }: AddFuelDialogProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
     event_date: new Date().toISOString().split('T')[0] || '', // YYYY-MM-DD
@@ -44,22 +48,53 @@ export function AddFuelDialog({
     octane: '',
   })
 
-  // Sync default values when props change (e.g., modal opens)
+  const isEditMode = !!initialData
+
+  // Sync values when props change
   useEffect(() => {
-    setFormData({
-      event_date: new Date().toISOString().split('T')[0] || '',
-      odometer: currentOdometer?.toString() || '',
-      gallons: '',
-      price_per_gallon: '',
-      trip_miles: '',
-      octane: '',
-    })
-    setError(null)
-  }, [isOpen, vehicleId, currentOdometer])
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          event_date: new Date(initialData.date).toISOString().split('T')[0] || '',
+          odometer: initialData.odometer.toString(),
+          gallons: initialData.gallons.toString(),
+          price_per_gallon: initialData.cost ? (initialData.cost / initialData.gallons).toFixed(3) : '',
+          trip_miles: initialData.trip_miles?.toString() || '',
+          octane: '', // Still missing from basic FuelEntry view, acceptable to leave blank
+        })
+      } else {
+        setFormData({
+          event_date: new Date().toISOString().split('T')[0] || '',
+          odometer: currentOdometer?.toString() || '',
+          gallons: '',
+          price_per_gallon: '',
+          trip_miles: '',
+          octane: '',
+        })
+      }
+      setError(null)
+      setShowDeleteConfirm(false)
+    }
+  }, [isOpen, vehicleId, currentOdometer, initialData])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     if (error) setError(null) // Clear error when user starts typing
+  }
+
+  async function handleDelete() {
+    setIsSubmitting(true)
+    try {
+      if (!initialData?.id) return
+      const result = await deleteFuelLog(initialData.id, vehicleId)
+      if (result.error) throw new Error(result.error)
+
+      onClose()
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete')
+      setIsSubmitting(false)
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -79,7 +114,12 @@ export function AddFuelDialog({
         octane: formData.octane ? parseFloat(formData.octane) : null,
       }
 
-      const result = await logFuel(fuelLogData)
+      let result
+      if (isEditMode && initialData?.id) {
+        result = await updateFuelLog(initialData.id, fuelLogData)
+      } else {
+        result = await logFuel(fuelLogData)
+      }
 
       if (result.error) {
         // If there are validation details, show them
@@ -94,18 +134,8 @@ export function AddFuelDialog({
       }
 
       if (!result.success) {
-        throw new Error('Failed to log fuel')
+        throw new Error('Failed to save log')
       }
-
-      // Success - reset form and close dialog
-      setFormData({
-        event_date: new Date().toISOString().split('T')[0] || '',
-        odometer: currentOdometer?.toString() || '',
-        gallons: '',
-        price_per_gallon: '',
-        trip_miles: '',
-        octane: '',
-      })
 
       onClose()
       // The server action already revalidates the path, so refresh the router
@@ -118,17 +148,39 @@ export function AddFuelDialog({
     }
   }
 
+  if (showDeleteConfirm) {
+    return (
+      <Modal open={isOpen} onOpenChange={onClose}>
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>Delete Fuel Log?</ModalTitle>
+            <ModalDescription>
+              Are you sure you want to delete this fuel log entry? This will recalculate your vehicle&apos;s average MPG. This action cannot be undone.
+            </ModalDescription>
+          </ModalHeader>
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
+              {isSubmitting ? 'Deleting...' : 'Delete Log'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    )
+  }
+
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalContent className="sm:max-w-lg p-0">
         <ModalHeader>
           <ModalTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5" />
-            Log Fuel
+            {isEditMode ? 'Edit Fuel Log' : 'Log Fuel'}
           </ModalTitle>
           <ModalDescription>
-            Enter the details from your fuel-up. This will also update your
-            vehicle&apos;s current mileage.
+            {isEditMode
+              ? 'Update the details of your fuel-up.'
+              : 'Enter the details from your fuel-up. This will also update your vehicle\'s current mileage.'}
           </ModalDescription>
         </ModalHeader>
 
@@ -212,10 +264,11 @@ export function AddFuelDialog({
               onChange={(e) => handleInputChange('trip_miles', e.target.value)}
               placeholder="e.g., 350.5"
             />
-            <p className="text-sm text-muted-foreground">Don&apos;t see your fuel type?</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Leave blank to calculate automatically from previous fuel-up
-            </p>
+            {!isEditMode && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave blank to calculate automatically from previous fuel-up
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -233,21 +286,35 @@ export function AddFuelDialog({
             />
           </div>
 
-          <ModalFooter className="gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Saving...' : 'Save Log'}
-            </Button>
+          <ModalFooter className="gap-2 pt-4 flex justify-between">
+            {isEditMode ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSubmitting}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            ) : <div />}
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : (isEditMode ? 'Update Log' : 'Save Log')}
+              </Button>
+            </div>
           </ModalFooter>
         </form>
       </ModalContent>
