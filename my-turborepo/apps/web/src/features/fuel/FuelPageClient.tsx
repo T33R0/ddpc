@@ -240,9 +240,23 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   )
 }
 
+import { FuelEntry } from './lib/getVehicleFuelData'
+
 export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
   const router = useRouter()
   const [isFuelModalOpen, setIsFuelModalOpen] = useState(false)
+  const [selectedLogEntry, setSelectedLogEntry] = useState<FuelEntry | null>(null)
+
+  const handleEditLog = (entry: FuelEntry) => {
+    setSelectedLogEntry(entry)
+    setIsFuelModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsFuelModalOpen(false)
+    setSelectedLogEntry(null)
+    router.refresh()
+  }
 
   return (
     <>
@@ -284,16 +298,17 @@ export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
       </div>
 
       {/* Fuel Log Entries */}
-      <FuelLogEntries fuelEntries={fuelData.fuelEntries} />
+      <FuelLogEntries
+        fuelEntries={fuelData.fuelEntries}
+        onEdit={handleEditLog}
+      />
 
       <AddFuelDialog
         isOpen={isFuelModalOpen}
-        onClose={() => {
-          setIsFuelModalOpen(false)
-          router.refresh()
-        }}
+        onClose={handleCloseModal}
         vehicleId={fuelData.vehicle.id}
         currentOdometer={fuelData.vehicle.odometer ?? null}
+        initialData={selectedLogEntry}
       />
     </>
   )
