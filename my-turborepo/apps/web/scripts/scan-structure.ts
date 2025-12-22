@@ -1,5 +1,5 @@
 
-import { glob } from 'glob';
+import { scanStructureData, toPascalCase } from '../src/lib/structure-scanner';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,78 +9,42 @@ const __dirname = path.dirname(__filename);
 
 // Resolve relative to the script location (apps/web/scripts)
 const WEB_ROOT = path.resolve(__dirname, '..');
-const REPO_ROOT = path.resolve(WEB_ROOT, '../..');
-
-const APP_DIR = path.join(WEB_ROOT, 'src/app');
-const UI_DIR = path.join(REPO_ROOT, 'packages/ui/src');
-const UI_PACKAGE_JSON = path.join(REPO_ROOT, 'packages/ui/package.json');
 const OUTPUT_FILE = path.join(WEB_ROOT, 'src/lib/component-registry.ts');
 const SQL_OUTPUT_FILE = path.join(WEB_ROOT, 'seed_structure.sql');
 
-async function scanStructure() {
-  console.log('Scanning application structure...');
+async function runScript() {
+  console.log('Running structure scan script...');
 
-  // Load UI exports
-  const uiPkg = JSON.parse(fs.readFileSync(UI_PACKAGE_JSON, 'utf-8'));
-  const exports = uiPkg.exports || {};
-  const validExports = new Set(
-    Object.keys(exports)
-      .map(k => k.replace(/^\.\//, '')) // remove ./ prefix
-      .filter(k => k !== '*') // ignore wildcard
-  );
-
-  console.log('Valid UI Exports:', Array.from(validExports));
-
-  const pages = await glob('**/page.tsx', { cwd: APP_DIR });
-  const components = await glob('**/*.tsx', { cwd: UI_DIR });
+  // Use the shared scanner
+  // Note: scanStructureData defaults to process.cwd(), but since we are running via tsx from root likely, or inside scripts...
+  // We explicitly pass the calculated WEB_ROOT to ensure consistency regardless of CWD.
+  const items = await scanStructureData({
+    webRoot: WEB_ROOT
+  });
 
   const registry: string[] = [];
   const sqlStatements: string[] = [];
 
-  // Truncate table first
+  // Truncate table first (Legacy behavior for the SQL seed file)
   sqlStatements.push('TRUNCATE TABLE app_structure;');
 
-  // Process Pages
-  for (const pageFile of pages) {
-    const routePath = '/' + path.dirname(pageFile)
-      .replace(/\\/g, '/')
-      .replace(/\(.*\)\//g, '') // remove route groups like (auth)
-      .replace(/\/page$/, '');
+  for (const item of items) {
+    // Generate SQL
+    // Escape single quotes in names/paths just in case
+    const safeName = item.name.replace(/'/g, "''");
+    const safePath = item.path.replace(/'/g, "''");
+    const metadataJson = JSON.stringify(item.metadata).replace(/'/g, "''");
 
-    // Normalize path (handle root page)
-    const normalizedPath = routePath === '/.' ? '/' : routePath;
-    const name = normalizedPath === '/' ? 'Home' :
-      normalizedPath.split('/').filter(Boolean).pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Page';
+    sqlStatements.push(`INSERT INTO app_structure (id, name, type, path, last_updated, metadata, status) VALUES ('${item.id}', '${safeName}', '${item.type}', '${safePath}', NOW(), '${metadataJson}', 'active');`);
 
-    const id = generateUUID(normalizedPath + 'page');
+    // Generate Registry Entry (Components only)
+    if (item.type === 'component') {
+      const pascalName = toPascalCase(item.name);
+      const safeNameKey = item.name.replace(/[^a-zA-Z0-9]/g, '');
+      const importPath = item.path; // already formatted as @repo/ui/...
 
-    sqlStatements.push(`INSERT INTO app_structure (id, name, type, path, last_updated, metadata) VALUES ('${id}', '${name}', 'page', '${normalizedPath}', NOW(), '{}');`);
-  }
-
-  // Process Components
-  for (const compFile of components) {
-    // Skip internal files
-    if (compFile.includes('index.ts') || compFile.includes('.stories.') || compFile.includes('.test.')) continue;
-
-    const name = path.basename(compFile, '.tsx');
-    const pascalName = toPascalCase(name);
-    // Sanitize component name for registry key
-    const safeName = name.replace(/[^a-zA-Z0-9]/g, '');
-
-    // Check if exported
-    if (!validExports.has(name)) {
-      continue;
+      registry.push(`  '${item.name}': lazy(() => import('${importPath}').then((m: any) => ({ default: m.${pascalName} || m.${safeNameKey} || m.default }))),`);
     }
-
-    // Add to registry with lazy import
-    const importPath = `@repo/ui/${name}`;
-
-    // Registry entry
-    // Cast m to any to avoid TS errors about missing properties
-    registry.push(`  '${name}': lazy(() => import('${importPath}').then((m: any) => ({ default: m.${pascalName} || m.${safeName} || m.default }))),`);
-
-    const id = generateUUID(name + 'component');
-    sqlStatements.push(`INSERT INTO app_structure (id, name, type, path, last_updated, metadata) VALUES ('${id}', '${name}', 'component', '${importPath}', NOW(), '{"defaultProps": {}}');`);
   }
 
   // Generate Registry File
@@ -101,20 +65,4 @@ ${registry.join('\n')}
   console.log(`SQL Seed written to ${SQL_OUTPUT_FILE}`);
 }
 
-function toPascalCase(str: string): string {
-  return str.replace(/(^\w|-\w)/g, (g) => g.replace('-', '').toUpperCase());
-}
-
-// Simple UUID generator for consistent IDs based on string (mock implementation)
-function generateUUID(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  const hex = Math.abs(hash).toString(16).padStart(8, '0');
-  return `00000000-0000-0000-0000-${hex.padEnd(12, '0')}`;
-}
-
-scanStructure().catch(console.error);
+runScript().catch(console.error);
