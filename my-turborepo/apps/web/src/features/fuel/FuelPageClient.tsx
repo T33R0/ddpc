@@ -8,7 +8,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
-import { Fuel } from 'lucide-react'
+import { Fuel, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import {
   AddFuelDialog,
@@ -19,6 +20,7 @@ import { VehicleFuelData } from './lib/getVehicleFuelData'
 
 interface FuelPageClientProps {
   fuelData: VehicleFuelData
+  vehicleSlug: string
 }
 
 // MPG Health Dial Component - Inlined to avoid import issues
@@ -238,23 +240,35 @@ function MpgHealthDial({ averageMpg, factoryMpg }: { averageMpg: number | undefi
   )
 }
 
-export function FuelPageClient({ fuelData }: FuelPageClientProps) {
+export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
   const router = useRouter()
   const [isFuelModalOpen, setIsFuelModalOpen] = useState(false)
 
   return (
     <>
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground">Vehicle Fuel</h1>
-          <p className="text-lg text-muted-foreground mt-2">Fuel economy and consumption tracking</p>
-        </div>
+      <div className="mb-8">
         <Button
-          onClick={() => setIsFuelModalOpen(true)}
-          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          variant="outline"
+          className="mb-4 border-border text-muted-foreground hover:bg-muted hover:border-accent"
+          asChild
         >
-          <Fuel className="mr-2 h-4 w-4" /> Log Fuel
+          <Link href={`/vehicle/${vehicleSlug}`}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Vehicle
+          </Link>
         </Button>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground">Vehicle Fuel</h1>
+            <p className="text-lg text-muted-foreground mt-2">Fuel economy and consumption tracking</p>
+          </div>
+          <Button
+            onClick={() => setIsFuelModalOpen(true)}
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          >
+            <Fuel className="mr-2 h-4 w-4" /> Log Fuel
+          </Button>
+        </div>
       </div>
 
       {/* Chart and Dial Row */}
