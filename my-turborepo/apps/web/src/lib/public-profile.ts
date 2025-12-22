@@ -90,7 +90,8 @@ export async function getProfileVehicles(ownerId: string, options: GetProfileVeh
 
   if (error) {
     console.error('Error fetching profile vehicles:', error)
-    return []
+    // Throw error so we know if query fails (e.g. relation missing) instead of silently returning empty
+    throw error
   }
 
   return data || []

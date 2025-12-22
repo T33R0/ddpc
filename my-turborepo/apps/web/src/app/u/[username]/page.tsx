@@ -135,12 +135,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     className={`h-[320px] p-0 ${isPrivate ? 'opacity-80' : ''}`}
                     badges={isPrivate ? ['PRIVATE'] : []}
                   >
-                     {/*
-                       Note: DashboardCard renders children at the bottom.
-                       We want the toggle to be at the top right.
-                       We'll inject the toggle via absolute positioning in this wrapper div instead of inside the card's children,
-                       because DashboardCard might clip content or handle layout strictly.
-                     */}
                   </DashboardCard>
 
                   {isOwner && (
@@ -152,7 +146,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     </div>
                   )}
 
-                  {/* Private indicator overlay if needed, though badges handles it */}
                   {isPrivate && (
                     <div className="absolute top-4 left-4 z-20 pointer-events-none">
                       <div className="bg-background/80 backdrop-blur-sm p-1.5 rounded-full border border-border shadow-sm">
