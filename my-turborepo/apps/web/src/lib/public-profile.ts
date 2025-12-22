@@ -60,14 +60,20 @@ export async function getUserProfileByUsername(username: string): Promise<User |
   } as User
 }
 
+interface GetProfileVehiclesOptions {
+  includePrivate?: boolean
+}
+
 /**
- * Fetches public vehicles for a specific user.
+ * Fetches vehicles for a specific user profile.
+ * By default only returns PUBLIC vehicles unless includePrivate is true.
  */
-export async function getPublicUserVehicles(ownerId: string): Promise<any[]> {
+export async function getProfileVehicles(ownerId: string, options: GetProfileVehiclesOptions = {}): Promise<any[]> {
   const supabase = getServiceRoleClient()
+  const { includePrivate = false } = options
 
   // Select user_vehicle joined with vehicle_data
-  const { data, error } = await supabase
+  let query = supabase
     .from('user_vehicle')
     .select(`
       *,
@@ -75,13 +81,20 @@ export async function getPublicUserVehicles(ownerId: string): Promise<any[]> {
       vehicle_primary_image (url)
     `)
     .eq('owner_id', ownerId)
-    .eq('privacy', 'PUBLIC')
-    .order('created_at', { ascending: false })
+
+  if (!includePrivate) {
+    query = query.eq('privacy', 'PUBLIC')
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching public user vehicles:', error)
+    console.error('Error fetching profile vehicles:', error)
     return []
   }
 
   return data || []
 }
+
+// Legacy alias for backward compatibility if needed, though we will update usages
+export const getPublicUserVehicles = (ownerId: string) => getProfileVehicles(ownerId, { includePrivate: false })

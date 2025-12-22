@@ -1,13 +1,12 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getUserProfileByUsername, getPublicUserVehicles } from '@/lib/public-profile'
+import { getUserProfileByUsername, getProfileVehicles } from '@/lib/public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/avatar'
 import { Badge } from '@repo/ui/badge'
-import { Button } from '@repo/ui/button'
-import { Card, CardContent, CardHeader } from '@repo/ui/card'
-import { MapPin, Link as LinkIcon, Calendar } from 'lucide-react'
-import Link from 'next/link'
-import { VehicleCard } from '@/components/vehicle-card'
+import { Card, CardContent } from '@repo/ui/card'
+import { MapPin, Link as LinkIcon, Calendar, Lock } from 'lucide-react'
+import { DashboardCard } from '@/components/dashboard-card'
+import { VehiclePrivacyToggle } from './_components/vehicle-privacy-toggle'
 
 interface PageProps {
   params: Promise<{
@@ -34,7 +33,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
     notFound()
   }
 
-  const vehicles = await getPublicUserVehicles(user.id)
+  // Use getProfileVehicles with includePrivate: isOwner
+  const vehicles = await getProfileVehicles(user.id, { includePrivate: isOwner })
 
   return (
     <div className="container py-8 space-y-8">
@@ -92,11 +92,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 </div>
               </div>
             </div>
-
-            {/* Actions/Stats (Optional placeholder for future) */}
-            <div className="hidden md:flex flex-col gap-2 pt-2">
-                {/* Could add 'Follow' button or social links here later */}
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -123,34 +118,49 @@ export default async function PublicProfilePage({ params }: PageProps) {
               const subtitle = v.nickname && v.vehicle_data ? v.nickname : (v.vehicle_data?.trim_description || '')
 
               // Determine image URL
-              // Prioritize user-uploaded images, fallback to vehicle_data stock images
-              // Assuming v.image_url might be an array or string in user_vehicle, or use vehicle_data.image_url
-              // Based on public-vehicle-utils, we might not have 'image_url' on user_vehicle directly unless it's joined?
-              // Let's use what we have. If user_vehicle has images, use them.
-              // Note: The types say vehicle_data has image_url (string) or images_url (stringified json?).
-              // But user_vehicle might have its own photo logic.
-              // I'll check the 'getPublicUserVehicles' select query: it selects * from user_vehicle.
-              // I'll check the schema memory: 'vehicle_primary_image' table exists.
-              // But my query doesn't join that yet. I'll rely on vehicle_data.image_url for now as a safe fallback
-              // or check if 'image_url' exists on user_vehicle (it's not in the strict type definition I saw earlier for Vehicle interface, which seemed to be vehicle_data).
-              // Actually, the `Vehicle` interface in types.ts is confusingly named, it looks like vehicle_data.
-              // I'll assume 'vehicle_data.image_url' is safe.
-
               const primaryImage = Array.isArray(v.vehicle_primary_image)
                 ? v.vehicle_primary_image[0]
                 : v.vehicle_primary_image
               const displayImage = primaryImage?.url || v.image_url || v.vehicle_data?.image_url || null
 
+              const isPrivate = v.privacy === 'PRIVATE'
+
               return (
-                <Link key={v.id} href={`/vehicle/${v.id}`} className="block h-full">
-                  <VehicleCard
+                <div key={v.id} className="relative group">
+                  <DashboardCard
                     title={title}
-                    subtitle={subtitle}
-                    imageUrl={displayImage}
-                    status={undefined} // Don't show status badges like "Parked" on public profile unless we want to map "privacy" which is always public here.
-                    className="h-full"
-                  />
-                </Link>
+                    description={subtitle}
+                    imageSrc={displayImage}
+                    href={`/vehicle/${v.id}`}
+                    className={`h-[320px] p-0 ${isPrivate ? 'opacity-80' : ''}`}
+                    badges={isPrivate ? ['PRIVATE'] : []}
+                  >
+                     {/*
+                       Note: DashboardCard renders children at the bottom.
+                       We want the toggle to be at the top right.
+                       We'll inject the toggle via absolute positioning in this wrapper div instead of inside the card's children,
+                       because DashboardCard might clip content or handle layout strictly.
+                     */}
+                  </DashboardCard>
+
+                  {isOwner && (
+                    <div className="absolute top-4 right-4 z-20">
+                      <VehiclePrivacyToggle
+                        vehicleId={v.id}
+                        initialPrivacy={v.privacy || 'PUBLIC'}
+                      />
+                    </div>
+                  )}
+
+                  {/* Private indicator overlay if needed, though badges handles it */}
+                  {isPrivate && (
+                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                      <div className="bg-background/80 backdrop-blur-sm p-1.5 rounded-full border border-border shadow-sm">
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
