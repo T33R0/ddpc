@@ -9,8 +9,7 @@
     "NEXT_PUBLIC_STRIPE_PRICE_ID_BUILDER",
     "NEXT_PUBLIC_STRIPE_PRICE_ID_PRO",
     "STRIPE_PUBLISHABLE_KEY",
-    "STRIPE_MCP_KEY",
-    "RESEND_API_KEY"
+    "STRIPE_MCP_KEY"
   ],
   "tasks": {
     "build": {
