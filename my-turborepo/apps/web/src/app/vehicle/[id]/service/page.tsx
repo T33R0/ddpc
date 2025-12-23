@@ -139,6 +139,7 @@ export default async function VehicleServicePage({ params }: ServicePageProps) {
   // --- 6. Pass all data to the Client Component ---
   return (
     <ServicePageClient
+      vehicleSlug={vehicleSlug}
       vehicle={vehicle}
       initialPlannedLogs={(plannedLogs as any[] | null) || []}
       initialPlan={
