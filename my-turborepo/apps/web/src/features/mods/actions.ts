@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { ModStepData } from './types'
-import { z } from 'zod'
 
 export type ModActionResponse = {
   success: boolean
@@ -12,31 +11,8 @@ export type ModActionResponse = {
   details?: { message?: string; path?: (string | number)[] }[]
 }
 
-const uuidSchema = z.string().uuid()
-const strMin1 = z.string().min(1, 'Cannot be empty')
-
 export async function addModStep(modPlanId: string, description: string, stepOrder: number) {
-  const schema = z.object({
-    modPlanId: uuidSchema,
-    description: strMin1,
-    stepOrder: z.number().int()
-  })
-
-  const validation = schema.safeParse({ modPlanId, description, stepOrder })
-  if (!validation.success) {
-    throw new Error('Invalid input: ' + validation.error.message)
-  }
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  // Ideally verify modPlanId belongs to user, but relying on RLS + Auth check for now
-  // We can check if the plan belongs to the user
-  const { data: plan } = await supabase.from('mod_plans').select('user_id').eq('id', modPlanId).single()
-  if (plan && plan.user_id !== user.id) {
-    throw new Error('Unauthorized access to mod plan')
-  }
 
   const { data, error } = await supabase
     .from('mod_steps')
@@ -60,26 +36,11 @@ export async function addModStep(modPlanId: string, description: string, stepOrd
 }
 
 export async function updateModStep(stepId: string, updates: Partial<ModStepData> & { is_completed_reassembly?: boolean }) {
-  const safeUpdatesSchema = z.object({
-      step_order: z.number().int().optional(),
-      description: z.string().optional(),
-      notes: z.string().nullable().optional(),
-      is_completed: z.boolean().optional(),
-      is_completed_reassembly: z.boolean().optional(),
-  })
-
-  if (!uuidSchema.safeParse(stepId).success) throw new Error('Invalid Step ID')
-
-  const updateValidation = safeUpdatesSchema.safeParse(updates)
-  if (!updateValidation.success) throw new Error('Invalid updates')
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
 
   const { error } = await supabase
     .from('mod_steps')
-    .update(updateValidation.data)
+    .update(updates)
     .eq('id', stepId)
 
   if (error) {
@@ -91,26 +52,17 @@ export async function updateModStep(stepId: string, updates: Partial<ModStepData
 }
 
 export async function duplicateModStep(stepId: string): Promise<ModActionResponse> {
-  if (!uuidSchema.safeParse(stepId).success) return { success: false, error: 'Invalid Step ID' }
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Unauthorized' }
 
   // 1. Fetch the step to duplicate
   const { data: step, error: stepError } = await supabase
     .from('mod_steps')
-    .select('*, mod_plans(user_id)')
+    .select('*')
     .eq('id', stepId)
     .single()
 
   if (stepError || !step) {
     return { success: false, error: 'Step not found' }
-  }
-
-  // Check ownership
-  if (step.mod_plans && (step.mod_plans as { user_id: string }).user_id !== user.id) {
-     return { success: false, error: 'Unauthorized' }
   }
 
   // 2. Fetch all steps in the plan to shift order
@@ -160,11 +112,7 @@ export async function duplicateModStep(stepId: string): Promise<ModActionRespons
 }
 
 export async function deleteModStep(stepId: string) {
-  if (!uuidSchema.safeParse(stepId).success) throw new Error('Invalid Step ID')
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
 
   const { error } = await supabase
     .from('mod_steps')
@@ -180,17 +128,7 @@ export async function deleteModStep(stepId: string) {
 }
 
 export async function reorderModSteps(updates: { id: string; step_order: number }[]) {
-  const schema = z.array(z.object({
-    id: uuidSchema,
-    step_order: z.number().int()
-  }))
-
-  const validation = schema.safeParse(updates)
-  if (!validation.success) throw new Error('Invalid input')
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
 
   // Perform updates in parallel
   const promises = updates.map(update =>
@@ -212,21 +150,7 @@ export async function reorderModSteps(updates: { id: string; step_order: number 
 }
 
 export async function fetchOrCreateModPlanAction(modLogId: string, userId: string, modTitle: string): Promise<{ id: string | null, error?: string }> {
-  const schema = z.object({
-    modLogId: uuidSchema,
-    userId: uuidSchema,
-    modTitle: z.string()
-  })
-
-  if (!schema.safeParse({ modLogId, userId, modTitle }).success) {
-      return { id: null, error: 'Invalid input' }
-  }
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { id: null, error: 'Unauthorized' }
-  if (user.id !== userId) return { id: null, error: 'Unauthorized user mismatch' }
 
   try {
     // 1. Check if plan exists
@@ -268,29 +192,14 @@ export async function fetchOrCreateModPlanAction(modLogId: string, userId: strin
 
     revalidatePath('/vehicle/[id]/mods/[modId]', 'page')
     return { id: newPlan.id }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Unexpected error in fetchOrCreateModPlanAction:', err)
-    const message = err instanceof Error ? err.message : 'Unexpected error'
-    return { id: null, error: message }
+    return { id: null, error: err.message || 'Unexpected error' }
   }
 }
 
 export async function duplicateModPlan(originalModPlanId: string, newName: string, userId: string, targetModId: string): Promise<ModActionResponse> {
-  const schema = z.object({
-      originalModPlanId: uuidSchema,
-      newName: strMin1,
-      userId: uuidSchema,
-      targetModId: uuidSchema.optional().or(z.string())
-  })
-
-  if (!schema.safeParse({ originalModPlanId, newName, userId, targetModId }).success) {
-      return { success: false, error: 'Invalid input' }
-  }
-
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Unauthorized' }
-  if (user.id !== userId) return { success: false, error: 'Unauthorized user mismatch' }
 
   // 1. Fetch original mod plan details
   const { data: originalPlan, error: planError } = await supabase
@@ -303,15 +212,26 @@ export async function duplicateModPlan(originalModPlanId: string, newName: strin
     return { success: false, error: 'Original mod plan not found.' }
   }
 
-  if (originalPlan.user_id !== user.id) {
-       return { success: false, error: 'Unauthorized access to original plan' }
-  }
+  // 2. Create new mod plan associated with the SAME or DIFFERENT mod?
+  // Usually, a plan is 1:1 with a Mod.
+  // If we duplicate, we likely want to duplicate it for *another* Mod or replace the current one?
+  // Or maybe "Duplicate Job" in service creates a NEW Service Log (maintenance_log).
+  // Here, we are already inside a specific Mod page.
+  // If the user wants to duplicate this plan, where does it go?
+  // "Duplicate Job" in Service creates a NEW Job (new maintenance_log).
+  // A Mod is a persistent entity.
+  // If I duplicate a Mod Plan, do I create a new Mod? Or just a plan variant?
+  // The prompt says: "make it so that each mod has the ability to have a plan".
+  // This suggests 1 plan per mod.
+  // If I duplicate, I probably need to create a NEW MOD as well?
+  // Service: `duplicateJobPlan` creates a NEW `maintenance_log` and `job_plan`.
+  // Here, I should probably create a NEW `mods` entry + `mod_plan`.
 
   // Fetch original mod to duplicate it first
   const { data: originalMod } = await supabase
     .from('mods')
     .select('*')
-    .eq('id', originalPlan.mod_log_id)
+    .eq('id', originalPlan.mod_log_id) // using mod_log_id as decided
     .single()
 
   if (!originalMod) {
@@ -327,6 +247,7 @@ export async function duplicateModPlan(originalModPlanId: string, newName: strin
       notes: originalMod.notes ? `${originalMod.notes} (Copy)` : 'Mod (Copy)',
       status: 'planned', // Default to planned
       cost: originalMod.cost,
+      // We don't copy specific event dates usually for new plans
     })
     .select()
     .single()
@@ -381,25 +302,12 @@ export async function duplicateModPlan(originalModPlanId: string, newName: strin
     }
   }
 
-  revalidatePath('/vehicle/[id]/mods', 'page')
+  revalidatePath('/vehicle/[id]/mods', 'page') // Revalidate list to see new mod
   return { success: true, data: { plan: newModPlan, modId: newMod.id } }
 }
 
 export async function updateModPlanName(modPlanId: string, newName: string, userId: string) {
-    const schema = z.object({
-        modPlanId: uuidSchema,
-        newName: strMin1,
-        userId: uuidSchema
-    })
-
-    if (!schema.safeParse({ modPlanId, newName, userId }).success) {
-        throw new Error('Invalid input')
-    }
-
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
-    if (user.id !== userId) throw new Error('Unauthorized user mismatch')
 
     const { error } = await supabase
       .from('mod_plans')

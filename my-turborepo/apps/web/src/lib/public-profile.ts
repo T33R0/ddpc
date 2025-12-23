@@ -73,12 +73,13 @@ export async function getProfileVehicles(ownerId: string, options: GetProfileVeh
   const { includePrivate = false } = options
 
   // Select user_vehicle joined with vehicle_data
+  // Note: 'vehicle_primary_image' relation might not exist or is not linked to user_vehicle directly.
+  // We rely on 'photo_url' in user_vehicle or 'image_url' in vehicle_data.
   let query = supabase
     .from('user_vehicle')
     .select(`
       *,
-      vehicle_data (*),
-      vehicle_primary_image (url)
+      vehicle_data (*)
     `)
     .eq('owner_id', ownerId)
 
@@ -90,7 +91,7 @@ export async function getProfileVehicles(ownerId: string, options: GetProfileVeh
 
   if (error) {
     console.error('Error fetching profile vehicles:', error)
-    return []
+    throw error
   }
 
   return data || []
