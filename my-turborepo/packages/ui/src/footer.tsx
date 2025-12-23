@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { Instagram, Linkedin, X } from 'lucide-react';
 
 const navLinks = [
-  { name: 'Features', href: '/features' },
-  { name: 'Pricing', href: '/pricing' },
   { name: 'About', href: '/about' },
   { name: 'Join', href: '/join' },
-  { name: 'Help Center', href: '/help' },
+  { name: 'Features', href: '/features' },
+  { name: 'Pricing', href: '/pricing' },
   { name: 'Contact Us', href: '/contact' },
+  { name: 'Help Center', href: '/help' },
 ];
 
 const socialLinks = [
