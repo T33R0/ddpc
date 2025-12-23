@@ -44,9 +44,6 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
       return
     }
 
-    // Always open selection dialog if there are vehicles (even if just 1, to be safe/consistent, or auto-select)
-    // User requested "recreate it by basically making a mini gallery... shrinking the vehicle cards".
-    // So I will always show the gallery if > 0 vehicles.
     setSelectedAction(action)
     setIsSelectVehicleOpen(true)
   }
@@ -156,13 +153,14 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
             </div>
           </DashboardCard>
 
-          {/* 4. ddsr (Daily Driven Sim Rig) */}
+          {/* 4. ddsr (Daily Driven Sim Rig) - COMING SOON */}
           <DashboardCard
-            className="h-[320px] p-0"
-            onClick={() => handleNavigate('/ddsr')}
+            className="h-[320px] p-0 cursor-default group"
+            onClick={undefined} // Disabled click
             imageSrc="/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg"
           >
-            <div className="relative z-10 flex h-full flex-col justify-end p-6">
+            {/* Content Container */}
+            <div className="relative z-10 flex h-full flex-col justify-end p-6 transition-opacity duration-300 group-hover:opacity-20">
               <div className="mb-2 flex items-center space-x-2">
                 <Monitor className="h-5 w-5 text-primary" />
                 <h3 className="text-xl font-bold uppercase tracking-wide">ddsr</h3>
@@ -170,6 +168,13 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
               <p className="text-sm text-muted-foreground">
                 Daily Driven Sim Rig configurations.
               </p>
+            </div>
+
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 backdrop-blur-sm">
+              <span className="text-2xl font-black uppercase tracking-widest text-white border-2 border-white px-4 py-2">
+                Coming Soon
+              </span>
             </div>
           </DashboardCard>
 
