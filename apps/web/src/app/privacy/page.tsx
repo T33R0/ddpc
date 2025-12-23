@@ -3,16 +3,7 @@ import { Button } from '@repo/ui/button';
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* Gradient background */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none"
-      >
-        <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-        <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-      </div>
-
+    <div className="min-h-screen text-foreground relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
