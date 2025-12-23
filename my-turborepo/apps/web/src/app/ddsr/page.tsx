@@ -43,7 +43,7 @@ export default function DDSRPage() {
         {/* Left: Real World */}
         <div className="relative w-full md:w-1/2 h-1/2 md:h-full group">
           <Image
-            src="/images/ddsr/ddsr_physical_car.jpg"
+            src="/images/ddsr/ddsr_physical_half.jpg"
             alt="Real world vehicle in a parking lot"
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -54,7 +54,7 @@ export default function DDSRPage() {
         {/* Right: Digital Twin */}
         <div className="relative w-full md:w-1/2 h-1/2 md:h-full group border-t md:border-t-0 md:border-l border-white/10">
           <Image
-            src="/images/ddsr/ddsr_wireframe_car.jpg"
+            src="/images/ddsr/ddsr_wireframe_half.jpg"
             alt="Digital twin wireframe simulation"
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
