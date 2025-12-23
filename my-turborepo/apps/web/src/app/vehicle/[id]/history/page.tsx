@@ -5,7 +5,7 @@ import { getVehicleEvents, VehicleEvent } from '@/features/timeline/lib/getVehic
 import { resolveVehicleSlug, isUUID } from '@/lib/vehicle-utils'
 import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
-import { AlertCircle, RefreshCw } from 'lucide-react'
+import { AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 interface VehicleHistoryPageProps {
@@ -57,6 +57,16 @@ export default async function VehicleHistoryPage({ params }: VehicleHistoryPageP
 
         <div className="relative container px-4 md:px-6 pt-24">
           <div className="mb-8">
+            <Button
+              variant="outline"
+              className="mb-4 border-border text-muted-foreground hover:bg-muted hover:border-accent"
+              asChild
+            >
+              <Link href={`/vehicle/${vehicleSlug}`}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Vehicle
+              </Link>
+            </Button>
             <h1 className="text-4xl font-bold text-foreground">Vehicle History</h1>
             <p className="text-lg text-muted-foreground mt-2">Complete maintenance and ownership history</p>
           </div>

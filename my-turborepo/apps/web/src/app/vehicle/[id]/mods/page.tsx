@@ -64,5 +64,5 @@ export default async function VehicleModsPage({ params }: VehicleModsPageProps) 
     return notFound()
   }
 
-  return <VehicleModsPageClient modsData={modsData} />
+  return <VehicleModsPageClient modsData={modsData} vehicleSlug={vehicleSlug} />
 }
