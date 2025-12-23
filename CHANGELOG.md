@@ -17,4 +17,3 @@ Notes / Observations from repository scan
 [2025-12-20] [database] [SECURITY] Resolves security_definer_view and function_search_path_mutable warnings by adding security_invoker to v_vehicle_data_typed and setting search_path on get_vehicle_countries and enable_admin_notifications.
 [2025-12-20] [database] [PERFORMANCE] Optimizes RLS policies for user_profile and testimonials by consolidating redundant policies and wrapping auth.uid() calls.
 [2025-12-21] [Explore API] [PERF] Optimized vehicle fetch query to select only used columns, reducing payload size.
-[2025-12-23] [ui] [REFACTOR] Redesigned Footer: streamlined links, updated socials (X), and improved responsive layout.
