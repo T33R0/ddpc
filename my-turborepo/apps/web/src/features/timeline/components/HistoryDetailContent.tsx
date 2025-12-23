@@ -189,6 +189,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
           {isEditing ? (
             <Input
               type="number"
+              inputMode="numeric"
               value={formData.odometer}
               onChange={(e) => setFormData({...formData, odometer: e.target.value})}
             />
@@ -207,6 +208,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
               <Input
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 value={formData.cost}
                 onChange={(e) => setFormData({...formData, cost: e.target.value})}
               />

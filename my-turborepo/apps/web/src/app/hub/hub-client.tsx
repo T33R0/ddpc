@@ -44,9 +44,6 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
       return
     }
 
-    // Always open selection dialog if there are vehicles (even if just 1, to be safe/consistent, or auto-select)
-    // User requested "recreate it by basically making a mini gallery... shrinking the vehicle cards".
-    // So I will always show the gallery if > 0 vehicles.
     setSelectedAction(action)
     setIsSelectVehicleOpen(true)
   }
@@ -160,7 +157,7 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <DashboardCard
             className="h-[320px] p-0"
             onClick={() => handleNavigate('/ddsr')}
-            imageSrc="/images/chris-kursikowski-tSHt5Waz7Pc-unsplash.jpg"
+            imageSrc="/images/hub/ddsr.png"
           >
             <div className="relative z-10 flex h-full flex-col justify-end p-6">
               <div className="mb-2 flex items-center space-x-2">

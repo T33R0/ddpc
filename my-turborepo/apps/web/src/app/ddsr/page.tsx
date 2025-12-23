@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@repo/ui/card';
+import { Badge } from '@repo/ui/badge';
 import {
   Modal,
   ModalContent,
@@ -13,32 +16,27 @@ import {
   ModalFooter,
   ModalBody,
 } from '@repo/ui/modal';
+import { Dna, Flag, Lock, ShoppingCart, ArrowRight, Check, Monitor, Gamepad2, Banknote } from 'lucide-react';
 
 export default function DDSRPage() {
-  const [count, setCount] = useState(1024); // Starting with a "fake" number to look popular
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleInterestClick = () => {
-    setCount(prev => prev + 1);
+  const handleJoinClick = () => {
     setIsModalOpen(true);
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, we would send this to an API
-    // For now, just simulate success
-    // Force rebuild
+    // Simulate API call
     setTimeout(() => {
       setSubmitted(true);
     }, 500);
   };
 
   return (
-    <section className="relative py-12 min-h-screen">
-      <div className="relative container px-4 md:px-6 pt-24 mx-auto">
-        <div className="max-w-3xl mx-auto space-y-12">
+    <div className="flex flex-col min-h-screen bg-gradient-orbital text-white">
 
       {/* 1. HERO SECTION */}
       <section className="relative w-full h-[90vh] flex flex-col md:flex-row overflow-hidden border-b border-white/10">
@@ -155,31 +153,96 @@ export default function DDSRPage() {
             </div>
           </div>
 
-          {/* Coming Soon */}
-          <div className="space-y-4">
-            <h2 className="text-5xl font-bold text-foreground lowercase">ddsr coming soon</h2>
+        </div>
+      </section>
+
+      {/* 3. THE SOLUTION (Value Prop) */}
+      <section className="py-24 px-6">
+        <div className="container mx-auto max-w-4xl text-center space-y-12">
+
+          <div className="space-y-6">
+            <h2 className="text-sm font-bold tracking-widest text-indigo-400 uppercase">The Solution</h2>
+            <h3 className="text-4xl md:text-5xl font-black text-white">
+              Introducing <span className="lowercase">ddsr</span>. <br />
+              The Operating System for the Phygital Era.
+            </h3>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              We don’t just give you a generic car in a game. We inject your car&apos;s DNA—your dyno curves,
+              your weight, your alignment specs—into a high-fidelity simulation engine.
+            </p>
           </div>
 
-          {/* Interest Check & CTA */}
-          <div className="flex flex-col items-center justify-center space-y-6 pt-8 pb-16">
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-medium text-foreground">Are you interested in this feature?</h3>
-              <p className="text-sm text-muted-foreground">Join {count} other enthusiasts waiting for this.</p>
-            </div>
-
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-2xl font-bold text-primary animate-in fade-in slide-in-from-bottom-2">
-                {count}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8">
+            <div className="p-6 rounded-xl bg-black/40 border border-white/10 shadow-lg backdrop-blur-sm">
+              <div className="mb-4 text-indigo-400 flex justify-center">
+                <Monitor className="w-10 h-10" />
               </div>
-              <Button
-                size="lg"
-                onClick={handleInterestClick}
-                className="px-8 py-6 text-lg"
-              >
-                Keep me posted
-              </Button>
+              <h4 className="font-bold text-xl mb-2 text-white">Install it Digitally.</h4>
+              <p className="text-sm text-gray-400">Upload the specs of that new turbo kit to your Digital Twin.</p>
+            </div>
+            <div className="p-6 rounded-xl bg-black/40 border border-white/10 shadow-lg backdrop-blur-sm">
+              <div className="mb-4 text-indigo-400 flex justify-center">
+                <Gamepad2 className="w-10 h-10" />
+              </div>
+              <h4 className="font-bold text-xl mb-2 text-white">Thrash it Virtually.</h4>
+              <p className="text-sm text-gray-400">Take it to the Nürburgring. Push it to the absolute limit.</p>
+            </div>
+            <div className="p-6 rounded-xl bg-black/40 border border-white/10 shadow-lg backdrop-blur-sm">
+               <div className="mb-4 text-indigo-400 flex justify-center">
+                <Banknote className="w-10 h-10" />
+              </div>
+              <h4 className="font-bold text-xl mb-2 text-white">Buy it Physically.</h4>
+              <p className="text-sm text-gray-400">If it feels right, buy the parts. If not, you just saved $4k.</p>
             </div>
           </div>
+
+        </div>
+      </section>
+
+      {/* 4. THE FEATURES (Salivate List) */}
+      <section className="py-24 px-6 bg-black/20 border-y border-white/10 backdrop-blur-sm">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+
+            {/* Feature 1 */}
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
+                <Dna className="w-8 h-8" />
+              </div>
+              <h4 className="text-2xl font-bold text-white">The Soul File Protocol</h4>
+              <p className="text-gray-400 leading-relaxed">
+                Your car is more than a 3D model. It’s a data set. Our proprietary engine reads your real-world
+                maintenance, wear-and-tear, and modifications to create a simulation that evolves with your odometer.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="flex flex-col items-center text-center space-y-4">
+               <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
+                <Flag className="w-8 h-8" />
+              </div>
+              <h4 className="text-2xl font-bold text-white">Asynchronous Competition</h4>
+              <p className="text-gray-400 leading-relaxed">
+                Race your friends, but on your time. Upload your best lap. Your friend downloads your &quot;Ghost&quot;—driven
+                by your exact physics—and battles it on Sunday morning.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="flex flex-col items-center text-center space-y-4">
+               <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
+                <Lock className="w-8 h-8" />
+              </div>
+              <h4 className="text-2xl font-bold text-white">Verified Ownership Racing</h4>
+              <p className="text-gray-400 leading-relaxed">
+                No &quot;Pay-to-Win&quot; BS. No generic supercars. In our leagues, you race what you own.
+                If you don&apos;t have the keys in real life, you don&apos;t get the grid slot in the sim.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       {/* 5. CALL TO ACTION (The Velvet Rope) */}
       <section className="py-32 px-6 relative overflow-hidden border-t border-white/10">
@@ -193,40 +256,71 @@ export default function DDSRPage() {
           />
           <div className="absolute inset-0 bg-black/70" /> {/* Dark tint overlay */}
         </div>
-      </div>
 
-      {/* Email Modal */}
+        <div className="container mx-auto max-w-2xl text-center space-y-8 relative z-10">
+          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white">
+            The Grid is Forming.
+          </h2>
+          <p className="text-xl text-gray-200">
+            We are currently mapping the initial fleet of Digital Twins.
+            Access will be granted in waves based on Garage Depth and Data Quality.
+          </p>
+
+          <div className="pt-4">
+            <Button size="lg" className="text-lg px-8 py-6 h-auto shadow-lg shadow-indigo-500/20 bg-white text-black hover:bg-gray-200" onClick={handleJoinClick}>
+              Reserve My Digital VIN <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <p className="text-xs text-gray-400 mt-4 font-medium uppercase tracking-wider">
+              Early adopters lock in &quot;Founder&quot; pricing for life.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-12 bg-black/60 border-t border-white/10 text-center backdrop-blur-md">
+        <p className="text-sm text-gray-400 font-mono">
+          Powered by ddpc. Built for the Drivers, not the Gamers.
+        </p>
+      </footer>
+
+      {/* JOIN WAITLIST MODAL */}
       <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <ModalContent>
           <ModalHeader>
-            <ModalTitle>Get Updates</ModalTitle>
+            <ModalTitle>Join the Waitlist</ModalTitle>
             <ModalDescription>
-              Be the first to know when ddsr goes live.
+              Secure your spot on the grid. We&apos;ll notify you when your wave opens.
             </ModalDescription>
           </ModalHeader>
 
           <ModalBody>
             {submitted ? (
-              <div className="text-center py-8 space-y-4">
-                <div className="text-green-500 text-5xl">✓</div>
-                <p className="text-lg font-medium">Thank you for your interest!</p>
-                <p className="text-muted-foreground">We&apos;ll keep you posted.</p>
+              <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-in fade-in zoom-in duration-300">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                  <Check className="w-8 h-8" />
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-bold">You&apos;re on the list.</p>
+                  <p className="text-muted-foreground">Keep wrenching. We&apos;ll be in touch.</p>
+                </div>
               </div>
             ) : (
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <form onSubmit={handleEmailSubmit} className="space-y-6 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email address</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="racer@example.com"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 text-lg"
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Notify Me
+                <Button type="submit" className="w-full h-12 text-lg">
+                  Join Waitlist
                 </Button>
               </form>
             )}
@@ -239,6 +333,7 @@ export default function DDSRPage() {
           )}
         </ModalContent>
       </Modal>
-    </section>
+
+    </div>
   );
 }
