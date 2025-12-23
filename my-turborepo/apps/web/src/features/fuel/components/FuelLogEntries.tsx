@@ -11,10 +11,9 @@ import { FuelEntry } from '../lib/getVehicleFuelData'
 
 interface FuelLogEntriesProps {
   fuelEntries: FuelEntry[]
-  onEdit?: (entry: FuelEntry) => void
 }
 
-export function FuelLogEntries({ fuelEntries, onEdit }: FuelLogEntriesProps) {
+export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
   if (fuelEntries.length === 0) {
     return (
       <Card
@@ -54,8 +53,7 @@ export function FuelLogEntries({ fuelEntries, onEdit }: FuelLogEntriesProps) {
           {sortedEntries.map((entry) => (
             <div
               key={entry.id}
-              onClick={() => onEdit?.(entry)}
-              className="bg-muted/50 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-accent transition-colors cursor-pointer active:scale-[0.99]"
+              className="bg-muted/50 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-accent transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">

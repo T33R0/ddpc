@@ -118,10 +118,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
               const subtitle = v.nickname && v.vehicle_data ? v.nickname : (v.vehicle_data?.trim_description || '')
 
               // Determine image URL
-              const primaryImage = Array.isArray(v.vehicle_primary_image)
-                ? v.vehicle_primary_image[0]
-                : v.vehicle_primary_image
-              const displayImage = primaryImage?.url || v.image_url || v.vehicle_data?.image_url || null
+              // Prioritize user's photo_url (or vehicle_image if present), fallback to vehicle_data stock image
+              // Typescript might complain about v.vehicle_image if not in interface, but 'any' return allows it.
+              const displayImage = v.vehicle_image || v.photo_url || v.vehicle_data?.image_url || null
 
               const isPrivate = v.privacy === 'PRIVATE'
 

@@ -62,7 +62,7 @@ export default async function VehicleFuelPage({ params }: VehicleFuelPageProps) 
       </div>
 
       <div className="relative container px-4 md:px-6 pt-24">
-        <FuelPageClient fuelData={fuelData} vehicleSlug={vehicleSlug} />
+        <FuelPageClient fuelData={fuelData} />
       </div>
     </section>
   )

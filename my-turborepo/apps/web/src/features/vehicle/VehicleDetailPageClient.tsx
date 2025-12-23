@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
@@ -66,31 +65,27 @@ function ImageWithTimeoutFallback({
   // On server-side or before hydration, show fallback
   if (!mounted || showFallback || !currentSrc) {
     return (
-      <Image
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
         src={fallbackSrc}
         alt={alt}
         className={className}
-        fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        priority
       />
     )
   }
 
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src={currentSrc}
       alt={alt}
       className={className}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      priority
       onLoad={() => {
         console.log('Image loaded successfully:', currentSrc)
         setImageLoaded(true)
       }}
-      onError={() => {
-        console.error('Image load error for:', currentSrc)
+      onError={(e) => {
+        console.error('Image load error for:', currentSrc, e)
         setShowFallback(true)
       }}
     />
