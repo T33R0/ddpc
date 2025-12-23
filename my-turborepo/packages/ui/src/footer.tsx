@@ -2,20 +2,42 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Instagram, Linkedin, X } from 'lucide-react';
+import { Instagram, Facebook, Twitter, Linkedin } from 'lucide-react';
 
-const navLinks = [
-  { name: 'Features', href: '/features' },
-  { name: 'Pricing', href: '/pricing' },
-  { name: 'About', href: '/about' },
-  { name: 'Join', href: '/join' },
-  { name: 'Help Center', href: '/help' },
-  { name: 'Contact Us', href: '/contact' },
+const sections = [
+  {
+    title: 'Product',
+    links: [
+      { name: 'Features', href: '/features' },
+      { name: 'Pricing', href: '/pricing' },
+      { name: 'Vehicle Explore', href: '/explore' },
+      { name: 'API', href: '/docs' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { name: 'About', href: '/about' },
+      { name: 'Community', href: '/community' },
+      { name: 'Blog', href: '/blog' },
+      { name: 'Careers', href: '/careers' },
+    ],
+  },
+  {
+    title: 'Support',
+    links: [
+      { name: 'Help Center', href: '/help' },
+      { name: 'Contact Us', href: '/contact' },
+      { name: 'Community Forum', href: '/community' },
+      { name: 'Status', href: '/status' },
+    ],
+  },
 ];
 
 const socialLinks = [
   { icon: <Instagram className="size-5" />, href: '#', label: 'Instagram' },
-  { icon: <X className="size-5" />, href: '#', label: 'X' },
+  { icon: <Facebook className="size-5" />, href: '#', label: 'Facebook' },
+  { icon: <Twitter className="size-5" />, href: '#', label: 'Twitter' },
   { icon: <Linkedin className="size-5" />, href: '#', label: 'LinkedIn' },
 ];
 
@@ -27,71 +49,60 @@ const legalLinks = [
 export function Footer({ onReportProblem }: { onReportProblem?: () => void }) {
   return (
     <footer className="bg-background border-t border-border text-foreground">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-          {/* Logo & Slogan */}
-          <div className="flex flex-col gap-2 text-center lg:text-left">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="md:col-span-2 lg:col-span-1">
             <Link href="/" className="text-2xl font-bold">
               ddpc
             </Link>
-            <p className="text-muted-foreground text-sm">
-              Fueling your automotive passion.
+            <p className="text-muted-foreground mt-4 text-sm">
+              The complete vehicle management platform for enthusiasts and professionals.
             </p>
           </div>
-
-          {/* Navigation Links */}
-          <nav className="grid grid-cols-2 gap-4 md:flex md:gap-8 justify-center items-center w-full lg:w-auto">
-            {navLinks.map((link) => {
-              if (link.name === 'Help Center' && onReportProblem) {
-                return (
-                  <button
-                    key={link.name}
-                    onClick={onReportProblem}
-                    className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-                  >
-                    {link.name}
-                  </button>
-                );
-              }
-              return (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-                >
-                  {link.name}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Social Icons */}
-          <div className="flex justify-center gap-4">
+          {sections.map((section) => (
+            <div key={section.title}>
+              <h3 className="font-semibold mb-4">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.links.map((link) => {
+                  // Special handling for Help Center
+                  if (link.name === 'Help Center' && onReportProblem) {
+                    return (
+                      <li key={link.name}>
+                        <button
+                          onClick={onReportProblem}
+                          className="text-muted-foreground hover:text-foreground text-sm text-left"
+                        >
+                          {link.name}
+                        </button>
+                      </li>
+                    );
+                  }
+                  return (
+                    <li key={link.name}>
+                      <Link href={link.href} className="text-muted-foreground hover:text-foreground text-sm">
+                        {link.name}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} DDPC. All rights reserved.
+          </div>
+          <div className="flex items-center gap-4 mt-4 md:mt-0">
             {socialLinks.map((social) => (
-              <Link
-                key={social.label}
-                href={social.href}
-                aria-label={social.label}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Link key={social.label} href={social.href} aria-label={social.label} className="text-muted-foreground hover:text-foreground">
                 {social.icon}
               </Link>
             ))}
           </div>
-        </div>
-
-        {/* Copyright & Legal */}
-        <div className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} DDPC. All rights reserved.
-          </div>
-          <div className="flex gap-6">
+          <div className="flex gap-4 mt-4 md:mt-0">
             {legalLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Link key={link.name} href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
                 {link.name}
               </Link>
             ))}

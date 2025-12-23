@@ -7,16 +7,12 @@ export interface VehicleEvent {
   date: Date
   title: string
   description: string
-  type: 'maintenance' | 'modification' | 'mileage' | 'fuel'
+  type: 'maintenance' | 'modification' | 'mileage'
   cost?: number
   odometer?: number
   status?: string
   event_date?: Date // For mods table
   service_provider?: string // Added for detailed view
-  // Fuel specific fields
-  gallons?: number
-  mpg?: number
-  price_per_gallon?: number
 }
 
 export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[]> {
@@ -98,18 +94,6 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
     throw new Error('Failed to fetch mileage data')
   }
 
-  // Fetch fuel logs
-  const { data: fuelLogs, error: fuelError } = await supabase
-    .from('fuel_log')
-    .select('id, event_date, odometer, gallons, price_per_gallon, total_cost, mpg, octane')
-    .eq('user_vehicle_id', vehicleId)
-    .order('event_date', { ascending: false })
-
-  if (fuelError) {
-    console.error('Error fetching fuel logs:', fuelError)
-    throw new Error('Failed to fetch fuel data')
-  }
-
   // Transform and merge events
   const events: VehicleEvent[] = []
 
@@ -156,24 +140,6 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
         odometer: mod.odometer || undefined,
         status: mod.status,
         event_date: mod.event_date ? new Date(mod.event_date) : undefined,
-      })
-    })
-  }
-
-  // Add fuel logs
-  if (fuelLogs) {
-    fuelLogs.forEach((log) => {
-      events.push({
-        id: `fuel-${log.id}`,
-        date: new Date(log.event_date),
-        title: 'Fuel Fill-up',
-        description: `${log.gallons} gal @ $${log.price_per_gallon}/gal${log.mpg ? ` • ${log.mpg.toFixed(1)} MPG` : ''}`,
-        type: 'fuel',
-        cost: log.total_cost || 0,
-        odometer: log.odometer,
-        gallons: log.gallons,
-        mpg: log.mpg,
-        price_per_gallon: log.price_per_gallon,
       })
     })
   }

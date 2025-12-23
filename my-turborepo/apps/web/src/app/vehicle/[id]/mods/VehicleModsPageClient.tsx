@@ -3,8 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@repo/ui/button'
-import { Plus, ArchiveRestore, Archive, ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, ArchiveRestore, Archive } from 'lucide-react'
 import { VehicleModsData, VehicleMod } from '@/features/mods/lib/getVehicleModsData'
 import { ModsPlanner } from '@/features/mods/components/ModsPlanner'
 import { InstalledMods } from '@/features/mods/components/InstalledMods'
@@ -14,10 +13,9 @@ import { ModCard } from '@/features/mods/components/ModCard'
 
 interface VehicleModsPageClientProps {
   modsData: VehicleModsData
-  vehicleSlug: string
 }
 
-export function VehicleModsPageClient({ modsData, vehicleSlug }: VehicleModsPageClientProps) {
+export function VehicleModsPageClient({ modsData }: VehicleModsPageClientProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedMod, setSelectedMod] = useState<VehicleMod | null>(null)
   const [showArchived, setShowArchived] = useState(false)
@@ -46,52 +44,40 @@ export function VehicleModsPageClient({ modsData, vehicleSlug }: VehicleModsPage
         </div>
 
         <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-8">
-            <Button
-              variant="outline"
-              className="mb-4 border-border text-muted-foreground hover:bg-muted hover:border-accent"
-              asChild
-            >
-              <Link href={`/vehicle/${vehicleSlug}`}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Vehicle
-              </Link>
-            </Button>
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-foreground">Vehicle Mods</h1>
-                <p className="text-lg text-muted-foreground mt-2">
-                  Modifications and upgrades tracking for {vehicle.name}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {archivedMods.length > 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowArchived(!showArchived)}
-                    className="bg-background"
-                  >
-                    {showArchived ? (
-                      <>
-                        <Archive className="h-4 w-4 mr-2" />
-                        Hide Archived
-                      </>
-                    ) : (
-                      <>
-                        <ArchiveRestore className="h-4 w-4 mr-2" />
-                        Show Archived
-                      </>
-                    )}
-                  </Button>
-                )}
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground">Vehicle Mods</h1>
+              <p className="text-lg text-muted-foreground mt-2">
+                Modifications and upgrades tracking for {vehicle.name}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {archivedMods.length > 0 && (
                 <Button
-                  onClick={() => setIsAddDialogOpen(true)}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  variant="outline"
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="bg-background"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Mod
+                  {showArchived ? (
+                    <>
+                      <Archive className="h-4 w-4 mr-2" />
+                      Hide Archived
+                    </>
+                  ) : (
+                    <>
+                      <ArchiveRestore className="h-4 w-4 mr-2" />
+                      Show Archived
+                    </>
+                  )}
                 </Button>
-              </div>
+              )}
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Mod
+              </Button>
             </div>
           </div>
 
