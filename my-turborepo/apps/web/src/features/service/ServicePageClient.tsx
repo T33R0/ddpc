@@ -6,8 +6,7 @@ import {
   ServiceInterval,
 } from '@repo/types'
 import { Button } from '@repo/ui/button'
-import { Plus, Fuel, ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Fuel } from 'lucide-react'
 import { AddServiceDialog } from '@/features/service/components/AddServiceDialog'
 import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
 import { ServicePlanView, ServicePlanViewRef } from '@/features/service/components/ServicePlanView'
@@ -24,7 +23,6 @@ type ServicePageClientProps = {
     nickname?: string | null
     odometer?: number | null
   }
-  vehicleSlug: string
   initialPlannedLogs: {
     id: string
     event_date: string
@@ -79,7 +77,6 @@ export function ServicePageClient({
   initialPlannedLogs,
   initialChecklistCategories,
   initialChecklistItems,
-  vehicleSlug,
 }: ServicePageClientProps) {
   const router = useRouter()
   const servicePlanViewRef = useRef<ServicePlanViewRef>(null)
@@ -146,38 +143,26 @@ export function ServicePageClient({
         </div>
 
         <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-8">
-            <Button
-              variant="outline"
-              className="mb-4 border-border text-muted-foreground hover:bg-muted hover:border-accent"
-              asChild
-            >
-              <Link href={`/vehicle/${vehicleSlug}`}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Vehicle
-              </Link>
-            </Button>
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-4xl font-bold text-foreground">Vehicle Service</h1>
-                <p className="text-lg text-muted-foreground mt-2">
-                  Service records and maintenance schedules for {displayName}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setIsFuelModalOpen(true)}
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
-                >
-                  <Fuel className="mr-2 h-4 w-4" /> Log Fuel
-                </Button>
-                <Button
-                  onClick={openAddServiceModal}
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Log Service
-                </Button>
-              </div>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground">Vehicle Service</h1>
+              <p className="text-lg text-muted-foreground mt-2">
+                Service records and maintenance schedules for {displayName}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setIsFuelModalOpen(true)}
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+              >
+                <Fuel className="mr-2 h-4 w-4" /> Log Fuel
+              </Button>
+              <Button
+                onClick={openAddServiceModal}
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Log Service
+              </Button>
             </div>
           </div>
 

@@ -7,7 +7,6 @@ export interface FuelEntry {
   cost?: number
   odometer: number
   mpg?: number // calculated field
-  trip_miles?: number
 }
 
 export interface FuelStats {
@@ -149,7 +148,6 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
         cost: log.total_cost || undefined,
         odometer: log.odometer,
         mpg: log.mpg || undefined,
-        trip_miles: log.trip_miles || undefined,
       }
 
       fuelEntries.push(fuelEntry)
