@@ -77,8 +77,7 @@ export async function getProfileVehicles(ownerId: string, options: GetProfileVeh
     .from('user_vehicle')
     .select(`
       *,
-      vehicle_data (*),
-      vehicle_primary_image (url)
+      vehicle_data (*)
     `)
     .eq('owner_id', ownerId)
 

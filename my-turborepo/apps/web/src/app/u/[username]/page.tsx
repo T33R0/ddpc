@@ -118,10 +118,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
               const subtitle = v.nickname && v.vehicle_data ? v.nickname : (v.vehicle_data?.trim_description || '')
 
               // Determine image URL
-              const primaryImage = Array.isArray(v.vehicle_primary_image)
-                ? v.vehicle_primary_image[0]
-                : v.vehicle_primary_image
-              const displayImage = primaryImage?.url || v.image_url || v.vehicle_data?.image_url || null
+              // Determine image URL
+              const displayImage = v.vehicle_image || v.photo_url || v.image_url || v.vehicle_data?.image_url || null
 
               const isPrivate = v.privacy === 'PRIVATE'
 
@@ -135,7 +133,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     className={`h-[320px] p-0 ${isPrivate ? 'opacity-80' : ''}`}
                     badges={isPrivate ? ['PRIVATE'] : []}
                   >
-                     {/*
+                    {/*
                        Note: DashboardCard renders children at the bottom.
                        We want the toggle to be at the top right.
                        We'll inject the toggle via absolute positioning in this wrapper div instead of inside the card's children,
