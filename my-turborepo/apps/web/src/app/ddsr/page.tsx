@@ -43,33 +43,23 @@ export default function DDSRPage() {
         {/* Left: Real World */}
         <div className="relative w-full md:w-1/2 h-1/2 md:h-full group">
           <Image
-            src="/images/hub/garage.jpg"
-            alt="Real world vehicle on a lift"
+            src="/images/ddsr/ddsr_physical_car.jpg"
+            alt="Real world vehicle in a parking lot"
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
             priority
           />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tighter uppercase opacity-80 select-none">
-              Physical
-            </h2>
-          </div>
         </div>
 
         {/* Right: Digital Twin */}
         <div className="relative w-full md:w-1/2 h-1/2 md:h-full group border-t md:border-t-0 md:border-l border-white/10">
           <Image
-            src="/images/hub/ddsr.png"
+            src="/images/ddsr/ddsr_wireframe_car.jpg"
             alt="Digital twin wireframe simulation"
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
             priority
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-             <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tighter uppercase opacity-80 select-none">
-              Digital
-            </h2>
-          </div>
         </div>
 
         {/* Center Text Overlay */}
@@ -121,12 +111,12 @@ export default function DDSRPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                 {/* Visual only button */}
+                {/* Visual only button */}
                 <Button className="w-full relative overflow-hidden group bg-white text-black hover:bg-gray-200">
-                   Proceed to Checkout
-                   <span className="absolute inset-0 bg-red-600/90 text-white flex items-center justify-center font-bold translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                     WAIT!
-                   </span>
+                  Proceed to Checkout
+                  <span className="absolute inset-0 bg-red-600/90 text-white flex items-center justify-center font-bold translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    WAIT!
+                  </span>
                 </Button>
               </CardFooter>
             </Card>
@@ -147,7 +137,7 @@ export default function DDSRPage() {
                 Or will you just destroy your ride quality for 15 horsepower?
               </p>
               <p className="font-medium text-white border-l-4 border-indigo-500 pl-4 py-2 bg-indigo-500/10 rounded-r">
-                Until today, you had to buy the parts to find out. <br/>
+                Until today, you had to buy the parts to find out. <br />
                 <span className="font-bold">That ends now.</span>
               </p>
             </div>
@@ -188,7 +178,7 @@ export default function DDSRPage() {
               <p className="text-sm text-gray-400">Take it to the Nürburgring. Push it to the absolute limit.</p>
             </div>
             <div className="p-6 rounded-xl bg-black/40 border border-white/10 shadow-lg backdrop-blur-sm">
-               <div className="mb-4 text-indigo-400 flex justify-center">
+              <div className="mb-4 text-indigo-400 flex justify-center">
                 <Banknote className="w-10 h-10" />
               </div>
               <h4 className="font-bold text-xl mb-2 text-white">Buy it Physically.</h4>
@@ -218,7 +208,7 @@ export default function DDSRPage() {
 
             {/* Feature 2 */}
             <div className="flex flex-col items-center text-center space-y-4">
-               <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
                 <Flag className="w-8 h-8" />
               </div>
               <h4 className="text-2xl font-bold text-white">Asynchronous Competition</h4>
@@ -230,7 +220,7 @@ export default function DDSRPage() {
 
             {/* Feature 3 */}
             <div className="flex flex-col items-center text-center space-y-4">
-               <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-2">
                 <Lock className="w-8 h-8" />
               </div>
               <h4 className="text-2xl font-bold text-white">Verified Ownership Racing</h4>
@@ -249,7 +239,7 @@ export default function DDSRPage() {
         {/* Background Image with Blur and Tint */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/hub/explore.png"
+            src="/images/ddsr/ddsr_full_car.jpg"
             alt="DDSR Fleet"
             fill
             className="object-cover blur-sm"
