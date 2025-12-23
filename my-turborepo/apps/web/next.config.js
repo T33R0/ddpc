@@ -10,6 +10,15 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'build-cache-invalidation-' + Date.now()
   },
+  async redirects() {
+    return [
+      {
+        source: '/careers',
+        destination: '/join',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 const config = {
