@@ -30,7 +30,9 @@ interface CommunityVehicle {
   photo_url: string | null;
   privacy: 'PUBLIC' | 'PRIVATE';
   spec_snapshot: Record<string, unknown> | null;
-  user_profile: { display_name: string | null } | { display_name: string | null }[] | null;
+  // Use any to avoid complex type matching with Supabase inferred types for joined tables
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  user_profile: any;
   [key: string]: unknown;
 }
 
