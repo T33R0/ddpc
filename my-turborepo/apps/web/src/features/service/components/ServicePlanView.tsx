@@ -15,6 +15,7 @@ import {
   ModalFooter,
 } from '@repo/ui/modal'
 import { archiveJobPlan, restoreJobPlan, permanentDeleteJobPlan } from '../actions'
+import { usePaywall } from '@/lib/hooks/usePaywall'
 
 interface PlannedServiceLog {
   id: string
@@ -86,6 +87,8 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
     const [deleteModalOpen, setDeleteModalOpen] = useState(false)
     const [planToDelete, setPlanToDelete] = useState<PlannedServiceLog | null>(null)
     const [deleteConfirmationName, setDeleteConfirmationName] = useState('')
+
+    const { isPro, triggerPaywall } = usePaywall()
 
     useEffect(() => {
       setPlannedLogs(initialPlannedLogs)
@@ -374,7 +377,13 @@ export const ServicePlanView = forwardRef<ServicePlanViewRef, ServicePlanViewPro
                             >
                               <span className="text-muted-foreground">{item.name}</span>
                               <Button
-                                onClick={() => onAddToPlan(item.id)}
+                                onClick={() => {
+                                  if (!isPro) {
+                                    triggerPaywall()
+                                    return
+                                  }
+                                  onAddToPlan(item.id)
+                                }}
                                 variant="outline"
                                 size="sm"
                                 className="border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground"

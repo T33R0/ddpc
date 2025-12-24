@@ -19,6 +19,7 @@ import {
   duplicateModStep,
   fetchOrCreateModPlanAction
 } from '../actions'
+import { usePaywall } from '@/lib/hooks/usePaywall'
 
 interface ModPlanBuilderProps {
   modLogId: string // mod id
@@ -52,6 +53,8 @@ export function ModPlanBuilder({
   const [duplicateName, setDuplicateName] = useState('')
   const [isDuplicating, setIsDuplicating] = useState(false)
 
+  const { isPro, triggerPaywall } = usePaywall()
+
   // Update modPlanId if initialModPlan changes
   useEffect(() => {
     if (initialModPlan?.id) {
@@ -61,7 +64,7 @@ export function ModPlanBuilder({
 
   const fetchOrCreateModPlan = React.useCallback(async () => {
     try {
-      console.log('Fetching or creating mod plan...', { modLogId, userId })
+      // console.log('Fetching or creating mod plan...', { modLogId, userId })
       const { id, error } = await fetchOrCreateModPlanAction(modLogId, userId, modTitle)
 
       if (error) {
@@ -70,7 +73,7 @@ export function ModPlanBuilder({
       }
 
       if (id) {
-        console.log('Mod plan ID acquired:', id)
+        // console.log('Mod plan ID acquired:', id)
         setModPlanId(id)
       } else {
         console.error('No ID returned from fetchOrCreateModPlanAction')
@@ -117,9 +120,18 @@ export function ModPlanBuilder({
   // Fetch or create mod plan if missing
   useEffect(() => {
     if (!modPlanId && userId && modLogId) {
+      // If user is NOT pro and plan doesn't exist, we must GATE creation.
+      if (!isPro && !initialModPlan?.id) {
+         // This is where we catch the "Create" attempt for free users navigating here
+         // We can't easily trigger the modal from useEffect without causing loops or rendering issues sometimes
+         // But we can just NOT call fetchOrCreate, and maybe show a locked state?
+         // Actually, triggerPaywall() updates context state, so it's safe if deduplicated.
+         // Let's rely on the UI rendering a lock if modPlanId is null and !isPro
+         return
+      }
       fetchOrCreateModPlan()
     }
-  }, [modPlanId, userId, modLogId, fetchOrCreateModPlan])
+  }, [modPlanId, userId, modLogId, fetchOrCreateModPlan, isPro, initialModPlan])
 
   const handleAddStep = async () => {
     if (!stepInput.trim() || !modPlanId || isAdding) return
@@ -384,6 +396,11 @@ export function ModPlanBuilder({
   const handleDuplicateMod = async () => {
     if (!modPlanId || !duplicateName.trim()) return
 
+    if (!isPro) {
+      triggerPaywall()
+      return
+    }
+
     setIsDuplicating(true)
     try {
       const result = await duplicateModPlan(modPlanId, duplicateName, userId, modLogId)
@@ -411,6 +428,28 @@ export function ModPlanBuilder({
 
   // Derived state for rendering
   const visibleSteps = isReassemblyMode ? [...steps].reverse() : steps
+
+  // If no plan exists and user is not Pro, show Locked State
+  if (!modPlanId && !isPro) {
+     return (
+       <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border rounded-lg bg-muted/20">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+               {/* Lucide Lock icon */}
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3 className="text-xl font-bold mb-2">Mod Planning is a Pro Feature</h3>
+          <p className="text-muted-foreground text-center max-w-sm mb-6">
+            Upgrade to Pro to create detailed modification plans, track steps, and manage your build.
+          </p>
+          <Button
+              onClick={triggerPaywall}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold"
+          >
+              Unlock Mod Planning
+          </Button>
+       </div>
+     )
+  }
 
   return (
     <div className="space-y-4">

@@ -15,6 +15,7 @@ import { searchConsoleVehicle } from '../../lib/search';
 import { useConsoleStats } from '../../lib/hooks/useConsoleStats';
 import { getVehicleSlug } from '../../lib/vehicle-utils-client';
 import { DashboardCard } from '@/components/dashboard-card';
+import { ProGate } from '@/components/paywall/ProGate';
 
 export default function ConsolePage() {
   const { user, loading: authLoading } = useAuth();
@@ -103,6 +104,7 @@ export default function ConsolePage() {
       </div>
 
       <div className="relative container px-4 md:px-6 pt-24">
+        <ProGate>
         {/* Page Header */}
         <h1 className="text-4xl font-bold mb-8 text-foreground">Vehicle Console</h1>
 
@@ -403,6 +405,7 @@ export default function ConsolePage() {
             </div>
           </div>
         </div>
+        </ProGate>
       </div>
 
 

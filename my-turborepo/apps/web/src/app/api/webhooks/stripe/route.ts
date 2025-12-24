@@ -15,14 +15,13 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   },
 });
 
-function getPlanFromPriceId(priceId: string): 'free' | 'builder' | 'pro' {
+function getPlanFromPriceId(priceId: string): 'free' | 'pro' {
   // Use NEXT_PUBLIC_ vars to match client-side and ensure availability if defined in .env.local
-  const builderPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUILDER;
   const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO;
 
-  if (priceId === builderPriceId) return 'builder';
   if (priceId === proPriceId) return 'pro';
-  // If no match found, default to free.
+
+  // Default to free for any other price ID (including deprecated builder)
   return 'free';
 }
 
@@ -77,10 +76,6 @@ export async function POST(req: NextRequest) {
            if (firstItem) {
              const priceId = firstItem.price.id;
              const plan = getPlanFromPriceId(priceId);
-
-             if (plan === 'free') {
-               console.log(`Price ID ${priceId} mapped to free plan.`);
-             }
 
              // Update user plan
              const { data: user } = await supabase

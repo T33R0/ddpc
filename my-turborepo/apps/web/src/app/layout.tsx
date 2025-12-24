@@ -6,6 +6,7 @@ import { createClient } from '../lib/supabase/server';
 import { AuthProvider } from '../lib/auth';
 import { ThemeProvider } from '../lib/theme-context';
 import { ReportModalProvider } from '../lib/report-modal-context';
+import { PaywallProvider } from '../lib/hooks/usePaywall';
 import {
   HeaderWithAuth,
   FooterWrapper,
@@ -64,8 +65,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <AuthProvider initialSession={session}>
           <ThemeProvider initialTheme={initialTheme}>
-            <ReportModalProvider>
-              <div className="relative flex flex-col min-h-screen">
+            <PaywallProvider>
+              <ReportModalProvider>
+                <div className="relative flex flex-col min-h-screen">
                 <div
                   aria-hidden="true"
                   className="fixed inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none z-0"
@@ -78,12 +80,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <main className="flex-grow relative z-10">
                   {children}
                 </main>
-                <FooterWrapper />
-                <ScrollToTop />
-              </div>
-              <LogoutModal />
-              <DDSRButton />
-            </ReportModalProvider>
+                  <FooterWrapper />
+                  <ScrollToTop />
+                </div>
+                <LogoutModal />
+                <DDSRButton />
+              </ReportModalProvider>
+            </PaywallProvider>
           </ThemeProvider>
         </AuthProvider>
         <SpeedInsights />
