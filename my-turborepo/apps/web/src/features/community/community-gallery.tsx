@@ -4,7 +4,7 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { VehicleSummary } from '@repo/types';
-import { VehicleCard } from '@/components/vehicle-card';
+import { DashboardCard } from '@/components/dashboard-card';
 
 type CommunityGalleryProps = {
   vehicles: VehicleSummary[];
@@ -51,25 +51,32 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {vehicles.map((summary) => (
-            <div
-              key={summary.id}
-            >
-              <VehicleCard
-                title={`${summary.year} ${summary.make} ${summary.model} ${summary.trims[0]?.trim || ''}`}
-                imageUrl={
-                  summary.trims[0]?.vehicle_image ||
-                  summary.heroImage ||
-                  summary.trims[0]?.image_url
-                }
-                onClick={() => handleOpenVehicle(summary)}
-                className="cursor-pointer"
-              />
-            </div >
-          ))
-          }
-        </div >
+          {vehicles.map((summary) => {
+            const ymmt = `${summary.year} ${summary.make} ${summary.model} ${summary.trims[0]?.trim || ''}`.trim();
+            const ownerName = summary.ownerDisplayName || 'User';
+            const title = `${ownerName}'s ${ymmt}`;
+            const subtitle = summary.nickname || '';
+
+            return (
+              <div key={summary.id} className="cursor-pointer" onClick={() => handleOpenVehicle(summary)}>
+                <DashboardCard
+                  title={title}
+                  description={subtitle}
+                  imageSrc={
+                    summary.trims[0]?.vehicle_image ||
+                    summary.heroImage ||
+                    summary.trims[0]?.image_url ||
+                    null
+                  }
+                  href={`/vehicle/${encodeURIComponent(summary.id)}`}
+                  className="h-[320px] p-0"
+                />
+              </div>
+            );
+          })}
+        </div>
       )}
+
 
       {/* Loading more indicator */}
       {

@@ -30,6 +30,7 @@ interface CommunityVehicle {
   photo_url: string | null;
   privacy: 'PUBLIC' | 'PRIVATE';
   spec_snapshot: Record<string, unknown> | null;
+  user_profile: { display_name: string | null } | null;
   [key: string]: unknown;
 }
 
@@ -71,7 +72,10 @@ export async function GET(request: NextRequest) {
         height_in,
         epa_combined_mpg,
         colors_exterior,
-        spec_snapshot
+        spec_snapshot,
+        user_profile (
+            display_name
+        )
       `)
       .eq('privacy', 'PUBLIC')
       .order('id', { ascending: false })
@@ -93,6 +97,11 @@ export async function GET(request: NextRequest) {
       // Extract data from spec_snapshot if available, otherwise use direct fields
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const specData = (vehicle.spec_snapshot || {}) as Record<string, any>;
+
+      // Resolve display name safely
+      const displayName = Array.isArray(vehicle.user_profile)
+        ? vehicle.user_profile[0]?.display_name
+        : vehicle.user_profile?.display_name;
 
       // Create a single trim for each user vehicle with all available data
       const trim: TrimVariant = {
@@ -231,13 +240,15 @@ export async function GET(request: NextRequest) {
       };
 
       return {
-        id: vehicle.nickname || vehicle.id, // Use nickname if available, otherwise UUID
+        id: vehicle.id, // Use actual ID
         year: vehicle.year?.toString() || '',
         make: vehicle.make || '',
         model: vehicle.model || '',
         // Prioritize user uploaded vehicle_image, then photo_url, then stock photo
         heroImage: vehicle.vehicle_image || vehicle.photo_url || specData.image_url || undefined,
         trims: [trim],
+        nickname: vehicle.nickname || undefined,
+        ownerDisplayName: displayName || undefined,
       };
     });
 

@@ -164,6 +164,8 @@ export interface VehicleSummary {
   model: string;
   heroImage?: string;
   trims: TrimVariant[];
+  nickname?: string;
+  ownerDisplayName?: string;
 }
 
 export interface WorkItem {
