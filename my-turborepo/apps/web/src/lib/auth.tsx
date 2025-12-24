@@ -11,6 +11,7 @@ interface UserProfile {
   displayName: string | null;
   avatarUrl: string | null;
   role: string | null;
+  plan: 'free' | 'pro' | null;
 }
 
 interface UserProfileRow {
@@ -19,6 +20,7 @@ interface UserProfileRow {
   display_name: string | null;
   avatar_url: string | null;
   role: string | null;
+  plan: string | null;
 }
 
 interface AuthContextType {
@@ -56,6 +58,7 @@ export function AuthProvider({
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     role: row.role ?? null,
+    plan: (row.plan === 'pro') ? 'pro' : 'free',
   });
 
   const fetchProfile = React.useCallback(
@@ -67,7 +70,7 @@ export function AuthProvider({
 
       const { data, error } = await supabase
         .from('user_profile')
-        .select('user_id, username, display_name, avatar_url, role')
+        .select('user_id, username, display_name, avatar_url, role, plan')
         .eq('user_id', userId)
         .maybeSingle();
 

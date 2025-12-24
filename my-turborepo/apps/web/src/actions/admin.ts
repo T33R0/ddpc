@@ -63,7 +63,7 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
     if (profileError) throw profileError
 
     // Enhance with auth data (slow N+1 but works for fallback)
-    const users = await Promise.all(profiles.map(async (p: { user_id: string; username: string; created_at: string; role: string; banned: boolean }) => {
+    const users = await Promise.all(profiles.map(async (p: { user_id: string; username: string; created_at: string; role: string; banned: boolean; plan: string | null }) => {
       const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(p.user_id)
 
       // Get vehicle stats
