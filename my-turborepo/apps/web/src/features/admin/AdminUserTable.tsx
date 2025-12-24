@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { toggleUserSuspension, toggleAdminRole } from '@/actions/admin'
+import { toggleUserSuspension, toggleAdminRole, grantProAccess } from '@/actions/admin'
 import { useRouter } from 'next/navigation'
 
 interface User {
@@ -14,6 +14,7 @@ interface User {
   provider: string
   role: string
   banned: boolean
+  plan?: string
 }
 
 export function AdminUserTable({
@@ -56,6 +57,18 @@ export function AdminUserTable({
       } catch (e) {
         console.error(e)
         alert('Failed to update admin role')
+      }
+    })
+  }
+
+  const handleGrantPro = async (userId: string, isPro: boolean) => {
+    startTransition(async () => {
+      try {
+        await grantProAccess(userId, isPro)
+        router.refresh()
+      } catch (e) {
+        console.error(e)
+        alert('Failed to update plan')
       }
     })
   }
@@ -106,10 +119,20 @@ export function AdminUserTable({
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex flex-col">
                     <span className="capitalize">{user.provider || 'Email'}</span>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        user.plan === 'pro'
+                          ? 'bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 dark:from-indigo-900 dark:to-purple-900 dark:text-indigo-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                      }`}>
+                        {user.plan === 'pro' ? 'Pro' : 'Free'}
+                      </span>
+                    </div>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col space-y-2">
+                   <div className="flex space-x-2">
                     {confirmSuspend === user.user_id ? (
                       <div className="flex items-center space-x-2">
                         <span className="text-red-600 text-xs">Are you sure?</span>
@@ -138,11 +161,20 @@ export function AdminUserTable({
                       </button>
                     )}
 
-                    {isBreakglass && user.email !== 'myddpc@gmail.com' && (
+                    <button
+                        onClick={() => handleGrantPro(user.user_id, user.plan !== 'pro')}
+                        disabled={isPending}
+                        className={`${user.plan === 'pro' ? 'text-gray-500 hover:text-gray-700' : 'text-indigo-600 hover:text-indigo-900'}`}
+                      >
+                        {user.plan === 'pro' ? 'Revoke Pro' : 'Grant Pro'}
+                    </button>
+                   </div>
+
+                   {isBreakglass && user.email !== 'myddpc@gmail.com' && (
                       <button
                         onClick={() => handleToggleAdmin(user.user_id, user.role !== 'admin')}
                         disabled={isPending}
-                        className="text-blue-600 hover:text-blue-900 ml-4"
+                        className="text-blue-600 hover:text-blue-900 text-left"
                       >
                         {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
                       </button>

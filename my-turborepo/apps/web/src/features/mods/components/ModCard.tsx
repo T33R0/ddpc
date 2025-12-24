@@ -5,6 +5,7 @@ import { Badge } from '@repo/ui/badge'
 import { Button } from '@repo/ui/button'
 import { VehicleMod } from '../lib/getVehicleModsData'
 import { Calendar, DollarSign, Gauge, Package, CheckCircle, XCircle, Wrench, Pencil } from 'lucide-react'
+import { usePaywall } from '@/lib/hooks/usePaywall'
 
 interface ModCardProps {
   mod: VehicleMod
@@ -44,8 +45,12 @@ const getStatusIcon = (status: VehicleMod['status']) => {
 
 export function ModCard({ mod, vehicleId, onEdit }: ModCardProps) {
   const router = useRouter()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { isPro, triggerPaywall } = usePaywall()
 
   const handleCardClick = () => {
+    // Navigate to the mod plan page.
+    // If the plan doesn't exist and user is Free, ModPlanBuilder will show the locked state.
     router.push(`/vehicle/${vehicleId}/mods/${mod.id}`)
   }
 

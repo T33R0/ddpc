@@ -93,7 +93,8 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
         vehicle_count: count || 0,
         status_counts: statusCounts,
         role: p.role,
-        banned: p.banned
+        banned: p.banned,
+        plan: p.plan || 'free'
       }
     }))
 
@@ -235,6 +236,46 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
     }
     throw new Error(`Failed to update admin role: ${err.message || 'Unknown error'}`)
   }
+
+  revalidatePath('/admin/users')
+}
+
+export async function grantProAccess(userId: string, isPro: boolean) {
+  const schema = z.object({
+    userId: z.string().uuid(),
+    isPro: z.boolean()
+  });
+
+  const parse = schema.safeParse({ userId, isPro });
+  if (!parse.success) {
+    console.error('Validation error in grantProAccess:', parse.error);
+    throw new Error('Invalid input');
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Unauthorized')
+
+  // Verify admin
+  const { data: profile } = await supabase
+    .from('user_profile')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
+    throw new Error('Unauthorized')
+  }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .from('user_profile')
+    .update({ plan: isPro ? 'pro' : 'free' })
+    .eq('user_id', userId)
+
+  if (error) throw error
 
   revalidatePath('/admin/users')
 }

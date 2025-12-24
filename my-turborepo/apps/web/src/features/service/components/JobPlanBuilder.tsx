@@ -17,6 +17,7 @@ import {
   duplicateJobPlan,
   duplicateJobStep
 } from '../actions'
+import { usePaywall } from '@/lib/hooks/usePaywall'
 
 interface JobPlanBuilderProps {
   maintenanceLogId: string
@@ -48,6 +49,8 @@ export function JobPlanBuilder({
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false)
   const [duplicateName, setDuplicateName] = useState('')
   const [isDuplicating, setIsDuplicating] = useState(false)
+
+  const { isPro, triggerPaywall } = usePaywall()
 
   // Update jobPlanId if initialJobPlan changes
   useEffect(() => {
@@ -128,9 +131,14 @@ export function JobPlanBuilder({
   // Fetch or create job plan if missing
   useEffect(() => {
     if (!jobPlanId && userId && maintenanceLogId) {
+      // If user is NOT pro and plan doesn't exist, we must GATE creation.
+      if (!isPro && !initialJobPlan?.id) {
+         // Prevent creation for free users
+         return
+      }
       fetchOrCreateJobPlan()
     }
-  }, [jobPlanId, userId, maintenanceLogId, fetchOrCreateJobPlan])
+  }, [jobPlanId, userId, maintenanceLogId, fetchOrCreateJobPlan, isPro, initialJobPlan])
 
   const handleAddStep = async () => {
     if (!stepInput.trim() || !jobPlanId) return
@@ -424,6 +432,11 @@ export function JobPlanBuilder({
   const handleDuplicateJob = async () => {
     if (!jobPlanId || !duplicateName.trim()) return
 
+    if (!isPro) {
+      triggerPaywall()
+      return
+    }
+
     setIsDuplicating(true)
     try {
       const result = await duplicateJobPlan(jobPlanId, duplicateName, userId)
@@ -446,6 +459,28 @@ export function JobPlanBuilder({
 
   // Derived state for rendering
   const visibleSteps = isReassemblyMode ? [...steps].reverse() : steps
+
+  // If no plan exists and user is not Pro, show Locked State
+  if (!jobPlanId && !isPro) {
+     return (
+       <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border rounded-lg bg-muted/20">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+               {/* Lucide Lock icon */}
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3 className="text-xl font-bold mb-2">Service Planning is a Pro Feature</h3>
+          <p className="text-muted-foreground text-center max-w-sm mb-6">
+            Upgrade to Pro to create detailed job plans, track steps, and manage your maintenance.
+          </p>
+          <Button
+              onClick={triggerPaywall}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold"
+          >
+              Unlock Service Planning
+          </Button>
+       </div>
+     )
+  }
 
   return (
     <div className="space-y-4">
