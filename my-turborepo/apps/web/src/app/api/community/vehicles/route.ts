@@ -30,7 +30,7 @@ interface CommunityVehicle {
   photo_url: string | null;
   privacy: 'PUBLIC' | 'PRIVATE';
   spec_snapshot: Record<string, unknown> | null;
-  user_profile: { display_name: string | null } | null;
+  user_profile: { display_name: string | null } | { display_name: string | null }[] | null;
   [key: string]: unknown;
 }
 
