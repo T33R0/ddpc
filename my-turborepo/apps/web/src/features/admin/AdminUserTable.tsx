@@ -63,7 +63,19 @@ export function AdminUserTable({
     })
   }
 
+  const [optimisticUsers, setOptimisticUsers] = useState<User[]>(users)
+
+  // Sync with server state when it updates
+  if (users !== optimisticUsers && !isPending) {
+     setOptimisticUsers(users)
+  }
+
   const handleGrantPro = async (userId: string, isPro: boolean) => {
+    // Optimistic Update
+    setOptimisticUsers(prev => prev.map(u =>
+        u.user_id === userId ? { ...u, plan: isPro ? 'pro' : 'free' } : u
+    ))
+
     startTransition(async () => {
       try {
         await grantProAccess(userId, isPro)
@@ -71,6 +83,10 @@ export function AdminUserTable({
       } catch (e) {
         console.error(e)
         alert('Failed to update plan')
+        // Revert on failure
+        setOptimisticUsers(prev => prev.map(u =>
+            u.user_id === userId ? { ...u, plan: !isPro ? 'pro' : 'free' } : u
+        ))
       }
     })
   }
@@ -90,7 +106,7 @@ export function AdminUserTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-            {users.map((user) => (
+            {optimisticUsers.map((user) => (
               <tr key={user.user_id} className={user.banned ? 'bg-red-50 dark:bg-red-900/20' : ''}>
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex flex-col">

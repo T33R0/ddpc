@@ -58,7 +58,7 @@ export function AuthProvider({
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     role: row.role ?? null,
-    plan: (row.plan === 'pro') ? 'pro' : 'free',
+    plan: (row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free',
   });
 
   const fetchProfile = React.useCallback(
