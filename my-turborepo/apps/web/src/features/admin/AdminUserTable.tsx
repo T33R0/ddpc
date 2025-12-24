@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { toggleUserSuspension, toggleAdminRole, grantProAccess } from '@/actions/admin'
 import { useRouter } from 'next/navigation'
+import { Switch } from '@repo/ui/switch'
+import { Label } from '@repo/ui/label'
 
 interface User {
   user_id: string
@@ -161,13 +163,17 @@ export function AdminUserTable({
                       </button>
                     )}
 
-                    <button
-                        onClick={() => handleGrantPro(user.user_id, user.plan !== 'pro')}
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id={`pro-toggle-${user.user_id}`}
+                        checked={user.plan === 'pro'}
+                        onCheckedChange={(checked) => handleGrantPro(user.user_id, checked)}
                         disabled={isPending}
-                        className={`${user.plan === 'pro' ? 'text-gray-500 hover:text-gray-700' : 'text-indigo-600 hover:text-indigo-900'}`}
-                      >
-                        {user.plan === 'pro' ? 'Revoke Pro' : 'Grant Pro'}
-                    </button>
+                      />
+                      <Label htmlFor={`pro-toggle-${user.user_id}`} className="text-sm font-normal text-gray-600 dark:text-gray-400">
+                        {user.plan === 'pro' ? 'Pro' : 'Free'}
+                      </Label>
+                    </div>
                    </div>
 
                    {isBreakglass && user.email !== 'myddpc@gmail.com' && (
