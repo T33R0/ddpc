@@ -93,10 +93,7 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${userVehicles?.length || 0} public vehicles`);
 
     // Transform user vehicles into VehicleSummary format for compatibility with existing gallery
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userVehiclesAny = (userVehicles || []) as any[];
-
-    const summaries: VehicleSummary[] = userVehiclesAny.map((vehicle: CommunityVehicle) => {
+    const summaries: VehicleSummary[] = (userVehicles || []).map((vehicle: CommunityVehicle) => {
       // Extract data from spec_snapshot if available, otherwise use direct fields
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const specData = (vehicle.spec_snapshot || {}) as Record<string, any>;
