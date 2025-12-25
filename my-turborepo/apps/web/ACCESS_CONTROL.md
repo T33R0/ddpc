@@ -50,3 +50,4 @@ Historically, a "Builder" tier existed but has been deprecated and merged into t
 
 ## Admin Capabilities
 - Admins can manually toggle a user's plan to `'pro'` via the Admin Dashboard.
+- The Admin User Management page relies on the `get_admin_users_stats` RPC function, which MUST return the `plan` column to correctly display and toggle user status.
