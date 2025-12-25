@@ -68,21 +68,28 @@ export function AuthProvider({
         return;
       }
 
-      const { data, error } = await supabase
-        .from('user_profile')
-        .select('user_id, username, display_name, avatar_url, role, plan')
-        .eq('user_id', userId)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('user_profile')
+          .select('user_id, username, display_name, avatar_url, role, plan')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error loading user profile:', error);
-        return;
-      }
+        if (error) {
+          console.error('Error loading user profile:', error);
+          // Don't set profile to null here on error if we want to retry or handle gracefully
+          // But for now, if it fails, we have no profile.
+          // Note: RLS errors or network errors could land here.
+          return;
+        }
 
-      if (data) {
-        setProfile(mapProfileRow(data));
-      } else {
-        setProfile(null);
+        if (data) {
+          setProfile(mapProfileRow(data));
+        } else {
+          setProfile(null);
+        }
+      } catch (e) {
+        console.error('Unexpected error fetching profile:', e);
       }
     },
     []
@@ -96,7 +103,6 @@ export function AuthProvider({
   useEffect(() => {
     if (initialSession) {
       // Sync server session to client to ensure they match
-      // This prevents "zombie" sessions from localStorage taking over
       supabase.auth.setSession(initialSession);
 
       if (initialSession.user?.id) {
@@ -109,14 +115,20 @@ export function AuthProvider({
     // Get initial session if not provided
     const getInitialSession = async () => {
       if (!initialSession) {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        if (session?.user?.id) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user?.id) {
+            await fetchProfile(session.user.id);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('Error getting initial session:', error);
+        } finally {
+          setLoading(false);
         }
       }
     };
@@ -128,18 +140,24 @@ export function AuthProvider({
       async (event, session) => {
         // If we have an initial session and this is the INITIAL_SESSION event,
         // we can ignore it to prevent overwriting with potentially stale local state
-        // if the local storage hasn't updated yet.
         if (event === 'INITIAL_SESSION' && initialSession) {
           return;
         }
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        if (session?.user?.id) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
+        setLoading(true); // Start loading on auth change
+        try {
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user?.id) {
+            await fetchProfile(session.user.id);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('Error handling auth change:', error);
+        } finally {
+          setLoading(false);
         }
       }
     );
