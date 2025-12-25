@@ -44,9 +44,10 @@ Historically, a "Builder" tier existed but has been deprecated and merged into t
 - `builder` plan references are mapped to `free` or removed.
 
 ### Codebase
-- **Hook:** `usePaywall()` provides `isPro` boolean and `triggerPaywall()` method.
-- **Component:** `ProGate` wraps content to restrict access.
+- **Hook:** `usePaywall()` provides `isPro` boolean, `isLoading` boolean, and `triggerPaywall()` method.
+- **Component:** `ProGate` wraps content to restrict access. It waits for `isLoading` to complete before enforcing the paywall to prevent "flash of locked content".
 - **Component:** `PaywallModal` handles the upgrade UI.
+- **Verification:** The client-side `useAuth` hook fetches the `user_profile` table. RLS policies and `GRANT SELECT` permissions MUST allow authenticated users to read their own `plan` column.
 
 ## Admin Capabilities
 - Admins can manually toggle a user's plan to `'pro'` via the Admin Dashboard.
