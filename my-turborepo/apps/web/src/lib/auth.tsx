@@ -61,7 +61,7 @@ export function AuthProvider({
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     role: row.role ?? null,
-    plan: (row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free',
+    plan: (row.role === 'admin' || row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free',
   });
 
   const fetchProfile = React.useCallback(
@@ -234,17 +234,17 @@ export function AuthProvider({
   const signOut = async () => {
     // 1. Clear local state IMMEDIATELY for instant UI feedback
     if (mounted.current) {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setShowLogoutModal(true);
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setShowLogoutModal(true);
     }
 
     // 2. Call Server Action to clear cookies and redirect
     try {
-        await signOutAction();
+      await signOutAction();
     } catch (e) {
-        console.error('Sign out action failed:', e);
+      console.error('Sign out action failed:', e);
     }
 
     // 3. Force hard navigation as a fallback/guarantee
