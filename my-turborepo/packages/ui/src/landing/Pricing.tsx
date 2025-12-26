@@ -30,7 +30,7 @@ export function PricingDropdown() {
       ],
     },
     {
-      id: 'builder',
+      id: 'pro',
       name: 'Builder',
       subtitle: 'The Tuner & Planner',
       price: '$9',
@@ -125,7 +125,7 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
       highlight: false,
     },
     {
-      id: 'builder',
+      id: 'pro',
       name: 'Builder',
       subtitle: 'Pro',
       target: 'The Builder, The Tuner, The Planner',
@@ -240,8 +240,8 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
                 <button
                   disabled
                   className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${plan.highlight
-                      ? 'bg-red-600/50 text-white cursor-not-allowed'
-                      : 'bg-secondary text-secondary-foreground opacity-50 cursor-not-allowed'
+                    ? 'bg-red-600/50 text-white cursor-not-allowed'
+                    : 'bg-secondary text-secondary-foreground opacity-50 cursor-not-allowed'
                     }`}
                 >
                   {plan.cta}
@@ -251,8 +251,8 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
                   href={plan.href}
                   onClick={onPlanCtaClick ? handlePlanCtaClick(plan.id) : undefined}
                   className={`block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-center ${plan.highlight
-                      ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-red-600/25'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-red-600/25'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
                 >
                   {plan.cta}

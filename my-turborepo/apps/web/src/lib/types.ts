@@ -13,7 +13,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   role: 'user' | 'helper' | 'admin';
-  plan: 'free' | 'builder' | 'pro';
+  plan: 'free' | 'pro';
   banned: boolean;
 }
 

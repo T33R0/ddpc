@@ -6,7 +6,6 @@ export type Tier = 'T0' | 'T1' | 'T2' | 'T3';
 export function mapPlanToTier(plan: User['plan']): Tier {
   switch (plan) {
     case 'free': return 'T0';
-    case 'builder': return 'T1'; // Mapping builder to T1 for now
     case 'pro': return 'T3'; // Mapping pro to T3 for now
     default: return 'T0';
   }
