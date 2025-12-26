@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { toggleUserSuspension, toggleAdminRole, grantProAccess } from '@/actions/admin'
 import { useRouter } from 'next/navigation'
+import { Switch } from '@repo/ui/switch'
+import { Label } from '@repo/ui/label'
 
 interface User {
   user_id: string
@@ -61,7 +63,19 @@ export function AdminUserTable({
     })
   }
 
+  const [optimisticUsers, setOptimisticUsers] = useState<User[]>(users)
+
+  // Sync with server state when it updates
+  if (users !== optimisticUsers && !isPending) {
+     setOptimisticUsers(users)
+  }
+
   const handleGrantPro = async (userId: string, isPro: boolean) => {
+    // Optimistic Update
+    setOptimisticUsers(prev => prev.map(u =>
+        u.user_id === userId ? { ...u, plan: isPro ? 'pro' : 'free' } : u
+    ))
+
     startTransition(async () => {
       try {
         await grantProAccess(userId, isPro)
@@ -69,6 +83,10 @@ export function AdminUserTable({
       } catch (e) {
         console.error(e)
         alert('Failed to update plan')
+        // Revert on failure
+        setOptimisticUsers(prev => prev.map(u =>
+            u.user_id === userId ? { ...u, plan: !isPro ? 'pro' : 'free' } : u
+        ))
       }
     })
   }
@@ -88,7 +106,7 @@ export function AdminUserTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-            {users.map((user) => (
+            {optimisticUsers.map((user) => (
               <tr key={user.user_id} className={user.banned ? 'bg-red-50 dark:bg-red-900/20' : ''}>
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex flex-col">
@@ -161,13 +179,17 @@ export function AdminUserTable({
                       </button>
                     )}
 
-                    <button
-                        onClick={() => handleGrantPro(user.user_id, user.plan !== 'pro')}
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id={`pro-toggle-${user.user_id}`}
+                        checked={user.plan === 'pro'}
+                        onCheckedChange={(checked) => handleGrantPro(user.user_id, checked)}
                         disabled={isPending}
-                        className={`${user.plan === 'pro' ? 'text-gray-500 hover:text-gray-700' : 'text-indigo-600 hover:text-indigo-900'}`}
-                      >
-                        {user.plan === 'pro' ? 'Revoke Pro' : 'Grant Pro'}
-                    </button>
+                      />
+                      <Label htmlFor={`pro-toggle-${user.user_id}`} className="text-sm font-normal text-gray-600 dark:text-gray-400">
+                        {user.plan === 'pro' ? 'Pro' : 'Free'}
+                      </Label>
+                    </div>
                    </div>
 
                    {isBreakglass && user.email !== 'myddpc@gmail.com' && (

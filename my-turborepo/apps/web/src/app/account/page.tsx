@@ -495,7 +495,6 @@ export default function AccountPage() {
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case 'free': return 'text-gray-400';
-      case 'builder': return 'text-red-500'; // Updated to match Builder branding
       case 'pro': return 'text-red-500';
       default: return 'text-gray-400';
     }
@@ -504,7 +503,6 @@ export default function AccountPage() {
   const getPlanIcon = (plan: string) => {
     switch (plan) {
       case 'free': return '🧱'; // Foundation/Maintainer
-      case 'builder': return '🔧'; // Builder
       case 'pro': return '🔧';
       default: return '🧱';
     }
@@ -540,7 +538,7 @@ export default function AccountPage() {
                   <div className="flex items-center gap-2">
                     <Crown className={`h-4 w-4 ${getPlanColor(user.plan)}`} />
                     <span className={`text-sm font-medium ${getPlanColor(user.plan)}`}>
-                      {getPlanIcon(user.plan)} {user.plan === 'free' ? 'Maintainer' : 'Builder'} Plan
+                      {getPlanIcon(user.plan)} {user.plan === 'pro' ? 'Pro' : 'Maintainer'} Plan
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -891,11 +889,11 @@ export default function AccountPage() {
                         <div className="text-2xl">{getPlanIcon(user.plan)}</div>
                         <div>
                           <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
-                            {user.plan === 'free' ? 'Maintainer' : 'Builder'} Plan
+                            {user.plan === 'pro' ? 'Pro' : 'Maintainer'} Plan
                           </h3>
                           <p className="text-sm text-muted-foreground">
                             {user.plan === 'free' && 'Essential tools for maintaining your daily drivers and weekend toys.'}
-                            {(user.plan === 'builder' || user.plan === 'pro') && 'Advanced tools for serious builds, detailed planning, and total cost tracking.'}
+                            {user.plan === 'pro' && 'Advanced tools for serious builds, detailed planning, and total cost tracking.'}
                           </p>
                         </div>
                       </div>
@@ -921,7 +919,7 @@ export default function AccountPage() {
                             <li>• Community Access</li>
                           </>
                         )}
-                        {(user.plan === 'builder' || user.plan === 'pro') && (
+                        {user.plan === 'pro' && (
                           <>
                             <li>• Vehicle Cap: Unlimited</li>
                             <li>• Mod Registry: Detailed modification tracking</li>
@@ -944,32 +942,7 @@ export default function AccountPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Builder Plan Option */}
-                      {user.plan === 'free' && (
-                        <div className="p-6 border border-border rounded-xl bg-card hover:border-accent transition-colors">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">🔧</span>
-                            <h3 className="text-xl font-bold text-red-500">Builder</h3>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            For serious builds and project management.
-                          </p>
-                          <ul className="text-sm text-muted-foreground space-y-2 mb-6">
-                            <li>• Unlimited Vehicles</li>
-                            <li>• Detailed Build Planning</li>
-                            <li>• Mod Registry</li>
-                          </ul>
-                          <Button
-                            className="w-full"
-                            onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_BUILDER || '')}
-                            disabled={isRedirecting}
-                          >
-                            Upgrade to Builder
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Pro Plan Option (Assuming Pro exists and is higher than Builder) */}
+                      {/* Pro Plan Option */}
                       {user.plan !== 'pro' && (
                         <div className="p-6 border border-border rounded-xl bg-card hover:border-accent transition-colors">
                           <div className="flex items-center gap-2 mb-2">
@@ -980,8 +953,9 @@ export default function AccountPage() {
                             The ultimate toolkit for automotive enthusiasts.
                           </p>
                           <ul className="text-sm text-muted-foreground space-y-2 mb-6">
-                            <li>• All Builder Features</li>
+                            <li>• Unlimited Vehicles</li>
                             <li>• Advanced Analytics</li>
+                            <li>• Detailed Build Planning</li>
                             <li>• Priority Support</li>
                           </ul>
                           <Button

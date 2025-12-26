@@ -12,7 +12,17 @@ interface ProGateProps {
 }
 
 export function ProGate({ children, fallback, blur = true }: ProGateProps) {
-  const { isPro, triggerPaywall } = usePaywall();
+  const { isPro, isLoading, triggerPaywall } = usePaywall();
+
+  // Show loading state or nothing while checking permissions
+  // This prevents the "Locked" screen from flashing during initial load
+  if (isLoading) {
+    return (
+      <div className="w-full h-full min-h-[400px] flex items-center justify-center">
+         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (isPro) {
     return <>{children}</>;

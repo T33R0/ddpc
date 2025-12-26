@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { signOut as signOutAction } from '../actions/auth';
@@ -52,6 +52,9 @@ export function AuthProvider({
   const [loading, setLoading] = useState(!initialSession);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // Ref to track if component is mounted to prevent state updates on unmount
+  const mounted = useRef(false);
+
   const mapProfileRow = (row: UserProfileRow): UserProfile => ({
     id: row.user_id,
     username: row.username,
@@ -64,25 +67,35 @@ export function AuthProvider({
   const fetchProfile = React.useCallback(
     async (userId: string | undefined | null) => {
       if (!userId) {
-        setProfile(null);
+        if (mounted.current) setProfile(null);
         return;
       }
 
-      const { data, error } = await supabase
-        .from('user_profile')
-        .select('user_id, username, display_name, avatar_url, role, plan')
-        .eq('user_id', userId)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('user_profile')
+          .select('user_id, username, display_name, avatar_url, role, plan')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error loading user profile:', error);
-        return;
-      }
+        if (!mounted.current) return;
 
-      if (data) {
-        setProfile(mapProfileRow(data));
-      } else {
-        setProfile(null);
+        if (error) {
+          console.error('Error loading user profile:', error);
+          // If we fail to fetch profile, we treat it as no profile data but user is logged in
+          // This might result in restricted access, which is safer than blocking indefinitely
+          setProfile(null);
+          return;
+        }
+
+        if (data) {
+          setProfile(mapProfileRow(data));
+        } else {
+          setProfile(null);
+        }
+      } catch (e) {
+        console.error('Unexpected error fetching profile:', e);
+        if (mounted.current) setProfile(null);
       }
     },
     []
@@ -92,60 +105,94 @@ export function AuthProvider({
     await fetchProfile(user?.id ?? null);
   }, [fetchProfile, user?.id]);
 
-  // Initial profile fetch if we have a session
+  // Handle initialization and auth state changes
   useEffect(() => {
-    if (initialSession) {
-      // Sync server session to client to ensure they match
-      // This prevents "zombie" sessions from localStorage taking over
-      supabase.auth.setSession(initialSession);
+    mounted.current = true;
 
-      if (initialSession.user?.id) {
-        fetchProfile(initialSession.user.id);
+    const initializeAuth = async () => {
+      // If we have an initial session (SSR), we just need to fetch the profile
+      if (initialSession) {
+        // Sync server session to client
+        supabase.auth.setSession(initialSession);
+        if (initialSession.user?.id) {
+          await fetchProfile(initialSession.user.id);
+        }
+        if (mounted.current) setLoading(false);
+        return;
       }
-    }
-  }, [initialSession, fetchProfile]);
 
-  useEffect(() => {
-    // Get initial session if not provided
-    const getInitialSession = async () => {
-      if (!initialSession) {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        if (session?.user?.id) {
-          await fetchProfile(session.user.id);
+      // No initial session, verify client-side
+      try {
+        // Use getUser() as recommended by Supabase/Vercel for security
+        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !authUser) {
+          // No valid user found
+          if (mounted.current) {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          }
         } else {
+          // User is valid, get the session
+          const { data: { session: authSession } } = await supabase.auth.getSession();
+
+          if (mounted.current) {
+            setSession(authSession);
+            setUser(authUser);
+            await fetchProfile(authUser.id);
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted.current) {
+          setSession(null);
+          setUser(null);
           setProfile(null);
         }
+      } finally {
+        if (mounted.current) setLoading(false);
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
-    // Listen for auth changes
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // If we have an initial session and this is the INITIAL_SESSION event,
-        // we can ignore it to prevent overwriting with potentially stale local state
-        // if the local storage hasn't updated yet.
-        if (event === 'INITIAL_SESSION' && initialSession) {
-          return;
-        }
+      async (event, newSession) => {
+        // Ignore INITIAL_SESSION if we already have an initialSession prop
+        // or if we are handling it in initializeAuth
+        if (event === 'INITIAL_SESSION' && initialSession) return;
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        if (session?.user?.id) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
+        // If component unmounted, stop
+        if (!mounted.current) return;
+
+        // For other events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED), update state
+        // We set loading to true to prevent UI flicker while fetching profile
+        setLoading(true);
+
+        try {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+
+          if (newSession?.user?.id) {
+            await fetchProfile(newSession.user.id);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('Error handling auth change:', error);
+        } finally {
+          if (mounted.current) setLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile, initialSession]);
+    return () => {
+      mounted.current = false;
+      subscription.unsubscribe();
+    };
+  }, [initialSession, fetchProfile]);
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
@@ -159,39 +206,9 @@ export function AuthProvider({
       }
     });
 
-    // Create user profile if signup was successful
-    if (!error && data.user) {
-      const { error: profileError } = await supabase
-        .from('user_profile')
-        .upsert({
-          user_id: data.user.id,
-          username: email.split('@')[0],
-          display_name: email.split('@')[0],
-          email: email,
-          is_public: true,
-          role: 'user',
-          plan: 'free',
-          banned: false,
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (profileError) {
-        console.error('Error creating user profile:', profileError);
-      } else {
-        // After creating the profile, create a garage for the user
-        const { error: garageError } = await supabase
-          .from('garage')
-          .insert({
-            owner_id: data.user.id,
-            name: `${data.user.email?.split('@')[0] ?? 'My'}'s Garage`,
-          });
-
-        if (garageError) {
-          console.error('Error creating user garage:', garageError);
-        }
-      }
-    }
+    // Create user profile logic handled by server-side callback/route or here if needed
+    // The previous server-side fix handles duplicate insertion protection
+    // We can optimistically create here if needed, but redundant with callback
 
     return { error };
   };
@@ -216,13 +233,20 @@ export function AuthProvider({
 
   const signOut = async () => {
     // 1. Clear local state IMMEDIATELY for instant UI feedback
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setShowLogoutModal(true);
+    if (mounted.current) {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setShowLogoutModal(true);
+    }
 
     // 2. Call Server Action to clear cookies and redirect
-    await signOutAction();
+    try {
+        await signOutAction();
+    } catch (e) {
+        console.error('Sign out action failed:', e);
+    }
+
     // 3. Force hard navigation as a fallback/guarantee
     window.location.href = '/';
   };

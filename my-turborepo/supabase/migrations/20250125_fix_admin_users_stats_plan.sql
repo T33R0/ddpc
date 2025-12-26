@@ -1,5 +1,5 @@
--- Admin function to get users with stats
--- This function runs with SECURITY DEFINER to access auth.users
+-- Fix for Admin Users page "falls back to free" bug
+-- The get_admin_users_stats RPC was missing the plan column
 
 CREATE OR REPLACE FUNCTION get_admin_users_stats(
   limit_offset int DEFAULT 0,
@@ -53,8 +53,8 @@ BEGIN
   JOIN auth.users au ON up.user_id = au.id
   LEFT JOIN vehicle_stats vs ON up.user_id = vs.owner_id
   WHERE
-    (search_query IS NULL OR 
-     up.username ILIKE '%' || search_query || '%' OR 
+    (search_query IS NULL OR
+     up.username ILIKE '%' || search_query || '%' OR
      au.email ILIKE '%' || search_query || '%')
   ORDER BY au.created_at DESC
   LIMIT limit_count OFFSET limit_offset;
@@ -63,21 +63,3 @@ $$;
 
 GRANT EXECUTE ON FUNCTION get_admin_users_stats TO authenticated;
 GRANT EXECUTE ON FUNCTION get_admin_users_stats TO service_role;
-
--- Fix for 500 Error: Create missing activity_log table
--- This table is likely referenced by a trigger on user_profile or auth.users
-CREATE TABLE IF NOT EXISTS public.activity_log (
-    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id uuid REFERENCES auth.users(id),
-    action text,
-    entity_type text,
-    entity_id text,
-    details jsonb,
-    ip_address text,
-    created_at timestamptz DEFAULT now()
-);
-
--- Grant permissions
-GRANT ALL ON public.activity_log TO service_role;
-GRANT ALL ON public.activity_log TO postgres;
-GRANT INSERT ON public.activity_log TO authenticated; 
