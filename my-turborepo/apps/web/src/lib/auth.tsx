@@ -71,13 +71,14 @@ export function AuthProvider({
   const mounted = useRef(false);
 
   const mapProfileRow = (row: UserProfileRow): UserProfile => {
-    const mapped = {
+    const plan: 'free' | 'pro' = (row.role === 'admin' || row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free';
+    const mapped: UserProfile = {
       id: row.user_id,
       username: row.username,
       displayName: row.display_name,
       avatarUrl: row.avatar_url,
       role: row.role ?? null,
-      plan: (row.role === 'admin' || row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free',
+      plan,
     };
     console.log('[AUTH] mapProfileRow input:', { 
       user_id: row.user_id, 
