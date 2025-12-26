@@ -137,9 +137,48 @@ export function ModPlanBuilder({
   }, [modPlanId, userId, modLogId, fetchOrCreateModPlan, isPro, initialModPlan, isAuthLoading])
 
 
-  // ... (handlers omitted for brevity)
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleAddStep()
+    }
+  }
 
-  // ... (drag and drop logic omitted)
+  const handleReassemblyMode = async () => {
+    setIsReassemblyMode(!isReassemblyMode)
+  }
+
+  const handleDuplicateMod = async () => {
+    if (!modPlanId || !duplicateName.trim()) return
+
+    if (!isPro) {
+      triggerPaywall()
+      return
+    }
+
+    setIsDuplicating(true)
+    try {
+      const result = await duplicateModPlan(modPlanId, duplicateName, userId, modLogId)
+      if (result.success && result.data) {
+        setIsDuplicateDialogOpen(false)
+        // Redirect to new mod page
+        const newModId = result.data.modId
+        const currentPath = window.location.pathname
+        // Extract vehicle path: /vehicle/[id]/
+        const match = currentPath.match(/\/vehicle\/[^/]+/)
+        if (match) {
+          const vehiclePart = match[0]
+          router.push(`${vehiclePart}/mods/${newModId}`)
+        }
+      } else {
+        alert(result.error || 'Failed to duplicate mod plan')
+      }
+    } catch (error) {
+      console.error('Error duplicating mod plan:', error)
+      alert('Failed to duplicate mod plan')
+    } finally {
+      setIsDuplicating(false)
+    }
+  }
 
   // Derived state for rendering
   const visibleSteps = isReassemblyMode ? [...steps].reverse() : steps
