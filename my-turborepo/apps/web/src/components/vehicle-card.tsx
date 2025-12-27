@@ -3,7 +3,7 @@ import { cn } from '@repo/ui/lib/utils'
 import { ImageWithTimeoutFallback } from './image-with-timeout-fallback'
 import { GripVertical } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@repo/ui/card'
-import { Badge } from '@repo/ui/badge'
+import { VehicleStatusBadge } from './vehicle-status-badge'
 
 interface VehicleCardProps {
   title: string
@@ -32,19 +32,6 @@ export function VehicleCard({
   onDragEnd,
   showDragHandle
 }: VehicleCardProps) {
-  // Map legacy status strings to standard Badge variants
-  const getStatusVariant = (s?: string): "default" | "secondary" | "destructive" => {
-    switch (s) {
-      case 'active': return 'default'
-      case 'inactive': return 'secondary'
-      case 'archived': return 'destructive'
-      default: return 'secondary'
-    }
-  }
-
-  // Format status text (replace underscores with spaces)
-  const formatStatus = (s: string) => s.replace(/_/g, ' ')
-
   return (
     <div
       className={cn("group transition-all duration-300", isDragging && "opacity-50", className)}
@@ -63,9 +50,7 @@ export function VehicleCard({
             {/* Status Badge */}
             {status && (
               <div className="absolute top-2 left-2 z-10">
-                <Badge variant={getStatusVariant(status)} className="capitalize shadow-sm">
-                  {formatStatus(status)}
-                </Badge>
+                <VehicleStatusBadge status={status} />
               </div>
             )}
 
