@@ -20,16 +20,8 @@ export function PaywallProvider({ children }: { children: React.ReactNode }) {
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    console.log('[PAYWALL] Profile changed:', { 
-      hasProfile: !!profile, 
-      plan: profile?.plan, 
-      role: profile?.role,
-      loading 
-    });
-    const newIsPro = profile?.plan === 'pro';
-    console.log('[PAYWALL] Setting isPro to:', newIsPro, '(profile?.plan === "pro":', profile?.plan === 'pro', ')');
-    setIsPro(newIsPro);
-  }, [profile, loading]);
+    setIsPro(profile?.plan === 'pro');
+  }, [profile]);
 
   const triggerPaywall = useCallback(() => {
     setIsOpen(true);

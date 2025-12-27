@@ -37,20 +37,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Use getUser() to validate session - this contacts the Supabase Auth server
   // and avoids the "insecure getSession" warning
   const supabase = await createClient();
-  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
-  
-  console.log('[LAYOUT] SSR getUser() result:', { 
-    hasUser: !!user, 
-    userId: user?.id, 
-    error: getUserError ? { message: getUserError.message, code: getUserError.code } : null 
-  });
+  const { data: { user } } = await supabase.auth.getUser();
   
   // Only get session if user is validated
   // Note: This getSession() call triggers the Vercel warning but is needed for initialSession
   // The warning is expected and safe here since we've already validated with getUser()
   const session = user ? (await supabase.auth.getSession()).data.session : null;
-  
-  console.log('[LAYOUT] SSR session:', { hasSession: !!session, userId: session?.user?.id });
 
   // Fetch initial theme server-side to prevent flash and ensure source of truth
   let initialTheme: 'light' | 'dark' | 'auto' = 'dark';

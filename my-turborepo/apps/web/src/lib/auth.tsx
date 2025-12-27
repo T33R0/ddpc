@@ -46,26 +46,11 @@ export function AuthProvider({
   children: React.ReactNode;
   initialSession?: Session | null;
 }) {
-  console.log('[AUTH] AuthProvider rendering, initialSession:', {
-    hasInitialSession: !!initialSession,
-    hasUser: !!initialSession?.user,
-    userId: initialSession?.user?.id
-  });
-
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(!initialSession);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  
-  console.log('[AUTH] AuthProvider initial state:', {
-    hasUser: !!user,
-    userId: user?.id,
-    hasSession: !!session,
-    hasProfile: !!profile,
-    profilePlan: profile?.plan,
-    loading
-  });
 
   // Ref to track if component is mounted to prevent state updates on unmount
   const mounted = useRef(false);
@@ -83,74 +68,17 @@ export function AuthProvider({
       role: row.role ?? null,
       plan,
     };
-    console.log('[AUTH] mapProfileRow input:', { 
-      user_id: row.user_id, 
-      role: row.role, 
-      plan: row.plan 
-    });
-    console.log('[AUTH] mapProfileRow output:', { 
-      id: mapped.id, 
-      role: mapped.role, 
-      plan: mapped.plan 
-    });
     return mapped;
   };
 
   const fetchProfile = React.useCallback(
     async (userId: string | undefined | null, skipAuthCheck = false) => {
-      console.log('[AUTH] fetchProfile called with userId:', userId, 'skipAuthCheck:', skipAuthCheck);
-      
       if (!userId) {
-        console.log('[AUTH] No userId provided, setting profile to null');
         if (mounted.current) setProfile(null);
         return;
       }
 
       try {
-        console.log('[AUTH] Fetching profile from user_profile table for userId:', userId);
-        
-        // Skip auth checks if we're using initialSession (session might not be set yet on client)
-        if (!skipAuthCheck) {
-          console.log('[AUTH] About to check auth state...');
-          
-          // Check auth state before query - with timeout
-          let authUser, authError;
-          try {
-            const authCheckPromise = supabase.auth.getUser();
-            const authTimeoutPromise = new Promise<{ data: { user: null }; error: { message: string; code: string } }>((resolve) => 
-              setTimeout(() => resolve({ 
-                data: { user: null }, 
-                error: { message: 'Auth check timeout after 5 seconds', code: 'AUTH_TIMEOUT' } 
-              }), 5000)
-            );
-            
-            const authResult = await Promise.race([authCheckPromise, authTimeoutPromise]);
-            authUser = authResult.data?.user;
-            authError = authResult.error;
-          } catch (authCatchError: any) {
-            console.error('[AUTH] Auth check exception:', authCatchError);
-            authError = { message: authCatchError.message || 'Auth check failed', code: 'AUTH_EXCEPTION' };
-            authUser = null;
-          }
-          
-          console.log('[AUTH] Current auth state:', {
-            hasUser: !!authUser,
-            userId: authUser?.id,
-            matchesRequested: authUser?.id === userId,
-            authError: authError ? { message: authError.message, code: authError.code } : null
-          });
-        } else {
-          console.log('[AUTH] Skipping auth check (using initialSession)');
-        }
-        
-        const queryStart = Date.now();
-        console.log('[AUTH] Starting Supabase query at:', queryStart);
-        console.log('[AUTH] Query details:', {
-          table: 'user_profile',
-          select: 'user_id, username, display_name, avatar_url, role, plan',
-          filter: `user_id = ${userId}`
-        });
-        
         // Execute query with timeout
         const queryPromise = supabase
           .from('user_profile')
@@ -167,9 +95,7 @@ export function AuthProvider({
         
         let data, error;
         try {
-          console.log('[AUTH] Executing Promise.race for query...');
           const result = await Promise.race([queryPromise, timeoutPromise]);
-          console.log('[AUTH] Promise.race completed, result:', { hasData: !!result.data, hasError: !!result.error });
           data = result.data;
           error = result.error;
         } catch (catchError: any) {
@@ -177,24 +103,6 @@ export function AuthProvider({
           error = { message: catchError.message || 'Unknown error', code: catchError.code || 'EXCEPTION' };
           data = null;
         }
-
-        const queryDuration = Date.now() - queryStart;
-        console.log('[AUTH] Supabase query completed in', queryDuration, 'ms');
-        console.log('[AUTH] Profile fetch response:', { 
-          hasData: !!data, 
-          data: data ? { 
-            user_id: data.user_id, 
-            username: data.username, 
-            role: data.role, 
-            plan: data.plan 
-          } : null,
-          error: error ? { 
-            message: error.message, 
-            code: error.code, 
-            details: (error as any).details,
-            hint: (error as any).hint
-          } : null
-        });
 
         if (!mounted.current) {
           console.log('[AUTH] Component unmounted, skipping profile update');
@@ -211,15 +119,8 @@ export function AuthProvider({
 
         if (data) {
           const mappedProfile = mapProfileRow(data);
-          console.log('[AUTH] Mapped profile:', { 
-            id: mappedProfile.id, 
-            username: mappedProfile.username, 
-            role: mappedProfile.role, 
-            plan: mappedProfile.plan 
-          });
           setProfile(mappedProfile);
         } else {
-          console.log('[AUTH] No profile data found, setting profile to null');
           setProfile(null);
         }
       } catch (e) {
@@ -239,15 +140,12 @@ export function AuthProvider({
     mounted.current = true;
 
     const initializeAuth = async () => {
-      console.log('[AUTH] initializeAuth called, initialSession:', !!initialSession);
-      
       // If we have an initial session (SSR), we just need to fetch the profile
       if (initialSession) {
         handlingInitialSession.current = true;
-        console.log('[AUTH] Using initialSession from SSR, user ID:', initialSession.user?.id);
         
-        // The browser client should read cookies automatically, but let's set the session
-        // and wait for it to be ready before querying
+        // The browser client should read cookies automatically, but we set the session
+        // and wait for it to be ready before querying to ensure RLS policies work
         try {
           const { error: setSessionError } = await supabase.auth.setSession({
             access_token: initialSession.access_token,
@@ -257,8 +155,6 @@ export function AuthProvider({
           if (setSessionError) {
             console.error('[AUTH] Error setting session:', setSessionError);
           } else {
-            console.log('[AUTH] Session set, waiting for it to be ready...');
-            
             // Wait for session to be available - poll until it's ready (max 1.5 seconds)
             // This ensures the session is ready before we try to query
             let sessionReady = false;
@@ -269,7 +165,6 @@ export function AuthProvider({
             for (let i = 0; i < maxAttempts; i++) {
               const { data: { session } } = await supabase.auth.getSession();
               if (session?.access_token) {
-                console.log('[AUTH] Session ready after', (i + 1) * pollInterval, 'ms');
                 sessionReady = true;
                 break;
               }
@@ -287,38 +182,25 @@ export function AuthProvider({
         }
         
         if (initialSession.user?.id) {
-          console.log('[AUTH] Calling fetchProfile with initialSession user ID (skipping auth check)');
           // Skip auth check since we have the user ID from SSR and session should be ready
           await fetchProfile(initialSession.user.id, true);
           profileFetchedForInitialSession.current = true;
-        } else {
-          console.warn('[AUTH] initialSession has no user.id');
         }
         
         handlingInitialSession.current = false;
         
         if (mounted.current) {
-          console.log('[AUTH] Setting loading to false (initialSession path)');
           setLoading(false);
         }
         return;
       }
 
       // No initial session, verify client-side
-      console.log('[AUTH] No initialSession, verifying client-side');
       try {
         // Use getUser() as recommended by Supabase/Vercel for security
-        console.log('[AUTH] Calling supabase.auth.getUser()');
         const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
 
-        console.log('[AUTH] getUser() response:', { 
-          hasUser: !!authUser, 
-          userId: authUser?.id, 
-          error: userError ? { message: userError.message, code: userError.code } : null 
-        });
-
         if (userError || !authUser) {
-          console.log('[AUTH] No valid user found, clearing auth state');
           // No valid user found
           if (mounted.current) {
             setSession(null);
@@ -326,19 +208,13 @@ export function AuthProvider({
             setProfile(null);
           }
         } else {
-          console.log('[AUTH] User found, getting session and fetching profile');
           // User is valid, get the session
           const { data: { session: authSession } } = await supabase.auth.getSession();
-
-          console.log('[AUTH] getSession() response:', { hasSession: !!authSession });
 
           if (mounted.current) {
             setSession(authSession);
             setUser(authUser);
-            console.log('[AUTH] Calling fetchProfile with authUser.id:', authUser.id);
             await fetchProfile(authUser.id);
-          } else {
-            console.log('[AUTH] Component unmounted before setting state');
           }
         }
       } catch (error) {
@@ -350,7 +226,6 @@ export function AuthProvider({
         }
       } finally {
         if (mounted.current) {
-          console.log('[AUTH] Setting loading to false (client-side path)');
           setLoading(false);
         }
       }
@@ -361,12 +236,8 @@ export function AuthProvider({
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[AUTH] onAuthStateChange event:', event, 'hasSession:', !!newSession, 'userId:', newSession?.user?.id);
-        
         // Ignore INITIAL_SESSION if we already have an initialSession prop
-        // or if we are handling it in initializeAuth
         if (event === 'INITIAL_SESSION' && initialSession) {
-          console.log('[AUTH] Ignoring INITIAL_SESSION because initialSession prop exists');
           return;
         }
 
@@ -374,7 +245,6 @@ export function AuthProvider({
         // Don't fetch profile again to avoid duplicate calls
         if (event === 'SIGNED_IN' && initialSession && newSession?.user?.id === initialSession.user?.id) {
           if (handlingInitialSession.current || profileFetchedForInitialSession.current) {
-            console.log('[AUTH] Ignoring SIGNED_IN event - already handled via initialSession');
             // Still update state but don't fetch profile again
             if (mounted.current) {
               setSession(newSession);
@@ -386,13 +256,11 @@ export function AuthProvider({
 
         // If component unmounted, stop
         if (!mounted.current) {
-          console.log('[AUTH] Component unmounted, ignoring auth state change');
           return;
         }
 
         // For other events (SIGNED_OUT, TOKEN_REFRESHED, or SIGNED_IN for different user), update state
         // We set loading to true to prevent UI flicker while fetching profile
-        console.log('[AUTH] Processing auth state change, setting loading to true');
         setLoading(true);
 
         try {
@@ -400,17 +268,14 @@ export function AuthProvider({
           setUser(newSession?.user ?? null);
 
           if (newSession?.user?.id) {
-            console.log('[AUTH] Calling fetchProfile from auth state change, userId:', newSession.user.id);
             await fetchProfile(newSession.user.id);
           } else {
-            console.log('[AUTH] No user in newSession, setting profile to null');
             setProfile(null);
           }
         } catch (error) {
           console.error('[AUTH] Error handling auth change:', error);
         } finally {
           if (mounted.current) {
-            console.log('[AUTH] Auth state change complete, setting loading to false');
             setLoading(false);
           }
         }
@@ -494,18 +359,6 @@ export function AuthProvider({
     setShowLogoutModal,
   };
 
-  // Log whenever profile changes
-  useEffect(() => {
-    console.log('[AUTH] Profile state updated:', {
-      hasProfile: !!profile,
-      profilePlan: profile?.plan,
-      profileRole: profile?.role,
-      profileId: profile?.id,
-      hasUser: !!user,
-      userId: user?.id,
-      loading
-    });
-  }, [profile, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
