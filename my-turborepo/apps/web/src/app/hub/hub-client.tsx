@@ -25,7 +25,7 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
   const { data, isLoading } = useVehicles()
   const allVehicles = data?.vehicles || []
   // Filter for active vehicles
-  const vehicles = allVehicles.filter(v => v.current_status !== 'sold' && v.current_status !== 'retired')
+  const vehicles = allVehicles.filter(v => v.current_status !== 'archived' && v.current_status !== 'retired')
 
   const [isSelectVehicleOpen, setIsSelectVehicleOpen] = useState(false)
   const [selectedAction, setSelectedAction] = useState<'fuel' | 'service' | 'wishlist' | null>(null)

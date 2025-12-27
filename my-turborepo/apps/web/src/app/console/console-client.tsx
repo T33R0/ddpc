@@ -147,7 +147,7 @@ export function ConsoleClient({ vehicles }: ConsoleClientProps) {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-xl font-bold">{vehicle.year} {vehicle.make} {vehicle.model}</h3>
-                        {vehicle.status === 'parked' && <Badge variant="secondary">Parked</Badge>}
+                        {vehicle.status === 'inactive' && <Badge variant="secondary">Inactive</Badge>}
                       </div>
                       <p className="text-muted-foreground">{vehicle.trim || 'Base Model'}</p>
                     </div>

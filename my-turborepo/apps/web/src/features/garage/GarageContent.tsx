@@ -115,7 +115,7 @@ function VehicleGallery({
     if (vehicleId) {
       if (onDrop) {
         // Status change logic
-        const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+        const newStatus = galleryType === 'active' ? 'active' : 'inactive'
         // If status is different, it's a move between galleries
         if (currentStatus !== newStatus) {
           onDrop(vehicleId, newStatus)
@@ -141,7 +141,7 @@ function VehicleGallery({
       onManualReorder(draggedId, targetVehicleId)
     } else if (onDrop && galleryType) {
       // Fallback to status change if moving between galleries
-      const newStatus = galleryType === 'active' ? 'daily_driver' : 'parked'
+      const newStatus = galleryType === 'active' ? 'active' : 'inactive'
       if (draggedStatus !== newStatus) {
         onDrop(draggedId, newStatus)
       }
@@ -152,16 +152,12 @@ function VehicleGallery({
 
   const formatStatus = (status: string) => {
     switch (status) {
-      case 'daily_driver':
+      case 'active':
         return 'Active'
-      case 'parked':
-        return 'Parked'
-      case 'listed':
-        return 'Listed'
-      case 'sold':
-        return 'Sold'
-      case 'retired':
-        return 'Retired'
+      case 'inactive':
+        return 'Inactive'
+      case 'archived':
+        return 'Archived'
       default:
         return status.charAt(0).toUpperCase() + status.slice(1)
     }
@@ -272,7 +268,7 @@ export function GarageContent({
 }: GarageContentProps) {
   const router = useRouter()
   // Use server-fetched data as initial state, ensuring no duplicates
-  const initialActive = initialVehicles.filter(vehicle => vehicle.current_status === 'daily_driver')
+  const initialActive = initialVehicles.filter(vehicle => vehicle.current_status === 'active')
   const uniqueInitialActive = initialActive.filter((v, index, self) =>
     index === self.findIndex((t) => t.id === v.id)
   )
@@ -422,20 +418,20 @@ export function GarageContent({
   const effectiveStoredVehicles = React.useMemo(() => {
     if (isManualSort && manualOrderVehicles.length > 0) {
       return manualOrderVehicles.filter(v =>
-        v.current_status !== 'daily_driver' &&
+        v.current_status !== 'active' &&
         !activeVehicles.find(av => av.id === v.id)
       );
     }
 
     // Standard mode: Merge local optimistic updates + hook data
     const filteredFromHook = storedVehicles.filter(v =>
-      v.current_status !== 'daily_driver' &&
+      v.current_status !== 'active' &&
       !activeVehicles.find(av => av.id === v.id)
     )
 
     // Keep vehicles that were optimistically added but aren't in hook yet
     const optimisticOnly = storedVehiclesLocal.filter(lv =>
-      lv.current_status !== 'daily_driver' &&
+      lv.current_status !== 'active' &&
       !activeVehicles.find(av => av.id === lv.id) &&
       !filteredFromHook.find(hv => hv.id === lv.id)
     )
@@ -516,7 +512,7 @@ export function GarageContent({
 
             // Update active vehicles
             setActiveVehicles((prev) => {
-              const isActive = newStatus === 'daily_driver'
+              const isActive = newStatus === 'active'
               const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
 
               if (isActive && vehicleIndex === -1) {
@@ -539,7 +535,7 @@ export function GarageContent({
 
             // Update stored vehicles
             setStoredVehiclesLocal((prev) => {
-              const isStored = newStatus !== 'daily_driver'
+              const isStored = newStatus !== 'active'
               const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
 
               if (isStored && vehicleIndex === -1) {
@@ -583,7 +579,7 @@ export function GarageContent({
     if (!vehicleToMove) return
 
     const updatedVehicle = { ...vehicleToMove, current_status: newStatus }
-    const isActive = newStatus === 'daily_driver'
+    const isActive = newStatus === 'active'
 
     // Update active vehicles immediately
     setActiveVehicles((prev) => {
@@ -718,7 +714,7 @@ export function GarageContent({
             if (vehicles) {
               // Update active vehicles - remove any that shouldn't be active
               setActiveVehicles((prev) => {
-                const activeIds = vehicles.filter(v => v.current_status === 'daily_driver').map(v => v.id)
+                const activeIds = vehicles.filter(v => v.current_status === 'active').map(v => v.id)
                 return prev
                   .filter(v => activeIds.includes(v.id))
                   .map(v => {
@@ -729,7 +725,7 @@ export function GarageContent({
 
               // Update stored vehicles - remove any that are now active
               setStoredVehiclesLocal((prev) => {
-                const storedIds = vehicles.filter(v => v.current_status !== 'daily_driver').map(v => v.id)
+                const storedIds = vehicles.filter(v => v.current_status !== 'active').map(v => v.id)
                 return prev
                   .filter(v => storedIds.includes(v.id))
                   .map(v => {

@@ -27,9 +27,9 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
 
   // Step 2 Data
   const [stillOwn, setStillOwn] = useState<boolean | null>(null)
-  const [status, setStatus] = useState('daily_driver')
+  const [status, setStatus] = useState('active')
   const [endDate, setEndDate] = useState('')
-  const [endStatus, setEndStatus] = useState('sold')
+  const [endStatus, setEndStatus] = useState('archived')
 
   const handleNext = () => {
     if (!acquisitionDate) {
@@ -144,7 +144,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                     variant={stillOwn === true ? 'default' : 'outline'}
                     onClick={() => {
                       setStillOwn(true)
-                      setStatus('daily_driver')
+                      setStatus('active')
                     }}
                     className="flex-1"
                   >
@@ -155,7 +155,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                     variant={stillOwn === false ? 'default' : 'outline'}
                     onClick={() => {
                       setStillOwn(false)
-                      setEndStatus('sold')
+                      setEndStatus('archived')
                     }}
                     className="flex-1"
                   >
@@ -173,8 +173,8 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >
-                    <option value="daily_driver">Daily Driver (Active)</option>
-                    <option value="parked">Parked (Stored)</option>
+                    <option value="active">Daily Driver (Active)</option>
+                    <option value="inactive">Inactive (Stored)</option>
                     <option value="listed">Listed (For Sale)</option>
                   </select>
                 </div>
@@ -201,7 +201,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                       value={endStatus}
                       onChange={(e) => setEndStatus(e.target.value)}
                     >
-                      <option value="sold">Sold</option>
+                      <option value="archived">Archived</option>
                       <option value="retired">Retired</option>
                     </select>
                   </div>

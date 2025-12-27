@@ -27,7 +27,7 @@ export function HeaderWithAuth() {
   }
 
   const allVehicles = vehiclesData?.vehicles || [];
-  const activeVehiclesCount = allVehicles.filter(vehicle => vehicle.current_status === 'daily_driver').length;
+  const activeVehiclesCount = allVehicles.filter(vehicle => vehicle.current_status === 'active').length;
 
   const rawUsername =
     profile?.username ??

@@ -341,7 +341,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
 
   // Add the user-specific fields that aren't in vehicle_data
   vehicleWithData.odometer = latestOdometer?.reading_mi || vehicle.odometer || null
-  vehicleWithData.current_status = vehicle.current_status || 'parked'
+  vehicleWithData.current_status = vehicle.current_status || 'inactive'
   vehicleWithData.privacy = vehicle.privacy || 'PRIVATE'
   vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 

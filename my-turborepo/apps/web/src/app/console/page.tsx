@@ -51,13 +51,13 @@ export default function ConsolePage() {
 
     switch (selectedFilter) {
       case 'Active':
-        return vehicle.current_status === 'daily_driver';
+        return vehicle.current_status === 'active';
       case 'Needs Attention':
         return serviceStatus?.needsAttention || false;
       case 'Service Due':
         return serviceStatus?.serviceDue || false;
       case 'Inactive':
-        return ['parked', 'retired', 'sold'].includes(vehicle.current_status);
+        return ['inactive', 'retired', 'archived'].includes(vehicle.current_status);
       default:
         return true;
     }
@@ -66,16 +66,12 @@ export default function ConsolePage() {
   const getVehicleStatus = (vehicle: { current_status: string }) => {
     // Format status for display based on current_status
     switch (vehicle.current_status) {
-      case 'daily_driver':
+      case 'active':
         return 'Active';
-      case 'parked':
-        return 'Parked';
-      case 'listed':
-        return 'Listed';
-      case 'sold':
-        return 'Sold';
-      case 'retired':
-        return 'Retired';
+      case 'inactive':
+        return 'Inactive';
+      case 'archived':
+        return 'Archived';
       default:
         return 'Active';
     }
@@ -84,10 +80,8 @@ export default function ConsolePage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'Parked': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'Listed': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      case 'Sold': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      case 'Retired': return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      case 'Inactive': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'Archived': return 'bg-red-500/10 text-red-400 border-red-500/20';
       default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
     }
   };
@@ -135,7 +129,7 @@ export default function ConsolePage() {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            {['All', 'Active', 'Needs Attention', 'Service Due', 'Inactive'].map((filter) => (
+            {['All', 'Active', 'Needs Attention', 'Service Due', 'Inactive', 'Archived'].map((filter) => (
               <Button
                 key={filter}
                 variant="outline"

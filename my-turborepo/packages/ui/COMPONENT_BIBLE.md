@@ -68,7 +68,7 @@
 | Neutral/Tag | `outline` | `<Badge variant="outline">Stock</Badge>` |
 | Success/Active | `default` | `<Badge>Active</Badge>` |
 | Warning | `secondary` | `<Badge variant="secondary">Pending</Badge>` |
-| Critical/Error | `destructive` | `<Badge variant="destructive">Sold</Badge>` |
+| Critical/Error | `destructive` | `<Badge variant="destructive">Archived</Badge>` |
 
 ### E. Dialogs (`<Dialog>` / `<Modal>`)
 **Import:** `import { Modal } from '@repo/ui/modal'` (Preferred wrapper) or `@repo/ui/dialog`

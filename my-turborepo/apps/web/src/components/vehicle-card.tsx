@@ -9,7 +9,7 @@ interface VehicleCardProps {
   title: string
   subtitle?: React.ReactNode
   imageUrl?: string | null
-  status?: string // 'daily_driver' | 'parked' | 'listed' | 'sold' | 'retired'
+  status?: string // 'active' | 'inactive' | 'archived'
   onClick?: () => void
   footer?: React.ReactNode
   className?: string
@@ -33,13 +33,11 @@ export function VehicleCard({
   showDragHandle
 }: VehicleCardProps) {
   // Map legacy status strings to standard Badge variants
-  const getStatusVariant = (s?: string): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusVariant = (s?: string): "default" | "secondary" | "destructive" => {
     switch (s) {
-      case 'daily_driver': return 'default'
-      case 'parked': return 'secondary'
-      case 'listed': return 'outline'
-      case 'sold':
-      case 'retired': return 'destructive'
+      case 'active': return 'default'
+      case 'inactive': return 'secondary'
+      case 'archived': return 'destructive'
       default: return 'secondary'
     }
   }

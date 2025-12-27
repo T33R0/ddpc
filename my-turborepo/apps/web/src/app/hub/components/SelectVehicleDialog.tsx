@@ -22,8 +22,8 @@ export function SelectVehicleDialog({
   actionLabel
 }: SelectVehicleDialogProps) {
 
-  const activeVehicles = vehicles.filter(v => v.current_status !== 'parked')
-  const parkedVehicles = vehicles.filter(v => v.current_status === 'parked')
+  const activeVehicles = vehicles.filter(v => v.current_status !== 'inactive')
+  const inactiveVehicles = vehicles.filter(v => v.current_status === 'inactive')
 
   const handleSelect = (vehicle: Vehicle) => {
     onSelect(vehicle)
@@ -83,13 +83,13 @@ export function SelectVehicleDialog({
             <Tabs defaultValue="active" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="active">Active</TabsTrigger>
-                    <TabsTrigger value="parked">Parked</TabsTrigger>
+                    <TabsTrigger value="inactive">inactive</TabsTrigger>
                 </TabsList>
                 <TabsContent value="active">
                     {renderGrid(activeVehicles, "No active vehicles found.")}
                 </TabsContent>
-                <TabsContent value="parked">
-                    {renderGrid(parkedVehicles, "No parked vehicles found.")}
+                <TabsContent value="inactive">
+                    {renderGrid(inactiveVehicles, "No inactive vehicles found.")}
                 </TabsContent>
             </Tabs>
         </div>

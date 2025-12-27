@@ -235,7 +235,7 @@ CREATE TABLE public.user_vehicle (
   stock_data_id text,
   title text,
   spec_snapshot jsonb,
-  current_status text DEFAULT 'daily_driver'::text CHECK (current_status = ANY (ARRAY['daily_driver'::text, 'parked'::text, 'listed'::text, 'sold'::text, 'retired'::text])),
+  current_status text DEFAULT 'active'::text CHECK (current_status = ANY (ARRAY['active'::text, 'inactive'::text, 'archived'::text])),
   owner_id uuid NOT NULL,
   odometer integer,
   horsepower_hp integer,

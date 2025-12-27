@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         stock_data_id: matchedVehicle.id,
         title: matchedVehicle.trim_description || matchedVehicle.trim,
         spec_snapshot: fullSpec,
-        current_status: 'daily_driver'
+        current_status: 'active'
       };
     } else {
       // No match found. Fallback to building the snapshot from NHTSA data.
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         model: model,
         trim: trim || 'N/A',
         spec_snapshot: specSnapshot,
-        current_status: 'daily_driver'
+        current_status: 'active'
       };
     }
 

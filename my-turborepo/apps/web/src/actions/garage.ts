@@ -172,7 +172,7 @@ export async function completeOnboarding(data: OnboardingData) {
     acquisitionType: z.string().min(1),
     acquisitionCost: z.number().nonnegative().optional(),
     ownershipEndDate: z.string().optional(),
-    status: z.enum(['daily_driver', 'parked', 'listed', 'sold', 'retired']).optional()
+    status: z.enum(['active', 'inactive', 'archived']).optional()
   })
 
   const parse = schema.safeParse(data)

@@ -278,10 +278,10 @@ This document provides a detailed overview of the database tables, views, and th
 - `model` (text): Vehicle model.
 - `trim` (text): Vehicle trim.
 - `odometer` (numeric): Current cached odometer reading.
-- `current_status` (text/enum): Status ('parked', 'daily_driver', 'project', etc.).
+- `current_status` (text/enum): Status ('inactive', 'active', 'project', etc.).
 - `photo_url` (text): Primary image URL (often mapped to `image_url` or `vehicle_image` in code).
 - `acquisition_date` (date): Date acquired.
-- `ownership_end_date` (date): Date sold/retired.
+- `ownership_end_date` (date): Date archived/retired.
 - `acquisition_cost` (numeric): Purchase price.
 - `acquisition_type` (text): Method of acquisition (Dealer, Private, etc.).
 - `is_onboarding_completed` (boolean): Flag for onboarding flow.

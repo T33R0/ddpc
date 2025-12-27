@@ -65,7 +65,7 @@ export async function GET(
       nickname: vehicle.nickname,
       ymmt: `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} ${vehicle.trim || ''}`.trim(),
       odometer: latestOdometer,
-      current_status: vehicle.current_status || 'parked',
+      current_status: vehicle.current_status || 'inactive',
       image_url: vehicle.photo_url,
       // Include all the vehicle data fields
       ...vehicle,

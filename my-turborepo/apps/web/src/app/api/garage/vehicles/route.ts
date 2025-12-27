@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     // Filter for stored vehicles if requested
     if (storedOnly) {
-      query = query.in('current_status', ['parked', 'listed', 'sold', 'retired']);
+      query = query.in('current_status', ['inactive', 'archived']);
     }
 
     // Apply sorting
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
           break;
         case 'status':
           // For status, simple alphabetical sort.
-          // Parked, Listed, Sold, Retired -> Listed, Parked, Retired, Sold
+          // inactive, Archived -> Archived, inactive
           query = query.order('current_status', { ascending: sortDir === 'asc' });
           break;
         case 'ownership_period':
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
         nickname: uv.nickname,
         ymmt: `${uv.year || ''} ${uv.make || ''} ${uv.model || ''} ${uv.trim || ''}`.trim(),
         odometer: latestMileage,
-        current_status: uv.current_status || 'parked',
+        current_status: uv.current_status || 'inactive',
         image_url: uv.vehicle_image || uv.photo_url,
         vehicle_image: uv.vehicle_image,
         created_at: uv.created_at,

@@ -60,7 +60,7 @@ describe('predictUpcomingNeeds', () => {
                 year: 2020,
                 make: 'Toyota',
                 model: 'Camry',
-                current_status: 'daily_driver',
+                current_status: 'active',
                 odometer: 50000,
                 mods: [{
                   status: 'installed',

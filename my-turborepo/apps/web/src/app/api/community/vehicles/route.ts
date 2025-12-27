@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
         trim: vehicle.trim || '',
         trim_description: vehicle.title || specData.trim_description || '',
         odometer: vehicle.odometer,
-        current_status: vehicle.current_status || 'parked',
+        current_status: vehicle.current_status || 'inactive',
         vehicle_image: vehicle.vehicle_image || vehicle.photo_url || null, // Prioritize vehicle_image (user uploaded) over photo_url
         privacy: vehicle.privacy,
         body_type: vehicle.body_type || specData.body_type || '',

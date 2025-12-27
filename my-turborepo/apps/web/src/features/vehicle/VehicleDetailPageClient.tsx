@@ -237,13 +237,11 @@ function StatusBadge({
   isOwner: boolean
 }) {
   const router = useRouter()
-  const statusOptions = ['daily_driver', 'parked', 'listed', 'sold', 'retired']
+  const statusOptions = ['active', 'inactive', 'archived']
   const statusLabels: Record<string, string> = {
-    daily_driver: 'Daily Driver',
-    parked: 'Parked',
-    listed: 'Listed',
-    sold: 'Sold',
-    retired: 'Retired'
+    active: 'Daily Driver',
+    inactive: 'Inactive',
+    archived: 'Archived',
   }
 
   if (!isOwner) {
@@ -525,7 +523,7 @@ function VehicleHeader({
           />
           <StatusBadge
             vehicleId={vehicleId}
-            currentStatus={vehicle.current_status || 'parked'}
+            currentStatus={vehicle.current_status || 'inactive'}
             onUpdate={onStatusUpdate}
             isOwner={isOwner}
           />
@@ -660,7 +658,7 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
   const vehicle = initialVehicle as VehicleWithOnboarding
   const router = useRouter()
   const [currentNickname, setCurrentNickname] = useState(vehicleNickname || vehicle.name || null)
-  const [currentStatus, setCurrentStatus] = useState(vehicle.current_status || 'parked')
+  const [currentStatus, setCurrentStatus] = useState(vehicle.current_status || 'inactive')
   const [currentPrivacy, setCurrentPrivacy] = useState<'PUBLIC' | 'PRIVATE'>(vehicle.privacy || 'PRIVATE')
   const [showOnboarding, setShowOnboarding] = useState(!vehicle.is_onboarding_completed)
 

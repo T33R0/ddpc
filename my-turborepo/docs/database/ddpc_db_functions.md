@@ -197,7 +197,7 @@ begin
     coalesce(p_title, concat(vt.year,' ',vt.make,' ',vt.model,
              case when vt.trim is null then '' else ' '||vt.trim end)),
     vt.year, vt.make, vt.model, vt.trim,
-    to_jsonb(vt), 'private','daily_driver'
+    to_jsonb(vt), 'private','active'
   from public.vehicle_template vt
   where vt.id = p_template_id
   returning id into v_new_id;
