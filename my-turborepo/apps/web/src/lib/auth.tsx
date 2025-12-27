@@ -105,9 +105,28 @@ export function AuthProvider({
 
       try {
         console.log('[AUTH] Fetching profile from user_profile table for userId:', userId);
+        console.log('[AUTH] About to check auth state...');
         
-        // Check auth state before query
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        // Check auth state before query - with timeout
+        let authUser, authError;
+        try {
+          const authCheckPromise = supabase.auth.getUser();
+          const authTimeoutPromise = new Promise<{ data: { user: null }; error: { message: string; code: string } }>((resolve) => 
+            setTimeout(() => resolve({ 
+              data: { user: null }, 
+              error: { message: 'Auth check timeout after 5 seconds', code: 'AUTH_TIMEOUT' } 
+            }), 5000)
+          );
+          
+          const authResult = await Promise.race([authCheckPromise, authTimeoutPromise]);
+          authUser = authResult.data?.user;
+          authError = authResult.error;
+        } catch (authCatchError: any) {
+          console.error('[AUTH] Auth check exception:', authCatchError);
+          authError = { message: authCatchError.message || 'Auth check failed', code: 'AUTH_EXCEPTION' };
+          authUser = null;
+        }
+        
         console.log('[AUTH] Current auth state:', {
           hasUser: !!authUser,
           userId: authUser?.id,
@@ -115,8 +134,27 @@ export function AuthProvider({
           authError: authError ? { message: authError.message, code: authError.code } : null
         });
         
-        // Check session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // Check session - with timeout
+        console.log('[AUTH] About to check session...');
+        let session, sessionError;
+        try {
+          const sessionCheckPromise = supabase.auth.getSession();
+          const sessionTimeoutPromise = new Promise<{ data: { session: null }; error: { message: string; code: string } }>((resolve) => 
+            setTimeout(() => resolve({ 
+              data: { session: null }, 
+              error: { message: 'Session check timeout after 5 seconds', code: 'SESSION_TIMEOUT' } 
+            }), 5000)
+          );
+          
+          const sessionResult = await Promise.race([sessionCheckPromise, sessionTimeoutPromise]);
+          session = sessionResult.data?.session;
+          sessionError = sessionResult.error;
+        } catch (sessionCatchError: any) {
+          console.error('[AUTH] Session check exception:', sessionCatchError);
+          sessionError = { message: sessionCatchError.message || 'Session check failed', code: 'SESSION_EXCEPTION' };
+          session = null;
+        }
+        
         console.log('[AUTH] Current session:', {
           hasSession: !!session,
           hasAccessToken: !!session?.access_token,
@@ -147,7 +185,9 @@ export function AuthProvider({
         
         let data, error;
         try {
+          console.log('[AUTH] Executing Promise.race for query...');
           const result = await Promise.race([queryPromise, timeoutPromise]);
+          console.log('[AUTH] Promise.race completed, result:', { hasData: !!result.data, hasError: !!result.error });
           data = result.data;
           error = result.error;
         } catch (catchError: any) {
