@@ -94,8 +94,8 @@ export function AuthProvider({
   };
 
   const fetchProfile = React.useCallback(
-    async (userId: string | undefined | null) => {
-      console.log('[AUTH] fetchProfile called with userId:', userId);
+    async (userId: string | undefined | null, skipAuthCheck = false) => {
+      console.log('[AUTH] fetchProfile called with userId:', userId, 'skipAuthCheck:', skipAuthCheck);
       
       if (!userId) {
         console.log('[AUTH] No userId provided, setting profile to null');
@@ -105,61 +105,40 @@ export function AuthProvider({
 
       try {
         console.log('[AUTH] Fetching profile from user_profile table for userId:', userId);
-        console.log('[AUTH] About to check auth state...');
         
-        // Check auth state before query - with timeout
-        let authUser, authError;
-        try {
-          const authCheckPromise = supabase.auth.getUser();
-          const authTimeoutPromise = new Promise<{ data: { user: null }; error: { message: string; code: string } }>((resolve) => 
-            setTimeout(() => resolve({ 
-              data: { user: null }, 
-              error: { message: 'Auth check timeout after 5 seconds', code: 'AUTH_TIMEOUT' } 
-            }), 5000)
-          );
+        // Skip auth checks if we're using initialSession (session might not be set yet on client)
+        if (!skipAuthCheck) {
+          console.log('[AUTH] About to check auth state...');
           
-          const authResult = await Promise.race([authCheckPromise, authTimeoutPromise]);
-          authUser = authResult.data?.user;
-          authError = authResult.error;
-        } catch (authCatchError: any) {
-          console.error('[AUTH] Auth check exception:', authCatchError);
-          authError = { message: authCatchError.message || 'Auth check failed', code: 'AUTH_EXCEPTION' };
-          authUser = null;
-        }
-        
-        console.log('[AUTH] Current auth state:', {
-          hasUser: !!authUser,
-          userId: authUser?.id,
-          matchesRequested: authUser?.id === userId,
-          authError: authError ? { message: authError.message, code: authError.code } : null
-        });
-        
-        // Check session - with timeout
-        console.log('[AUTH] About to check session...');
-        let session, sessionError;
-        try {
-          const sessionCheckPromise = supabase.auth.getSession();
-          const sessionTimeoutPromise = new Promise<{ data: { session: null }; error: { message: string; code: string } }>((resolve) => 
-            setTimeout(() => resolve({ 
-              data: { session: null }, 
-              error: { message: 'Session check timeout after 5 seconds', code: 'SESSION_TIMEOUT' } 
-            }), 5000)
-          );
+          // Check auth state before query - with timeout
+          let authUser, authError;
+          try {
+            const authCheckPromise = supabase.auth.getUser();
+            const authTimeoutPromise = new Promise<{ data: { user: null }; error: { message: string; code: string } }>((resolve) => 
+              setTimeout(() => resolve({ 
+                data: { user: null }, 
+                error: { message: 'Auth check timeout after 5 seconds', code: 'AUTH_TIMEOUT' } 
+              }), 5000)
+            );
+            
+            const authResult = await Promise.race([authCheckPromise, authTimeoutPromise]);
+            authUser = authResult.data?.user;
+            authError = authResult.error;
+          } catch (authCatchError: any) {
+            console.error('[AUTH] Auth check exception:', authCatchError);
+            authError = { message: authCatchError.message || 'Auth check failed', code: 'AUTH_EXCEPTION' };
+            authUser = null;
+          }
           
-          const sessionResult = await Promise.race([sessionCheckPromise, sessionTimeoutPromise]);
-          session = sessionResult.data?.session;
-          sessionError = sessionResult.error;
-        } catch (sessionCatchError: any) {
-          console.error('[AUTH] Session check exception:', sessionCatchError);
-          sessionError = { message: sessionCatchError.message || 'Session check failed', code: 'SESSION_EXCEPTION' };
-          session = null;
+          console.log('[AUTH] Current auth state:', {
+            hasUser: !!authUser,
+            userId: authUser?.id,
+            matchesRequested: authUser?.id === userId,
+            authError: authError ? { message: authError.message, code: authError.code } : null
+          });
+        } else {
+          console.log('[AUTH] Skipping auth check (using initialSession)');
         }
-        
-        console.log('[AUTH] Current session:', {
-          hasSession: !!session,
-          hasAccessToken: !!session?.access_token,
-          sessionError: sessionError ? { message: sessionError.message, code: sessionError.code } : null
-        });
         
         const queryStart = Date.now();
         console.log('[AUTH] Starting Supabase query at:', queryStart);
@@ -262,11 +241,30 @@ export function AuthProvider({
       // If we have an initial session (SSR), we just need to fetch the profile
       if (initialSession) {
         console.log('[AUTH] Using initialSession from SSR, user ID:', initialSession.user?.id);
-        // Sync server session to client
-        supabase.auth.setSession(initialSession);
+        
+        // The browser client should read cookies automatically, but let's try setting the session
+        // and wait for it to propagate
+        try {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: initialSession.access_token,
+            refresh_token: initialSession.refresh_token || '',
+          });
+          
+          if (setSessionError) {
+            console.error('[AUTH] Error setting session:', setSessionError);
+          } else {
+            console.log('[AUTH] Session set, waiting for propagation...');
+            // Give the session time to propagate through the client
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        } catch (setSessionErr: any) {
+          console.error('[AUTH] Exception setting session:', setSessionErr);
+        }
+        
         if (initialSession.user?.id) {
           console.log('[AUTH] Calling fetchProfile with initialSession user ID');
-          await fetchProfile(initialSession.user.id);
+          // Try fetching profile - the session should be set now
+          await fetchProfile(initialSession.user.id, true);
         } else {
           console.warn('[AUTH] initialSession has no user.id');
         }
