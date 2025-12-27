@@ -105,12 +105,59 @@ export function AuthProvider({
 
       try {
         console.log('[AUTH] Fetching profile from user_profile table for userId:', userId);
-        const { data, error } = await supabase
+        
+        // Check auth state before query
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        console.log('[AUTH] Current auth state:', {
+          hasUser: !!authUser,
+          userId: authUser?.id,
+          matchesRequested: authUser?.id === userId,
+          authError: authError ? { message: authError.message, code: authError.code } : null
+        });
+        
+        // Check session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('[AUTH] Current session:', {
+          hasSession: !!session,
+          hasAccessToken: !!session?.access_token,
+          sessionError: sessionError ? { message: sessionError.message, code: sessionError.code } : null
+        });
+        
+        const queryStart = Date.now();
+        console.log('[AUTH] Starting Supabase query at:', queryStart);
+        console.log('[AUTH] Query details:', {
+          table: 'user_profile',
+          select: 'user_id, username, display_name, avatar_url, role, plan',
+          filter: `user_id = ${userId}`
+        });
+        
+        // Execute query with timeout
+        const queryPromise = supabase
           .from('user_profile')
           .select('user_id, username, display_name, avatar_url, role, plan')
           .eq('user_id', userId)
           .maybeSingle();
+        
+        const timeoutPromise = new Promise<{ data: null; error: { message: string; code: string } }>((resolve) => 
+          setTimeout(() => resolve({ 
+            data: null, 
+            error: { message: 'Profile query timeout after 10 seconds', code: 'TIMEOUT' } 
+          }), 10000)
+        );
+        
+        let data, error;
+        try {
+          const result = await Promise.race([queryPromise, timeoutPromise]);
+          data = result.data;
+          error = result.error;
+        } catch (catchError: any) {
+          console.error('[AUTH] Query exception:', catchError);
+          error = { message: catchError.message || 'Unknown error', code: catchError.code || 'EXCEPTION' };
+          data = null;
+        }
 
+        const queryDuration = Date.now() - queryStart;
+        console.log('[AUTH] Supabase query completed in', queryDuration, 'ms');
         console.log('[AUTH] Profile fetch response:', { 
           hasData: !!data, 
           data: data ? { 
@@ -119,7 +166,12 @@ export function AuthProvider({
             role: data.role, 
             plan: data.plan 
           } : null,
-          error: error ? { message: error.message, code: error.code, details: error.details } : null
+          error: error ? { 
+            message: error.message, 
+            code: error.code, 
+            details: (error as any).details,
+            hint: (error as any).hint
+          } : null
         });
 
         if (!mounted.current) {
