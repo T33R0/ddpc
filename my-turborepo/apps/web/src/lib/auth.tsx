@@ -69,6 +69,9 @@ export function AuthProvider({
 
   // Ref to track if component is mounted to prevent state updates on unmount
   const mounted = useRef(false);
+  // Track if we're handling initialSession to prevent duplicate fetchProfile calls
+  const handlingInitialSession = useRef(false);
+  const profileFetchedForInitialSession = useRef(false);
 
   const mapProfileRow = (row: UserProfileRow): UserProfile => {
     const plan: 'free' | 'pro' = (row.role === 'admin' || row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free';
@@ -240,10 +243,11 @@ export function AuthProvider({
       
       // If we have an initial session (SSR), we just need to fetch the profile
       if (initialSession) {
+        handlingInitialSession.current = true;
         console.log('[AUTH] Using initialSession from SSR, user ID:', initialSession.user?.id);
         
-        // The browser client should read cookies automatically, but let's try setting the session
-        // and wait for it to propagate
+        // The browser client should read cookies automatically, but let's set the session
+        // and wait for it to be ready before querying
         try {
           const { error: setSessionError } = await supabase.auth.setSession({
             access_token: initialSession.access_token,
@@ -253,21 +257,46 @@ export function AuthProvider({
           if (setSessionError) {
             console.error('[AUTH] Error setting session:', setSessionError);
           } else {
-            console.log('[AUTH] Session set, waiting for propagation...');
-            // Give the session time to propagate through the client
-            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log('[AUTH] Session set, waiting for it to be ready...');
+            
+            // Wait for session to be available - poll until it's ready (max 1.5 seconds)
+            // This ensures the session is ready before we try to query
+            let sessionReady = false;
+            const maxWait = 1500; // 1.5 seconds max
+            const pollInterval = 100; // Check every 100ms
+            const maxAttempts = maxWait / pollInterval;
+            
+            for (let i = 0; i < maxAttempts; i++) {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.access_token) {
+                console.log('[AUTH] Session ready after', (i + 1) * pollInterval, 'ms');
+                sessionReady = true;
+                break;
+              }
+              if (i < maxAttempts - 1) {
+                await new Promise(resolve => setTimeout(resolve, pollInterval));
+              }
+            }
+            
+            if (!sessionReady) {
+              console.warn('[AUTH] Session not ready after', maxWait, 'ms, proceeding anyway');
+            }
           }
         } catch (setSessionErr: any) {
           console.error('[AUTH] Exception setting session:', setSessionErr);
         }
         
         if (initialSession.user?.id) {
-          console.log('[AUTH] Calling fetchProfile with initialSession user ID');
-          // Try fetching profile - the session should be set now
+          console.log('[AUTH] Calling fetchProfile with initialSession user ID (skipping auth check)');
+          // Skip auth check since we have the user ID from SSR and session should be ready
           await fetchProfile(initialSession.user.id, true);
+          profileFetchedForInitialSession.current = true;
         } else {
           console.warn('[AUTH] initialSession has no user.id');
         }
+        
+        handlingInitialSession.current = false;
+        
         if (mounted.current) {
           console.log('[AUTH] Setting loading to false (initialSession path)');
           setLoading(false);
@@ -341,13 +370,27 @@ export function AuthProvider({
           return;
         }
 
+        // If we have initialSession and this is SIGNED_IN, we've already handled it or are handling it
+        // Don't fetch profile again to avoid duplicate calls
+        if (event === 'SIGNED_IN' && initialSession && newSession?.user?.id === initialSession.user?.id) {
+          if (handlingInitialSession.current || profileFetchedForInitialSession.current) {
+            console.log('[AUTH] Ignoring SIGNED_IN event - already handled via initialSession');
+            // Still update state but don't fetch profile again
+            if (mounted.current) {
+              setSession(newSession);
+              setUser(newSession?.user ?? null);
+            }
+            return;
+          }
+        }
+
         // If component unmounted, stop
         if (!mounted.current) {
           console.log('[AUTH] Component unmounted, ignoring auth state change');
           return;
         }
 
-        // For other events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED), update state
+        // For other events (SIGNED_OUT, TOKEN_REFRESHED, or SIGNED_IN for different user), update state
         // We set loading to true to prevent UI flicker while fetching profile
         console.log('[AUTH] Processing auth state change, setting loading to true');
         setLoading(true);
