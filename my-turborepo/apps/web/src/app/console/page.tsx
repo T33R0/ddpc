@@ -5,9 +5,9 @@ import { useAuth } from '../../lib/auth';
 import { useVehicles } from '../../lib/hooks/useVehicles';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
-import { Badge } from '@repo/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Search, Plus, AlertTriangle, Calendar, FileText, BarChart, Receipt, Download, Car, Activity, Wrench, Fuel, Settings } from 'lucide-react';
+import { VehicleStatusBadge } from '@/components/vehicle-status-badge';
 
 import { GalleryLoadingSkeleton } from '../../components/gallery-loading-skeleton';
 import { useSearch } from '../../lib/hooks/useSearch';
@@ -62,29 +62,6 @@ export default function ConsolePage() {
         return true;
     }
   });
-
-  const getVehicleStatus = (vehicle: { current_status: string }) => {
-    // Format status for display based on current_status
-    switch (vehicle.current_status) {
-      case 'active':
-        return 'Active';
-      case 'inactive':
-        return 'Inactive';
-      case 'archived':
-        return 'Archived';
-      default:
-        return 'Active';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'Inactive': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'Archived': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-    }
-  };
 
   return (
     <section className="relative py-12 min-h-screen bg-background text-foreground">
@@ -163,7 +140,6 @@ export default function ConsolePage() {
             ) : (
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 {filteredVehicles.map((vehicle) => {
-                  const status = getVehicleStatus(vehicle) || 'Active';
                   // Use the smart slug generation (nickname if unique, YMMT otherwise, ID as fallback)
                   const slug = getVehicleSlug(vehicle, vehicles);
                   const imageUrl = vehicle.image_url || '/branding/fallback-logo.png';
@@ -189,9 +165,7 @@ export default function ConsolePage() {
                               <h3 className="text-lg font-bold text-foreground drop-shadow-md">{vehicle.name}</h3>
                               <p className="text-sm text-muted-foreground drop-shadow-sm">{vehicle.ymmt}</p>
                             </div>
-                            <Badge className={`text-xs ${getStatusColor(status)}`}>
-                              {status}
-                            </Badge>
+                            <VehicleStatusBadge status={vehicle.current_status} />
                           </div>
 
                           <div className="grid grid-cols-3 gap-4">
