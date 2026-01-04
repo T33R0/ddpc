@@ -4,9 +4,17 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { VehicleEvent } from '../lib/getVehicleEvents'
 import { HistoryDetailSheet } from './HistoryDetailSheet'
-import { Wrench, Zap, Gauge, History } from 'lucide-react'
+import { Wrench, Zap, Gauge, History, Fuel } from 'lucide-react'
 
 // Icon components for different event types
+function FuelIcon() {
+  return (
+    <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+      <Fuel className="w-4 h-4 text-red-400" />
+    </div>
+  )
+}
+
 function MaintenanceIcon() {
   return (
     <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center">
@@ -39,6 +47,8 @@ function getEventIcon(type: VehicleEvent['type']) {
       return <ModificationIcon />
     case 'mileage':
       return <MileageIcon />
+    case 'fuel':
+      return <FuelIcon />
     default:
       return <MaintenanceIcon />
   }
@@ -52,6 +62,8 @@ function getEventTypeLabel(type: VehicleEvent['type']) {
       return 'Modification'
     case 'mileage':
       return 'Mileage Update'
+    case 'fuel':
+      return 'Fuel Log'
     default:
       return 'Event'
   }
@@ -65,6 +77,8 @@ function getEventTypeColor(type: VehicleEvent['type']) {
       return 'text-lime-400'
     case 'mileage':
       return 'text-orange-400'
+    case 'fuel':
+      return 'text-red-400'
     default:
       return 'text-muted-foreground'
   }

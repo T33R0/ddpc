@@ -6,10 +6,6 @@ const nextConfig = {
       bodySizeLimit: '4mb',
     },
   },
-  // Disable static optimization for pages that use authentication
-  generateBuildId: async () => {
-    return 'build-cache-invalidation-' + Date.now()
-  },
   async redirects() {
     return [
       {

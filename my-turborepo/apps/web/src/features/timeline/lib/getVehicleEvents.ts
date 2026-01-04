@@ -7,7 +7,7 @@ export interface VehicleEvent {
   date: Date
   title: string
   description: string
-  type: 'maintenance' | 'modification' | 'mileage'
+  type: 'maintenance' | 'modification' | 'mileage' | 'fuel'
   cost?: number
   odometer?: number
   status?: string
@@ -36,62 +36,82 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
     throw new Error('Vehicle not found or access denied')
   }
 
-  // Fetch maintenance logs
-  const { data: maintenanceLogs, error: maintenanceError } = await supabase
-    .from('maintenance_log')
-    .select(`
-      id,
-      cost,
-      odometer,
-      event_date,
-      notes,
-      service_provider,
-      service_items (
-        name
-      )
-    `)
-    .eq('user_vehicle_id', vehicleId)
-    .order('event_date', { ascending: false })
+  // Fetch all data in parallel to avoid waterfalls
+  const [maintenanceResult, modsResult, odometerResult, fuelResult] = await Promise.all([
+    // Fetch maintenance logs
+    supabase
+      .from('maintenance_log')
+      .select(`
+        id,
+        cost,
+        odometer,
+        event_date,
+        notes,
+        service_provider,
+        service_items (
+          name
+        )
+      `)
+      .eq('user_vehicle_id', vehicleId)
+      .order('event_date', { ascending: false }),
+
+    // Fetch mods
+    supabase
+      .from('mods')
+      .select(`
+        id,
+        cost,
+        odometer,
+        event_date,
+        status,
+        created_at,
+        notes,
+        mod_items (
+          name,
+          description
+        )
+      `)
+      .eq('user_vehicle_id', vehicleId)
+      .order('event_date', { ascending: false }),
+
+    // Fetch odometer logs
+    supabase
+      .from('odometer_log')
+      .select('id, reading_mi, recorded_at, event_date')
+      .eq('user_vehicle_id', vehicleId)
+      .order('recorded_at', { ascending: false }),
+
+    // Fetch fuel logs
+    supabase
+      .from('fuel_log')
+      .select('id, event_date, odometer, gallons, price_per_gallon, total_cost, mpg')
+      .eq('user_vehicle_id', vehicleId)
+      .order('event_date', { ascending: false })
+  ]);
+
+  const { data: maintenanceLogs, error: maintenanceError } = maintenanceResult;
+  const { data: mods, error: modsError } = modsResult;
+  const { data: odometerLogs, error: odometerError } = odometerResult;
+  const { data: fuelLogs, error: fuelError } = fuelResult;
 
   if (maintenanceError) {
     console.error('Error fetching maintenance logs:', maintenanceError)
     throw new Error('Failed to fetch maintenance data')
   }
 
-  // Fetch mods
-  const { data: mods, error: modsError } = await supabase
-    .from('mods')
-    .select(`
-      id,
-      cost,
-      odometer,
-      event_date,
-      status,
-      created_at,
-      notes,
-      mod_items (
-        name,
-        description
-      )
-    `)
-    .eq('user_vehicle_id', vehicleId)
-    .order('event_date', { ascending: false })
-
   if (modsError) {
     console.error('Error fetching mods:', modsError)
     throw new Error('Failed to fetch modifications data')
   }
 
-  // Fetch odometer logs
-  const { data: odometerLogs, error: odometerError } = await supabase
-    .from('odometer_log')
-    .select('id, reading_mi, recorded_at, event_date')
-    .eq('user_vehicle_id', vehicleId)
-    .order('recorded_at', { ascending: false })
-
   if (odometerError) {
     console.error('Error fetching odometer logs:', odometerError)
     throw new Error('Failed to fetch mileage data')
+  }
+
+  if (fuelError) {
+    console.error('Error fetching fuel logs:', fuelError)
+    // Don't fail the whole request for fuel logs, just log error
   }
 
   // Transform and merge events
@@ -140,6 +160,22 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
         odometer: mod.odometer || undefined,
         status: mod.status,
         event_date: mod.event_date ? new Date(mod.event_date) : undefined,
+      })
+    })
+  }
+
+  // Add fuel events
+  if (fuelLogs) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fuelLogs.forEach((log: any) => {
+      events.push({
+        id: `fuel-${log.id}`,
+        date: new Date(log.event_date),
+        title: `Fuel Up: ${log.gallons} gal`,
+        description: log.mpg ? `${log.mpg.toFixed(1)} MPG` : 'Fuel log',
+        type: 'fuel',
+        cost: log.total_cost || undefined,
+        odometer: log.odometer || undefined,
       })
     })
   }

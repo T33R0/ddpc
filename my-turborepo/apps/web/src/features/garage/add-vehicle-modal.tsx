@@ -325,7 +325,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
       if (result.vehicleId) {
         // Always redirect to the new vehicle page
-        window.location.href = `/vehicle/${result.vehicleId}`;
+        onOpenChange(false);
+        router.push(`/vehicle/${result.vehicleId}`);
       } else {
         setTimeout(() => {
           onOpenChange(false);
