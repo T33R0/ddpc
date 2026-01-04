@@ -13,6 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@gsap/react": "^2.1.2",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-slot": "^1.2.3",
