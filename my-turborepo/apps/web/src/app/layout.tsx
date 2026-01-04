@@ -22,8 +22,15 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'ddpc',
   description: 'stop winging it',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'ddpc',
+  },
   icons: {
     icon: '/branding/favicon.ico',
+    apple: '/branding/logo-transparent.png',
   },
 };
 
