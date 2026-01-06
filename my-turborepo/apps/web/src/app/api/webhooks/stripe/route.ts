@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { sendEmail } from '@/lib/email';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -25,6 +26,46 @@ function getPlanFromPriceId(priceId: string): 'free' | 'pro' {
   return 'free';
 }
 
+async function downgradeUserAndNotify(userId: string, reason: string) {
+  // 1. Downgrade user to free
+  const { error: updateError } = await supabase
+    .from('user_profile')
+    .update({ plan: 'free' })
+    .eq('user_id', userId);
+
+  if (updateError) {
+    console.error(`Failed to downgrade user ${userId}:`, updateError);
+    return;
+  }
+
+  // 2. Fetch user email
+  const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
+
+  if (userError || !user || !user.email) {
+    console.error(`Failed to fetch email for user ${userId}:`, userError);
+    return;
+  }
+
+  // 3. Send notification email
+  await sendEmail({
+    to: user.email,
+    subject: 'Payment Failed - Subscription Downgraded',
+    html: `
+      <div style="font-family: sans-serif; color: #333;">
+        <h1>Payment Failed</h1>
+        <p>We were unable to process the payment for your subscription.</p>
+        <p>As a result, your account has been downgraded to the <strong>Maintainer (Free)</strong> plan.</p>
+        <p><strong>Reason:</strong> ${reason}</p>
+        <p>To restore your Pro access, please update your payment method in your account settings.</p>
+        <br />
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://myddpc.com'}/account?tab=billing" style="display: inline-block; background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Update Payment Method</a>
+      </div>
+    `
+  });
+
+  console.log(`Downgraded and notified user ${userId} due to: ${reason}`);
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const headersList = await headers();
@@ -42,9 +83,10 @@ export async function POST(req: NextRequest) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (error: any) {
-    console.error(`Webhook signature verification failed: ${error.message}`);
-    return NextResponse.json({ error: `Webhook Error: ${error.message}` }, { status: 400 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`Webhook signature verification failed: ${errorMessage}`);
+    return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 });
   }
 
   try {
@@ -69,6 +111,18 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
+        // Find the user associated with this customer
+        const { data: user } = await supabase
+          .from('user_profile')
+          .select('user_id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (!user) {
+          console.warn(`User not found for customer ${customerId} in subscription update`);
+          break;
+        }
+
         // Check status
         if (['active', 'trialing'].includes(subscription.status)) {
            // Ensure items exist
@@ -78,38 +132,14 @@ export async function POST(req: NextRequest) {
              const plan = getPlanFromPriceId(priceId);
 
              // Update user plan
-             const { data: user } = await supabase
+             await supabase
                .from('user_profile')
-               .select('user_id')
-               .eq('stripe_customer_id', customerId)
-               .single();
-
-             if (user) {
-               await supabase
-                 .from('user_profile')
-                 .update({ plan })
-                 .eq('user_id', user.user_id);
-             } else {
-               console.warn(`User not found for customer ${customerId} in subscription update`);
-             }
+               .update({ plan })
+               .eq('user_id', user.user_id);
            }
-        } else {
-           // If status is incomplete, past_due, canceled... we might handle it.
-           // Usually 'canceled' comes via subscription.deleted (or updated with status=canceled)
-           if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-              const { data: user } = await supabase
-               .from('user_profile')
-               .select('user_id')
-               .eq('stripe_customer_id', customerId)
-               .single();
-
-              if (user) {
-                await supabase
-                  .from('user_profile')
-                  .update({ plan: 'free' })
-                  .eq('user_id', user.user_id);
-              }
-           }
+        } else if (['past_due', 'unpaid', 'canceled'].includes(subscription.status)) {
+           // Handle failed payment states immediately as requested
+           await downgradeUserAndNotify(user.user_id, `Subscription status: ${subscription.status}`);
         }
         break;
       }
@@ -124,16 +154,14 @@ export async function POST(req: NextRequest) {
              .single();
 
         if (user) {
-           await supabase
-             .from('user_profile')
-             .update({ plan: 'free' })
-             .eq('user_id', user.user_id);
+           await downgradeUserAndNotify(user.user_id, 'Subscription canceled');
         }
         break;
       }
     }
-  } catch (error: any) {
-    console.error(`Error processing webhook: ${error.message}`);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`Error processing webhook: ${errorMessage}`);
     return NextResponse.json({ error: 'Error processing webhook' }, { status: 500 });
   }
 
