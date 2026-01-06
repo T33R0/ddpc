@@ -10,7 +10,7 @@ import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
 import { Switch } from '@repo/ui/switch';
 import { AuthModal } from '@repo/ui/auth-modal';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
@@ -46,6 +46,10 @@ export default function AccountPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
+
+  // Polling state
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
 
   // Profile form state
   const [username, setUsername] = useState('');
@@ -86,6 +90,7 @@ export default function AccountPage() {
         setIsPublic(data.user.isPublic);
         setNotifyOnNewUser(data.user.notifyOnNewUser || false);
         setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
+        return data.user;
       } else if (response.status === 401 && retry) {
         // Attempt to refresh session and retry once
         const { data: { session: newSession }, error } = await supabase.auth.refreshSession();
@@ -93,10 +98,9 @@ export default function AccountPage() {
           console.error('Session refresh failed:', error);
           toast.error('Session expired, please sign in again');
           signOut();
-          return;
+          return null;
         }
 
-        // Update local session state if needed (optional, as useAuth should catch it)
         // Retry the fetch with new token
         const retryResponse = await fetch('/api/account/profile', {
           headers: {
@@ -117,22 +121,27 @@ export default function AccountPage() {
           setIsPublic(data.user.isPublic);
           setNotifyOnNewUser(data.user.notifyOnNewUser || false);
           setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
+          return data.user;
         } else {
           const errorData = await retryResponse.json().catch(() => ({}));
           console.error('Profile fetch retry failed:', errorData);
           toast.error('Failed to load profile data');
+          return null;
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Profile fetch failed:', errorData);
         toast.error('Failed to load profile data');
+        return null;
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile data');
+      return null;
     }
   }, [session?.access_token, signOut]);
 
+  // Initial load
   useEffect(() => {
     if (!loading && !authUser) {
       // Don't redirect, let the component handle unauthorized access
@@ -142,23 +151,69 @@ export default function AccountPage() {
       fetchUserProfile();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser, loading, session?.access_token, router]);
+  }, [authUser, loading, session?.access_token]);
+
+  // Handle Billing Return & Polling
+  useEffect(() => {
+    const billingStatus = searchParams?.get('billing_status');
+
+    // Clear polling on unmount
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []); // Run only on mount/unmount for cleanup
 
   useEffect(() => {
     const billingStatus = searchParams?.get('billing_status');
-    if (billingStatus === 'success') {
-      toast.success('Subscription updated successfully!');
-      // Refresh profile to get new plan
-      if (session?.access_token) {
-        fetchUserProfile();
-      }
-      // Clean up URL
-      router.replace('/account');
+
+    if (billingStatus === 'success' && !isPolling && session?.access_token) {
+      setIsPolling(true);
+      setActiveTab('billing');
+      const toastId = toast.loading('Finalizing your subscription...');
+
+      let attempts = 0;
+      const maxAttempts = 15; // 30 seconds (15 * 2000ms)
+
+      const poll = async () => {
+        const updatedUser = await fetchUserProfile(false);
+        attempts++;
+
+        if (updatedUser?.plan === 'pro') {
+          // Success!
+          toast.success('You are now a Pro member!', { id: toastId });
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setIsPolling(false);
+          router.replace('/account?tab=billing'); // Clear query param
+          await refreshProfile(); // Sync global auth context
+        } else if (attempts >= maxAttempts) {
+          // Timeout
+          toast.error('Subscription update taking longer than expected. Please check back later.', { id: toastId });
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setIsPolling(false);
+          router.replace('/account?tab=billing');
+        }
+      };
+
+      // Initial check immediately
+      poll();
+
+      // Start polling
+      pollingRef.current = setInterval(poll, 2000);
     } else if (billingStatus === 'canceled') {
       toast.error('Subscription update canceled');
-      router.replace('/account');
+      router.replace('/account?tab=billing');
     }
-  }, [searchParams, router, fetchUserProfile, session?.access_token]);
+  }, [searchParams, router, fetchUserProfile, session?.access_token, isPolling, refreshProfile]);
+
+  // Handle tab from URL
+  useEffect(() => {
+    const tab = searchParams?.get('tab');
+    if (tab && ['profile', 'security', 'billing', 'account', 'theme'].includes(tab)) {
+      setActiveTab(tab as TabType);
+    }
+  }, [searchParams]);
 
   const handleManageBilling = async () => {
     setIsRedirecting(true);
