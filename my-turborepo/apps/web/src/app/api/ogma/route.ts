@@ -1,4 +1,4 @@
-import { generateText, streamText, convertToCoreMessages } from 'ai';
+import { generateText, streamText, convertToModelMessages } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createClient } from '@/lib/supabase/server';
 
@@ -63,10 +63,10 @@ export async function POST(req: Request) {
 
     // FIX: Convert frontend UI messages to standard Core messages
     // This handles the "Object vs String" crash automatically
-    const coreMessages = convertToCoreMessages(messages);
+    const coreMessages = await convertToModelMessages(messages);
 
     // Helper to get simple text for the synthesis prompt later
-    const lastMsgContent = coreMessages[coreMessages.length - 1].content;
+    const lastMsgContent = coreMessages[coreMessages.length - 1]?.content ?? '';
     const latestPromptText = typeof lastMsgContent === 'string'
         ? lastMsgContent
         : lastMsgContent.filter(part => part.type === 'text').map(p => p.text).join('');
@@ -121,5 +121,5 @@ export async function POST(req: Request) {
         }
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 }
