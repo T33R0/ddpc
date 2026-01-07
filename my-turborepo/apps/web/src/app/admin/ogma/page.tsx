@@ -2,7 +2,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, Message } from 'ai';
+import { UIMessage, DefaultChatTransport } from 'ai';
 import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -19,15 +19,10 @@ export default function ChatPage() {
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Initial messages state for useChat
-    const [initialMessages, setInitialMessages] = useState<Message[]>([]);
-
     const { messages, sendMessage, status, setMessages } = useChat({
         transport: new DefaultChatTransport({
             api: '/api/ogma',
         }),
-        initialMessages,
-        // Reset messages when session ID changes (handled via setMessages in select handler, but good to know)
     });
 
     const isLoading = status === 'submitted' || status === 'streaming';
@@ -67,13 +62,14 @@ export default function ChatPage() {
             try {
                 // Fetch messages for this session
                 const dbMessages = await getChatMessages(id);
-                // Convert DB messages to AI SDK Message format
-                const formattedMessages: Message[] = dbMessages.map(m => ({
+                // Convert DB messages to AI SDK UIMessage format
+                const formattedMessages: UIMessage[] = dbMessages.map(m => ({
                     id: m.id,
                     role: m.role as 'user' | 'assistant',
-                    content: m.content,
-                    createdAt: new Date(m.created_at),
-                }));
+                    parts: [{ type: 'text', text: m.content }],
+                    // We mock other required fields of UIMessage if needed, but parts + role + id is usually enough
+                } as any));
+
                 setMessages(formattedMessages);
             } catch (err) {
                 console.error("Failed to load messages", err);
@@ -182,7 +178,7 @@ export default function ChatPage() {
                                                 .filter((part) => part.type === 'text')
                                                 .map((part) => (part as any).text)
                                                 .join('')
-                                            : m.content /* Handle loaded messages that don't have parts */
+                                            : (m as any).content /* Fallback cast */
                                         }
                                     </div>
                                 </div>

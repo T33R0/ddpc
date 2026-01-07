@@ -1,21 +1,29 @@
 import { generateText, streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { createClient } from '@/lib/supabase/server';
 
-// 1. Define The Trinity Configuration
+// 0. Initialize Vercel AI Gateway
+// This allows us to use a single AI_GATEWAY_API_KEY for all providers.
+const gateway = createOpenAI({
+    baseURL: 'https://gateway.ai.vercel.dev/v1',
+    apiKey: process.env.AI_GATEWAY_API_KEY,
+    headers: {
+        'x-project-id': 'my-ddpc', // Telemetry/Tagging
+    }
+});
+
+// 1. Define The Trinity Configuration using the Gateway
 const TRINITY = {
     architect: {
-        model: openai('gpt-4o') as any,
+        model: gateway('openai/gpt-4o'),
         role: "You are The Architect. Analyze the user's request for structural integrity, system design, and logical consistency. Be precise and high-level.",
     },
     visionary: {
-        model: anthropic('claude-3-5-sonnet-20240620') as any,
+        model: gateway('anthropic/claude-3-5-sonnet-20240620'),
         role: "You are The Visionary. Look for creative solutions, alternative approaches, and user experience nuances that others might miss. Think laterally.",
     },
     engineer: {
-        model: google('gemini-1.5-pro-latest') as any,
+        model: gateway('google/gemini-1.5-pro-latest'),
         role: "You are The Engineer. Focus on execution, code correctness, security, performance optimization, and practical implementation. Find the bugs before they happen.",
     }
 };
@@ -45,10 +53,7 @@ export async function POST(req: Request) {
     }
 
     // 2. The Trinity "Thinks" (Parallel Execution)
-    // We wrap this in a try/catch to handle API key errors gracefully,
-    // although standard error handling might suffice.
-    // Given the user lacks keys, this WILL fail. We let it fail so the UI shows an error.
-
+    // Using the unified gateway for all requests
     const [architectRes, visionaryRes, engineerRes] = await Promise.all([
         generateText({
             model: TRINITY.architect.model,
@@ -93,7 +98,7 @@ export async function POST(req: Request) {
 
     // 4. Stream the Final Synthesized Response
     const result = streamText({
-        model: openai('gpt-4o'),
+        model: gateway('openai/gpt-4o'), // Using gateway for the synthesis model too
         prompt: synthesisPrompt,
         onFinish: async ({ text }) => {
             if (user && sessionId) {
