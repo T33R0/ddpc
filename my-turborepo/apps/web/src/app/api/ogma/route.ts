@@ -17,15 +17,15 @@ const vercelGateway = createOpenAICompatible({
 // 2. Define The Trinity
 const TRINITY = {
     architect: {
-        model: vercelGateway('openai/gpt-4o'),
+        model: vercelGateway('openai/gpt-5'),
         role: "You are The Architect. Analyze structural integrity and system design.",
     },
     visionary: {
-        model: vercelGateway('anthropic/claude-3-5-sonnet'),
+        model: vercelGateway('anthropic/claude-3.7-sonnet'),
         role: "You are The Visionary. Focus on creative solutions and lateral thinking.",
     },
     engineer: {
-        model: vercelGateway('google/gemini-1.5-pro'),
+        model: vercelGateway('google/gemini-2.5-pro'),
         role: "You are The Engineer. Focus on code correctness and execution.",
     }
 };
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     // 5. Stream the Final Response
     // strict usage of vercelGateway to avoid "Missing API Key" errors
     const result = streamText({
-        model: vercelGateway('openai/gpt-4o'),
+        model: vercelGateway('openai/gpt-5'),
         prompt: synthesisPrompt,
         onFinish: async ({ text }) => {
             if (user && sessionId) {
