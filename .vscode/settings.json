@@ -1,0 +1,7 @@
+{
+    "deno.enable": true,
+    "deno.enablePaths": [
+        "my-turborepo/supabase/functions"
+    ],
+    "deno.unstable": true
+}
