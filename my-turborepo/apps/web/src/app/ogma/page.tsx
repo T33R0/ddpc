@@ -62,7 +62,7 @@ export default function ChatPage() {
     const isProfileLoading = user && !profile;
     const isUnauthorized = profile && profile.role !== 'admin';
 
-    if (!mounted || loading || isProfileLoading || isUnauthorized) {
+    if (!mounted || loading || !user || isProfileLoading || isUnauthorized) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-black text-white">
                 <div className="animate-pulse flex flex-col items-center gap-4">
