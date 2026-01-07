@@ -38,15 +38,31 @@ export default function ChatPage() {
     }, []);
 
     useEffect(() => {
-        if (!loading && mounted) {
-            if (!user || profile?.role !== 'admin') {
-                router.push('/'); // Redirect unauthorized users
-            }
+        // Wait for hydration and basic auth loading
+        if (!mounted || loading) return;
+
+        // If not authenticated, redirect immediately
+        if (!user) {
+            router.push('/');
+            return;
         }
+
+        // If authenticated, we must ensure we have the profile before making a decision.
+        // If profile is missing but user exists, it might still be fetching (race condition in useAuth).
+        // So we only redirect if we have a profile AND the role is definitely not admin.
+        if (profile && profile.role !== 'admin') {
+            router.push('/');
+        }
+
+        // Note: If profile is null but user exists, we stay on the loading screen.
+        // This handles the case where useAuth says loading=false but profile hasn't populated yet.
     }, [user, profile, loading, mounted, router]);
 
-    // Show loading state while checking auth
-    if (!mounted || loading || !profile || profile.role !== 'admin') {
+    // Show loading state while checking auth or waiting for profile
+    const isProfileLoading = user && !profile;
+    const isUnauthorized = profile && profile.role !== 'admin';
+
+    if (!mounted || loading || !user || isProfileLoading || isUnauthorized) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-black text-white">
                 <div className="animate-pulse flex flex-col items-center gap-4">
