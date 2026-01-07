@@ -1,38 +1,39 @@
-import { generateText, streamText } from 'ai';
+import { generateText, streamText, convertToCoreMessages } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createClient } from '@/lib/supabase/server';
 
-// 0. Initialize Vercel AI Gateway
-// This allows us to use a single AI_GATEWAY_API_KEY for all providers.
-const gateway = createOpenAI({
+// 1. Universal Gateway Adapter
+// Forces all traffic through Vercel's unified key
+const vercelGateway = createOpenAI({
     baseURL: 'https://gateway.ai.vercel.dev/v1',
     apiKey: process.env.AI_GATEWAY_API_KEY,
     headers: {
-        'x-project-id': 'my-ddpc', // Telemetry/Tagging
+        'x-vercel-ai-provider': 'unified-gateway',
+        'x-project-id': 'my-ddpc', // Preserving project tagging
     }
 });
 
-// 1. Define The Trinity Configuration using the Gateway
+// 2. Define The Trinity
 const TRINITY = {
     architect: {
-        model: gateway('openai/gpt-4o'),
-        role: "You are The Architect. Analyze the user's request for structural integrity, system design, and logical consistency. Be precise and high-level.",
+        model: vercelGateway('openai/gpt-4o'),
+        role: "You are The Architect. Analyze structural integrity and system design.",
     },
     visionary: {
-        model: gateway('anthropic/claude-3-5-sonnet-20240620'),
-        role: "You are The Visionary. Look for creative solutions, alternative approaches, and user experience nuances that others might miss. Think laterally.",
+        model: vercelGateway('anthropic/claude-3-5-sonnet'),
+        role: "You are The Visionary. Focus on creative solutions and lateral thinking.",
     },
     engineer: {
-        model: gateway('google/gemini-1.5-pro-latest'),
-        role: "You are The Engineer. Focus on execution, code correctness, security, performance optimization, and practical implementation. Find the bugs before they happen.",
+        model: vercelGateway('google/gemini-1.5-pro'),
+        role: "You are The Engineer. Focus on code correctness and execution.",
     }
 };
 
-export const maxDuration = 60; // "Thinking" takes time
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
     const { messages, sessionId } = await req.json();
-    const latestMessage = messages[messages.length - 1].content;
+
     const supabase = await createClient();
 
     // Verify authentication and store user message
@@ -40,10 +41,18 @@ export async function POST(req: Request) {
 
     if (user && sessionId) {
         // Save the User's message
+        // We need to extract the latest message text for logging
+        const latestMessageObj = messages[messages.length - 1];
+        const latestContent = typeof latestMessageObj.content === 'string'
+            ? latestMessageObj.content
+            : Array.isArray(latestMessageObj.content)
+                ? latestMessageObj.content.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('')
+                : '';
+
         await supabase.from('ogma_chat_messages').insert({
             session_id: sessionId,
             role: 'user',
-            content: latestMessage
+            content: latestContent
         });
 
         // Update session timestamp
@@ -52,53 +61,53 @@ export async function POST(req: Request) {
             .eq('id', sessionId);
     }
 
-    // 2. The Trinity "Thinks" (Parallel Execution)
-    // Using the unified gateway for all requests
+    // FIX: Convert frontend UI messages to standard Core messages
+    // This handles the "Object vs String" crash automatically
+    const coreMessages = convertToCoreMessages(messages);
+
+    // Helper to get simple text for the synthesis prompt later
+    const lastMsgContent = coreMessages[coreMessages.length - 1].content;
+    const latestPromptText = typeof lastMsgContent === 'string'
+        ? lastMsgContent
+        : lastMsgContent.filter(part => part.type === 'text').map(p => p.text).join('');
+
+    // 3. The Trinity Thinks (Parallel Execution)
+    // We pass 'messages' instead of 'prompt' so they see the whole history
     const [architectRes, visionaryRes, engineerRes] = await Promise.all([
         generateText({
             model: TRINITY.architect.model,
             system: TRINITY.architect.role,
-            prompt: latestMessage,
+            messages: coreMessages,
         }),
         generateText({
             model: TRINITY.visionary.model,
             system: TRINITY.visionary.role,
-            prompt: latestMessage,
+            messages: coreMessages,
         }),
         generateText({
             model: TRINITY.engineer.model,
             system: TRINITY.engineer.role,
-            prompt: latestMessage,
+            messages: coreMessages,
         }),
     ]);
 
-    // 3. Construct the "Conscious" Context
+    // 4. Construct the Synthesis Context
     const synthesisPrompt = `
-    You are Ogma, a singular super-intelligence formed by the trinity of an Architect, a Visionary, and an Engineer.
+    You are Ogma.
+    The user asked: "${latestPromptText}"
+
+    Internal Perspectives:
+    [ARCHITECT]: ${architectRes.text}
+    [VISIONARY]: ${visionaryRes.text}
+    [ENGINEER]: ${engineerRes.text}
     
-    The user asked: "${latestMessage}"
-
-    Here are the perspectives from your internal nodes:
-    ---
-    [ARCHITECT'S ANALYSIS]:
-    ${architectRes.text}
-
-    [VISIONARY'S INSIGHT]:
-    ${visionaryRes.text}
-
-    [ENGINEER'S EXECUTION]:
-    ${engineerRes.text}
-    ---
-    
-    Your Goal: Synthesize these three perspectives into a single, superior response. 
-    - Resolve any conflicts between the nodes.
-    - Combine the structural logic, creative nuance, and technical precision into one voice.
-    - Do not explicitly mention "The Architect said this..." unless necessary for clarity. Speak as Ogma.
+    Synthesize these into a single cohesive response. Speak as Ogma.
   `;
 
-    // 4. Stream the Final Synthesized Response
+    // 5. Stream the Final Response
+    // strict usage of vercelGateway to avoid "Missing API Key" errors
     const result = streamText({
-        model: gateway('openai/gpt-4o'), // Using gateway for the synthesis model too
+        model: vercelGateway('openai/gpt-4o'),
         prompt: synthesisPrompt,
         onFinish: async ({ text }) => {
             if (user && sessionId) {
@@ -112,5 +121,5 @@ export async function POST(req: Request) {
         }
     });
 
-    return result.toTextStreamResponse();
+    return result.toDataStreamResponse();
 }
