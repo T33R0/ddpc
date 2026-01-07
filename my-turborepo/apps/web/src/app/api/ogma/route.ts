@@ -7,15 +7,15 @@ import { google } from '@ai-sdk/google';
 // This allows you to easily swap/upgrade models later.
 const TRINITY = {
     architect: {
-        model: openai('gpt-4o'),
+        model: openai('gpt-4o') as any,
         role: "You are The Architect. Analyze the user's request for structural integrity, system design, and logical consistency. Be precise and high-level.",
     },
     visionary: {
-        model: anthropic('claude-3-5-sonnet-20240620'),
+        model: anthropic('claude-3-5-sonnet-20240620') as any,
         role: "You are The Visionary. Look for creative solutions, alternative approaches, and user experience nuances that others might miss. Think laterally.",
     },
     engineer: {
-        model: google('gemini-1.5-pro-latest'),
+        model: google('gemini-1.5-pro-latest') as any,
         role: "You are The Engineer. Focus on execution, code correctness, security, performance optimization, and practical implementation. Find the bugs before they happen.",
     }
 };
