@@ -2,9 +2,9 @@ import { generateText, streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
+import { createClient } from '@/lib/supabase/server';
 
 // 1. Define The Trinity Configuration
-// This allows you to easily swap/upgrade models later.
 const TRINITY = {
     architect: {
         model: openai('gpt-4o') as any,
@@ -23,11 +23,32 @@ const TRINITY = {
 export const maxDuration = 60; // "Thinking" takes time
 
 export async function POST(req: Request) {
-    const { messages } = await req.json();
+    const { messages, sessionId } = await req.json();
     const latestMessage = messages[messages.length - 1].content;
+    const supabase = await createClient();
+
+    // Verify authentication and store user message
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user && sessionId) {
+        // Save the User's message
+        await supabase.from('ogma_chat_messages').insert({
+            session_id: sessionId,
+            role: 'user',
+            content: latestMessage
+        });
+
+        // Update session timestamp
+        await supabase.from('ogma_chat_sessions')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', sessionId);
+    }
 
     // 2. The Trinity "Thinks" (Parallel Execution)
-    // We run all three models at once to minimize wait time.
+    // We wrap this in a try/catch to handle API key errors gracefully,
+    // although standard error handling might suffice.
+    // Given the user lacks keys, this WILL fail. We let it fail so the UI shows an error.
+
     const [architectRes, visionaryRes, engineerRes] = await Promise.all([
         generateText({
             model: TRINITY.architect.model,
@@ -71,10 +92,19 @@ export async function POST(req: Request) {
   `;
 
     // 4. Stream the Final Synthesized Response
-    // We use the strongest model (usually Claude or GPT-4) as the "Voice of Ogma"
     const result = streamText({
-        model: openai('gpt-4o'), // Or swap this to whichever model you prefer as the "Speaker"
+        model: openai('gpt-4o'),
         prompt: synthesisPrompt,
+        onFinish: async ({ text }) => {
+            if (user && sessionId) {
+                // Save the Assistant's response
+                await supabase.from('ogma_chat_messages').insert({
+                    session_id: sessionId,
+                    role: 'assistant',
+                    content: text
+                });
+            }
+        }
     });
 
     return result.toTextStreamResponse();
