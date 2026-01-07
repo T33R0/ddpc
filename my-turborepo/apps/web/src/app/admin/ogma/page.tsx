@@ -1,4 +1,3 @@
-'use strict';
 'use client';
 
 import { useChat } from '@ai-sdk/react';
@@ -158,32 +157,77 @@ export default function ChatPage() {
                             </div>
                         )}
 
-                        {messages.map((m) => (
-                            <div
-                                key={m.id}
-                                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
-                                        ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
-                                        : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
-                                        {m.role === 'user' ? 'Operator' : 'Ogma'}
-                                    </div>
-                                    <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                        {m.parts
-                                            ? m.parts
-                                                .filter((part) => part.type === 'text')
-                                                .map((part) => (part as any).text)
-                                                .join('')
-                                            : (m as any).content /* Fallback cast */
-                                        }
-                                    </div>
+                        {messages.map((m) => {
+                            // Extract thought annotations from the message
+                            const thoughts = (m as any).annotations?.filter(
+                                (a: any) => a.type === 'thought'
+                            ) || [];
+
+                            return (
+                                <div key={m.id} className="space-y-4">
+                                    {m.role === 'user' && (
+                                        <div className="flex justify-end">
+                                            <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border bg-white/5 border-white/10 text-white rounded-br-sm">
+                                                <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
+                                                    Operator
+                                                </div>
+                                                <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
+                                                    {m.parts
+                                                        ? m.parts
+                                                            .filter((part) => part.type === 'text')
+                                                            .map((part) => (part as any).text)
+                                                            .join('')
+                                                        : (m as any).content}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {m.role === 'assistant' && (
+                                        <div className="flex justify-start flex-col gap-3">
+                                            {/* Trinity Thoughts as Colored Cards */}
+                                            {thoughts.length > 0 && (
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in duration-500">
+                                                    {thoughts.map((thought: any, idx: number) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="p-4 rounded-lg border backdrop-blur-sm text-sm"
+                                                            style={{
+                                                                backgroundColor: `${thought.color}15`,
+                                                                borderColor: `${thought.color}40`,
+                                                                color: thought.color
+                                                            }}
+                                                        >
+                                                            <div className="font-bold uppercase text-xs tracking-widest mb-2 opacity-70">
+                                                                {thought.agent}
+                                                            </div>
+                                                            <div className="text-xs leading-relaxed whitespace-pre-wrap opacity-90">
+                                                                {thought.content}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Ogma's Synthesis */}
+                                            <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm">
+                                                <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
+                                                    Ogma
+                                                </div>
+                                                <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
+                                                    {m.parts
+                                                        ? m.parts
+                                                            .filter((part) => part.type === 'text')
+                                                            .map((part) => (part as any).text)
+                                                            .join('')
+                                                        : (m as any).content}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {isLoading && (
                             <div className="flex justify-start">

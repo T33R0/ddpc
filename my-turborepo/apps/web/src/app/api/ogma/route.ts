@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, generateText, convertToModelMessages } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 
@@ -13,148 +13,117 @@ const vercelGateway = createOpenAICompatible({
   }
 });
 
-// 2. Define The Trinity
+// 2. Define The Trinity with colors for client rendering
 const TRINITY = {
   architect: {
     model: vercelGateway('openai/gpt-5'),
     role: "You are The Architect. Analyze structural integrity and system design.",
+    color: "#3b82f6"
   },
   visionary: {
     model: vercelGateway('anthropic/claude-3.7-sonnet'),
     role: "You are The Visionary. Focus on creative solutions and lateral thinking.",
+    color: "#a855f7"
   },
   engineer: {
     model: vercelGateway('google/gemini-2.5-pro'),
     role: "You are The Engineer. Focus on code correctness and execution.",
+    color: "#10b981"
   }
 };
 
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  try {
-    const { messages, sessionId } = await req.json();
-    const supabase = await createClient();
+  const { messages, sessionId } = await req.json();
+  const supabase = await createClient();
 
-    // --- Database Logging (User Message) ---
+  // Log user message (fire and forget)
+  (async () => {
     const { data: { user } } = await supabase.auth.getUser();
-
     if (user && sessionId) {
-      const latestMessageObj = messages[messages.length - 1];
-      const latestContent = typeof latestMessageObj.content === 'string'
-        ? latestMessageObj.content
-        : Array.isArray(latestMessageObj.content)
-          ? latestMessageObj.content.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('')
-          : '';
-
+      const lastMsg = messages[messages.length - 1];
+      const content = typeof lastMsg.content === 'string' ? lastMsg.content : '';
       await supabase.from('ogma_chat_messages').insert({
         session_id: sessionId,
         role: 'user',
-        content: latestContent
+        content
       });
-
-      await supabase.from('ogma_chat_sessions')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', sessionId);
     }
+  })();
 
-    // --- The Trinity Logic ---
-    
-    // FIX for v6: Use convertToModelMessages (async) instead of convertToCoreMessages
-    const modelMessages = await convertToModelMessages(messages);
+  // Convert messages for AI SDK
+  const modelMessages = await convertToModelMessages(messages);
+  
+  // Run all Trinity agents in parallel to collect their thoughts
+  const [archResult, visResult, engResult] = await Promise.all([
+    generateText({
+      model: TRINITY.architect.model,
+      system: TRINITY.architect.role,
+      messages: modelMessages,
+    }),
+    generateText({
+      model: TRINITY.visionary.model,
+      system: TRINITY.visionary.role,
+      messages: modelMessages,
+    }),
+    generateText({
+      model: TRINITY.engineer.model,
+      system: TRINITY.engineer.role,
+      messages: modelMessages,
+    }),
+  ]);
 
-    // Extract latest prompt for synthesis
-    const lastMsgContent = modelMessages[modelMessages.length - 1]?.content ?? '';
-    const latestPromptText = typeof lastMsgContent === 'string'
-      ? lastMsgContent
-      : Array.isArray(lastMsgContent)
-        ? lastMsgContent.filter(part => part.type === 'text').map(p => p.text).join('')
-        : '';
+  const archText = archResult.text;
+  const visText = visResult.text;
+  const engText = engResult.text;
 
-    // Parallel Execution
-    const [architectRes, visionaryRes, engineerRes] = await Promise.all([
-      streamText({
-        model: TRINITY.architect.model,
-        system: TRINITY.architect.role,
-        messages: modelMessages,
-      }),
-      streamText({
-        model: TRINITY.visionary.model,
-        system: TRINITY.visionary.role,
-        messages: modelMessages,
-      }),
-      streamText({
-        model: TRINITY.engineer.model,
-        system: TRINITY.engineer.role,
-        messages: modelMessages,
-      }),
-    ]);
-    
-    // Note: We need full text for synthesis, so we use 'generateText' logic here via stream 
-    // or we assume we want to stream the synthesis immediately. 
-    // To keep it simple and fast, we will just start the synthesis stream 
-    // using the Trinity personas as "System" context injections if we were doing RAG. 
-    // BUT since we want their *output*, we actually need 'generateText' for the Trinity 
-    // and 'streamText' for Ogma.
-    //
-    // Let's correct the loop above to use 'generateText' for the agents so we can await their answers.
-    
-    // Re-import generateText if needed, or use this corrected block:
-    const { generateText } = await import('ai'); 
+  // Synthesize final response with Trinity thoughts as context
+  const synthesisPrompt = `Internal Perspectives:
+[ARCHITECT]: ${archText}
+[VISIONARY]: ${visText}
+[ENGINEER]: ${engText}
 
-    const [arch, vis, eng] = await Promise.all([
-      generateText({
-        model: TRINITY.architect.model,
-        system: TRINITY.architect.role,
-        messages: modelMessages,
-      }),
-      generateText({
-        model: TRINITY.visionary.model,
-        system: TRINITY.visionary.role,
-        messages: modelMessages,
-      }),
-      generateText({
-        model: TRINITY.engineer.model,
-        system: TRINITY.engineer.role,
-        messages: modelMessages,
-      }),
-    ]);
+Synthesize these into a single cohesive response. Speak as Ogma.`;
 
-    // Synthesize
-    const synthesisPrompt = `
-    You are Ogma.
-    The user asked: "${latestPromptText}"
-
-    Internal Perspectives:
-    [ARCHITECT]: ${arch.text}
-    [VISIONARY]: ${vis.text}
-    [ENGINEER]: ${eng.text}
-    
-    Synthesize these into a single cohesive response. Speak as Ogma.
-    `;
-
-    // --- Final Stream ---
-    const result = streamText({
-      model: vercelGateway('openai/gpt-5'),
-      prompt: synthesisPrompt,
-      onFinish: async ({ text }) => {
-        if (user && sessionId) {
-          await supabase.from('ogma_chat_messages').insert({
-            session_id: sessionId,
-            role: 'assistant',
-            content: text
-          });
-        }
+  // Stream final response
+  const result = streamText({
+    model: vercelGateway('openai/gpt-5'),
+    prompt: synthesisPrompt,
+    onFinish: async ({ text }) => {
+      // Log assistant response (fire and forget)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && sessionId) {
+        await supabase.from('ogma_chat_messages').insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: text
+        });
       }
-    });
+    }
+  });
 
-    return result.toTextStreamResponse();
+  // Add annotations to the result (Trinity thoughts)
+  result.annotations = [
+    {
+      type: 'thought',
+      agent: 'architect',
+      color: TRINITY.architect.color,
+      content: archText
+    },
+    {
+      type: 'thought',
+      agent: 'visionary',
+      color: TRINITY.visionary.color,
+      content: visText
+    },
+    {
+      type: 'thought',
+      agent: 'engineer',
+      color: TRINITY.engineer.color,
+      content: engText
+    }
+  ];
 
-  } catch (error) {
-    console.error('Ogma Trinity Error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to process Trinity request' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  return result.toTextStreamResponse();
 }
