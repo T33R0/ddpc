@@ -12,9 +12,22 @@ export default function ChatPage() {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    const { messages, append, isLoading } = useChat({
         api: '/api/ogma',
     });
+
+    const [input, setInput] = useState('');
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim()) return;
+        append({ role: 'user', content: input });
+        setInput('');
+    };
 
     useEffect(() => {
         setMounted(true);
