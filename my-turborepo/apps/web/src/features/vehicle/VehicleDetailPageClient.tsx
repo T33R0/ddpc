@@ -9,7 +9,7 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalDescription } from '@repo/ui/modal'
-import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, ChevronLeft } from 'lucide-react'
+import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, ChevronLeft, Puzzle } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { Badge } from '@repo/ui/badge'
 import { DropdownMenu } from '@repo/ui/dropdown-menu'
@@ -807,6 +807,16 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
             stats={[
               { label: 'Total Mods', value: stats?.totalCompletedMods?.toLocaleString() || '---' },
               { label: 'Total Cost', value: stats?.totalCompletedModCost !== undefined ? formatCurrency(stats.totalCompletedModCost) : '---' }
+            ]}
+            disabled={!isOwner}
+          />
+          <NavigationCard
+            icon={Puzzle}
+            title="Parts"
+            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/parts`)}
+            stats={[
+              { label: 'Diagram', value: 'Interactive' },
+              { label: 'Health', value: 'Monitor' }
             ]}
             disabled={!isOwner}
           />
