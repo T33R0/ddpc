@@ -6,8 +6,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Terminal } from 'lucide-react';
 import { ChatSidebar } from '@/features/ogma/components/ChatSidebar';
-import { createChatSession, getChatMessages } from '@/features/ogma/actions';
-import { cn } from '@repo/ui/lib/utils';
+import { createChatSession } from '@/features/ogma/actions';
 
 export default function ChatPage() {
     const { user, profile, loading } = useAuth();
@@ -16,22 +15,50 @@ export default function ChatPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [input, setInput] = useState('');
 
-    const { messages, input, setInput, handleInputChange, handleSubmit, isLoading } = useChat({
-        api: '/api/ogma',
+    const { messages, sendMessage, status, setMessages } = useChat({
     });
+
+    // Determine loading state
+    const isLoading = status !== 'ready';
 
     const handleSelectSession = async (id: string | null) => {
         setCurrentSessionId(id);
-        // Load messages when session changes - we'll reload the page or refetch
         if (id) {
+            // Clear messages when switching sessions
+            setMessages([]);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim()) return;
+
+        let activeSessionId = currentSessionId;
+
+        // If no session exists, create one first
+        if (!activeSessionId) {
             try {
-                // For now, let the useChat hook handle fetching
-                // You can add a useEffect to reload messages when session changes
+                activeSessionId = await createChatSession();
+                setCurrentSessionId(activeSessionId);
+                setRefreshTrigger(prev => prev + 1);
             } catch (err) {
-                console.error("Failed to load messages", err);
+                console.error("Failed to create session", err);
+                return;
             }
         }
+
+        // Send message with the AI SDK
+        await sendMessage({
+            role: 'user',
+            content: input,
+        } as any);
+        setInput('');
     };
 
     useEffect(() => {
@@ -111,7 +138,7 @@ export default function ChatPage() {
                             </div>
                         )}
 
-                        {messages.map((m) => (
+                        {messages.map((m: any) => (
                             <div
                                 key={m.id}
                                 className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
