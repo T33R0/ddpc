@@ -1,4 +1,4 @@
-import { generateText, streamText, convertToCoreMessages } from 'ai';
+import { generateText, streamText, convertToModelMessages } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 
@@ -62,14 +62,16 @@ export async function POST(req: Request) {
 
         // --- The Trinity Logic ---
         
-        // Convert to Core messages for the AI SDK
-        const coreMessages = convertToCoreMessages(messages);
+        // FIX: Use v6 'convertToModelMessages' and AWAIT it
+        const coreMessages = await convertToModelMessages(messages);
 
         // Extract latest prompt for the synthesis context
         const lastMsgContent = coreMessages[coreMessages.length - 1]?.content ?? '';
         const latestPromptText = typeof lastMsgContent === 'string'
             ? lastMsgContent
-            : lastMsgContent.filter(part => part.type === 'text').map(p => p.text).join('');
+            : Array.isArray(lastMsgContent) 
+                ? lastMsgContent.filter(part => part.type === 'text').map(p => p.text).join('') 
+                : '';
 
         // Parallel Execution: The Three Minds Think
         const [architectRes, visionaryRes, engineerRes] = await Promise.all([
@@ -118,7 +120,7 @@ export async function POST(req: Request) {
             }
         });
 
-        // Return Data Stream Protocol (Types should pass now due to clean install)
+        // Return Data Stream Protocol
         return result.toDataStreamResponse();
 
     } catch (error) {
