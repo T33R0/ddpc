@@ -1,15 +1,13 @@
 import { generateText, streamText, convertToModelMessages } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 
 // 1. Universal Gateway Adapter
 // Forces all traffic through Vercel's unified key
-const vercelGateway = createOpenAI({
+const vercelGateway = createOpenAICompatible({
     name: 'ogma-gateway',
     baseURL: 'https://ai-gateway.vercel.sh/v1',
     apiKey: process.env.AI_GATEWAY_API_KEY,
-    // @ts-expect-error - compatibility mode required for Vercel Gateway but missing in current SDK types
-    compatibility: 'strict',
     headers: {
         'x-vercel-ai-provider': 'unified-gateway',
         'x-project-id': 'my-ddpc', // Preserving project tagging
