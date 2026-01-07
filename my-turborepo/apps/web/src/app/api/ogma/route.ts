@@ -122,5 +122,6 @@ export async function POST(req: Request) {
         }
     });
 
-    return result.toTextStreamResponse();
+    // @ts-expect-error - method exists at runtime in AI SDK Core v6 but types are stale
+    return result.toDataStreamResponse();
 }
