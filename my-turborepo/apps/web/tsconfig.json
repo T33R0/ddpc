@@ -14,8 +14,7 @@
     ],
     "jsx": "react-jsx",
     "allowJs": true,
-    "esModuleInterop": true,
-    "moduleResolution": "node"
+    "esModuleInterop": true
   },
   "include": [
     "next-env.d.ts",
