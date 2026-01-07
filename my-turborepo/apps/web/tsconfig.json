@@ -11,9 +11,14 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node"
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "next-env.d.ts",
