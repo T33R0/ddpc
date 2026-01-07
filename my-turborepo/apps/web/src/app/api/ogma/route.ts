@@ -103,27 +103,5 @@ Synthesize these into a single cohesive response. Speak as Ogma.`;
     }
   });
 
-  // Add annotations to the result (Trinity thoughts)
-  result.annotations = [
-    {
-      type: 'thought',
-      agent: 'architect',
-      color: TRINITY.architect.color,
-      content: archText
-    },
-    {
-      type: 'thought',
-      agent: 'visionary',
-      color: TRINITY.visionary.color,
-      content: visText
-    },
-    {
-      type: 'thought',
-      agent: 'engineer',
-      color: TRINITY.engineer.color,
-      content: engText
-    }
-  ];
-
   return result.toTextStreamResponse();
 }

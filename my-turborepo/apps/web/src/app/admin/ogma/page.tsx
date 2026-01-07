@@ -1,7 +1,6 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { UIMessage, DefaultChatTransport } from 'ai';
 import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,65 +17,20 @@ export default function ChatPage() {
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    const { messages, sendMessage, status, setMessages } = useChat({
-        transport: new DefaultChatTransport({
-            api: '/api/ogma',
-        }),
+    const { messages, input, setInput, handleInputChange, handleSubmit, isLoading } = useChat({
+        api: '/api/ogma',
     });
-
-    const isLoading = status === 'submitted' || status === 'streaming';
-    const [input, setInput] = useState('');
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInput(e.target.value);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim()) return;
-
-        let activeSessionId = currentSessionId;
-
-        // If no session exists, create one first
-        if (!activeSessionId) {
-            try {
-                activeSessionId = await createChatSession();
-                setCurrentSessionId(activeSessionId);
-                setRefreshTrigger(prev => prev + 1); // Update sidebar
-            } catch (err) {
-                console.error("Failed to create session", err);
-                return; // Prevent sending if session creation fails
-            }
-        }
-
-        // Send message with sessionId in the body
-        sendMessage({ text: input }, { body: { sessionId: activeSessionId } });
-        setInput('');
-    };
 
     const handleSelectSession = async (id: string | null) => {
         setCurrentSessionId(id);
-
+        // Load messages when session changes - we'll reload the page or refetch
         if (id) {
             try {
-                // Fetch messages for this session
-                const dbMessages = await getChatMessages(id);
-                // Convert DB messages to AI SDK UIMessage format
-                const formattedMessages: UIMessage[] = dbMessages.map(m => ({
-                    id: m.id,
-                    role: m.role as 'user' | 'assistant',
-                    parts: [{ type: 'text', text: m.content }],
-                    // We mock other required fields of UIMessage if needed, but parts + role + id is usually enough
-                } as any));
-
-                setMessages(formattedMessages);
+                // For now, let the useChat hook handle fetching
+                // You can add a useEffect to reload messages when session changes
             } catch (err) {
                 console.error("Failed to load messages", err);
-                setMessages([]);
             }
-        } else {
-            // New Chat
-            setMessages([]);
         }
     };
 
@@ -157,77 +111,26 @@ export default function ChatPage() {
                             </div>
                         )}
 
-                        {messages.map((m) => {
-                            // Extract thought annotations from the message
-                            const thoughts = (m as any).annotations?.filter(
-                                (a: any) => a.type === 'thought'
-                            ) || [];
-
-                            return (
-                                <div key={m.id} className="space-y-4">
-                                    {m.role === 'user' && (
-                                        <div className="flex justify-end">
-                                            <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border bg-white/5 border-white/10 text-white rounded-br-sm">
-                                                <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
-                                                    Operator
-                                                </div>
-                                                <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                                    {m.parts
-                                                        ? m.parts
-                                                            .filter((part) => part.type === 'text')
-                                                            .map((part) => (part as any).text)
-                                                            .join('')
-                                                        : (m as any).content}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {m.role === 'assistant' && (
-                                        <div className="flex justify-start flex-col gap-3">
-                                            {/* Trinity Thoughts as Colored Cards */}
-                                            {thoughts.length > 0 && (
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in duration-500">
-                                                    {thoughts.map((thought: any, idx: number) => (
-                                                        <div
-                                                            key={idx}
-                                                            className="p-4 rounded-lg border backdrop-blur-sm text-sm"
-                                                            style={{
-                                                                backgroundColor: `${thought.color}15`,
-                                                                borderColor: `${thought.color}40`,
-                                                                color: thought.color
-                                                            }}
-                                                        >
-                                                            <div className="font-bold uppercase text-xs tracking-widest mb-2 opacity-70">
-                                                                {thought.agent}
-                                                            </div>
-                                                            <div className="text-xs leading-relaxed whitespace-pre-wrap opacity-90">
-                                                                {thought.content}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {/* Ogma's Synthesis */}
-                                            <div className="max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm">
-                                                <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
-                                                    Ogma
-                                                </div>
-                                                <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                                    {m.parts
-                                                        ? m.parts
-                                                            .filter((part) => part.type === 'text')
-                                                            .map((part) => (part as any).text)
-                                                            .join('')
-                                                        : (m as any).content}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                        {messages.map((m) => (
+                            <div
+                                key={m.id}
+                                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
+                                        ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
+                                        : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
+                                        {m.role === 'user' ? 'Operator' : 'Ogma'}
+                                    </div>
+                                    <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
+                                        {m.content}
+                                    </div>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        ))}
 
                         {isLoading && (
                             <div className="flex justify-start">
