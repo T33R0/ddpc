@@ -14,6 +14,12 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '4mb',
     },
+    optimizePackageImports: [
+      'lucide-react',
+      '@ai-sdk/react',
+      'ai',
+      'recharts',
+    ],
   },
   async redirects() {
     return [
