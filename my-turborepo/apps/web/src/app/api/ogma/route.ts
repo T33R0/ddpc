@@ -1,21 +1,29 @@
 import { generateText, streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createClient } from '@/lib/supabase/server';
 
-// 1. Define The Trinity Configuration
-// This allows you to easily swap/upgrade models later.
+// 0. Initialize Vercel AI Gateway
+// This allows us to use a single AI_GATEWAY_API_KEY for all providers.
+const gateway = createOpenAI({
+    baseURL: 'https://gateway.ai.vercel.dev/v1',
+    apiKey: process.env.AI_GATEWAY_API_KEY,
+    headers: {
+        'x-project-id': 'my-ddpc', // Telemetry/Tagging
+    }
+});
+
+// 1. Define The Trinity Configuration using the Gateway
 const TRINITY = {
     architect: {
-        model: openai('gpt-4o') as any,
+        model: gateway('openai/gpt-4o'),
         role: "You are The Architect. Analyze the user's request for structural integrity, system design, and logical consistency. Be precise and high-level.",
     },
     visionary: {
-        model: anthropic('claude-3-5-sonnet-20240620') as any,
+        model: gateway('anthropic/claude-3-5-sonnet-20240620'),
         role: "You are The Visionary. Look for creative solutions, alternative approaches, and user experience nuances that others might miss. Think laterally.",
     },
     engineer: {
-        model: google('gemini-1.5-pro-latest') as any,
+        model: gateway('google/gemini-1.5-pro-latest'),
         role: "You are The Engineer. Focus on execution, code correctness, security, performance optimization, and practical implementation. Find the bugs before they happen.",
     }
 };
@@ -23,11 +31,29 @@ const TRINITY = {
 export const maxDuration = 60; // "Thinking" takes time
 
 export async function POST(req: Request) {
-    const { messages } = await req.json();
+    const { messages, sessionId } = await req.json();
     const latestMessage = messages[messages.length - 1].content;
+    const supabase = await createClient();
+
+    // Verify authentication and store user message
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user && sessionId) {
+        // Save the User's message
+        await supabase.from('ogma_chat_messages').insert({
+            session_id: sessionId,
+            role: 'user',
+            content: latestMessage
+        });
+
+        // Update session timestamp
+        await supabase.from('ogma_chat_sessions')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', sessionId);
+    }
 
     // 2. The Trinity "Thinks" (Parallel Execution)
-    // We run all three models at once to minimize wait time.
+    // Using the unified gateway for all requests
     const [architectRes, visionaryRes, engineerRes] = await Promise.all([
         generateText({
             model: TRINITY.architect.model,
@@ -71,10 +97,19 @@ export async function POST(req: Request) {
   `;
 
     // 4. Stream the Final Synthesized Response
-    // We use the strongest model (usually Claude or GPT-4) as the "Voice of Ogma"
     const result = streamText({
-        model: openai('gpt-4o'), // Or swap this to whichever model you prefer as the "Speaker"
+        model: gateway('openai/gpt-4o'), // Using gateway for the synthesis model too
         prompt: synthesisPrompt,
+        onFinish: async ({ text }) => {
+            if (user && sessionId) {
+                // Save the Assistant's response
+                await supabase.from('ogma_chat_messages').insert({
+                    session_id: sessionId,
+                    role: 'assistant',
+                    content: text
+                });
+            }
+        }
     });
 
     return result.toTextStreamResponse();

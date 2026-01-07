@@ -1,0 +1,57 @@
+
+> dev
+> turbo run dev
+
+• turbo 2.7.1
+• Packages in scope: @repo/assets, @repo/eslint-config, @repo/prettier-config, @repo/services, @repo/tailwind-config, @repo/types, @repo/typescript-config, @repo/ui, docs, web
+• Running dev in 10 packages
+• Remote caching disabled
+web:dev: cache bypass, force executing 32e095a596bcb657
+docs:dev: cache bypass, force executing 5bb977c7586f8b56
+web:dev:
+web:dev: > web@0.1.0 dev
+web:dev: > next dev --turbopack --port 3000
+web:dev:
+docs:dev:
+docs:dev: > docs@0.1.0 dev
+docs:dev: > next dev --turbopack --port 3001
+docs:dev:
+docs:dev:    ▲ Next.js 16.0.10 (Turbopack)
+docs:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+docs:dev:    - Local:         http://localhost:3001
+docs:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+docs:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+docs:dev:    - Network:       http://192.168.0.2:3001
+docs:dev:
+docs:dev:  ✓ Starting...
+docs:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+docs:dev:  Detected additional lockfiles:
+docs:dev:    * /app/my-turborepo/package-lock.json
+docs:dev:
+docs:dev:  ✓ Ready in 762ms
+web:dev:  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+web:dev:  We detected multiple lockfiles and selected the directory of /app/package-lock.json as the root directory.
+web:dev:  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+web:dev:    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+web:dev:  Detected additional lockfiles:
+web:dev:    * /app/my-turborepo/package-lock.json
+web:dev:
+web:dev:    ▲ Next.js 16.0.10 (Turbopack)
+web:dev:    - Local:         http://localhost:3000
+web:dev:    - Network:       http://192.168.0.2:3000
+web:dev:    - Experiments (use with caution):
+web:dev:      · optimizePackageImports
+web:dev:      · serverActions
+web:dev:
+web:dev:  ✓ Starting...
+web:dev:  ✓ Ready in 2.6s
+web:dev:  ○ Compiling /admin/ogma ...
+web:dev:  GET /admin/ogma 307 in 9.7s (compile: 8.7s, render: 989ms)
+web:dev:  ✓ Compiled in 302ms
+web:dev:  GET /admin/ogma 200 in 735ms (compile: 218ms, render: 517ms)
+web:dev:  POST /admin/ogma 200 in 90ms (compile: 19ms, render: 72ms)
+web:dev:  POST /admin/ogma 200 in 91ms (compile: 48ms, render: 43ms)
+web:dev:  GET /api/garage/vehicles 401 in 1435ms (compile: 1396ms, render: 39ms)
+web:dev:  GET /api/garage/vehicles 401 in 1451ms (compile: 1430ms, render: 21ms)
+web:dev:  ✓ Compiled in 273ms
+web:dev:  ✓ Compiled in 227ms
