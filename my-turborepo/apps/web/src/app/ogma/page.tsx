@@ -2,6 +2,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,9 +14,9 @@ export default function ChatPage() {
     const [mounted, setMounted] = useState(false);
 
     const { messages, sendMessage, status } = useChat({
-        async fetch(input, init) {
-            return fetch('/api/ogma', init);
-        },
+        transport: new DefaultChatTransport({
+            api: '/api/ogma',
+        }),
     });
 
     const isLoading = status === 'submitted' || status === 'streaming';
@@ -28,7 +29,7 @@ export default function ChatPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
-        sendMessage({ role: 'user', content: input });
+        sendMessage({ text: input });
         setInput('');
     };
 
@@ -104,7 +105,10 @@ export default function ChatPage() {
                                     {m.role === 'user' ? 'Operator' : 'Ogma'}
                                 </div>
                                 <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                    {(m as any).content}
+                                    {m.parts
+                                        .filter((part) => part.type === 'text')
+                                        .map((part) => (part as any).text)
+                                        .join('')}
                                 </div>
                             </div>
                         </div>
