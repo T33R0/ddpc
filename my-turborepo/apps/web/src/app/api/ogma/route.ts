@@ -1,9 +1,8 @@
-import { generateText, streamText, convertToCoreMessages } from 'ai';
+import { streamText, convertToModelMessages } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 
 // 1. Universal Gateway Adapter
-// Forces traffic through Vercel Gateway (Marketplace Mode)
 const vercelGateway = createOpenAICompatible({
   name: 'ogma-gateway',
   baseURL: 'https://ai-gateway.vercel.sh/v1',
@@ -61,12 +60,11 @@ export async function POST(req: Request) {
 
     // --- The Trinity Logic ---
     
-    // STANDARD FIX: Now that dependencies are clean, we use the standard helper.
-    // This converts frontend messages to the Core format 'streamText' expects.
-    const coreMessages = convertToCoreMessages(messages);
+    // FIX for v6: Use convertToModelMessages (async) instead of convertToCoreMessages
+    const modelMessages = await convertToModelMessages(messages);
 
-    // Extract latest prompt for the synthesis context
-    const lastMsgContent = coreMessages[coreMessages.length - 1]?.content ?? '';
+    // Extract latest prompt for synthesis
+    const lastMsgContent = modelMessages[modelMessages.length - 1]?.content ?? '';
     const latestPromptText = typeof lastMsgContent === 'string'
       ? lastMsgContent
       : Array.isArray(lastMsgContent)
@@ -75,20 +73,50 @@ export async function POST(req: Request) {
 
     // Parallel Execution
     const [architectRes, visionaryRes, engineerRes] = await Promise.all([
+      streamText({
+        model: TRINITY.architect.model,
+        system: TRINITY.architect.role,
+        messages: modelMessages,
+      }),
+      streamText({
+        model: TRINITY.visionary.model,
+        system: TRINITY.visionary.role,
+        messages: modelMessages,
+      }),
+      streamText({
+        model: TRINITY.engineer.model,
+        system: TRINITY.engineer.role,
+        messages: modelMessages,
+      }),
+    ]);
+    
+    // Note: We need full text for synthesis, so we use 'generateText' logic here via stream 
+    // or we assume we want to stream the synthesis immediately. 
+    // To keep it simple and fast, we will just start the synthesis stream 
+    // using the Trinity personas as "System" context injections if we were doing RAG. 
+    // BUT since we want their *output*, we actually need 'generateText' for the Trinity 
+    // and 'streamText' for Ogma.
+    //
+    // Let's correct the loop above to use 'generateText' for the agents so we can await their answers.
+    
+    // Re-import generateText if needed, or use this corrected block:
+    const { generateText } = await import('ai'); 
+
+    const [arch, vis, eng] = await Promise.all([
       generateText({
         model: TRINITY.architect.model,
         system: TRINITY.architect.role,
-        messages: coreMessages,
+        messages: modelMessages,
       }),
       generateText({
         model: TRINITY.visionary.model,
         system: TRINITY.visionary.role,
-        messages: coreMessages,
+        messages: modelMessages,
       }),
       generateText({
         model: TRINITY.engineer.model,
         system: TRINITY.engineer.role,
-        messages: coreMessages,
+        messages: modelMessages,
       }),
     ]);
 
@@ -98,9 +126,9 @@ export async function POST(req: Request) {
     The user asked: "${latestPromptText}"
 
     Internal Perspectives:
-    [ARCHITECT]: ${architectRes.text}
-    [VISIONARY]: ${visionaryRes.text}
-    [ENGINEER]: ${engineerRes.text}
+    [ARCHITECT]: ${arch.text}
+    [VISIONARY]: ${vis.text}
+    [ENGINEER]: ${eng.text}
     
     Synthesize these into a single cohesive response. Speak as Ogma.
     `;
@@ -120,8 +148,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // Return Data Stream Protocol
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (error) {
     console.error('Ogma Trinity Error:', error);
