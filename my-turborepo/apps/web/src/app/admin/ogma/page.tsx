@@ -2,11 +2,19 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useAuth } from '@/lib/auth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Terminal } from 'lucide-react';
+import { Send, Terminal, Cpu, Lightbulb, PenTool } from 'lucide-react';
 import { ChatSidebar } from '@/features/ogma/components/ChatSidebar';
 import { createChatSession } from '@/features/ogma/actions';
+
+// Define the shape of our custom thought annotation from the Trinity
+type Thought = {
+    type: 'thought';
+    agent: 'architect' | 'visionary' | 'engineer';
+    color: string;
+    content: string;
+};
 
 export default function ChatPage() {
     const { user, profile, loading } = useAuth();
@@ -15,27 +23,31 @@ export default function ChatPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [input, setInput] = useState('');
 
-    const { messages, sendMessage, status, setMessages } = useChat({
-    });
+    // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
+    const { messages, input, handleInputChange, handleSubmit, append, setMessages, status } = useChat({
+        api: '/api/ogma',
+        body: { sessionId: currentSessionId },
+    }) as any;
 
-    // Determine loading state
-    const isLoading = status !== 'ready';
+    const isLoading = status === 'submitted' || status === 'streaming';
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll logic
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
     const handleSelectSession = async (id: string | null) => {
         setCurrentSessionId(id);
         if (id) {
-            // Clear messages when switching sessions
             setMessages([]);
         }
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInput(e.target.value);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
 
@@ -53,12 +65,19 @@ export default function ChatPage() {
             }
         }
 
-        // Send message with the AI SDK
-        await sendMessage({
+        // 2. CRITICAL: Use 'append' to send the message with the new Session ID valid
+        // We manually append because 'handleSubmit' relies on the state which might lag one render cycle
+        await append({
             role: 'user',
             content: input,
-        } as any);
-        setInput('');
+        });
+        
+        // Input clearing is handled by the hook usually, but since we used append manual, we might need to clear? 
+        // Actually, handleInputChange manages 'input' state. We should clear it manually here if using append.
+        // Or simpler: just let append work and use the standard handleSubmit logic if possible, 
+        // but async session creation makes that tricky. 
+        // Let's stick to this manual clear for safety:
+        handleInputChange({ target: { value: '' } } as any); 
     };
 
     useEffect(() => {
@@ -66,21 +85,16 @@ export default function ChatPage() {
     }, []);
 
     useEffect(() => {
-        // Wait for hydration and basic auth loading
         if (!mounted || loading) return;
-
-        // If not authenticated, redirect immediately
         if (!user) {
             router.push('/');
             return;
         }
-
         if (profile && profile.role !== 'admin') {
             router.push('/');
         }
     }, [user, profile, loading, mounted, router]);
 
-    // Show loading state while checking auth or waiting for profile
     const isProfileLoading = user && !profile;
     const isUnauthorized = profile && profile.role !== 'admin';
 
@@ -97,7 +111,6 @@ export default function ChatPage() {
 
     return (
         <div className="flex h-screen w-full bg-[#0a0a0a] text-[#e0e0e0] font-sans overflow-hidden">
-            {/* Sidebar */}
             <ChatSidebar
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
@@ -128,7 +141,7 @@ export default function ChatPage() {
 
                 {/* Chat Area */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
-                    <div className="max-w-3xl mx-auto space-y-8 pb-32">
+                    <div className="max-w-4xl mx-auto space-y-8 pb-32">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 opacity-50">
                                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-4">
@@ -138,45 +151,89 @@ export default function ChatPage() {
                             </div>
                         )}
 
-                        {messages.map((m: any) => (
-                            <div
-                                key={m.id}
-                                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
-                                        ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
-                                        : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
-                                        {m.role === 'user' ? 'Operator' : 'Ogma'}
-                                    </div>
-                                    <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                        {m.content}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                        {messages.map((m: any) => {
+                            // 3. Extract Thoughts for Visualization
+                            const thoughts = (m.annotations as Thought[] | undefined)?.filter(
+                                (a) => a && a.type === 'thought'
+                            );
 
-                        {isLoading && (
+                            return (
+                                <div
+                                    key={m.id}
+                                    className={`flex flex-col gap-2 ${m.role === 'user' ? 'items-end' : 'items-start'}`}
+                                >
+                                    {/* --- TRINITY THOUGHT CARDS --- */}
+                                    {thoughts && thoughts.length > 0 && (
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2 w-full max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                            {thoughts.map((t, i) => (
+                                                <div 
+                                                    key={i} 
+                                                    className={`p-3 rounded-lg border text-xs leading-relaxed font-mono relative overflow-hidden group
+                                                        ${t.agent === 'architect' ? 'bg-blue-950/30 border-blue-500/30 text-blue-200/90' : ''}
+                                                        ${t.agent === 'visionary' ? 'bg-purple-950/30 border-purple-500/30 text-purple-200/90' : ''}
+                                                        ${t.agent === 'engineer' ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200/90' : ''}
+                                                    `}
+                                                >
+                                                    <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-2">
+                                                        {t.agent === 'architect' && <PenTool className="w-3 h-3 text-blue-400" />}
+                                                        {t.agent === 'visionary' && <Lightbulb className="w-3 h-3 text-purple-400" />}
+                                                        {t.agent === 'engineer' && <Cpu className="w-3 h-3 text-emerald-400" />}
+                                                        <span className="uppercase tracking-widest opacity-70 font-bold text-[10px]">
+                                                            {t.agent}
+                                                        </span>
+                                                    </div>
+                                                    <div className="opacity-80 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                                                        {t.content}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* --- MAIN MESSAGE --- */}
+                                    {(m.content || m.role === 'user') && (
+                                        <div
+                                            className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
+                                                ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
+                                                : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
+                                                {m.role === 'user' ? 'Operator' : 'Ogma'}
+                                            </div>
+                                            <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
+                                                {m.content}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        {/* Loading Indicator */}
+                        {isLoading && messages[messages.length - 1]?.role === 'user' && (
                             <div className="flex justify-start">
                                 <div className="max-w-[75%] rounded-2xl rounded-bl-sm px-6 py-4 bg-indigo-500/5 border border-indigo-500/10">
-                                    <div className="flex gap-1.5 items-center h-6">
-                                        <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                        <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                        <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex gap-1.5 items-center h-6">
+                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce" />
+                                        </div>
+                                        <span className="text-xs font-mono text-indigo-400/50 tracking-widest animate-pulse">
+                                            SYNTHESIZING...
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         )}
+                        <div ref={scrollRef} />
                     </div>
                 </main>
 
-                {/* Input Area */}
                 <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent pt-10 z-10">
                     <div className="max-w-3xl mx-auto">
-                        <form onSubmit={handleSubmit} className="relative group">
+                        <form onSubmit={handleFormSubmit} className="relative group">
                             <input
                                 className="w-full bg-[#111] hover:bg-[#161616] focus:bg-[#111] transition-all border border-white/10 text-white placeholder-white/20 rounded-2xl px-6 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 shadow-2xl shadow-black/50"
                                 value={input}

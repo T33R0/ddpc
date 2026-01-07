@@ -1,6 +1,7 @@
-import { streamText, generateText, convertToModelMessages } from 'ai';
+import { streamText, convertToModelMessages, createDataStreamResponse } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 
 // 1. Universal Gateway Adapter
 const vercelGateway = createOpenAICompatible({
@@ -13,22 +14,22 @@ const vercelGateway = createOpenAICompatible({
   }
 });
 
-// 2. Define The Trinity with colors for client rendering
+// 2. Define The Trinity
 const TRINITY = {
   architect: {
     model: vercelGateway('openai/gpt-5'),
     role: "You are The Architect. Analyze structural integrity and system design.",
-    color: "#3b82f6"
+    color: "blue"
   },
   visionary: {
     model: vercelGateway('anthropic/claude-3.7-sonnet'),
     role: "You are The Visionary. Focus on creative solutions and lateral thinking.",
-    color: "#a855f7"
+    color: "purple"
   },
   engineer: {
     model: vercelGateway('google/gemini-2.5-pro'),
     role: "You are The Engineer. Focus on code correctness and execution.",
-    color: "#10b981"
+    color: "green"
   }
 };
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   const { messages, sessionId } = await req.json();
   const supabase = await createClient();
 
-  // Log user message (fire and forget)
+  // Log user message
   (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user && sessionId) {
@@ -52,56 +53,69 @@ export async function POST(req: Request) {
     }
   })();
 
-  // Convert messages for AI SDK
-  const modelMessages = await convertToModelMessages(messages);
-  
-  // Run all Trinity agents in parallel to collect their thoughts
-  const [archResult, visResult, engResult] = await Promise.all([
-    generateText({
-      model: TRINITY.architect.model,
-      system: TRINITY.architect.role,
-      messages: modelMessages,
-    }),
-    generateText({
-      model: TRINITY.visionary.model,
-      system: TRINITY.visionary.role,
-      messages: modelMessages,
-    }),
-    generateText({
-      model: TRINITY.engineer.model,
-      system: TRINITY.engineer.role,
-      messages: modelMessages,
-    }),
-  ]);
+  // 3. Create a Custom Data Stream (v6 Standard)
+  return createDataStreamResponse({
+    execute: async (dataStream) => {
+      // v6: Use convertToModelMessages (Async)
+      const modelMessages = await convertToModelMessages(messages);
+      
+      // We need generateText to capture the full thought string
+      const { generateText } = await import('ai');
 
-  const archText = archResult.text;
-  const visText = visResult.text;
-  const engText = engResult.text;
+      const runAgent = async (key: 'architect' | 'visionary' | 'engineer') => {
+        const agent = TRINITY[key];
+        
+        const { text } = await generateText({
+          model: agent.model,
+          system: agent.role,
+          messages: modelMessages,
+        });
 
-  // Synthesize final response with Trinity thoughts as context
-  const synthesisPrompt = `Internal Perspectives:
-[ARCHITECT]: ${archText}
-[VISIONARY]: ${visText}
-[ENGINEER]: ${engText}
-
-Synthesize these into a single cohesive response. Speak as Ogma.`;
-
-  // Stream final response
-  const result = streamText({
-    model: vercelGateway('openai/gpt-5'),
-    prompt: synthesisPrompt,
-    onFinish: async ({ text }) => {
-      // Log assistant response (fire and forget)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && sessionId) {
-        await supabase.from('ogma_chat_messages').insert({
-          session_id: sessionId,
-          role: 'assistant',
+        // v6: Write annotation to the stream manually
+        dataStream.writeMessageAnnotation({
+          type: 'thought',
+          agent: key,
+          color: agent.color,
           content: text
         });
-      }
-    }
-  });
 
-  return result.toTextStreamResponse();
+        return text;
+      };
+
+      // Run Trinity in Parallel
+      const [archText, visText, engText] = await Promise.all([
+        runAgent('architect'),
+        runAgent('visionary'),
+        runAgent('engineer')
+      ]);
+
+      const synthesisPrompt = `
+      Internal Perspectives:
+      [ARCHITECT]: ${archText}
+      [VISIONARY]: ${visText}
+      [ENGINEER]: ${engText}
+      
+      Synthesize these into a single cohesive response. Speak as Ogma.
+      `;
+
+      // Stream Ogma's Final Word
+      const result = streamText({
+        model: vercelGateway('openai/gpt-5'),
+        prompt: synthesisPrompt,
+        onFinish: async ({ text }) => {
+             const { data: { user } } = await supabase.auth.getUser();
+             if (user && sessionId) {
+                await supabase.from('ogma_chat_messages').insert({
+                    session_id: sessionId,
+                    role: 'assistant',
+                    content: text
+                });
+             }
+        }
+      });
+
+      // Merge Ogma's stream into our custom data stream
+      result.mergeIntoDataStream(dataStream);
+    },
+  });
 }
