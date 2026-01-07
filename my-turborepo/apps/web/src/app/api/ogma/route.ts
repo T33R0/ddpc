@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 // 1. Universal Gateway Adapter
 // Forces all traffic through Vercel's unified key
 const vercelGateway = createOpenAI({
-    baseURL: 'https://gateway.ai.vercel.dev/v1',
+    baseURL: 'https://ai-gateway.vercel.sh/v1',
     apiKey: process.env.AI_GATEWAY_API_KEY,
     headers: {
         'x-vercel-ai-provider': 'unified-gateway',
