@@ -1,7 +1,7 @@
 'use strict';
 'use client';
 
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -80,8 +80,8 @@ export default function ChatPage() {
                         >
                             <div
                                 className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
-                                        ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
-                                        : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
+                                    ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
+                                    : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
                                     }`}
                             >
                                 <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
