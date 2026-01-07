@@ -12,10 +12,13 @@ export default function ChatPage() {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
 
-    const { messages, append, isLoading } = useChat({
-        api: '/api/ogma',
+    const { messages, sendMessage, status } = useChat({
+        async fetch(input, init) {
+            return fetch('/api/ogma', init);
+        },
     });
 
+    const isLoading = status === 'submitted' || status === 'streaming';
     const [input, setInput] = useState('');
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +28,7 @@ export default function ChatPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
-        append({ role: 'user', content: input });
+        sendMessage({ role: 'user', content: input });
         setInput('');
     };
 
@@ -101,7 +104,7 @@ export default function ChatPage() {
                                     {m.role === 'user' ? 'Operator' : 'Ogma'}
                                 </div>
                                 <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                    {m.content}
+                                    {(m as any).content}
                                 </div>
                             </div>
                         </div>
