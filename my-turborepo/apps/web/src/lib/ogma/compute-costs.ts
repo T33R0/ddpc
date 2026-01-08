@@ -3,27 +3,43 @@ import { createClient } from '@/lib/supabase/server';
 // Model pricing per 1M tokens (as of 2025-01-27)
 // Prices are in USD per million tokens
 // Format: { input: price_per_1M_input_tokens, output: price_per_1M_output_tokens }
+// See model-pricing-reference.md for full pricing list
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  // DeepSeek models
-  'deepseek/deepseek-chat': { input: 0.14, output: 0.28 }, // DeepSeek Chat
+  // DeepSeek models (Cost-optimized)
+  'deepseek/deepseek-chat': { input: 0.14, output: 0.28 },
+  'deepseek/deepseek-v3.2': { input: 0.20, output: 0.50 }, // Current Architect
+  'deepseek/deepseek-v3': { input: 0.20, output: 0.50 },
   'deepseek/deepseek-coder': { input: 0.14, output: 0.28 },
   
   // Anthropic Claude models
-  'anthropic/claude-3.7-sonnet': { input: 3.0, output: 15.0 }, // Claude 3.7 Sonnet
+  'anthropic/claude-3.7-sonnet': { input: 3.0, output: 15.0 },
+  'anthropic/claude-3.5-sonnet': { input: 3.0, output: 15.0 },
+  'anthropic/claude-3.5-haiku': { input: 0.25, output: 1.25 }, // Current Visionary
+  'anthropic/claude-haiku-4.5': { input: 0.25, output: 1.25 },
   'anthropic/claude-3-opus': { input: 15.0, output: 75.0 },
   'anthropic/claude-3-sonnet': { input: 3.0, output: 15.0 },
   'anthropic/claude-3-haiku': { input: 0.25, output: 1.25 },
   
   // Google Gemini models
-  'google/gemini-2.5-pro': { input: 1.25, output: 5.0 }, // Gemini 2.5 Pro
+  'google/gemini-2.5-pro': { input: 1.25, output: 5.0 },
+  'google/gemini-2.5-flash': { input: 0.30, output: 2.50 }, // Current Engineer
+  'google/gemini-2.0-flash': { input: 0.20, output: 0.50 },
   'google/gemini-pro': { input: 0.5, output: 1.5 },
   'google/gemini-ultra': { input: 0.0, output: 0.0 }, // Pricing TBD
   
   // OpenAI models
-  'openai/gpt-5': { input: 2.5, output: 10.0 }, // Estimated pricing
+  'openai/gpt-5': { input: 2.5, output: 10.0 },
   'openai/gpt-4-turbo': { input: 10.0, output: 30.0 },
+  'openai/gpt-4o-mini': { input: 0.15, output: 0.60 },
   'openai/gpt-4': { input: 30.0, output: 60.0 },
   'openai/gpt-3.5-turbo': { input: 0.5, output: 1.5 },
+  
+  // XAI models
+  'xai/grok-4': { input: 3.0, output: 15.0 },
+  'xai/grok-3': { input: 2.0, output: 10.0 },
+  
+  // Perplexity models
+  'perplexity/sonar-pro': { input: 3.0, output: 15.0 },
   
   // Default fallback (conservative estimate)
   'default': { input: 2.0, output: 8.0 }

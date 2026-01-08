@@ -124,18 +124,19 @@ When critiquing others, challenge implementation flaws, code quality issues, unr
   };
 }
 
-// The Trinity Models
+// The Trinity Models - Cost-Optimized Configuration
+// See model-pricing-reference.md for pricing details
 const TRINITY = {
   architect: {
-    model: vercelGateway('deepseek/deepseek-chat'),
+    model: vercelGateway('deepseek/deepseek-v3.2'), // $0.20/$0.50 - Best value for architecture
     name: 'Architect'
   },
   visionary: {
-    model: vercelGateway('anthropic/claude-3.7-sonnet'),
+    model: vercelGateway('anthropic/claude-3.5-haiku'), // $0.25/$1.25 - Claude quality at 1/12th Sonnet cost
     name: 'Visionary'
   },
   engineer: {
-    model: vercelGateway('google/gemini-2.5-pro'),
+    model: vercelGateway('google/gemini-2.5-flash'), // $0.30/$2.50 - Fast execution, great value
     name: 'Engineer'
   }
 };
@@ -185,24 +186,24 @@ async function generateInitialSolutions(
     await Promise.all([
       logComputeCost({
         sessionId,
-        modelUsed: extractModelName('deepseek/deepseek-chat'),
+        modelUsed: extractModelName('deepseek/deepseek-v3.2'),
         inputTokens: (archRes.usage as any)?.promptTokens || (archRes.usage as any)?.inputTokens || 0,
         outputTokens: (archRes.usage as any)?.completionTokens || (archRes.usage as any)?.outputTokens || 0,
-        costUsd: calculateCost('deepseek/deepseek-chat', (archRes.usage as any)?.promptTokens || (archRes.usage as any)?.inputTokens || 0, (archRes.usage as any)?.completionTokens || (archRes.usage as any)?.outputTokens || 0)
+        costUsd: calculateCost('deepseek/deepseek-v3.2', (archRes.usage as any)?.promptTokens || (archRes.usage as any)?.inputTokens || 0, (archRes.usage as any)?.completionTokens || (archRes.usage as any)?.outputTokens || 0)
       }),
       logComputeCost({
         sessionId,
-        modelUsed: extractModelName('anthropic/claude-3.7-sonnet'),
+        modelUsed: extractModelName('anthropic/claude-3.5-haiku'),
         inputTokens: (visRes.usage as any)?.promptTokens || (visRes.usage as any)?.inputTokens || 0,
         outputTokens: (visRes.usage as any)?.completionTokens || (visRes.usage as any)?.outputTokens || 0,
-        costUsd: calculateCost('anthropic/claude-3.7-sonnet', (visRes.usage as any)?.promptTokens || (visRes.usage as any)?.inputTokens || 0, (visRes.usage as any)?.completionTokens || (visRes.usage as any)?.outputTokens || 0)
+        costUsd: calculateCost('anthropic/claude-3.5-haiku', (visRes.usage as any)?.promptTokens || (visRes.usage as any)?.inputTokens || 0, (visRes.usage as any)?.completionTokens || (visRes.usage as any)?.outputTokens || 0)
       }),
       logComputeCost({
         sessionId,
-        modelUsed: extractModelName('google/gemini-2.5-pro'),
+        modelUsed: extractModelName('google/gemini-2.5-flash'),
         inputTokens: (engRes.usage as any)?.promptTokens || (engRes.usage as any)?.inputTokens || 0,
         outputTokens: (engRes.usage as any)?.completionTokens || (engRes.usage as any)?.outputTokens || 0,
-        costUsd: calculateCost('google/gemini-2.5-pro', (engRes.usage as any)?.promptTokens || (engRes.usage as any)?.inputTokens || 0, (engRes.usage as any)?.completionTokens || (engRes.usage as any)?.outputTokens || 0)
+        costUsd: calculateCost('google/gemini-2.5-flash', (engRes.usage as any)?.promptTokens || (engRes.usage as any)?.inputTokens || 0, (engRes.usage as any)?.completionTokens || (engRes.usage as any)?.outputTokens || 0)
       })
     ]);
   }
@@ -240,9 +241,9 @@ async function generateCritiques(
     critiquePrompts.map(({ persona, prompt }) => {
       const personaKey = persona.toLowerCase() as keyof typeof TRINITY;
       const systemPrompt = personaPrompts[personaKey];
-      const modelName = personaKey === 'architect' ? 'deepseek/deepseek-chat' :
-                       personaKey === 'visionary' ? 'anthropic/claude-3.7-sonnet' :
-                       'google/gemini-2.5-pro';
+      const modelName = personaKey === 'architect' ? 'deepseek/deepseek-v3.2' :
+                       personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
+                       'google/gemini-2.5-flash';
       
       return generateText({
         model: TRINITY[personaKey].model,
@@ -306,9 +307,9 @@ async function generateVotes(
     votePrompts.map(({ persona, prompt }) => {
       const personaKey = persona.toLowerCase() as keyof typeof TRINITY;
       const systemPrompt = personaPrompts[personaKey];
-      const modelName = personaKey === 'architect' ? 'deepseek/deepseek-chat' :
-                       personaKey === 'visionary' ? 'anthropic/claude-3.7-sonnet' :
-                       'google/gemini-2.5-pro';
+      const modelName = personaKey === 'architect' ? 'deepseek/deepseek-v3.2' :
+                       personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
+                       'google/gemini-2.5-flash';
       
       return generateText({
         model: TRINITY[personaKey].model,
@@ -366,9 +367,9 @@ async function refineSolutions(
     responses.map(async (response) => {
       const personaKey = response.persona.toLowerCase() as keyof typeof TRINITY;
       const systemPrompt = personaPrompts[personaKey];
-      const modelName = personaKey === 'architect' ? 'deepseek/deepseek-chat' :
-                       personaKey === 'visionary' ? 'anthropic/claude-3.7-sonnet' :
-                       'google/gemini-2.5-pro';
+      const modelName = personaKey === 'architect' ? 'deepseek/deepseek-v3.2' :
+                       personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
+                       'google/gemini-2.5-flash';
       
       // Get critiques relevant to this persona
       const relevantCritiques = Object.entries(critiques)
@@ -486,8 +487,10 @@ Voting Results: ${JSON.stringify(finalRound.votes || {})}
 
 Synthesize the agreed-upon solution into a single, articulate response. Speak as Ogma with eloquence, binding through understanding, and strength in execution. Be precise, valuable, and free of filler.`;
 
+  // Use Claude Sonnet for final synthesis (best eloquence, but we can use Haiku for cost savings)
+  // For cost optimization, using Haiku; switch to Sonnet if quality is insufficient
   const finalResponse = await generateText({
-    model: vercelGateway('anthropic/claude-3.7-sonnet'), // Use Claude for final synthesis (eloquence)
+    model: vercelGateway('anthropic/claude-3.5-sonnet'), // Use Sonnet for final synthesis (eloquence)
     prompt: synthesisPrompt
   });
 
@@ -497,10 +500,10 @@ Synthesize the agreed-upon solution into a single, articulate response. Speak as
     const outputTokens = (finalResponse.usage as any)?.completionTokens || (finalResponse.usage as any)?.outputTokens || 0;
     await logComputeCost({
       sessionId,
-      modelUsed: extractModelName('anthropic/claude-3.7-sonnet'),
+      modelUsed: extractModelName('anthropic/claude-3.5-sonnet'),
       inputTokens,
       outputTokens,
-      costUsd: calculateCost('anthropic/claude-3.7-sonnet', inputTokens, outputTokens)
+      costUsd: calculateCost('anthropic/claude-3.5-sonnet', inputTokens, outputTokens)
     });
   }
 

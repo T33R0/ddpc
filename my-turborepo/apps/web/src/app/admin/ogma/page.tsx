@@ -27,12 +27,24 @@ export default function ChatPage() {
     const [localInput, setLocalInput] = useState('');
 
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
-    // Use a stable body object - but we'll update it dynamically via body function
-    const { messages, input, handleInputChange, handleSubmit, append, setMessages, setInput, status } = useChat({
+    // Use a stable body object to prevent hook re-initialization
+    const chatBody = useMemo(() => ({ sessionId: currentSessionId }), [currentSessionId]);
+    
+    const chatHook = useChat({
         api: '/api/ogma',
-        body: () => ({ sessionId: currentSessionId }), // Use function to get current sessionId dynamically
+        body: chatBody,
         id: 'ogma-chat', // Use a stable ID to prevent re-initialization
-    }) as any;
+    });
+    
+    // Extract all possible properties from the hook with proper typing
+    const messages = chatHook.messages || [];
+    const input = (chatHook as any).input || '';
+    const handleInputChange = (chatHook as any).handleInputChange;
+    const handleSubmit = (chatHook as any).handleSubmit;
+    const append = (chatHook as any).append;
+    const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
+    const setInput = (chatHook as any).setInput;
+    const status = (chatHook as any).status || chatHook.status || 'ready';
 
     // Sync local input with hook input when available
     useEffect(() => {
@@ -119,52 +131,105 @@ export default function ChatPage() {
                 setCurrentSessionId(activeSessionId);
                 setRefreshTrigger(prev => prev + 1);
                 // Wait a bit for the hook to re-initialize with the new session ID
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 200));
             } catch (err) {
                 console.error("Failed to create session", err);
                 return;
             }
         }
 
-        // Store the input value before clearing
+        // Store the input value
         const messageContent = messageText;
         
-        // Clear input immediately for better UX
+        // Clear input immediately
         setLocalInput('');
         if (setInput && typeof setInput === 'function') {
             setInput('');
         }
 
-        // 2. CRITICAL: Use handleSubmit which properly handles the useChat hook
-        // First, set the input so handleSubmit can use it
-        if (setInput && typeof setInput === 'function') {
-            setInput(messageContent);
-        } else {
-            setLocalInput(messageContent);
-        }
-        
-        // Wait a tick for state to update, then use handleSubmit
-        // This ensures the hook has the message content
-        setTimeout(() => {
-            if (handleSubmit && typeof handleSubmit === 'function') {
-                const syntheticEvent = {
-                    preventDefault: () => {},
-                    target: e.target,
-                    currentTarget: e.currentTarget,
-                } as React.FormEvent<HTMLFormElement>;
-                handleSubmit(syntheticEvent);
-            } else if (append && typeof append === 'function') {
-                // Fallback to append if handleSubmit not available
-                append({
+        // Try to use append first (most reliable)
+        if (append && typeof append === 'function') {
+            try {
+                await append({
                     role: 'user',
                     content: messageContent,
                 });
-            } else {
-                console.error('Neither handleSubmit nor append available');
-                // Restore input on error
-                setLocalInput(messageContent);
+                return; // Success, exit early
+            } catch (err) {
+                console.error('append failed, trying handleSubmit:', err);
             }
-        }, 0);
+        }
+
+        // Fallback to handleSubmit
+        if (handleSubmit && typeof handleSubmit === 'function') {
+            // Set input first so handleSubmit can use it
+            if (setInput && typeof setInput === 'function') {
+                setInput(messageContent);
+                // Wait for state update
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            try {
+                handleSubmit(e);
+                return;
+            } catch (err) {
+                console.error('handleSubmit failed:', err);
+            }
+        }
+
+        // Last resort: manually add message and call API
+        console.warn('Using manual API call fallback');
+        const userMessage = {
+            id: `temp-${Date.now()}`,
+            role: 'user' as const,
+            content: messageContent,
+        };
+        setMessages([...messages, userMessage]);
+        
+        try {
+            const response = await fetch('/api/ogma', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [...messages, userMessage],
+                    sessionId: activeSessionId,
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to send message');
+            }
+            
+            // Read the stream and update messages manually
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let assistantMessage = { id: `assistant-${Date.now()}`, role: 'assistant' as const, content: '' };
+            setMessages([...messages, userMessage, assistantMessage]);
+            
+            if (reader) {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        if (line.startsWith('0:"')) {
+                            const text = JSON.parse(line.substring(2));
+                            assistantMessage.content += text;
+                            setMessages([...messages, userMessage, { ...assistantMessage }]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Manual API call failed:', err);
+            // Restore input on error
+            setLocalInput(messageContent);
+            if (setInput) {
+                setInput(messageContent);
+            }
+        }
     };
 
     useEffect(() => {
@@ -320,7 +385,19 @@ export default function ChatPage() {
 
                 <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent pt-10 z-10">
                     <div className="max-w-3xl mx-auto">
-                        <form onSubmit={handleFormSubmit} className="relative group">
+                        <form 
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                // Try native handleSubmit first if available
+                                if (handleSubmit && typeof handleSubmit === 'function') {
+                                    handleSubmit(e);
+                                } else {
+                                    // Fallback to our custom handler
+                                    handleFormSubmit(e);
+                                }
+                            }} 
+                            className="relative group"
+                        >
                             <input
                                 ref={inputRef}
                                 type="text"
