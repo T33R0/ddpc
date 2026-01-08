@@ -128,10 +128,20 @@ export async function logComputeCost(params: {
   }
 }
 
+// Define the shape of the RPC response
+interface ComputeHealthSummary {
+  total_cost_usd: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_interactions: number;
+  avg_cost_per_interaction: number;
+  model_breakdown: any;
+}
+
 /**
  * Get compute health summary for a session or all sessions
  */
-export async function getComputeHealthSummary(sessionId?: string | null) {
+export async function getComputeHealthSummary(sessionId?: string | null): Promise<ComputeHealthSummary | null> {
   try {
     const supabase = await createClient();
 
@@ -146,7 +156,8 @@ export async function getComputeHealthSummary(sessionId?: string | null) {
       return null;
     }
 
-    return data;
+    // Cast the generic RPC data to our known interface
+    return data as unknown as ComputeHealthSummary;
   } catch (error) {
     console.error('Error in getComputeHealthSummary:', error);
     return null;
