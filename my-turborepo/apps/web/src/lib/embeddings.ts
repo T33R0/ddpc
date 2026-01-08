@@ -1,12 +1,7 @@
 
-import { Configuration, OpenAIApi } from 'openai-edge';
+import { embed } from 'ai';
+import { vercelGateway } from './ai-gateway';
 import { Vehicle } from './types';
-
-const config = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(config);
 
 export async function generateVehicleEmbedding(vehicle: Vehicle): Promise<number[]> {
     // Concatenate key fields: Year, Make, Model, Trim, Description (trim_description)
@@ -22,18 +17,12 @@ export async function generateVehicleEmbedding(vehicle: Vehicle): Promise<number
         .join(' ');
 
     try {
-        const response = await openai.createEmbedding({
-            model: 'text-embedding-3-small',
-            input: content,
+        const { embedding } = await embed({
+            model: vercelGateway.textEmbeddingModel('text-embedding-3-small'),
+            value: content,
         });
 
-        const result = await response.json();
-
-        if (result.error) {
-            throw new Error(result.error.message);
-        }
-
-        return result.data[0].embedding;
+        return embedding;
     } catch (error) {
         console.error('Error generating vehicle embedding:', error);
         throw error;

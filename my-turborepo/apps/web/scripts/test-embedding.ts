@@ -1,4 +1,3 @@
-
 import { generateVehicleEmbedding } from '../src/lib/embeddings';
 import { Vehicle } from '../src/lib/types';
 

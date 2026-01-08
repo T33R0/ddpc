@@ -1,21 +1,10 @@
 import { streamText, generateText } from 'ai';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/lib/ogma/compute-costs';
 import { get_repo_structure, read_file_content, create_issue, create_pull_request } from '@/lib/ogma/tools';
 import { loadConstitution, formatConstitutionForPrompt } from '@/lib/ogma/context-loader';
 import { getRelevantImprovements } from '@/lib/ogma/memory';
-
-// Universal Gateway Adapter
-const vercelGateway = createOpenAICompatible({
-  name: 'ogma-gateway',
-  baseURL: 'https://ai-gateway.vercel.sh/v1',
-  apiKey: process.env.AI_GATEWAY_API_KEY,
-  headers: {
-    'x-vercel-ai-provider': 'unified-gateway',
-    'x-project-id': 'my-ddpc',
-  }
-});
+import { vercelGateway } from '@/lib/ai-gateway';
 
 // High-quality model for final synthesis (Voice of Ogma)
 const ogmaVoice = vercelGateway('anthropic/claude-3.5-sonnet');
