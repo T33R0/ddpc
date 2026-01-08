@@ -6,6 +6,27 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  excludeDefaultRoutes: true,
+  buildExcludes: [/app-build-manifest\.json$/, /~offline/],
+  publicExcludes: ['!noprecache/**/*'],
+  fallbacks: {
+    document: '/~offline',
+  },
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/.*/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'offlineCache',
+        expiration: {
+          maxEntries: 200,
+        },
+      },
+    },
+  ],
+  workboxOptions: {
+    exclude: [/~offline/],
+  },
 });
 
 const nextConfig = {

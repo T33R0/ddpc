@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useAuth } from '@/lib/auth';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Terminal, Cpu, Lightbulb, PenTool } from 'lucide-react';
 import { ChatSidebar } from '@/features/ogma/components/ChatSidebar';
@@ -25,13 +25,18 @@ export default function ChatPage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
-    const { messages, input, handleInputChange, handleSubmit, append, setMessages, status } = useChat({
+    // Use a stable body object to prevent hook re-initialization
+    const chatBody = useMemo(() => ({ sessionId: currentSessionId }), [currentSessionId]);
+    
+    const { messages, input, handleInputChange, handleSubmit, append, setMessages, setInput, status } = useChat({
         api: '/api/ogma',
-        body: { sessionId: currentSessionId },
+        body: chatBody,
+        id: currentSessionId || undefined, // Use session ID as chat ID to maintain state
     }) as any;
 
     const isLoading = status === 'submitted' || status === 'streaming';
     const scrollRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Auto-scroll logic
     useEffect(() => {
@@ -65,19 +70,20 @@ export default function ChatPage() {
             }
         }
 
+        // Store the input value before clearing
+        const messageContent = input.trim();
+        
+        // Clear input immediately for better UX (append should do this, but clear manually to be safe)
+        if (setInput) {
+            setInput('');
+        }
+
         // 2. CRITICAL: Use 'append' to send the message with the new Session ID valid
-        // We manually append because 'handleSubmit' relies on the state which might lag one render cycle
+        // We manually append because 'handleSubmit' relies on state that might lag one render cycle
         await append({
             role: 'user',
-            content: input,
+            content: messageContent,
         });
-        
-        // Input clearing is handled by the hook usually, but since we used append manual, we might need to clear? 
-        // Actually, handleInputChange manages 'input' state. We should clear it manually here if using append.
-        // Or simpler: just let append work and use the standard handleSubmit logic if possible, 
-        // but async session creation makes that tricky. 
-        // Let's stick to this manual clear for safety:
-        handleInputChange({ target: { value: '' } } as any); 
     };
 
     useEffect(() => {
@@ -235,10 +241,24 @@ export default function ChatPage() {
                     <div className="max-w-3xl mx-auto">
                         <form onSubmit={handleFormSubmit} className="relative group">
                             <input
+                                ref={inputRef}
+                                type="text"
                                 className="w-full bg-[#111] hover:bg-[#161616] focus:bg-[#111] transition-all border border-white/10 text-white placeholder-white/20 rounded-2xl px-6 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 shadow-2xl shadow-black/50"
                                 value={input || ''}
-                                onChange={handleInputChange}
+                                onChange={(e) => {
+                                    e.stopPropagation();
+                                    handleInputChange(e);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleFormSubmit(e as any);
+                                    }
+                                }}
                                 placeholder="Query the Trinity..."
+                                disabled={isLoading}
+                                autoComplete="off"
+                                autoFocus={false}
                             />
                             <button
                                 type="submit"
