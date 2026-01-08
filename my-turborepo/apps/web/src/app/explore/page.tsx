@@ -4,156 +4,92 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@repo/ui/button';
-import { ExploreActionButtons } from "../../features/explore/explore-action-buttons";
 import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
-import { getVehicleSummaries, getVehicleFilterOptions } from "../../lib/supabase";
 import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
-import type { SupabaseFilter, FilterOptions } from '../../features/explore/types';
 
 const PAGE_SIZE = 24;
 
 function ExploreContent() {
   const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
-  const [filters, setFilters] = useState<SupabaseFilter[]>([]);
+  // Ref to track the timeout ID for debouncing
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const isInitialLoadRef = useRef(true);
-
-  const loadVehicles = useCallback(async (page: number, append: boolean = false) => {
+  const performSearch = useCallback(async (searchQuery: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setError(null);
-      }
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('q', searchQuery);
 
-      const { data: vehicleData, hasMore: vehicleHasMore } = await getVehicleSummaries(page, PAGE_SIZE, filters);
+      const res = await fetch(`/api/explore/search?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch results');
 
-      setHasMore(vehicleHasMore);
-
-      setAllVehicles(prev => append ? [...prev, ...vehicleData] : vehicleData);
+      const payload = await res.json();
+      setAllVehicles(payload.data || []);
     } catch (err) {
-      console.error('Failed to fetch vehicles:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load vehicles';
-      setError(errorMessage);
-      if (!append) {
-        setAllVehicles([]);
-      }
-      setHasMore(false);
+      console.error('Search failed:', err);
+      setError('Failed to load vehicles');
+      setAllVehicles([]);
     } finally {
-      setLoadingMore(false);
-      if (!append) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [filters]);
-
-  const loadMore = useCallback(() => {
-    if (loading || loadingMore || !hasMore) {
-      return;
-    }
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
-    loadVehicles(nextPage, true);
-  }, [currentPage, hasMore, loadVehicles, loading, loadingMore]);
-
-  // Initial load and subsequent reloads handled by manual Apply
-  useEffect(() => {
-    if (isInitialLoadRef.current) {
-      return;
-    }
-    // When filters change, we reset to page 1
-    setCurrentPage(1);
-    loadVehicles(1, false);
-  }, [loadVehicles]); // loadVehicles depends on filters
-
-  useEffect(() => {
-    if (!isInitialLoadRef.current) {
-      return;
-    }
-
-    loadVehicles(1, false).finally(() => {
-      isInitialLoadRef.current = false;
-    });
-  }, [loadVehicles]);
-
-  // Load filter options
-  useEffect(() => {
-    async function loadFilters() {
-      try {
-        const options = await getVehicleFilterOptions();
-        if (options && typeof options === 'object') {
-          setFilterOptions(options);
-        } else {
-          setFilterOptions({
-            years: [],
-            makes: [],
-            models: [],
-            engineTypes: [],
-            fuelTypes: [],
-            drivetrains: [],
-            bodyTypes: [],
-            countries: [],
-          });
-        }
-      } catch (err) {
-        console.error('Failed to load filter options:', err);
-        setFilterOptions({
-          years: [],
-          makes: [],
-          models: [],
-          engineTypes: [],
-          fuelTypes: [],
-          drivetrains: [],
-          bodyTypes: [],
-          countries: [],
-        });
-      }
-    }
-    loadFilters();
   }, []);
 
-  const handleApplyFilters = useCallback(() => {
-    // This function is called when the user clicks "Apply" in the modal.
-    // The state update in setFilters triggers the useEffect above.
-    // We can also force a reload here if needed, but the effect is sufficient.
-    // However, if filters didn't effectively change (same content), effect might not fire if React is smart?
-    // Arrays are new references, so effect fires.
-  }, []);
+  // Handle input change with debounce
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      performSearch(value);
+    }, 300);
+  };
+
+  // Initial load
+  useEffect(() => {
+    performSearch('');
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [performSearch]);
 
   return (
     <section className="relative py-12 min-h-screen">
       <div className="relative container px-4 md:px-6 pt-24">
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-foreground">Explore</h1>
-          <Link href="/community">
-            <Button variant="outline" className="gap-2">
-              Community Builds
-              <ArrowRight size={16} />
-            </Button>
-          </Link>
-        </div>
+        <div className="flex flex-col gap-6 mb-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-4xl font-bold text-foreground">Explore</h1>
+            <Link href="/community">
+              <Button variant="outline" className="gap-2">
+                Community Builds
+                <ArrowRight size={16} />
+              </Button>
+            </Link>
+          </div>
 
-        <ExploreActionButtons
-          filters={filters}
-          onFilterChange={setFilters}
-          filterOptions={filterOptions || {
-            years: [], makes: [], models: [], engineTypes: [],
-            fuelTypes: [], drivetrains: [], bodyTypes: [], countries: []
-          }}
-          onApply={handleApplyFilters}
-        />
+          {/* Omnibar */}
+          <div className="relative max-w-2xl w-full">
+            <input
+              type="text"
+              value={query}
+              onChange={handleSearchChange}
+              placeholder='Search for builds (e.g., "Overland Toyota", "Drift BMW")...'
+              className="w-full h-12 px-4 rounded-lg border border-input bg-background ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-lg shadow-sm transition-all duration-200"
+            />
+          </div>
+        </div>
 
         {/* Gallery or Loading State */}
         {error ? (
@@ -165,9 +101,9 @@ function ExploreContent() {
         ) : (
           <VehicleGallery
             vehicles={allVehicles}
-            onLoadMore={loadMore}
-            loadingMore={loadingMore}
-            hasMore={hasMore}
+            onLoadMore={() => { }} // Infinite scroll paused for V1 search
+            loadingMore={false}
+            hasMore={false}
           />
         )}
       </div>
