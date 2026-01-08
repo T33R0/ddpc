@@ -2,6 +2,7 @@ import { streamText, generateText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost } from '@/lib/ogma/compute-costs';
+import { get_repo_structure, read_file_content } from '@/lib/ogma/tools';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import yaml from 'js-yaml';
@@ -123,6 +124,8 @@ Your analysis must be:
 - Realistic about implementation constraints
 - Focused on immediate feasibility and correctness
 
+You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
+
 CRITICAL: Be extremely brief. Bullet points only. No filler.`
   };
 }
@@ -139,7 +142,11 @@ const TRINITY = {
   },
   engineer: {
     model: vercelGateway('google/gemini-1.5-flash'), // Focus: Execution speed
-    name: 'Engineer'
+    name: 'Engineer',
+    tools: {
+      get_repo_structure,
+      read_file_content
+    }
   }
 };
 
@@ -250,7 +257,9 @@ export async function POST(req: Request) {
         const result = await generateText({
           model,
           system: personaPrompts.engineer,
-          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`
+          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
+          tools: TRINITY.engineer.tools,
+          maxSteps: 3
         });
 
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
@@ -325,6 +334,8 @@ The Trinity's Deliberation:
 ${allSolutions}
 
 Synthesize the three perspectives into a single, articulate response. Speak as Ogma with eloquence, binding through understanding, and strength in execution. Be precise, valuable, and free of filler.
+
+If the Council identifies a necessary code change, do not output code blocks. Instead, propose a specific Action Plan: "I recommend creating a Pull Request to modify [file]..." and ask the user for authorization.
 
 At the end of your response, include a brief metadata section showing:
 - Total runtime: [calculate from start time]
