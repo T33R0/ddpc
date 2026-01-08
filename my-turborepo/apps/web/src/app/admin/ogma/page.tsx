@@ -16,6 +16,13 @@ type Thought = {
     content: string;
 };
 
+type TrinityProgress = {
+    stage: string;
+    agent?: string;
+    round?: number;
+    message: string;
+};
+
 export default function ChatPage() {
     const { user, profile, loading } = useAuth();
     const router = useRouter();
@@ -25,6 +32,8 @@ export default function ChatPage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     // Fallback input state in case useChat doesn't provide input
     const [localInput, setLocalInput] = useState('');
+    // Trinity progress tracking
+    const [trinityProgress, setTrinityProgress] = useState<TrinityProgress | null>(null);
 
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
     // Use a stable body object to prevent hook re-initialization
@@ -56,6 +65,8 @@ export default function ChatPage() {
     const isLoading = status === 'submitted' || status === 'streaming';
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-scroll logic
     useEffect(() => {
@@ -63,6 +74,53 @@ export default function ChatPage() {
             scrollRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages]);
+
+    // Poll for new messages when loading or when session changes
+    useEffect(() => {
+        if (!currentSessionId || !mounted) return;
+
+        const pollMessages = async () => {
+            try {
+                const { getChatMessages } = await import('@/features/ogma/actions');
+                const dbMessages = await getChatMessages(currentSessionId);
+                
+                // Convert DB messages to useChat format
+                const chatMessages = dbMessages.map((msg: any) => ({
+                    id: msg.id,
+                    role: msg.role,
+                    content: msg.content,
+                }));
+
+                // Only update if we have new messages or different content
+                const currentMessageIds = new Set(messages.map((m: any) => m.id));
+                const currentMessageMap = new Map(messages.map((m: any) => [m.id, m.content]));
+                const hasNewMessages = chatMessages.some((msg: any) => 
+                    !currentMessageIds.has(msg.id) || currentMessageMap.get(msg.id) !== msg.content
+                );
+                
+                if (hasNewMessages) {
+                    setMessages(chatMessages);
+                }
+            } catch (err) {
+                console.error('Failed to poll messages:', err);
+            }
+        };
+
+        // Poll every 1.5 seconds when loading (to catch responses quickly), or every 5 seconds otherwise
+        const interval = setInterval(pollMessages, isLoading ? 1500 : 5000);
+        pollingIntervalRef.current = interval;
+
+        // Also poll immediately when loading starts
+        if (isLoading) {
+            pollMessages();
+        }
+
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+            }
+        };
+    }, [currentSessionId, mounted, isLoading, messages, setMessages]);
 
     const handleSelectSession = async (id: string | null) => {
         setCurrentSessionId(id);
@@ -116,6 +174,9 @@ export default function ChatPage() {
         // Clear input immediately (only local state, hook will handle its own)
         setLocalInput('');
 
+        // Reset progress when starting - show Trinity models are working
+        setTrinityProgress({ stage: 'initial', message: 'Trinity models deliberating...' });
+
         // Try to use append first (most reliable)
         if (append && typeof append === 'function') {
             try {
@@ -123,9 +184,52 @@ export default function ChatPage() {
                     role: 'user',
                     content: messageContent,
                 });
+                
+                // Update progress based on time elapsed (simulated progress)
+                let elapsed = 0;
+                progressIntervalRef.current = setInterval(() => {
+                    elapsed += 1;
+                    if (elapsed < 10) {
+                        setTrinityProgress({ 
+                            stage: 'initial', 
+                            message: 'Trinity models generating initial solutions...' 
+                        });
+                    } else if (elapsed < 20) {
+                        setTrinityProgress({ 
+                            stage: 'critiques', 
+                            round: 1,
+                            message: 'Round 1: Generating critiques...' 
+                        });
+                    } else if (elapsed < 30) {
+                        setTrinityProgress({ 
+                            stage: 'votes', 
+                            round: 1,
+                            message: 'Round 1: Voting...' 
+                        });
+                    } else {
+                        setTrinityProgress({ 
+                            stage: 'synthesis', 
+                            message: 'Synthesizing final response...' 
+                        });
+                    }
+                }, 1000);
+                
+                // Clear progress when loading stops
+                const checkInterval = setInterval(() => {
+                    if (!isLoading) {
+                        if (progressIntervalRef.current) {
+                            clearInterval(progressIntervalRef.current);
+                            progressIntervalRef.current = null;
+                        }
+                        clearInterval(checkInterval);
+                        setTrinityProgress(null);
+                    }
+                }, 500);
+                
                 return; // Success, exit early
             } catch (err) {
                 console.error('append failed, trying handleSubmit:', err);
+                setTrinityProgress(null);
             }
         }
 
@@ -245,6 +349,13 @@ export default function ChatPage() {
 
     useEffect(() => {
         setMounted(true);
+        
+        // Cleanup on unmount
+        return () => {
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -373,9 +484,84 @@ export default function ChatPage() {
                             );
                         })}
 
-                        {/* Loading Indicator */}
-                        {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                            <div className="flex justify-start">
+                        {/* Loading Indicator with Trinity Progress */}
+                        {(isLoading || trinityProgress) && messages[messages.length - 1]?.role === 'user' && (
+                            <div className="flex flex-col gap-3 justify-start">
+                                {/* Trinity Models Status */}
+                                {trinityProgress && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-[90%]">
+                                        {/* Architect */}
+                                        <div className={`p-3 rounded-lg border text-xs transition-all ${
+                                            trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                ? 'bg-blue-950/50 border-blue-500/50 shadow-lg shadow-blue-500/20'
+                                                : 'bg-blue-950/20 border-blue-500/20'
+                                        }`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <PenTool className={`w-4 h-4 ${
+                                                    trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                        ? 'text-blue-400 animate-pulse'
+                                                        : 'text-blue-400/50'
+                                                }`} />
+                                                <span className="uppercase tracking-widest font-bold text-[10px] text-blue-300/80">
+                                                    ARCHITECT
+                                                </span>
+                                            </div>
+                                            <div className="text-blue-200/60 font-mono text-[10px]">
+                                                {trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                    ? 'Processing...'
+                                                    : 'Standby'}
+                                            </div>
+                                        </div>
+
+                                        {/* Visionary */}
+                                        <div className={`p-3 rounded-lg border text-xs transition-all ${
+                                            trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                ? 'bg-purple-950/50 border-purple-500/50 shadow-lg shadow-purple-500/20'
+                                                : 'bg-purple-950/20 border-purple-500/20'
+                                        }`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Lightbulb className={`w-4 h-4 ${
+                                                    trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                        ? 'text-purple-400 animate-pulse'
+                                                        : 'text-purple-400/50'
+                                                }`} />
+                                                <span className="uppercase tracking-widest font-bold text-[10px] text-purple-300/80">
+                                                    VISIONARY
+                                                </span>
+                                            </div>
+                                            <div className="text-purple-200/60 font-mono text-[10px]">
+                                                {trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                    ? 'Processing...'
+                                                    : 'Standby'}
+                                            </div>
+                                        </div>
+
+                                        {/* Engineer */}
+                                        <div className={`p-3 rounded-lg border text-xs transition-all ${
+                                            trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                ? 'bg-emerald-950/50 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
+                                                : 'bg-emerald-950/20 border-emerald-500/20'
+                                        }`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Cpu className={`w-4 h-4 ${
+                                                    trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                        ? 'text-emerald-400 animate-pulse'
+                                                        : 'text-emerald-400/50'
+                                                }`} />
+                                                <span className="uppercase tracking-widest font-bold text-[10px] text-emerald-300/80">
+                                                    ENGINEER
+                                                </span>
+                                            </div>
+                                            <div className="text-emerald-200/60 font-mono text-[10px]">
+                                                {trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                    ? 'Processing...'
+                                                    : 'Standby'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Main Loading Indicator */}
                                 <div className="max-w-[75%] rounded-2xl rounded-bl-sm px-6 py-4 bg-indigo-500/5 border border-indigo-500/10">
                                     <div className="flex items-center gap-3">
                                         <div className="flex gap-1.5 items-center h-6">
@@ -383,9 +569,16 @@ export default function ChatPage() {
                                             <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
                                             <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce" />
                                         </div>
-                                        <span className="text-xs font-mono text-indigo-400/50 tracking-widest animate-pulse">
-                                            SYNTHESIZING...
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-mono text-indigo-400/50 tracking-widest animate-pulse">
+                                                {trinityProgress?.message || 'SYNTHESIZING...'}
+                                            </span>
+                                            {trinityProgress?.round && (
+                                                <span className="text-[10px] font-mono text-indigo-400/30">
+                                                    Round {trinityProgress.round} of 4
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

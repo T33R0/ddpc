@@ -411,22 +411,44 @@ async function refineSolutions(
 // Main Consensus Loop
 export async function runParliamentEngine(
   userPrompt: string,
-  sessionId: string | null = null
+  sessionId: string | null = null,
+  onProgress?: (progress: { stage: string; agent?: string; round?: number; message: string }) => void
 ): Promise<{ finalResponse: string; rounds: DebateRound[]; consensusReached: boolean }> {
   const constitution = loadConstitution();
   const personaPrompts = buildPersonaPrompts(constitution);
   
   const rounds: DebateRound[] = [];
+  
+  // Initial solutions with progress
+  onProgress?.({ stage: 'initial', message: 'Architect, Visionary, and Engineer generating initial solutions...' });
   let responses = await generateInitialSolutions(userPrompt, personaPrompts, sessionId);
+  onProgress?.({ stage: 'initial_complete', message: 'Initial solutions generated' });
+  
   let consensusReached = false;
   let currentRound = 1;
-  const MAX_ROUNDS = 7;
+  const MAX_ROUNDS = 4; // Reduced from 7 to speed up responses
 
   while (currentRound <= MAX_ROUNDS && !consensusReached) {
-    // Generate critiques
+    onProgress?.({ 
+      stage: 'round_start', 
+      round: currentRound, 
+      message: `Round ${currentRound}: Trinity models deliberating...` 
+    });
+    
+    // Generate critiques with progress
+    onProgress?.({ 
+      stage: 'critiques', 
+      round: currentRound, 
+      message: 'Generating critiques...' 
+    });
     const critiques = await generateCritiques(responses, personaPrompts, currentRound, sessionId);
     
-    // Generate votes
+    // Generate votes with progress
+    onProgress?.({ 
+      stage: 'votes', 
+      round: currentRound, 
+      message: 'Trinity models voting...' 
+    });
     const votes = await generateVotes(responses, critiques, personaPrompts, currentRound, sessionId);
     
     // Check consensus
@@ -441,6 +463,14 @@ export async function runParliamentEngine(
       consensusReached
     });
 
+    onProgress?.({ 
+      stage: 'round_complete', 
+      round: currentRound, 
+      message: consensusReached 
+        ? `Consensus reached in round ${currentRound}!` 
+        : `Round ${currentRound} complete, continuing...` 
+    });
+
     // If consensus reached, break
     if (consensusReached) {
       break;
@@ -448,6 +478,11 @@ export async function runParliamentEngine(
 
     // If not the last round, refine solutions
     if (currentRound < MAX_ROUNDS) {
+      onProgress?.({ 
+        stage: 'refine', 
+        round: currentRound, 
+        message: 'Refining solutions based on critiques...' 
+      });
       responses = await refineSolutions(responses, critiques, personaPrompts, userPrompt, currentRound, sessionId);
     }
 
@@ -469,6 +504,12 @@ export async function runParliamentEngine(
   const finalCritiques = Object.entries(finalRound.critiques || {})
     .map(([persona, critique]) => `[${persona}'s Final Critique]: ${critique}`)
     .join('\n\n');
+
+  // Synthesize final response
+  onProgress?.({ 
+    stage: 'synthesis', 
+    message: 'Synthesizing final response...' 
+  });
 
   const synthesisPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has reached ${consensusReached ? 'consensus' : 'a decision after maximum rounds'}.
 
@@ -492,6 +533,11 @@ Synthesize the agreed-upon solution into a single, articulate response. Speak as
   const finalResponse = await generateText({
     model: vercelGateway('anthropic/claude-3.5-haiku'), // Cost-optimized: $0.25/$1.25 vs Sonnet $3.00/$15.00
     prompt: synthesisPrompt
+  });
+
+  onProgress?.({ 
+    stage: 'complete', 
+    message: 'Response ready' 
   });
 
   // Log compute cost for final synthesis
