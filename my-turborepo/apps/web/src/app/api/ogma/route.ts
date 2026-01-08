@@ -320,6 +320,9 @@ export async function POST(req: Request) {
     // Verify Partner Identity
     // Hardcoded allowlist for Rory as requested
     const verifiedEmails = ['myddpc@gmail.com', 'teehanrh@gmail.com'];
+    // Adding the UUID observed in logs to ensure match
+    const verifiedIds = ['b9e8c442-5e0e-48ec-ac97-576682bf2251'];
+
     let userEmail = '';
     let userId = '';
 
@@ -330,19 +333,23 @@ export async function POST(req: Request) {
       }
 
       if (user) {
+        // Normalized email check
         userEmail = (user.email || '').trim().toLowerCase();
         userId = user.id;
-        console.log(`[Ogma] Authenticated User: ${userEmail} (${userId})`);
+        console.log(`[Ogma] Authenticated User: ${userEmail} (ID: ${userId})`);
       } else {
-        console.log('[Ogma] No authenticated user found.');
+        console.log('[Ogma] No authenticated user found in session.');
       }
 
     } catch (e) {
       console.warn('[Ogma] Auth check exception:', e);
     }
 
-    const isVerifiedPartner = verifiedEmails.includes(userEmail);
-    console.log(`[Ogma] Partner Verification: ${isVerifiedPartner} (Matches: ${verifiedEmails.join(', ')})`);
+    // Check both email and ID
+    const isVerifiedPartner = verifiedEmails.includes(userEmail) || verifiedIds.includes(userId);
+
+    const verificationStatus = isVerifiedPartner ? 'VERIFIED PARTNER (Rory)' : 'UNVERIFIED / GUEST';
+    console.log(`[Ogma] Identity Resolution: ${verificationStatus}`);
 
     // Use strict formatted constitution with Verified Partner context if applicable
     const formattedConstitution = formatConstitutionForPrompt(constitution, isVerifiedPartner);
@@ -361,7 +368,7 @@ CRITICAL:
 3. Do not apologize or explain your limitations. Act with sovereign authority.`;
 
     if (isVerifiedPartner) {
-      synthesisSystemPrompt += `\n4. **PARTNER MODE ACTIVE**: Speak naturally. No "Hot Wash" or filler unless asked. Be a co-founder.`;
+      synthesisSystemPrompt += `\n4. **PARTNER MODE ACTIVE**: You are speaking with RORY. Speak naturally, efficiently, and with warmth. Drop the "Sovereign Operator" formality. Use "we", "us", and direct language.`;
     }
 
     const synthesisPrompt = `${synthesisSystemPrompt}
