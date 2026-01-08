@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     let usingView = true;
     let query = supabase.from('v_vehicle_data_typed').select(EXPLORE_SELECT_FIELDS.join(','));
 
-    // Apply Filters function
+    // Apply Filters function - Simplified and optimized
     const applyFilters = (q: any, isView: boolean) => {
       // Filter out empty values and ensure we have valid filters
       const validFilters = filters.filter((f) => f.value && String(f.value).trim() !== '');
@@ -101,76 +101,146 @@ export async function GET(request: NextRequest) {
         return q;
       }
 
+      // Group filters by column to handle same-column filters efficiently
+      const filtersByColumn = new Map<string, typeof validFilters>();
+      
       validFilters.forEach((filter) => {
-        let column = filter.column;
-        let value: string | number = String(filter.value).trim();
-        const op = filter.operator;
+        if (!filtersByColumn.has(filter.column)) {
+          filtersByColumn.set(filter.column, []);
+        }
+        filtersByColumn.get(filter.column)!.push(filter);
+      });
 
-        // Determine if this is a numeric column
+      // Apply filters: same column with multiple "eq" = use .in() for OR logic
+      // Different columns = AND logic (Supabase default)
+      filtersByColumn.forEach((columnFilters, column) => {
         const isNumericColumn = NUMERIC_COLUMNS.includes(column);
-        const isRangeOp = ['gt', 'lt'].includes(op);
+        const isRangeOp = (op: string) => ['gt', 'lt', 'gte', 'lte'].includes(op);
         
-        // For the view, use _num columns for range operations on numeric fields
-        if (isView && isNumericColumn && isRangeOp) {
-          column = `${column}_num`;
-        }
-
-        // Convert value to number for numeric operations if possible
-        let processedValue: string | number = value;
-        if (isNumericColumn && (op === 'eq' || op === 'neq' || op === 'gt' || op === 'lt')) {
-          const numValue = parseFloat(value);
-          if (!isNaN(numValue) && isFinite(numValue)) {
-            processedValue = numValue;
+        if (columnFilters.length === 1) {
+          // Single filter on this column - apply directly
+          const filter = columnFilters[0];
+          q = applySingleFilter(q, filter, column, isView, isNumericColumn, isRangeOp);
+        } else {
+          // Multiple filters on same column
+          const allEq = columnFilters.every(f => f.operator === 'eq');
+          const allIlike = columnFilters.every(f => f.operator === 'ilike');
+          
+          if (allEq) {
+            // Multiple "Equals" filters on same column - use .in() for OR logic (efficient)
+            const values = columnFilters.map(f => {
+              const value = String(f.value).trim();
+              if (isNumericColumn) {
+                const numVal = parseFloat(value);
+                return !isNaN(numVal) && isFinite(numVal) ? numVal : value;
+              }
+              return value;
+            }).filter(v => v !== '' && v !== null && v !== undefined);
+            
+            if (values.length > 0) {
+              q = q.in(column, values);
+            }
+          } else if (allIlike) {
+            // Multiple "Contains" filters on same column - use OR
+            const orConditions = columnFilters.map(f => {
+              const value = String(f.value).trim();
+              return `${column}.ilike.%${value}%`;
+            }).join(',');
+            q = q.or(orConditions);
+          } else {
+            // Mixed operators - apply each filter (they'll be AND'd, which may not be what user wants)
+            // But this is better than breaking. User should use same operator for same column.
+            columnFilters.forEach(filter => {
+              q = applySingleFilter(q, filter, column, isView, isNumericColumn, isRangeOp);
+            });
           }
-          // If conversion fails (e.g., "V6" for cylinders), keep as string
-        }
-
-        // Apply the filter operation
-        // Supabase chains filters with AND logic by default
-        switch (op) {
-          case 'eq':
-            q = q.eq(column, processedValue);
-            break;
-          case 'neq':
-            q = q.neq(column, processedValue);
-            break;
-          case 'gt':
-            // For range ops, ensure we use numeric value
-            if (isNumericColumn && typeof processedValue === 'number') {
-              q = q.gt(column, processedValue);
-            } else {
-              // Try to convert for comparison
-              const numVal = parseFloat(value);
-              if (!isNaN(numVal) && isFinite(numVal)) {
-                q = q.gt(column, numVal);
-              } else {
-                // Fallback to string comparison (may not work for numeric columns)
-                q = q.gt(column, value);
-              }
-            }
-            break;
-          case 'lt':
-            // For range ops, ensure we use numeric value
-            if (isNumericColumn && typeof processedValue === 'number') {
-              q = q.lt(column, processedValue);
-            } else {
-              // Try to convert for comparison
-              const numVal = parseFloat(value);
-              if (!isNaN(numVal) && isFinite(numVal)) {
-                q = q.lt(column, numVal);
-              } else {
-                // Fallback to string comparison (may not work for numeric columns)
-                q = q.lt(column, value);
-              }
-            }
-            break;
-          case 'ilike':
-            q = q.ilike(column, `%${value}%`);
-            break;
-          default:
-            q = q.eq(column, processedValue);
         }
       });
+
+      return q;
+    };
+
+    // Helper function to apply a single filter
+    const applySingleFilter = (
+      q: any, 
+      filter: typeof filters[0], 
+      column: string, 
+      isView: boolean,
+      isNumericColumn: boolean,
+      isRangeOp: (op: string) => boolean
+    ) => {
+      let targetColumn = column;
+      let value: string | number = String(filter.value).trim();
+      const op = filter.operator;
+
+      // For the view, use _num columns for range operations on numeric fields
+      if (isView && isNumericColumn && isRangeOp(op)) {
+        targetColumn = `${column}_num`;
+      }
+
+      // Convert value to number for numeric operations if possible
+      let processedValue: string | number = value;
+      if (isNumericColumn && (op === 'eq' || op === 'neq' || isRangeOp(op))) {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          processedValue = numValue;
+        }
+      }
+
+      // Apply the filter operation
+      switch (op) {
+        case 'eq':
+          q = q.eq(targetColumn, processedValue);
+          break;
+        case 'neq':
+          q = q.neq(targetColumn, processedValue);
+          break;
+        case 'gt':
+          if (isNumericColumn && typeof processedValue === 'number') {
+            q = q.gt(targetColumn, processedValue);
+          } else {
+            const numVal = parseFloat(value);
+            if (!isNaN(numVal) && isFinite(numVal)) {
+              q = q.gt(targetColumn, numVal);
+            }
+          }
+          break;
+        case 'lt':
+          if (isNumericColumn && typeof processedValue === 'number') {
+            q = q.lt(targetColumn, processedValue);
+          } else {
+            const numVal = parseFloat(value);
+            if (!isNaN(numVal) && isFinite(numVal)) {
+              q = q.lt(targetColumn, numVal);
+            }
+          }
+          break;
+        case 'gte':
+          if (isNumericColumn && typeof processedValue === 'number') {
+            q = q.gte(targetColumn, processedValue);
+          } else {
+            const numVal = parseFloat(value);
+            if (!isNaN(numVal) && isFinite(numVal)) {
+              q = q.gte(targetColumn, numVal);
+            }
+          }
+          break;
+        case 'lte':
+          if (isNumericColumn && typeof processedValue === 'number') {
+            q = q.lte(targetColumn, processedValue);
+          } else {
+            const numVal = parseFloat(value);
+            if (!isNaN(numVal) && isFinite(numVal)) {
+              q = q.lte(targetColumn, numVal);
+            }
+          }
+          break;
+        case 'ilike':
+          q = q.ilike(targetColumn, `%${value}%`);
+          break;
+        default:
+          q = q.eq(targetColumn, processedValue);
+      }
       return q;
     };
 

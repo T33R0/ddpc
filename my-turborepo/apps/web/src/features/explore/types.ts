@@ -1,4 +1,4 @@
-export type FilterOperator = 'eq' | 'neq' | 'gt' | 'lt' | 'ilike';
+export type FilterOperator = 'eq' | 'neq' | 'gt' | 'lt' | 'gte' | 'lte' | 'ilike';
 
 export interface SupabaseFilter {
   id: string;

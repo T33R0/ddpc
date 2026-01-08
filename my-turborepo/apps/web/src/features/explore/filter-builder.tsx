@@ -38,16 +38,18 @@ const COLUMNS: ColumnDef[] = [
 ];
 
 const OPERATORS_TEXT: { label: string; value: FilterOperator }[] = [
-  { label: 'Equals', value: 'eq' },
-  { label: 'Not Equals', value: 'neq' },
-  { label: 'Includes', value: 'ilike' },
+  { label: '=', value: 'eq' },
+  { label: '≠', value: 'neq' },
+  { label: 'Contains', value: 'ilike' },
 ];
 
 const OPERATORS_NUMERIC: { label: string; value: FilterOperator }[] = [
-  { label: 'Equals', value: 'eq' },
-  { label: 'Not Equals', value: 'neq' },
-  { label: 'Greater Than', value: 'gt' },
-  { label: 'Less Than', value: 'lt' },
+  { label: '=', value: 'eq' },
+  { label: '≠', value: 'neq' },
+  { label: '>', value: 'gt' },
+  { label: '<', value: 'lt' },
+  { label: '≥', value: 'gte' },
+  { label: '≤', value: 'lte' },
 ];
 
 export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps) {
@@ -55,7 +57,7 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
     const newFilter: SupabaseFilter = {
       id: crypto.randomUUID(),
       column: 'make',
-      operator: 'eq',
+      operator: 'ilike', // Default to "Contains" for text fields
       value: '',
     };
     onChange([...filters, newFilter]);
@@ -71,11 +73,16 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
         if (f.id !== id) return f;
         const updated = { ...f, ...updates };
 
-        // Reset value if column changes to prevent type mismatch
+        // Reset value and operator if column changes to prevent type mismatch
         if (updates.column && updates.column !== f.column) {
           updated.value = '';
           const colDef = COLUMNS.find(c => c.value === updates.column);
-          updated.operator = colDef?.type === 'numeric' ? 'eq' : 'eq';
+          // Set appropriate default operator based on column type
+          if (colDef?.type === 'numeric') {
+            updated.operator = 'eq';
+          } else {
+            updated.operator = 'ilike'; // Default to "Contains" for text fields
+          }
         }
 
         return updated;
@@ -131,9 +138,9 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
           const valueOptions = getValueOptions(filter.column);
 
           return (
-            <div key={filter.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-secondary/20 p-4 rounded-lg border border-border/50">
-              {/* Column Select */}
-              <div className="w-full sm:w-[200px] shrink-0">
+            <div key={filter.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end bg-secondary/20 p-4 rounded-lg border border-border/50">
+              {/* Column Select - Equal width */}
+              <div className="flex-1 w-full min-w-0">
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Field</label>
                 <select
                   value={filter.column}
@@ -148,8 +155,8 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
                 </select>
               </div>
 
-              {/* Operator Select */}
-              <div className="w-full sm:w-[160px] shrink-0">
+              {/* Operator Select - Equal width */}
+              <div className="flex-1 w-full min-w-0">
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Operator</label>
                 <select
                   value={filter.operator}
@@ -165,8 +172,8 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
                 </select>
               </div>
 
-              {/* Value Input/Select */}
-              <div className="flex-1 w-full min-w-[200px]">
+              {/* Value Input/Select - Equal width */}
+              <div className="flex-1 w-full min-w-0">
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Value</label>
                 {valueOptions ? (
                   <select
@@ -192,7 +199,7 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
               </div>
 
               {/* Remove Button */}
-              <div className="w-full sm:w-auto sm:pt-6">
+              <div className="w-full sm:w-auto sm:pb-0 pb-2">
                 <Button
                   variant="ghost"
                   size="icon"
