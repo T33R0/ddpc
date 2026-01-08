@@ -68,7 +68,7 @@ export default function ChatPage() {
                     content: a.content || ''
                 }));
                 
-                if (annotationThoughts.length > 0) {
+                if (annotationThoughts.length > 0 && m.id) {
                     setPendingThoughts(prev => {
                         const newMap = new Map(prev);
                         newMap.set(m.id, annotationThoughts);
@@ -121,10 +121,10 @@ export default function ChatPage() {
                 }));
 
                 // Only update if we have new messages or different content
-                const currentMessageIds = new Set(messages.map((m: any) => m.id));
-                const currentMessageMap = new Map(messages.map((m: any) => [m.id, m.content]));
+                const currentMessageIds = new Set(messages.map((m: any) => m.id).filter((id): id is string => !!id));
+                const currentMessageMap = new Map(messages.filter((m: any) => m.id).map((m: any) => [m.id, m.content]));
                 const hasNewMessages = chatMessages.some((msg: any) => 
-                    !currentMessageIds.has(msg.id) || currentMessageMap.get(msg.id) !== msg.content
+                    msg.id && (!currentMessageIds.has(msg.id) || currentMessageMap.get(msg.id) !== msg.content)
                 );
                 
                 if (hasNewMessages) {
@@ -565,7 +565,7 @@ export default function ChatPage() {
                             const annotationThoughts = (m.annotations as Thought[] | undefined)?.filter(
                                 (a) => a && a.type === 'thought'
                             ) || [];
-                            const pendingThoughtsForMessage = pendingThoughts.get(m.id) || [];
+                            const pendingThoughtsForMessage = (m.id ? pendingThoughts.get(m.id) : undefined) || [];
                             // Combine and deduplicate by agent
                             const allThoughtsMap = new Map<string, Thought>();
                             [...annotationThoughts, ...pendingThoughtsForMessage].forEach(t => {
@@ -576,15 +576,16 @@ export default function ChatPage() {
                             const thoughts = Array.from(allThoughtsMap.values());
 
                             // Check if this is the last assistant message and if it's still loading
+                            const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
                             const isLastAssistant = m.role === 'assistant' && 
-                                messages.length > 0 && 
-                                messages[messages.length - 1].id === m.id;
-                            const hasNoContent = !m.content || m.content.trim() === '';
+                                lastMessage && 
+                                lastMessage.id === m.id;
+                            const hasNoContent = !m.content || (typeof m.content === 'string' && m.content.trim() === '');
                             const showSynthesizing = isLastAssistant && hasNoContent && isLoading;
 
                             return (
                                 <div
-                                    key={m.id}
+                                    key={m.id || `msg-${Date.now()}-${Math.random()}`}
                                     className={`flex flex-col gap-2 ${m.role === 'user' ? 'items-end' : 'items-start'}`}
                                 >
                                     {/* --- TRINITY THOUGHT CARDS --- */}
