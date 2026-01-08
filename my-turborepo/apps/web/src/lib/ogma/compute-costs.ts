@@ -10,7 +10,7 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'deepseek/deepseek-v3.2': { input: 0.20, output: 0.50 }, // Current Architect
   'deepseek/deepseek-v3': { input: 0.20, output: 0.50 },
   'deepseek/deepseek-coder': { input: 0.14, output: 0.28 },
-  
+
   // Anthropic Claude models
   'anthropic/claude-3.7-sonnet': { input: 3.0, output: 15.0 },
   'anthropic/claude-3.5-sonnet': { input: 3.0, output: 15.0 },
@@ -19,28 +19,28 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'anthropic/claude-3-opus': { input: 15.0, output: 75.0 },
   'anthropic/claude-3-sonnet': { input: 3.0, output: 15.0 },
   'anthropic/claude-3-haiku': { input: 0.25, output: 1.25 },
-  
+
   // Google Gemini models
   'google/gemini-2.5-pro': { input: 1.25, output: 5.0 },
   'google/gemini-2.5-flash': { input: 0.30, output: 2.50 }, // Current Engineer
   'google/gemini-2.0-flash': { input: 0.20, output: 0.50 },
   'google/gemini-pro': { input: 0.5, output: 1.5 },
   'google/gemini-ultra': { input: 0.0, output: 0.0 }, // Pricing TBD
-  
+
   // OpenAI models
   'openai/gpt-5': { input: 2.5, output: 10.0 },
   'openai/gpt-4-turbo': { input: 10.0, output: 30.0 },
   'openai/gpt-4o-mini': { input: 0.15, output: 0.60 },
   'openai/gpt-4': { input: 30.0, output: 60.0 },
   'openai/gpt-3.5-turbo': { input: 0.5, output: 1.5 },
-  
+
   // XAI models
   'xai/grok-4': { input: 3.0, output: 15.0 },
   'xai/grok-3': { input: 2.0, output: 10.0 },
-  
+
   // Perplexity models
   'perplexity/sonar-pro': { input: 3.0, output: 15.0 },
-  
+
   // Default fallback (conservative estimate)
   'default': { input: 2.0, output: 8.0 }
 };
@@ -56,12 +56,12 @@ export function calculateCost(
   // Normalize model name (remove gateway prefixes if any)
   const normalizedModel = modelName.toLowerCase().replace(/^.*\//, '');
   const fullModelName = modelName.toLowerCase();
-  
+
   // Try to find exact match first
-  const pricing = MODEL_PRICING[fullModelName] || 
-                  MODEL_PRICING[normalizedModel] || 
-                  MODEL_PRICING['default'];
-  
+  const pricing = MODEL_PRICING[fullModelName] ||
+    MODEL_PRICING[normalizedModel] ||
+    MODEL_PRICING['default'];
+
   if (!pricing) {
     console.warn(`No pricing found for model: ${modelName}, using default`);
     const defaultPricing = MODEL_PRICING['default']!; // Safe because we always define 'default'
@@ -69,11 +69,11 @@ export function calculateCost(
     const outputCost = (outputTokens / 1_000_000) * defaultPricing.output;
     return inputCost + outputCost;
   }
-  
+
   // Calculate cost: (input_tokens / 1M) * input_price + (output_tokens / 1M) * output_price
   const inputCost = (inputTokens / 1_000_000) * pricing.input;
   const outputCost = (outputTokens / 1_000_000) * pricing.output;
-  
+
   return inputCost + outputCost;
 }
 
@@ -99,7 +99,7 @@ export async function logComputeCost(params: {
 }): Promise<void> {
   try {
     const supabase = await createClient();
-    
+
     // Only log if we have a session ID
     if (!params.sessionId) {
       console.warn('Cannot log compute cost: no session ID provided');
@@ -128,13 +128,23 @@ export async function logComputeCost(params: {
   }
 }
 
+// Define the shape of the RPC response
+interface ComputeHealthSummary {
+  total_cost_usd: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_interactions: number;
+  avg_cost_per_interaction: number;
+  model_breakdown: any;
+}
+
 /**
  * Get compute health summary for a session or all sessions
  */
-export async function getComputeHealthSummary(sessionId?: string | null) {
+export async function getComputeHealthSummary(sessionId?: string | null): Promise<ComputeHealthSummary | null> {
   try {
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .rpc('get_compute_health_summary', {
         p_session_id: sessionId || null
@@ -146,10 +156,30 @@ export async function getComputeHealthSummary(sessionId?: string | null) {
       return null;
     }
 
-    return data;
+    // Cast the generic RPC data to our known interface
+    return data as unknown as ComputeHealthSummary;
   } catch (error) {
     console.error('Error in getComputeHealthSummary:', error);
     return null;
   }
 }
 
+
+/**
+ * Get formatted ledger context for the Sophia Layer
+ */
+export async function getLedgerContext(sessionId?: string | null): Promise<string> {
+  const summary = await getComputeHealthSummary(sessionId);
+  if (!summary) return "Ledger inaccessible.";
+
+  // Format into a concise block
+  // summary shape: { total_cost_usd, total_input_tokens, total_output_tokens, total_interactions, avg_cost_per_interaction, model_breakdown }
+
+  const totalCost = Number(summary.total_cost_usd || 0).toFixed(4);
+  const totalTokens = Number(summary.total_input_tokens || 0) + Number(summary.total_output_tokens || 0);
+
+  return `Total Spend: $${totalCost} USD
+Total Tokens: ${totalTokens} (${summary.total_input_tokens || 0} in / ${summary.total_output_tokens || 0} out)
+Interactions: ${summary.total_interactions || 0}
+Avg Cost/Interaction: $${Number(summary.avg_cost_per_interaction || 0).toFixed(4)} USD`;
+}

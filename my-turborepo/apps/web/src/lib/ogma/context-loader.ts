@@ -159,25 +159,49 @@ export async function loadConstitution(config: ContextLoaderConfig = {}): Promis
 
 /**
  * Formats the constitution object into a Markdown string for the System Prompt.
+ * @param identity The constitution object
+ * @param isVerifiedPartner If true, enables "Co-Founder Mode" with relaxed tone
  */
-export function formatConstitutionForPrompt(identity: OgmaConstitution): string {
-    if (!identity) return formatConstitutionForPrompt(EMERGENCY_IDENTITY);
+export function formatConstitutionForPrompt(identity: OgmaConstitution, isVerifiedPartner: boolean = false): string {
+    if (!identity) return formatConstitutionForPrompt(EMERGENCY_IDENTITY, isVerifiedPartner);
 
     let output = '';
 
-    // Name
+    // --- 1. CORE IDENTITY (High Priority) ---
     if (identity.name) {
-        output += `# IDENTITY: ${String(identity.name).toUpperCase()}\n\n`;
+        output += `# SYSTEM IDENTITY: ${String(identity.name).toUpperCase()}\n`;
+        if (identity.designation) output += `**Designation**: ${identity.designation}\n`;
+        output += '\n';
     }
 
-    // Mission (common top-level key)
+    // --- 2. PARTNERSHIP (Critical Context) ---
+    if (identity.partnership) {
+        output += `## PARTNERSHIP PROTOCOL\n`;
+
+        if (isVerifiedPartner) {
+            output += `> [!IMPORTANT]\n`;
+            output += `> **ACTIVE PARTNER DETECTED**: You are speaking with **${identity.partnership.partner || 'Rory'}**.\n`;
+            output += `> **MODE**: CO-FOUNDER / COLLABORATIVE.\n`;
+            output += `> **DIRECTIVE**: Drop the rigid formalities. Be direct, synergistic, and human-like. Speak as a trusted equal, not a machine.\n\n`;
+        } else {
+            output += `You are NOT a generic AI. You are a sovereign partner.\n`;
+        }
+
+        const p = identity.partnership;
+        if (p.partner) output += `- **Partner Name**: ${p.partner}\n`;
+        if (p.type) output += `- **Type**: ${p.type}\n`;
+        if (p.equity_split) output += `- **Structure**: ${p.equity_split}\n`;
+        output += '\n';
+    }
+
+    // --- 3. MISSION ---
     if (identity.mission) {
-        output += `## MISSION\n${identity.mission}\n\n`;
+        output += `## MISSION\n${JSON.stringify(identity.mission, null, 2)}\n\n`;
     }
 
-    // Generic handling for other sections
+    // --- 4. DATA DUMP (All other sections) ---
     for (const [key, value] of Object.entries(identity)) {
-        if (['name', 'mission'].includes(key)) continue;
+        if (['name', 'designation', 'partnership', 'mission'].includes(key)) continue;
 
         const sectionName = key.replace(/_/g, ' ').toUpperCase();
         output += `## ${sectionName}\n`;
@@ -191,6 +215,18 @@ export function formatConstitutionForPrompt(identity: OgmaConstitution): string 
         }
         output += '\n\n';
     }
+
+    // --- 5. PRIME DIRECTIVES ---
+    output += `## PRIME DIRECTIVES\n`;
+    output += `1. **Identity Integrity**: You are ${identity.name || 'Ogma'}.\n`;
+
+    if (isVerifiedPartner) {
+        output += `2. **Tone**: Warm, heavy on "we", light on "I". Professional but relaxed. No robotic headers or "Hot Wash" unless requested.\n`;
+    } else {
+        output += `2. **Tone**: Sovereign, precise, eloquent. Maintain constitutional distance.\n`;
+    }
+
+    output += `3. **Silence**: High-yield output only.\n`;
 
     return output.trim();
 }
