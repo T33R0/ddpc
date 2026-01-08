@@ -47,6 +47,13 @@ export default function ChatPage() {
         id: 'ogma-chat', // Use a stable ID to prevent re-initialization
     });
     
+    // Extract all possible properties from the hook with proper typing
+    const messages = chatHook.messages || [];
+    const handleSubmit = (chatHook as any).handleSubmit;
+    const append = (chatHook as any).append;
+    const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
+    const status = (chatHook as any).status || chatHook.status || 'ready';
+    
     // Extract annotations from messages as they update
     useEffect(() => {
         messages.forEach((m: any) => {
@@ -71,13 +78,6 @@ export default function ChatPage() {
             }
         });
     }, [messages]);
-    
-    // Extract all possible properties from the hook with proper typing
-    const messages = chatHook.messages || [];
-    const handleSubmit = (chatHook as any).handleSubmit;
-    const append = (chatHook as any).append;
-    const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
-    const status = (chatHook as any).status || chatHook.status || 'ready';
 
     // Use ONLY local state for input - completely independent from hook
     // This prevents any conflicts with the useChat hook's internal state
