@@ -49,7 +49,7 @@ export default function ChatPage() {
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim()) return;
+        if (!input?.trim()) return;
 
         let activeSessionId = currentSessionId;
 
@@ -236,13 +236,13 @@ export default function ChatPage() {
                         <form onSubmit={handleFormSubmit} className="relative group">
                             <input
                                 className="w-full bg-[#111] hover:bg-[#161616] focus:bg-[#111] transition-all border border-white/10 text-white placeholder-white/20 rounded-2xl px-6 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 shadow-2xl shadow-black/50"
-                                value={input}
+                                value={input || ''}
                                 onChange={handleInputChange}
                                 placeholder="Query the Trinity..."
                             />
                             <button
                                 type="submit"
-                                disabled={!input.trim() || isLoading}
+                                disabled={!input?.trim() || isLoading}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                             >
                                 <Send className="w-5 h-5" />
