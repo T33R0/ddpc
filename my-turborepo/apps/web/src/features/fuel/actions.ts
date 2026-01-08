@@ -23,7 +23,7 @@ export async function logFuel(data: FuelLogInputs) {
       if (validationError instanceof z.ZodError) {
         return {
           error: 'Validation failed.',
-          details: validationError.errors.map(err => ({
+          details: validationError.issues.map(err => ({
             message: err.message,
             path: err.path.map(String),
           })),
@@ -162,10 +162,10 @@ export async function logFuel(data: FuelLogInputs) {
     return { success: true, logId: logEntry.id }
   } catch (e) {
     if (e instanceof z.ZodError) {
-      console.error('Zod validation error:', e.errors)
+      console.error('Zod validation error:', e.issues)
       return {
         error: 'Validation failed.',
-        details: e.errors.map(err => ({
+        details: e.issues.map(err => ({
           message: err.message,
           path: err.path.map(String),
         })),

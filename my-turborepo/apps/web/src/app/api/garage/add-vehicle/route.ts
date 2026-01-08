@@ -150,8 +150,7 @@ export async function POST(request: Request) {
     )
   } catch (e) {
     if (e instanceof ZodError) {
-      // @ts-ignore - Bypass strict type check
-      return new NextResponse(JSON.stringify({ error: (e as unknown as ZodError).errors }), {
+      return new NextResponse(JSON.stringify({ error: e.issues }), {
         status: 400,
       })
     }
