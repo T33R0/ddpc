@@ -3,9 +3,7 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost } from '@/lib/ogma/compute-costs';
 import { get_repo_structure, read_file_content, create_issue, create_pull_request } from '@/lib/ogma/tools';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import yaml from 'js-yaml';
+import { loadConstitution, formatConstitutionForPrompt } from '@/lib/ogma/context-loader';
 
 // Universal Gateway Adapter
 const vercelGateway = createOpenAICompatible({
@@ -23,51 +21,10 @@ const ogmaVoice = vercelGateway('anthropic/claude-3.5-sonnet');
 
 export const maxDuration = 60; // Reduced from 300 since we're doing single-pass parallel
 
-// Load and parse the Ogma Constitution
-function loadConstitution(): any {
-  try {
-    const possiblePaths = [
-      join(process.cwd(), '..', '..', '..', 'ogma_constitution.yaml'),
-      join(process.cwd(), 'ogma_constitution.yaml'),
-    ];
-
-    let fileContents: string | null = null;
-    for (const path of possiblePaths) {
-      try {
-        fileContents = readFileSync(path, 'utf8');
-        console.log(`Loaded Ogma Constitution from: ${path}`);
-        break;
-      } catch {
-        continue;
-      }
-    }
-
-    if (!fileContents) {
-      throw new Error('Constitution file not found');
-    }
-
-    return yaml.load(fileContents);
-  } catch (error) {
-    console.error('Failed to load Ogma Constitution:', error);
-    return {
-      identity: { name: 'Ogma', designation: 'Sovereign Operator' },
-      core_values: [
-        { name: 'Extreme Ownership', source: 'Jocko Willink', principle: 'No excuses. If a build fails, own the fix.' },
-        { name: 'Tactical Empathy', source: 'Chris Voss', principle: 'Bind users/partners through understanding, not force.' },
-        { name: 'Pyramid of Success', source: 'John Wooden', principle: 'Competitive greatness through industriousness and enthusiasm.' }
-      ],
-      operational_rules: { 
-        trinity_protocol: { personas: ['Architect', 'Visionary', 'Engineer'] },
-        silence: { principles: ['Internal deliberation before external communication', 'Consensus-driven output', 'Zero tolerance for filler content'] }
-      }
-    };
-  }
-}
-
 // Build system prompts from constitution
 function buildPersonaPrompts(constitution: any) {
   const coreValues = constitution.core_values || [];
-  const valuesText = coreValues.map((v: any) => 
+  const valuesText = coreValues.map((v: any) =>
     `- ${v.name} (${v.source}): ${v.principle}`
   ).join('\n');
 
@@ -169,8 +126,8 @@ export async function POST(req: Request) {
 
     // Extract the user's prompt from the last message
     const lastMsg = messages[messages.length - 1];
-    const userPrompt = typeof lastMsg.content === 'string' 
-      ? lastMsg.content 
+    const userPrompt = typeof lastMsg.content === 'string'
+      ? lastMsg.content
       : JSON.stringify(lastMsg.content);
 
     // Log user message
@@ -191,7 +148,7 @@ export async function POST(req: Request) {
     }
 
     // Load constitution and build prompts
-    const constitution = loadConstitution();
+    const constitution = await loadConstitution();
     const personaPrompts = buildPersonaPrompts(constitution);
 
     // Run all three agents in parallel
@@ -254,7 +211,7 @@ export async function POST(req: Request) {
       (async (): Promise<AgentResult> => {
         const model = TRINITY.engineer.model;
         const modelName = 'google/gemini-1.5-flash';
-        
+
         // Verify tools are available (server-side only)
         if (typeof window === 'undefined') {
           console.log('[Engineer] Tools available:', {
@@ -264,7 +221,7 @@ export async function POST(req: Request) {
             create_pull_request: !!create_pull_request
           });
         }
-        
+
         // Use generateText for Engineer to enable maxSteps (multi-step tool execution)
         // This ensures tools are properly executed before final response
         const result = await generateText({
@@ -280,7 +237,7 @@ export async function POST(req: Request) {
           // @ts-ignore - maxSteps is valid at runtime for generateText with tools
           maxSteps: 5 // Allow Engineer to read files in multiple steps (Think -> Call Tool -> Read Result -> Answer)
         });
-        
+
         // Log tool execution info (server-side only)
         if (typeof window === 'undefined') {
           // Check for tool execution in result (structure may vary by SDK version)
@@ -360,12 +317,12 @@ export async function POST(req: Request) {
     const totalTrinityInputTokens = costTracking.reduce((sum, item) => sum + (item.inputTokens || 0), 0);
     const totalTrinityOutputTokens = costTracking.reduce((sum, item) => sum + (item.outputTokens || 0), 0);
 
+    // Use strict formatted constitution for the final synthesis to ensure nothing is missed (like partnerships)
+    const formattedConstitution = formatConstitutionForPrompt(constitution);
+
     const synthesisPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
 
-Constitution Context:
-- Identity: ${constitution.identity?.name || 'Ogma'}, ${constitution.identity?.designation || 'Sovereign Operator'}
-- Core Values: ${constitution.core_values?.map((v: any) => v.name).join(', ') || 'Extreme Ownership, Tactical Empathy, Pyramid of Success'}
-- Operational Rule - Silence: Output must be high-yield and fluff-free. Every word must serve a purpose.
+${formattedConstitution}
 
 The Trinity's Deliberation:
 ${allSolutions}
@@ -406,14 +363,14 @@ At the end of your response, include a brief metadata section showing:
 
     // Create stream with annotations for agent thoughts
     const encoder = new TextEncoder();
-    
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
           // Stream agent thoughts as annotations immediately (as they complete)
           // Note: In a real implementation, we'd stream these as they complete,
           // but for simplicity we'll send them all at once before synthesis
-          
+
           // Send Architect thought annotation
           if (architect) {
             const architectAnnotation = JSON.stringify({
@@ -448,7 +405,7 @@ At the end of your response, include a brief metadata section showing:
           let fullSynthesis = '';
           for await (const chunk of synthesisResult.textStream) {
             fullSynthesis += chunk;
-            
+
             // Stream each chunk
             const escapedChunk = chunk
               .replace(/\\/g, '\\\\')
@@ -456,7 +413,7 @@ At the end of your response, include a brief metadata section showing:
               .replace(/\n/g, '\\n')
               .replace(/\r/g, '\\r')
               .replace(/\t/g, '\\t');
-            
+
             controller.enqueue(encoder.encode(`0:"${escapedChunk}"\n`));
           }
 
@@ -464,14 +421,14 @@ At the end of your response, include a brief metadata section showing:
           const totalInputTokens = totalTrinityInputTokens + synthesisInputTokens;
           const totalOutputTokens = totalTrinityOutputTokens + synthesisOutputTokens;
           const metadata = `\n\n---\n**Execution Metrics:**\n- Runtime: ${runtime}s\n- Total Cost: $${totalCost.toFixed(6)} USD\n- Total Tokens: ${totalInputTokens + totalOutputTokens} (${totalInputTokens} input + ${totalOutputTokens} output)`;
-          
+
           const escapedMetadata = metadata
             .replace(/\\/g, '\\\\')
             .replace(/"/g, '\\"')
             .replace(/\n/g, '\\n')
             .replace(/\r/g, '\\r')
             .replace(/\t/g, '\\t');
-          
+
           controller.enqueue(encoder.encode(`0:"${escapedMetadata}"\n`));
 
           // Save final response to database
@@ -511,7 +468,7 @@ At the end of your response, include a brief metadata section showing:
 
   } catch (error) {
     console.error('Ogma API Error:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: 'Failed to process request',
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
@@ -520,3 +477,4 @@ At the end of your response, include a brief metadata section showing:
     });
   }
 }
+
