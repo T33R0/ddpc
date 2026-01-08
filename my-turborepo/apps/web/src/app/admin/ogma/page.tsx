@@ -234,11 +234,11 @@ export default function ChatPage() {
                                 
                                 // Find the assistant message ID (poll until found)
                                 let assistantMsgId: string | null = null;
-                                const findAssistantMessageId = () => {
+                                const findAssistantMessageId = (): string | null => {
                                     const currentMessages = messagesRef.current || [];
                                     if (currentMessages.length > messageCountBefore) {
                                         const assistantMsg = currentMessages[currentMessages.length - 1];
-                                        if (assistantMsg && assistantMsg.role === 'assistant') {
+                                        if (assistantMsg && assistantMsg.role === 'assistant' && assistantMsg.id) {
                                             return assistantMsg.id;
                                         }
                                     }
