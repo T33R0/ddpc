@@ -34,6 +34,8 @@ export default function ChatPage() {
     const [localInput, setLocalInput] = useState('');
     // Trinity progress tracking
     const [trinityProgress, setTrinityProgress] = useState<TrinityProgress | null>(null);
+    // Store thought annotations separately for async rendering
+    const [pendingThoughts, setPendingThoughts] = useState<Map<string, Thought[]>>(new Map());
 
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
     // Use a stable body object to prevent hook re-initialization
@@ -44,6 +46,31 @@ export default function ChatPage() {
         body: chatBody,
         id: 'ogma-chat', // Use a stable ID to prevent re-initialization
     });
+    
+    // Extract annotations from messages as they update
+    useEffect(() => {
+        messages.forEach((m: any) => {
+            if (m.role === 'assistant' && m.annotations) {
+                const annotationThoughts = (m.annotations as any[]).filter(
+                    (a: any) => a && a.type === 'thought' && a.agent
+                ).map((a: any): Thought => ({
+                    type: 'thought',
+                    agent: a.agent,
+                    color: a.agent === 'architect' ? 'blue' : 
+                           a.agent === 'visionary' ? 'purple' : 'emerald',
+                    content: a.content || ''
+                }));
+                
+                if (annotationThoughts.length > 0) {
+                    setPendingThoughts(prev => {
+                        const newMap = new Map(prev);
+                        newMap.set(m.id, annotationThoughts);
+                        return newMap;
+                    });
+                }
+            }
+        });
+    }, [messages]);
     
     // Extract all possible properties from the hook with proper typing
     const messages = chatHook.messages || [];
@@ -67,6 +94,8 @@ export default function ChatPage() {
     const inputRef = useRef<HTMLInputElement>(null);
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const messagesRef = useRef(messages);
+    messagesRef.current = messages; // Keep ref in sync
 
     // Auto-scroll logic
     useEffect(() => {
@@ -176,14 +205,120 @@ export default function ChatPage() {
 
         // Reset progress when starting - show Trinity models are working
         setTrinityProgress({ stage: 'initial', message: 'Trinity models deliberating...' });
+        // Clear pending thoughts for new conversation
+        setPendingThoughts(new Map());
 
         // Try to use append first (most reliable)
         if (append && typeof append === 'function') {
             try {
+                // Intercept fetch to capture annotations
+                const originalFetch = window.fetch;
+                const messageCountBefore = messages.length;
+                
+                window.fetch = async (...args) => {
+                    const response = await originalFetch(...args);
+                    
+                    // Only intercept our ogma API calls
+                    if (typeof args[0] === 'string' && args[0].includes('/api/ogma')) {
+                        const clonedResponse = response.clone();
+                        
+                        // Read annotations in the background
+                        (async () => {
+                            try {
+                                const reader = clonedResponse.body?.getReader();
+                                if (!reader) return;
+                                
+                                const decoder = new TextDecoder();
+                                let buffer = '';
+                                const thoughts: Thought[] = [];
+                                
+                                // Find the assistant message ID (poll until found)
+                                let assistantMsgId: string | null = null;
+                                const findAssistantMessageId = () => {
+                                    const currentMessages = messagesRef.current || [];
+                                    if (currentMessages.length > messageCountBefore) {
+                                        const assistantMsg = currentMessages[currentMessages.length - 1];
+                                        if (assistantMsg && assistantMsg.role === 'assistant') {
+                                            return assistantMsg.id;
+                                        }
+                                    }
+                                    return null;
+                                };
+                                
+                                // Poll for assistant message ID (up to 2 seconds)
+                                for (let i = 0; i < 20; i++) {
+                                    assistantMsgId = findAssistantMessageId();
+                                    if (assistantMsgId) break;
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                }
+                                
+                                // Fallback if not found
+                                if (!assistantMsgId) {
+                                    assistantMsgId = `assistant-${Date.now()}`;
+                                }
+                                
+                                while (true) {
+                                    const { done, value } = await reader.read();
+                                    if (done) break;
+                                    
+                                    buffer += decoder.decode(value, { stream: true });
+                                    const lines = buffer.split('\n');
+                                    buffer = lines.pop() || '';
+                                    
+                                    for (const line of lines) {
+                                        if (line.startsWith('a:')) {
+                                            try {
+                                                const annotation = JSON.parse(line.substring(2));
+                                                if (annotation.type === 'thought' && annotation.agent) {
+                                                    const thought: Thought = {
+                                                        type: 'thought',
+                                                        agent: annotation.agent,
+                                                        color: annotation.agent === 'architect' ? 'blue' : 
+                                                               annotation.agent === 'visionary' ? 'purple' : 'emerald',
+                                                        content: annotation.content || ''
+                                                    };
+                                                    
+                                                    // Check if we already have this agent's thought
+                                                    const existingIndex = thoughts.findIndex(t => t.agent === thought.agent);
+                                                    if (existingIndex >= 0) {
+                                                        thoughts[existingIndex] = thought;
+                                                    } else {
+                                                        thoughts.push(thought);
+                                                    }
+                                                    
+                                                    // Update immediately as each thought arrives
+                                                    if (assistantMsgId) {
+                                                        setPendingThoughts(prev => {
+                                                            const newMap = new Map(prev);
+                                                            newMap.set(assistantMsgId!, [...thoughts]);
+                                                            return newMap;
+                                                        });
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                // Ignore parse errors
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Error reading annotations:', err);
+                            }
+                        })();
+                    }
+                    
+                    return response;
+                };
+                
                 await append({
                     role: 'user',
                     content: messageContent,
                 });
+                
+                // Restore fetch after a delay
+                setTimeout(() => {
+                    window.fetch = originalFetch;
+                }, 10000);
                 
                 // Update progress based on time elapsed (simulated progress)
                 let elapsed = 0;
@@ -426,10 +561,26 @@ export default function ChatPage() {
                         )}
 
                         {messages.map((m: any) => {
-                            // 3. Extract Thoughts for Visualization
-                            const thoughts = (m.annotations as Thought[] | undefined)?.filter(
+                            // Extract Thoughts from both annotations and pending thoughts
+                            const annotationThoughts = (m.annotations as Thought[] | undefined)?.filter(
                                 (a) => a && a.type === 'thought'
-                            );
+                            ) || [];
+                            const pendingThoughtsForMessage = pendingThoughts.get(m.id) || [];
+                            // Combine and deduplicate by agent
+                            const allThoughtsMap = new Map<string, Thought>();
+                            [...annotationThoughts, ...pendingThoughtsForMessage].forEach(t => {
+                                if (t && t.agent) {
+                                    allThoughtsMap.set(t.agent, t);
+                                }
+                            });
+                            const thoughts = Array.from(allThoughtsMap.values());
+
+                            // Check if this is the last assistant message and if it's still loading
+                            const isLastAssistant = m.role === 'assistant' && 
+                                messages.length > 0 && 
+                                messages[messages.length - 1].id === m.id;
+                            const hasNoContent = !m.content || m.content.trim() === '';
+                            const showSynthesizing = isLastAssistant && hasNoContent && isLoading;
 
                             return (
                                 <div
@@ -441,7 +592,7 @@ export default function ChatPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2 w-full max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-500">
                                             {thoughts.map((t, i) => (
                                                 <div 
-                                                    key={i} 
+                                                    key={`${t.agent}-${i}`} 
                                                     className={`p-3 rounded-lg border text-xs leading-relaxed font-mono relative overflow-hidden group
                                                         ${t.agent === 'architect' ? 'bg-blue-950/30 border-blue-500/30 text-blue-200/90' : ''}
                                                         ${t.agent === 'visionary' ? 'bg-purple-950/30 border-purple-500/30 text-purple-200/90' : ''}
@@ -465,7 +616,7 @@ export default function ChatPage() {
                                     )}
 
                                     {/* --- MAIN MESSAGE --- */}
-                                    {(m.content || m.role === 'user') && (
+                                    {(m.content || m.role === 'user' || showSynthesizing) && (
                                         <div
                                             className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
                                                 ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
@@ -476,7 +627,20 @@ export default function ChatPage() {
                                                 {m.role === 'user' ? 'Operator' : 'Ogma'}
                                             </div>
                                             <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
-                                                {m.content}
+                                                {showSynthesizing ? (
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex gap-1.5 items-center h-6">
+                                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce" />
+                                                        </div>
+                                                        <span className="text-xs font-mono text-indigo-400/50 tracking-widest animate-pulse">
+                                                            SYNTHESIZING...
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    m.content
+                                                )}
                                             </div>
                                         </div>
                                     )}
