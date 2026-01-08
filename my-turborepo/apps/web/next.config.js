@@ -9,9 +9,10 @@ const withPWA = withPWAInit({
   excludeDefaultRoutes: true,
   buildExcludes: [/app-build-manifest\.json$/, /~offline/, /\/~offline/],
   publicExcludes: ['!noprecache/**/*', '~offline'],
-  fallbacks: {
-    document: '/~offline',
-  },
+  // Remove fallbacks to prevent offline page from being used incorrectly
+  // fallbacks: {
+  //   document: '/~offline',
+  // },
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/.*/,
@@ -26,8 +27,10 @@ const withPWA = withPWAInit({
   ],
   workboxOptions: {
     exclude: [/~offline/, /\/~offline/],
-    navigateFallback: '/~offline',
-    navigateFallbackDenylist: [/^\/api/, /^\/_next/],
+    // Disable navigateFallback to prevent offline page from showing on all pages
+    // Only use offline page when actually offline, not as a general fallback
+    navigateFallback: null,
+    navigateFallbackDenylist: [/.*/], // Deny all routes from using fallback
     runtimeCaching: [
       {
         urlPattern: /\/~offline/,

@@ -487,10 +487,10 @@ Voting Results: ${JSON.stringify(finalRound.votes || {})}
 
 Synthesize the agreed-upon solution into a single, articulate response. Speak as Ogma with eloquence, binding through understanding, and strength in execution. Be precise, valuable, and free of filler.`;
 
-  // Use Claude Sonnet for final synthesis (best eloquence, but we can use Haiku for cost savings)
-  // For cost optimization, using Haiku; switch to Sonnet if quality is insufficient
+  // Use Claude Haiku for final synthesis (cost-optimized, still good quality)
+  // Haiku provides good eloquence at 1/12th the cost of Sonnet
   const finalResponse = await generateText({
-    model: vercelGateway('anthropic/claude-3.5-sonnet'), // Use Sonnet for final synthesis (eloquence)
+    model: vercelGateway('anthropic/claude-3.5-haiku'), // Cost-optimized: $0.25/$1.25 vs Sonnet $3.00/$15.00
     prompt: synthesisPrompt
   });
 
@@ -500,10 +500,10 @@ Synthesize the agreed-upon solution into a single, articulate response. Speak as
     const outputTokens = (finalResponse.usage as any)?.completionTokens || (finalResponse.usage as any)?.outputTokens || 0;
     await logComputeCost({
       sessionId,
-      modelUsed: extractModelName('anthropic/claude-3.5-sonnet'),
+      modelUsed: extractModelName('anthropic/claude-3.5-haiku'),
       inputTokens,
       outputTokens,
-      costUsd: calculateCost('anthropic/claude-3.5-sonnet', inputTokens, outputTokens)
+      costUsd: calculateCost('anthropic/claude-3.5-haiku', inputTokens, outputTokens)
     });
   }
 

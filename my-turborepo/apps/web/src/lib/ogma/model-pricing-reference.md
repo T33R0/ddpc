@@ -87,9 +87,9 @@ This document provides pricing information for AI models available through the V
 
 ## Final Synthesis Model
 
-For the final "Voice of Ogma" synthesis, recommend:
-- **Primary**: `anthropic/claude-3.5-sonnet` ($3.00/$15.00) - Best eloquence
-- **Budget**: `anthropic/claude-3.5-haiku` ($0.25/$1.25) - 12x cheaper, still good
+For the final "Voice of Ogma" synthesis:
+- **Current**: `anthropic/claude-3.5-haiku` ($0.25/$1.25) - Cost-optimized, good quality
+- **Premium Option**: `anthropic/claude-3.5-sonnet` ($3.00/$15.00) - Best eloquence (12x more expensive)
 
 ---
 
