@@ -1,7 +1,6 @@
 import { streamText, convertToModelMessages, createDataStreamResponse } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
 
 // 1. Universal Gateway Adapter
 const vercelGateway = createOpenAICompatible({
@@ -53,15 +52,13 @@ export async function POST(req: Request) {
     }
   })();
 
-  // 3. Create a Custom Data Stream (v6 Standard)
+  // 3. Create Data Stream (v6 Native)
   return createDataStreamResponse({
     execute: async (dataStream) => {
-      // v6: Use convertToModelMessages (Async)
       const modelMessages = await convertToModelMessages(messages);
-      
-      // We need generateText to capture the full thought string
-      const { generateText } = await import('ai');
+      const { generateText } = await import('ai'); // Ensure dynamic import for safety
 
+      // A. Trinity Logic
       const runAgent = async (key: 'architect' | 'visionary' | 'engineer') => {
         const agent = TRINITY[key];
         
@@ -71,7 +68,7 @@ export async function POST(req: Request) {
           messages: modelMessages,
         });
 
-        // v6: Write annotation to the stream manually
+        // Write annotation to stream (v6 method)
         dataStream.writeMessageAnnotation({
           type: 'thought',
           agent: key,
@@ -82,13 +79,14 @@ export async function POST(req: Request) {
         return text;
       };
 
-      // Run Trinity in Parallel
+      // B. Run in Parallel
       const [archText, visText, engText] = await Promise.all([
         runAgent('architect'),
         runAgent('visionary'),
         runAgent('engineer')
       ]);
 
+      // C. Synthesize
       const synthesisPrompt = `
       Internal Perspectives:
       [ARCHITECT]: ${archText}
@@ -98,7 +96,7 @@ export async function POST(req: Request) {
       Synthesize these into a single cohesive response. Speak as Ogma.
       `;
 
-      // Stream Ogma's Final Word
+      // D. Stream Final Response
       const result = streamText({
         model: vercelGateway('openai/gpt-5'),
         prompt: synthesisPrompt,
@@ -114,7 +112,7 @@ export async function POST(req: Request) {
         }
       });
 
-      // Merge Ogma's stream into our custom data stream
+      // Merge Ogma's stream into the data stream
       result.mergeIntoDataStream(dataStream);
     },
   });
