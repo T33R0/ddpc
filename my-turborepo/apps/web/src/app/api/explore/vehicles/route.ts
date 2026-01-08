@@ -120,7 +120,9 @@ export async function GET(request: NextRequest) {
         if (columnFilters.length === 1) {
           // Single filter on this column - apply directly
           const filter = columnFilters[0];
-          q = applySingleFilter(q, filter, column, isView, isNumericColumn, isRangeOp);
+          if (filter) {
+            q = applySingleFilter(q, filter, column, isView, isNumericColumn, isRangeOp);
+          }
         } else {
           // Multiple filters on same column
           const allEq = columnFilters.every(f => f.operator === 'eq');
@@ -142,11 +144,21 @@ export async function GET(request: NextRequest) {
             }
           } else if (allIlike) {
             // Multiple "Contains" filters on same column - use OR
-            const orConditions = columnFilters.map(f => {
-              const value = String(f.value).trim();
-              return `${column}.ilike.%${value}%`;
-            }).join(',');
-            q = q.or(orConditions);
+            // Supabase .or() syntax: "column.ilike.%value1%,column.ilike.%value2%"
+            const orConditions = columnFilters
+              .map(f => {
+                const value = String(f.value).trim();
+                if (value) {
+                  return `${column}.ilike.%${value}%`;
+                }
+                return null;
+              })
+              .filter((condition): condition is string => condition !== null)
+              .join(',');
+            
+            if (orConditions) {
+              q = q.or(orConditions);
+            }
           } else {
             // Mixed operators - apply each filter (they'll be AND'd, which may not be what user wants)
             // But this is better than breaking. User should use same operator for same column.
@@ -163,7 +175,7 @@ export async function GET(request: NextRequest) {
     // Helper function to apply a single filter
     const applySingleFilter = (
       q: any, 
-      filter: typeof filters[0], 
+      filter: SupabaseFilter, 
       column: string, 
       isView: boolean,
       isNumericColumn: boolean,
