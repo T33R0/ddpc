@@ -71,18 +71,18 @@ export function ExploreActionButtons({
       </div>
 
       <Modal open={showFilter} onOpenChange={setShowFilter}>
-        <ModalContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <ModalContent className="sm:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
           <ModalHeader>
             <ModalTitle>Filter Options</ModalTitle>
           </ModalHeader>
-          <ModalBody className="px-6 pb-6 overflow-y-auto">
+          <ModalBody className="px-6 pb-4 overflow-y-auto flex-1">
              <FilterBuilder
                 filters={localFilters}
                 onChange={setLocalFilters}
                 options={filterOptions}
              />
           </ModalBody>
-          <ModalFooter className="mt-auto px-6 py-4 border-t border-border">
+          <ModalFooter className="mt-auto px-6 py-4 border-t border-border shrink-0">
              <div className="flex justify-end gap-2 w-full">
                 <Button variant="ghost" onClick={() => setShowFilter(false)}>Cancel</Button>
                 <Button onClick={handleApply}>Apply Filters</Button>

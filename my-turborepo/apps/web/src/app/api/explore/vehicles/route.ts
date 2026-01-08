@@ -94,39 +94,81 @@ export async function GET(request: NextRequest) {
 
     // Apply Filters function
     const applyFilters = (q: any, isView: boolean) => {
-      filters.forEach((filter) => {
-        if (!filter.value) return; // Skip empty values
+      // Filter out empty values and ensure we have valid filters
+      const validFilters = filters.filter((f) => f.value && String(f.value).trim() !== '');
+      
+      if (validFilters.length === 0) {
+        return q;
+      }
 
+      validFilters.forEach((filter) => {
         let column = filter.column;
-        const value = filter.value;
+        let value: string | number = String(filter.value).trim();
         const op = filter.operator;
 
-        // OPTIMIZATION: Only use computed numeric columns (_num) for range comparisons (gt, lt).
-        // For equality (eq, neq) and text search (ilike), use the raw text column.
+        // Determine if this is a numeric column
+        const isNumericColumn = NUMERIC_COLUMNS.includes(column);
         const isRangeOp = ['gt', 'lt'].includes(op);
-
-        if (isView && NUMERIC_COLUMNS.includes(column) && isRangeOp) {
+        
+        // For the view, use _num columns for range operations on numeric fields
+        if (isView && isNumericColumn && isRangeOp) {
           column = `${column}_num`;
         }
 
+        // Convert value to number for numeric operations if possible
+        let processedValue: string | number = value;
+        if (isNumericColumn && (op === 'eq' || op === 'neq' || op === 'gt' || op === 'lt')) {
+          const numValue = parseFloat(value);
+          if (!isNaN(numValue) && isFinite(numValue)) {
+            processedValue = numValue;
+          }
+          // If conversion fails (e.g., "V6" for cylinders), keep as string
+        }
+
+        // Apply the filter operation
+        // Supabase chains filters with AND logic by default
         switch (op) {
           case 'eq':
-            q = q.eq(column, value);
+            q = q.eq(column, processedValue);
             break;
           case 'neq':
-            q = q.neq(column, value);
+            q = q.neq(column, processedValue);
             break;
           case 'gt':
-            q = q.gt(column, value);
+            // For range ops, ensure we use numeric value
+            if (isNumericColumn && typeof processedValue === 'number') {
+              q = q.gt(column, processedValue);
+            } else {
+              // Try to convert for comparison
+              const numVal = parseFloat(value);
+              if (!isNaN(numVal) && isFinite(numVal)) {
+                q = q.gt(column, numVal);
+              } else {
+                // Fallback to string comparison (may not work for numeric columns)
+                q = q.gt(column, value);
+              }
+            }
             break;
           case 'lt':
-            q = q.lt(column, value);
+            // For range ops, ensure we use numeric value
+            if (isNumericColumn && typeof processedValue === 'number') {
+              q = q.lt(column, processedValue);
+            } else {
+              // Try to convert for comparison
+              const numVal = parseFloat(value);
+              if (!isNaN(numVal) && isFinite(numVal)) {
+                q = q.lt(column, numVal);
+              } else {
+                // Fallback to string comparison (may not work for numeric columns)
+                q = q.lt(column, value);
+              }
+            }
             break;
           case 'ilike':
             q = q.ilike(column, `%${value}%`);
             break;
           default:
-            q = q.eq(column, value);
+            q = q.eq(column, processedValue);
         }
       });
       return q;
@@ -140,6 +182,12 @@ export async function GET(request: NextRequest) {
     query = query.order('year', { ascending: false }).order('make').order('model');
 
     let { data, error } = await query;
+    
+    // Log filter application for debugging (only in development)
+    if (process.env.NODE_ENV === 'development' && filters.length > 0) {
+      console.log('[Explore API] Applied filters:', JSON.stringify(filters, null, 2));
+      console.log('[Explore API] Results count:', data?.length || 0);
+    }
 
     // Fallback to table if View doesn't exist
     if (error && error.code === '42P01') {

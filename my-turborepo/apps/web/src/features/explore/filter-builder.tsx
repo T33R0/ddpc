@@ -119,88 +119,99 @@ export function FilterBuilder({ filters, onChange, options }: FilterBuilderProps
   };
 
   return (
-    <div className="flex flex-col gap-3 min-w-[300px] w-full p-1">
-      {filters.map((filter) => {
-        const colDef = COLUMNS.find((c) => c.value === filter.column);
-        const operators = getOperators(filter.column);
-        const valueOptions = getValueOptions(filter.column);
+    <div className="flex flex-col gap-4 w-full">
+      {filters.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8">
+          No filters added. Click "Add filter" to get started.
+        </div>
+      ) : (
+        filters.map((filter) => {
+          const colDef = COLUMNS.find((c) => c.value === filter.column);
+          const operators = getOperators(filter.column);
+          const valueOptions = getValueOptions(filter.column);
 
-        return (
-          <div key={filter.id} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-secondary/20 p-2 rounded-md">
-            {/* Column Select */}
-            <div className="w-full sm:w-1/3">
-              <select
-                value={filter.column}
-                onChange={(e) => updateFilter(filter.id, { column: e.target.value })}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                {COLUMNS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Operator Select */}
-            <div className="w-full sm:w-[140px]">
-              <select
-                value={filter.operator}
-                // @ts-ignore - value cast
-                onChange={(e) => updateFilter(filter.id, { operator: e.target.value as FilterOperator })}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                {operators.map((op) => (
-                  <option key={op.value} value={op.value}>
-                    {op.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Value Input/Select */}
-            <div className="flex-1 w-full min-w-0">
-              {valueOptions ? (
+          return (
+            <div key={filter.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-secondary/20 p-4 rounded-lg border border-border/50">
+              {/* Column Select */}
+              <div className="w-full sm:w-[200px] shrink-0">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Field</label>
                 <select
-                  value={filter.value}
-                  onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={filter.column}
+                  onChange={(e) => updateFilter(filter.id, { column: e.target.value })}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Any</option>
-                  {valueOptions.map((opt) => (
-                    <option key={opt.value + opt.label} value={opt.value}>
-                      {opt.label}
+                  {COLUMNS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
                     </option>
                   ))}
                 </select>
-              ) : (
-                <Input
-                  value={filter.value}
-                  onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-                  placeholder="Value..."
-                  className="h-9 bg-background"
-                />
-              )}
-            </div>
+              </div>
 
-            {/* Remove Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove filter"
-              onClick={() => removeFilter(filter.id)}
-              className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      })}
+              {/* Operator Select */}
+              <div className="w-full sm:w-[160px] shrink-0">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Operator</label>
+                <select
+                  value={filter.operator}
+                  // @ts-ignore - value cast
+                  onChange={(e) => updateFilter(filter.id, { operator: e.target.value as FilterOperator })}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {operators.map((op) => (
+                    <option key={op.value} value={op.value}>
+                      {op.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Value Input/Select */}
+              <div className="flex-1 w-full min-w-[200px]">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Value</label>
+                {valueOptions ? (
+                  <select
+                    value={filter.value}
+                    onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Any</option>
+                    {valueOptions.map((opt) => (
+                      <option key={opt.value + opt.label} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    value={filter.value}
+                    onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
+                    placeholder="Enter value..."
+                    className="h-10 w-full bg-background text-sm"
+                  />
+                )}
+              </div>
+
+              {/* Remove Button */}
+              <div className="w-full sm:w-auto sm:pt-6">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Remove filter"
+                  onClick={() => removeFilter(filter.id)}
+                  className="h-10 w-10 text-muted-foreground hover:text-destructive shrink-0"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          );
+        })
+      )}
 
       <Button
         variant="outline"
         onClick={addFilter}
-        className="self-start gap-2 mt-2"
+        className="self-start gap-2 mt-2 h-10"
       >
         <Plus className="h-4 w-4" />
         Add filter
