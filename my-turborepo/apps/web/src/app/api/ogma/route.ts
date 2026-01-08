@@ -257,9 +257,8 @@ export async function POST(req: Request) {
         const result = await generateText({
           model,
           system: personaPrompts.engineer,
-          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
-          tools: TRINITY.engineer.tools,
-          maxSteps: 5
+          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable. Use your tools (get_repo_structure and read_file_content) to verify code before responding. Do not hallucinate.`,
+          tools: TRINITY.engineer.tools
         });
 
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
