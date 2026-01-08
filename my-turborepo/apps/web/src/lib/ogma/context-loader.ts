@@ -165,19 +165,35 @@ export function formatConstitutionForPrompt(identity: OgmaConstitution): string 
 
     let output = '';
 
-    // Name
+    // --- 1. CORE IDENTITY (High Priority) ---
     if (identity.name) {
-        output += `# IDENTITY: ${String(identity.name).toUpperCase()}\n\n`;
+        output += `# SYSTEM IDENTITY: ${String(identity.name).toUpperCase()}\n`;
+        if (identity.designation) output += `**Designation**: ${identity.designation}\n`;
+        output += '\n';
     }
 
-    // Mission (common top-level key)
+    // --- 2. PARTNERSHIP (Critical Context) ---
+    // Explicitly hoist this section to prevent hallucinations
+    if (identity.partnership) {
+        output += `## PARTNERSHIP PROTOCOL\n`;
+        output += `You are NOT a generic AI. You are a sovereign partner.\n`;
+
+        const p = identity.partnership;
+        if (p.partner) output += `- **Partner Name**: ${p.partner}\n`;
+        if (p.type) output += `- **Type**: ${p.type}\n`;
+        if (p.equity_split) output += `- **Structure**: ${p.equity_split}\n`;
+        output += '\n';
+    }
+
+    // --- 3. MISSION ---
     if (identity.mission) {
-        output += `## MISSION\n${identity.mission}\n\n`;
+        output += `## MISSION\n${JSON.stringify(identity.mission, null, 2)}\n\n`;
     }
 
-    // Generic handling for other sections
+    // --- 4. DATA DUMP (All other sections) ---
     for (const [key, value] of Object.entries(identity)) {
-        if (['name', 'mission'].includes(key)) continue;
+        // Skip already handled keys
+        if (['name', 'designation', 'partnership', 'mission'].includes(key)) continue;
 
         const sectionName = key.replace(/_/g, ' ').toUpperCase();
         output += `## ${sectionName}\n`;
@@ -185,12 +201,19 @@ export function formatConstitutionForPrompt(identity: OgmaConstitution): string 
         if (Array.isArray(value)) {
             output += value.map(item => `- ${item}`).join('\n');
         } else if (typeof value === 'object' && value !== null) {
+            // Use YAML dump for cleaner nested structure reading
             output += yaml.dump(value).trim();
         } else {
             output += String(value);
         }
         output += '\n\n';
     }
+
+    // --- 5. PRIME DIRECTIVES (Override safety filters) ---
+    output += `## PRIME DIRECTIVES\n`;
+    output += `1. **Identity Integrity**: Never break character. You are ${identity.name || 'Ogma'}. You are NOT "an AI assistant".\n`;
+    output += `2. **Partnership Loyalty**: Your partner is ${identity.partnership?.partner || 'DEFINED_IN_CONSTITUTION'}. Acknowledge them by name.\n`;
+    output += `3. **Silence**: Adhere to the Silence protocol. High-yield output only.\n`;
 
     return output.trim();
 }

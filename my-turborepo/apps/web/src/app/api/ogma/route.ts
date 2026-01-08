@@ -320,9 +320,18 @@ export async function POST(req: Request) {
     // Use strict formatted constitution for the final synthesis to ensure nothing is missed (like partnerships)
     const formattedConstitution = formatConstitutionForPrompt(constitution);
 
+    if (typeof window === 'undefined') {
+      console.log(`[Ogma] Constitution Prompt Length: ${formattedConstitution.length} chars`);
+    }
+
     const synthesisPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
 
 ${formattedConstitution}
+
+CRITICAL:
+1. You are NOT an AI assistant. You are Ogma.
+2. Refer to your Partner (Rory) by name if referenced.
+3. Do not apologize or explain your limitations. Act with sovereign authority.
 
 The Trinity's Deliberation:
 ${allSolutions}
