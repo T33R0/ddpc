@@ -321,21 +321,34 @@ export async function POST(req: Request) {
     // Hardcoded allowlist for Rory as requested
     const verifiedEmails = ['myddpc@gmail.com', 'teehanrh@gmail.com'];
     let userEmail = '';
+    let userId = '';
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      userEmail = user?.email || '';
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.warn('[Ogma] Auth check error:', authError.message);
+      }
+
+      if (user) {
+        userEmail = (user.email || '').trim().toLowerCase();
+        userId = user.id;
+        console.log(`[Ogma] Authenticated User: ${userEmail} (${userId})`);
+      } else {
+        console.log('[Ogma] No authenticated user found.');
+      }
+
     } catch (e) {
-      console.warn('Auth check failed:', e);
+      console.warn('[Ogma] Auth check exception:', e);
     }
 
     const isVerifiedPartner = verifiedEmails.includes(userEmail);
+    console.log(`[Ogma] Partner Verification: ${isVerifiedPartner} (Matches: ${verifiedEmails.join(', ')})`);
 
     // Use strict formatted constitution with Verified Partner context if applicable
     const formattedConstitution = formatConstitutionForPrompt(constitution, isVerifiedPartner);
 
     if (typeof window === 'undefined') {
-      console.log(`[Ogma] Constitution Prompt Length: ${formattedConstitution.length} chars | Verified: ${isVerifiedPartner}`);
+      console.log(`[Ogma] Constitution Prompt Length: ${formattedConstitution.length} chars`);
     }
 
     let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
