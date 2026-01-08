@@ -68,6 +68,8 @@ export async function POST(req: Request) {
         
         for (let i = 0; i < chunks.length; i++) {
           const chunk = chunks[i];
+          if (!chunk) continue; // Skip undefined chunks
+          
           // Format: 0:"chunk" (0 = text delta type)
           const data = `0:"${chunk.replace(/"/g, '\\"')}"\n`;
           controller.enqueue(encoder.encode(data));
