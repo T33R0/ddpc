@@ -2,6 +2,7 @@ import { streamText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 import { runParliamentEngine } from '@/lib/ogma/parliament-engine';
+import { convertToModelMessages } from 'ai';
 
 // Universal Gateway Adapter for final synthesis streaming
 const vercelGateway = createOpenAICompatible({
@@ -57,32 +58,36 @@ export async function POST(req: Request) {
       }
     })();
 
-    // Stream the already-synthesized response (no need to re-process)
-    // Create a simple readable stream for the final response
+    // Create a stream in the format useChat expects (AI SDK data stream format)
+    // Format: 0:"text chunk" for text deltas
+    const encoder = new TextEncoder();
     const stream = new ReadableStream({
-      start(controller) {
+      async start(controller) {
         // Split response into chunks for streaming effect
-        const chunks = finalResponse.match(/.{1,50}/g) || [finalResponse];
-        let index = 0;
+        const chunks = finalResponse.match(/.{1,20}/g) || [finalResponse];
         
-        const pushChunk = () => {
-          if (index < chunks.length) {
-            controller.enqueue(new TextEncoder().encode(chunks[index]));
-            index++;
-            setTimeout(pushChunk, 10); // Small delay for streaming effect
-          } else {
-            controller.close();
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+          // Format: 0:"chunk" (0 = text delta type)
+          const data = `0:"${chunk.replace(/"/g, '\\"')}"\n`;
+          controller.enqueue(encoder.encode(data));
+          
+          // Small delay for streaming effect
+          if (i < chunks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 10));
           }
-        };
+        }
         
-        pushChunk();
+        // Send finish signal
+        controller.enqueue(encoder.encode('d:{"finishReason":"stop"}\n'));
+        controller.close();
       }
     });
 
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'Transfer-Encoding': 'chunked',
+        'X-Vercel-AI-Data-Stream': 'v1',
       },
     });
 

@@ -7,8 +7,8 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   excludeDefaultRoutes: true,
-  buildExcludes: [/app-build-manifest\.json$/, /~offline/],
-  publicExcludes: ['!noprecache/**/*'],
+  buildExcludes: [/app-build-manifest\.json$/, /~offline/, /\/~offline/],
+  publicExcludes: ['!noprecache/**/*', '~offline'],
   fallbacks: {
     document: '/~offline',
   },
@@ -25,7 +25,15 @@ const withPWA = withPWAInit({
     },
   ],
   workboxOptions: {
-    exclude: [/~offline/],
+    exclude: [/~offline/, /\/~offline/],
+    navigateFallback: '/~offline',
+    navigateFallbackDenylist: [/^\/api/, /^\/_next/],
+    runtimeCaching: [
+      {
+        urlPattern: /\/~offline/,
+        handler: 'NetworkOnly',
+      },
+    ],
   },
 });
 

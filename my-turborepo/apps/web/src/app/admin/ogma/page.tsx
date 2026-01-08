@@ -27,13 +27,11 @@ export default function ChatPage() {
     const [localInput, setLocalInput] = useState('');
 
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
-    // Use a stable body object to prevent hook re-initialization
-    const chatBody = useMemo(() => ({ sessionId: currentSessionId }), [currentSessionId]);
-    
+    // Use a stable body object - but we'll update it dynamically via body function
     const { messages, input, handleInputChange, handleSubmit, append, setMessages, setInput, status } = useChat({
         api: '/api/ogma',
-        body: chatBody,
-        id: currentSessionId || undefined, // Use session ID as chat ID to maintain state
+        body: () => ({ sessionId: currentSessionId }), // Use function to get current sessionId dynamically
+        id: 'ogma-chat', // Use a stable ID to prevent re-initialization
     }) as any;
 
     // Sync local input with hook input when available
@@ -102,6 +100,8 @@ export default function ChatPage() {
                 activeSessionId = await createChatSession();
                 setCurrentSessionId(activeSessionId);
                 setRefreshTrigger(prev => prev + 1);
+                // Wait a bit for the hook to re-initialize with the new session ID
+                await new Promise(resolve => setTimeout(resolve, 100));
             } catch (err) {
                 console.error("Failed to create session", err);
                 return;
@@ -111,19 +111,61 @@ export default function ChatPage() {
         // Store the input value before clearing
         const messageContent = messageText;
         
-        // Clear input immediately for better UX (append should do this, but clear manually to be safe)
+        // Clear input immediately for better UX
+        setLocalInput('');
         if (setInput && typeof setInput === 'function') {
             setInput('');
-        } else {
-            setLocalInput('');
         }
 
         // 2. CRITICAL: Use 'append' to send the message with the new Session ID valid
         // We manually append because 'handleSubmit' relies on state that might lag one render cycle
-        await append({
-            role: 'user',
-            content: messageContent,
-        });
+        try {
+            // Check if append is available and is a function
+            if (!append) {
+                console.error('append is not available from useChat hook');
+                // Fallback: manually add message to state and call API
+                const userMessage = {
+                    id: `temp-${Date.now()}`,
+                    role: 'user' as const,
+                    content: messageContent,
+                };
+                setMessages([...messages, userMessage]);
+                
+                // Manually call the API
+                const response = await fetch('/api/ogma', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [...messages, userMessage],
+                        sessionId: activeSessionId,
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                
+                // The response will be streamed, so we need to handle it
+                // For now, just return - the hook should handle streaming
+                return;
+            }
+            
+            if (typeof append !== 'function') {
+                throw new Error('append is not a function');
+            }
+            
+            await append({
+                role: 'user',
+                content: messageContent,
+            });
+        } catch (err) {
+            console.error('Failed to send message:', err);
+            // Restore input on error
+            setLocalInput(messageContent);
+            if (setInput) {
+                setInput(messageContent);
+            }
+        }
     };
 
     useEffect(() => {
