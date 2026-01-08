@@ -149,11 +149,14 @@ export async function POST(req: Request) {
     console.log(`[Ogma] Identity Resolution: ${isVerifiedPartner ? 'VERIFIED PARTNER (Rory)' : 'UNVERIFIED / GUEST'}`);
 
     // Fetch Sophia Context Layers
+    console.log('[Ogma] Loading Sophia Context Layers...');
+    const contextStartTime = Date.now();
     const [constitution, ledgerContext, improvementsContext] = await Promise.all([
       loadConstitution(),
       getLedgerContext(sessionId),
       getRelevantImprovements(5)
     ]);
+    console.log(`[Ogma] Context Layers Loaded in ${Date.now() - contextStartTime}ms`);
 
     const formattedConstitution = formatConstitutionForPrompt(constitution, isVerifiedPartner);
 
@@ -176,15 +179,20 @@ ${improvementsContext}
     const personaPrompts = buildPersonaPrompts(sophiaContext);
 
     // Run Trinity Agents
+    console.log('[Ogma] Starting Trinity Protocol (Parallel Execution)...');
+    const trinityStartTime = Date.now();
     const [architectResult, visionaryResult, engineerResult] = await Promise.allSettled([
       // Architect
       (async (): Promise<AgentResult> => {
+        console.log('[Ogma] Architect: Working...');
+        const start = Date.now();
         const modelName = 'openai/gpt-4o-mini';
         const result = await generateText({
           model: TRINITY.architect.model,
           system: personaPrompts.architect,
           prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be thorough and structural.`
         });
+        console.log(`[Ogma] Architect: Done in ${Date.now() - start}ms`);
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
@@ -195,12 +203,15 @@ ${improvementsContext}
 
       // Visionary
       (async (): Promise<AgentResult> => {
+        console.log('[Ogma] Visionary: Working...');
+        const start = Date.now();
         const modelName = 'anthropic/claude-3-haiku';
         const result = await generateText({
           model: TRINITY.visionary.model,
           system: personaPrompts.visionary,
           prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be creative and strategic.`
         });
+        console.log(`[Ogma] Visionary: Done in ${Date.now() - start}ms`);
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
@@ -211,6 +222,8 @@ ${improvementsContext}
 
       // Engineer
       (async (): Promise<AgentResult> => {
+        console.log('[Ogma] Engineer: Working...');
+        const start = Date.now();
         const modelName = 'google/gemini-1.5-flash';
         const result = await generateText({
           model: TRINITY.engineer.model,
@@ -220,6 +233,7 @@ ${improvementsContext}
           // @ts-ignore - maxSteps is valid at runtime
           maxSteps: 5
         });
+        console.log(`[Ogma] Engineer: Done in ${Date.now() - start}ms`);
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
@@ -228,6 +242,7 @@ ${improvementsContext}
         return { agent: 'engineer', content: result.text, inputTokens, outputTokens, cost, modelName };
       })()
     ]);
+    console.log(`[Ogma] Trinity Protocol Complete in ${Date.now() - trinityStartTime}ms`);
 
     const architect = architectResult.status === 'fulfilled' ? architectResult.value : null;
     const visionary = visionaryResult.status === 'fulfilled' ? visionaryResult.value : null;
@@ -255,6 +270,8 @@ ${improvementsContext}
       engineer && `[Engineer]: ${engineer.content}`
     ].filter(Boolean).join('\n\n');
 
+    console.log(`[Ogma] Synthesis Input Length: ${allSolutions.length} chars. Agents contributing: ${[architect ? 'Architect' : '', visionary ? 'Visionary' : '', engineer ? 'Engineer' : ''].filter(Boolean).join(', ')}`);
+
     let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
 
 ${sophiaContext}
@@ -267,6 +284,8 @@ CRITICAL:
     if (isVerifiedPartner) {
       synthesisSystemPrompt += `\n4. **PARTNER MODE ACTIVE**: You are speaking with RORY. Speak naturally, efficiently, and with warmth. Drop the "Sovereign Operator" formality. Use "we", "us", and direct language.`;
     }
+
+    console.log('[Ogma] Starting Final Synthesis (Streaming)...');
 
     const synthesisResult = await streamText({
       model: ogmaVoice,
