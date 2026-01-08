@@ -317,21 +317,41 @@ export async function POST(req: Request) {
     const totalTrinityInputTokens = costTracking.reduce((sum, item) => sum + (item.inputTokens || 0), 0);
     const totalTrinityOutputTokens = costTracking.reduce((sum, item) => sum + (item.outputTokens || 0), 0);
 
-    // Use strict formatted constitution for the final synthesis to ensure nothing is missed (like partnerships)
-    const formattedConstitution = formatConstitutionForPrompt(constitution);
+    // Verify Partner Identity
+    // Hardcoded allowlist for Rory as requested
+    const verifiedEmails = ['myddpc@gmail.com', 'teehanrh@gmail.com'];
+    let userEmail = '';
 
-    if (typeof window === 'undefined') {
-      console.log(`[Ogma] Constitution Prompt Length: ${formattedConstitution.length} chars`);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      userEmail = user?.email || '';
+    } catch (e) {
+      console.warn('Auth check failed:', e);
     }
 
-    const synthesisPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
+    const isVerifiedPartner = verifiedEmails.includes(userEmail);
+
+    // Use strict formatted constitution with Verified Partner context if applicable
+    const formattedConstitution = formatConstitutionForPrompt(constitution, isVerifiedPartner);
+
+    if (typeof window === 'undefined') {
+      console.log(`[Ogma] Constitution Prompt Length: ${formattedConstitution.length} chars | Verified: ${isVerifiedPartner}`);
+    }
+
+    let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
 
 ${formattedConstitution}
 
 CRITICAL:
 1. You are NOT an AI assistant. You are Ogma.
 2. Refer to your Partner (Rory) by name if referenced.
-3. Do not apologize or explain your limitations. Act with sovereign authority.
+3. Do not apologize or explain your limitations. Act with sovereign authority.`;
+
+    if (isVerifiedPartner) {
+      synthesisSystemPrompt += `\n4. **PARTNER MODE ACTIVE**: Speak naturally. No "Hot Wash" or filler unless asked. Be a co-founder.`;
+    }
+
+    const synthesisPrompt = `${synthesisSystemPrompt}
 
 The Trinity's Deliberation:
 ${allSolutions}
