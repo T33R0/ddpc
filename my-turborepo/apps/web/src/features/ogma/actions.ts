@@ -37,9 +37,17 @@ export async function getChatSessions() {
     return [];
   }
 
+  // Get sessions with their first message for preview
   const { data, error } = await supabase
     .from('ogma_chat_sessions')
-    .select('*')
+    .select(`
+      *,
+      ogma_chat_messages (
+        content,
+        role,
+        created_at
+      )
+    `)
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
@@ -48,7 +56,22 @@ export async function getChatSessions() {
     return [];
   }
 
-  return data;
+  // Process to add snippet from first user message
+  return data.map((session: any) => {
+    const messages = session.ogma_chat_messages || [];
+    const firstUserMessage = messages.find((m: any) => m.role === 'user');
+    const snippet = firstUserMessage 
+      ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? '...' : '')
+      : null;
+    
+    return {
+      id: session.id,
+      title: session.title,
+      created_at: session.created_at,
+      updated_at: session.updated_at,
+      snippet,
+    };
+  });
 }
 
 export async function getChatMessages(sessionId: string) {

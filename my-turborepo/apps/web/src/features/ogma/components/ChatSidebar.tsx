@@ -13,6 +13,7 @@ interface ChatSession {
   title: string | null;
   created_at: string;
   updated_at: string;
+  snippet?: string | null;
 }
 
 interface ChatSidebarProps {
@@ -104,13 +105,20 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
 
               {isOpen && (
                 <>
-                  <div className="flex-1 truncate text-xs font-medium">
-                    {session.title !== 'New Conversation' ? session.title : format(new Date(session.created_at), 'MMM d, h:mm a')}
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate text-xs font-medium">
+                      {session.title !== 'New Conversation' ? session.title : format(new Date(session.created_at), 'MMM d, h:mm a')}
+                    </div>
+                    {session.snippet && (
+                      <div className="truncate text-[10px] text-neutral-500 mt-0.5">
+                        {session.snippet}
+                      </div>
+                    )}
                   </div>
 
                   <button
                     onClick={(e) => handleDelete(e, session.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity shrink-0"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>

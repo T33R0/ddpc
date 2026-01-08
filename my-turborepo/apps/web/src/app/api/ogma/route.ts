@@ -58,31 +58,58 @@ export async function POST(req: Request) {
       }
     })();
 
-    // Create a stream in the format useChat expects (AI SDK data stream format)
-    // Format: 0:"text chunk" for text deltas
+    // Create a proper AI SDK data stream response
+    // Format: Each line is either 0:"text" for text deltas or d:{"finishReason":"stop"} for finish
     const encoder = new TextEncoder();
+    
+    // Helper to escape JSON string
+    const escapeJsonString = (str: string): string => {
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    };
+    
     const stream = new ReadableStream({
       async start(controller) {
-        // Split response into chunks for streaming effect
-        const chunks = finalResponse.match(/.{1,20}/g) || [finalResponse];
-        
-        for (let i = 0; i < chunks.length; i++) {
-          const chunk = chunks[i];
-          if (!chunk) continue; // Skip undefined chunks
+        try {
+          // Split response into chunks for streaming effect (smaller chunks for smoother streaming)
+          const chunkSize = 30;
+          const chunks: string[] = [];
           
-          // Format: 0:"chunk" (0 = text delta type)
-          const data = `0:"${chunk.replace(/"/g, '\\"')}"\n`;
-          controller.enqueue(encoder.encode(data));
-          
-          // Small delay for streaming effect
-          if (i < chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 10));
+          for (let i = 0; i < finalResponse.length; i += chunkSize) {
+            chunks.push(finalResponse.slice(i, i + chunkSize));
           }
+          
+          if (chunks.length === 0) {
+            chunks.push(finalResponse);
+          }
+          
+          // Stream each chunk
+          for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            if (!chunk) continue;
+            
+            // AI SDK data stream format: 0:"text chunk"
+            const escapedChunk = escapeJsonString(chunk);
+            const data = `0:"${escapedChunk}"\n`;
+            controller.enqueue(encoder.encode(data));
+            
+            // Small delay for streaming effect (faster to avoid timeout)
+            if (i < chunks.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 15));
+            }
+          }
+          
+          // Send finish signal
+          controller.enqueue(encoder.encode('d:{"finishReason":"stop"}\n'));
+          controller.close();
+        } catch (error) {
+          console.error('Stream error:', error);
+          controller.error(error);
         }
-        
-        // Send finish signal
-        controller.enqueue(encoder.encode('d:{"finishReason":"stop"}\n'));
-        controller.close();
       }
     });
 

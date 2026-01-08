@@ -83,6 +83,24 @@ export default function ChatPage() {
     const handleSelectSession = async (id: string | null) => {
         setCurrentSessionId(id);
         if (id) {
+            // Load messages for this session from database
+            try {
+                const { getChatMessages } = await import('@/features/ogma/actions');
+                const dbMessages = await getChatMessages(id);
+                
+                // Convert DB messages to useChat format
+                const chatMessages = dbMessages.map((msg: any) => ({
+                    id: msg.id,
+                    role: msg.role,
+                    content: msg.content,
+                }));
+                
+                setMessages(chatMessages);
+            } catch (err) {
+                console.error('Failed to load messages:', err);
+                setMessages([]);
+            }
+        } else {
             setMessages([]);
         }
     };
@@ -117,55 +135,36 @@ export default function ChatPage() {
             setInput('');
         }
 
-        // 2. CRITICAL: Use 'append' to send the message with the new Session ID valid
-        // We manually append because 'handleSubmit' relies on state that might lag one render cycle
-        try {
-            // Check if append is available and is a function
-            if (!append) {
-                console.error('append is not available from useChat hook');
-                // Fallback: manually add message to state and call API
-                const userMessage = {
-                    id: `temp-${Date.now()}`,
-                    role: 'user' as const,
-                    content: messageContent,
-                };
-                setMessages([...messages, userMessage]);
-                
-                // Manually call the API
-                const response = await fetch('/api/ogma', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        messages: [...messages, userMessage],
-                        sessionId: activeSessionId,
-                    }),
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to send message');
-                }
-                
-                // The response will be streamed, so we need to handle it
-                // For now, just return - the hook should handle streaming
-                return;
-            }
-            
-            if (typeof append !== 'function') {
-                throw new Error('append is not a function');
-            }
-            
-            await append({
-                role: 'user',
-                content: messageContent,
-            });
-        } catch (err) {
-            console.error('Failed to send message:', err);
-            // Restore input on error
+        // 2. CRITICAL: Use handleSubmit which properly handles the useChat hook
+        // First, set the input so handleSubmit can use it
+        if (setInput && typeof setInput === 'function') {
+            setInput(messageContent);
+        } else {
             setLocalInput(messageContent);
-            if (setInput) {
-                setInput(messageContent);
-            }
         }
+        
+        // Wait a tick for state to update, then use handleSubmit
+        // This ensures the hook has the message content
+        setTimeout(() => {
+            if (handleSubmit && typeof handleSubmit === 'function') {
+                const syntheticEvent = {
+                    preventDefault: () => {},
+                    target: e.target,
+                    currentTarget: e.currentTarget,
+                } as React.FormEvent<HTMLFormElement>;
+                handleSubmit(syntheticEvent);
+            } else if (append && typeof append === 'function') {
+                // Fallback to append if handleSubmit not available
+                append({
+                    role: 'user',
+                    content: messageContent,
+                });
+            } else {
+                console.error('Neither handleSubmit nor append available');
+                // Restore input on error
+                setLocalInput(messageContent);
+            }
+        }, 0);
     };
 
     useEffect(() => {
