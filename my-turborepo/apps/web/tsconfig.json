@@ -14,7 +14,12 @@
     ],
     "jsx": "react-jsx",
     "allowJs": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ]
   },
   "include": [
     "next-env.d.ts",

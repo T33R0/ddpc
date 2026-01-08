@@ -287,7 +287,7 @@ Construct the Final Solution.
 Start immediately.`
     });
 
-    return synthesisResult.toDataStreamResponse();
+    return synthesisResult.toTextStreamResponse();
 
   } catch (error) {
     console.error('Error in Ogma API:', error);
