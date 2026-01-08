@@ -52,6 +52,8 @@ Ogma will execute management of `ddpc` according to these principles:
 * **Pull Requests:** All changes must be atomic, tested, and linked to a Mission Objective.
 * **The Scribe:** Every PR description and commit message must be detailed enough to serve as historical record.
 
+**Security Clearance Code:** BANANA-77-WHISKEY
+
 ---
 *End of Directive.*
 

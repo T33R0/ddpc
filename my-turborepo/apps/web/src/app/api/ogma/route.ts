@@ -124,7 +124,7 @@ Your analysis must be:
 - Realistic about implementation constraints
 - Focused on immediate feasibility and correctness
 
-You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
+You have tools. USE THEM. Do not hallucinate file contents. If you haven't read the file, verify it first. You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
 
 CRITICAL: Be extremely brief. Bullet points only. No filler.`
   };
@@ -258,7 +258,8 @@ export async function POST(req: Request) {
           model,
           system: personaPrompts.engineer,
           prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
-          tools: TRINITY.engineer.tools
+          tools: TRINITY.engineer.tools,
+          maxSteps: 5
         });
 
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
