@@ -70,7 +70,8 @@ const getRepoStructureSchema = z.object({
 export const get_repo_structure = tool({
   description: 'Returns a tree view of the file system (ignoring node_modules, .git, dist, build, .next, .turbo). Allows Ogma to orient himself in the repository structure.',
   parameters: getRepoStructureSchema,
-  execute: async ({ path }: z.infer<typeof getRepoStructureSchema>) => {
+  execute: async (args: z.infer<typeof getRepoStructureSchema>) => {
+    const { path } = args;
     try {
       // Determine repository root (assuming we're in apps/web)
       const currentDir = process.cwd();
@@ -114,7 +115,8 @@ const readFileContentSchema = z.object({
 export const read_file_content = tool({
   description: 'Takes a file path and returns the raw text content. Allows Ogma to read code files from the repository.',
   parameters: readFileContentSchema,
-  execute: async ({ path }: z.infer<typeof readFileContentSchema>) => {
+  execute: async (args: z.infer<typeof readFileContentSchema>) => {
+    const { path } = args;
     try {
       // Determine repository root
       const currentDir = process.cwd();
@@ -165,7 +167,8 @@ const createIssueSchema = z.object({
 export const create_issue = tool({
   description: 'Creates a GitHub Issue with the provided title and body. Useful for feature tracking and task management.',
   parameters: createIssueSchema,
-  execute: async ({ title, body, owner, repo }: z.infer<typeof createIssueSchema>) => {
+  execute: async (args: z.infer<typeof createIssueSchema>) => {
+    const { title, body, owner, repo } = args;
     try {
       const { owner: defaultOwner, repo: defaultRepo } = getRepoInfo();
       const finalOwner = owner || defaultOwner;
@@ -224,7 +227,8 @@ const createPullRequestSchema = z.object({
 export const create_pull_request = tool({
   description: 'Creates a new branch, commits the provided file changes, and opens a pull request against the main branch.',
   parameters: createPullRequestSchema,
-  execute: async ({ title, body, branch_name, file_changes, owner, repo, base_branch }: z.infer<typeof createPullRequestSchema>) => {
+  execute: async (args: z.infer<typeof createPullRequestSchema>) => {
+    const { title, body, branch_name, file_changes, owner, repo, base_branch } = args;
     try {
       const { owner: defaultOwner, repo: defaultRepo } = getRepoInfo();
       const finalOwner = owner || defaultOwner;
