@@ -1,8 +1,9 @@
-import { streamText, generateText, convertToModelMessages } from 'ai';
+import { streamText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
+import { runParliamentEngine } from '@/lib/ogma/parliament-engine';
 
-// 1. Universal Gateway Adapter
+// Universal Gateway Adapter for final synthesis streaming
 const vercelGateway = createOpenAICompatible({
   name: 'ogma-gateway',
   baseURL: 'https://ai-gateway.vercel.sh/v1',
@@ -13,99 +14,84 @@ const vercelGateway = createOpenAICompatible({
   }
 });
 
-// 2. Define The Trinity
-const TRINITY = {
-  architect: {
-    model: vercelGateway('openai/gpt-5'),
-    role: "You are The Architect. Analyze structural integrity and system design.",
-  },
-  visionary: {
-    model: vercelGateway('anthropic/claude-3.7-sonnet'),
-    role: "You are The Visionary. Focus on creative solutions and lateral thinking.",
-  },
-  engineer: {
-    model: vercelGateway('google/gemini-2.5-pro'),
-    role: "You are The Engineer. Focus on code correctness and execution.",
-  }
-};
-
-export const maxDuration = 60;
+export const maxDuration = 300; // Increased for consensus loop (up to 7 rounds)
 
 export async function POST(req: Request) {
   try {
     const { messages, sessionId } = await req.json();
     const supabase = await createClient();
 
+    // Extract the user's prompt from the last message
+    const lastMsg = messages[messages.length - 1];
+    const userPrompt = typeof lastMsg.content === 'string' 
+      ? lastMsg.content 
+      : JSON.stringify(lastMsg.content);
+
     // Log user message
     (async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && sessionId) {
-            const lastMsg = messages[messages.length - 1];
-            const content = typeof lastMsg.content === 'string' ? lastMsg.content : '';
             await supabase.from('ogma_chat_messages').insert({
                 session_id: sessionId,
                 role: 'user',
-                content
+                content: userPrompt
             });
         }
     })();
 
-    // Standard v6 Message Conversion
-    const modelMessages = await convertToModelMessages(messages);
+    // Run the Parliament Engine (Consensus Loop)
+    const { finalResponse, rounds, consensusReached } = await runParliamentEngine(userPrompt, sessionId);
 
-    // A. Run Trinity (Parallel)
-    // We execute them to get their wisdom, but we won't stream it to the UI yet.
-    // This avoids the broken 'createDataStreamResponse' export.
-    const [archRes, visRes, engRes] = await Promise.all([
-      generateText({
-        model: TRINITY.architect.model,
-        system: TRINITY.architect.role,
-        messages: modelMessages,
-      }),
-      generateText({
-        model: TRINITY.visionary.model,
-        system: TRINITY.visionary.role,
-        messages: modelMessages,
-      }),
-      generateText({
-        model: TRINITY.engineer.model,
-        system: TRINITY.engineer.role,
-        messages: modelMessages,
-      }),
-    ]);
+    // Log the deliberation process (optional - for debugging/transparency)
+    console.log(`Parliament Engine: ${rounds.length} rounds, Consensus: ${consensusReached}`);
 
-    // B. Synthesize
-    const synthesisPrompt = `
-    Internal Perspectives:
-    [ARCHITECT]: ${archRes.text}
-    [VISIONARY]: ${visRes.text}
-    [ENGINEER]: ${engRes.text}
-    
-    Synthesize these into a single cohesive response. Speak as Ogma.
-    `;
+    // Log the final response to database
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && sessionId) {
+        await supabase.from('ogma_chat_messages').insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: finalResponse
+        });
+      }
+    })();
 
-    // C. Stream Final Response
-    const result = streamText({
-      model: vercelGateway('openai/gpt-5'),
-      prompt: synthesisPrompt,
-      onFinish: async ({ text }) => {
-           const { data: { user } } = await supabase.auth.getUser();
-           if (user && sessionId) {
-              await supabase.from('ogma_chat_messages').insert({
-                  session_id: sessionId,
-                  role: 'assistant',
-                  content: text
-              });
-           }
+    // Stream the already-synthesized response (no need to re-process)
+    // Create a simple readable stream for the final response
+    const stream = new ReadableStream({
+      start(controller) {
+        // Split response into chunks for streaming effect
+        const chunks = finalResponse.match(/.{1,50}/g) || [finalResponse];
+        let index = 0;
+        
+        const pushChunk = () => {
+          if (index < chunks.length) {
+            controller.enqueue(new TextEncoder().encode(chunks[index]));
+            index++;
+            setTimeout(pushChunk, 10); // Small delay for streaming effect
+          } else {
+            controller.close();
+          }
+        };
+        
+        pushChunk();
       }
     });
 
-    // Simple Data Stream (v6 Standard) - No custom function wrappers
-    return result.toTextStreamResponse();
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+      },
+    });
 
   } catch (error) {
-    console.error('Ogma Trinity Error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to process Trinity request' }), {
+    console.error('Parliament Engine Error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to process request through Parliament Engine',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
