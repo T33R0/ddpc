@@ -2,7 +2,7 @@ import { streamText, generateText } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost } from '@/lib/ogma/compute-costs';
-import { get_repo_structure, read_file_content } from '@/lib/ogma/tools';
+import { get_repo_structure, read_file_content, create_issue, create_pull_request } from '@/lib/ogma/tools';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import yaml from 'js-yaml';
@@ -124,7 +124,7 @@ Your analysis must be:
 - Realistic about implementation constraints
 - Focused on immediate feasibility and correctness
 
-You have tools. USE THEM. Do not hallucinate file contents. If you haven't read the file, verify it first. You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
+You have file access tools. If asked about a file, READ IT using read_file_content. Do not guess. You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
 
 CRITICAL: Be extremely brief. Bullet points only. No filler.`
   };
@@ -250,18 +250,33 @@ export async function POST(req: Request) {
         };
       })(),
 
-      // Engineer
+      // Engineer - Uses streamText with maxSteps for multi-step tool execution
       (async (): Promise<AgentResult> => {
         const model = TRINITY.engineer.model;
         const modelName = 'google/gemini-1.5-flash';
-        const result = await generateText({
+        
+        // Use streamText for Engineer to enable maxSteps (multi-step tool execution)
+        const streamResult = await streamText({
           model,
           system: personaPrompts.engineer,
-          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable. Use your tools (get_repo_structure and read_file_content) to verify code before responding. Do not hallucinate.`,
-          tools: TRINITY.engineer.tools
+          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
+          tools: {
+            get_repo_structure,
+            read_file_content,
+            create_issue,
+            create_pull_request
+          },
+          // @ts-ignore - maxSteps is valid at runtime for streamText with tools
+          maxSteps: 5 // Allow Engineer to read files in multiple steps
         });
 
-        const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
+        // Extract final text from stream
+        let finalText = '';
+        for await (const chunk of streamResult.textStream) {
+          finalText += chunk;
+        }
+
+        const usage = streamResult.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
         const cost = calculateCost(modelName, inputTokens, outputTokens);
@@ -270,7 +285,7 @@ export async function POST(req: Request) {
 
         return {
           agent: 'engineer',
-          content: result.text,
+          content: finalText,
           inputTokens,
           outputTokens,
           cost,
