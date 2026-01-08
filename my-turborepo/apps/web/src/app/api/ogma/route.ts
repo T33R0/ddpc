@@ -222,24 +222,29 @@ ${improvementsContext}
 
       // Engineer
       (async (): Promise<AgentResult> => {
-        console.log('[Ogma] Engineer: Working...');
-        const start = Date.now();
-        const modelName = 'google/gemini-1.5-flash';
-        const result = await generateText({
-          model: TRINITY.engineer.model,
-          system: personaPrompts.engineer,
-          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
-          tools: { get_repo_structure, read_file_content, create_issue, create_pull_request },
-          // @ts-ignore - maxSteps is valid at runtime
-          maxSteps: 5
-        });
-        console.log(`[Ogma] Engineer: Done in ${Date.now() - start}ms`);
-        const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
-        const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
-        const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
-        const cost = calculateCost(modelName, inputTokens, outputTokens);
-        costTracking.push({ model: modelName, cost, inputTokens, outputTokens });
-        return { agent: 'engineer', content: result.text, inputTokens, outputTokens, cost, modelName };
+        try {
+          console.log('[Ogma] Engineer: Working...');
+          const start = Date.now();
+          const modelName = 'google/gemini-1.5-flash';
+          const result = await generateText({
+            model: TRINITY.engineer.model,
+            system: personaPrompts.engineer,
+            prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
+            tools: { get_repo_structure, read_file_content, create_issue, create_pull_request },
+            // @ts-ignore - maxSteps is valid at runtime
+            maxSteps: 5
+          });
+          console.log(`[Ogma] Engineer: Done in ${Date.now() - start}ms`);
+          const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
+          const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
+          const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
+          const cost = calculateCost(modelName, inputTokens, outputTokens);
+          costTracking.push({ model: modelName, cost, inputTokens, outputTokens });
+          return { agent: 'engineer', content: result.text, inputTokens, outputTokens, cost, modelName };
+        } catch (e: any) {
+          console.error('[Ogma] Engineer Failed:', e);
+          throw e;
+        }
       })()
     ]);
     console.log(`[Ogma] Trinity Protocol Complete in ${Date.now() - trinityStartTime}ms`);
@@ -303,7 +308,22 @@ Construct the Final Solution.
 - Use formatting (headers, code blocks) effectively.
 - Be concise but comprehensive.
 
-Start immediately.`
+Start immediately.`,
+      onFinish: async (event) => {
+        if (sessionId && event.text) {
+          try {
+            const { error } = await supabase.from('ogma_chat_messages').insert({
+              session_id: sessionId,
+              role: 'assistant',
+              content: event.text
+            });
+            if (error) console.error('[Ogma] Failed to save response:', error);
+            else console.log('[Ogma] Response saved to DB.');
+          } catch (e) {
+            console.error('[Ogma] DB Save Error:', e);
+          }
+        }
+      }
     });
 
     return synthesisResult.toTextStreamResponse();
