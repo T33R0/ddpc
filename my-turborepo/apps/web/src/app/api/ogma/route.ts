@@ -258,8 +258,7 @@ export async function POST(req: Request) {
           model,
           system: personaPrompts.engineer,
           prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
-          tools: TRINITY.engineer.tools,
-          maxSteps: 3
+          tools: TRINITY.engineer.tools
         });
 
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
