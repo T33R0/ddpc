@@ -23,6 +23,8 @@ export default function ChatPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    // Fallback input state in case useChat doesn't provide input
+    const [localInput, setLocalInput] = useState('');
 
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
     // Use a stable body object to prevent hook re-initialization
@@ -33,6 +35,41 @@ export default function ChatPage() {
         body: chatBody,
         id: currentSessionId || undefined, // Use session ID as chat ID to maintain state
     }) as any;
+
+    // Sync local input with hook input when available
+    useEffect(() => {
+        if (input !== undefined && input !== null) {
+            setLocalInput(input);
+        }
+    }, [input]);
+    
+    // Use local input if hook doesn't provide it
+    const effectiveInput = input !== undefined && input !== null ? input : localInput;
+    
+    // Simple input handler that always works
+    const handleInputChangeSafe = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        // Update local state immediately for responsive UI
+        setLocalInput(value);
+        
+        // Also try to update hook state if available
+        if (setInput && typeof setInput === 'function') {
+            try {
+                setInput(value);
+            } catch (err) {
+                // Ignore errors, local state will handle it
+            }
+        }
+        
+        // Try handleInputChange if it exists and is a function
+        if (handleInputChange && typeof handleInputChange === 'function') {
+            try {
+                handleInputChange(e);
+            } catch (err) {
+                // Ignore errors, we have local state as fallback
+            }
+        }
+    };
 
     const isLoading = status === 'submitted' || status === 'streaming';
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -54,7 +91,8 @@ export default function ChatPage() {
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input?.trim()) return;
+        const messageText = effectiveInput?.trim();
+        if (!messageText) return;
 
         let activeSessionId = currentSessionId;
 
@@ -71,11 +109,13 @@ export default function ChatPage() {
         }
 
         // Store the input value before clearing
-        const messageContent = input.trim();
+        const messageContent = messageText;
         
         // Clear input immediately for better UX (append should do this, but clear manually to be safe)
-        if (setInput) {
+        if (setInput && typeof setInput === 'function') {
             setInput('');
+        } else {
+            setLocalInput('');
         }
 
         // 2. CRITICAL: Use 'append' to send the message with the new Session ID valid
@@ -244,11 +284,8 @@ export default function ChatPage() {
                                 ref={inputRef}
                                 type="text"
                                 className="w-full bg-[#111] hover:bg-[#161616] focus:bg-[#111] transition-all border border-white/10 text-white placeholder-white/20 rounded-2xl px-6 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 shadow-2xl shadow-black/50"
-                                value={input || ''}
-                                onChange={(e) => {
-                                    e.stopPropagation();
-                                    handleInputChange(e);
-                                }}
+                                value={effectiveInput || ''}
+                                onChange={handleInputChangeSafe}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
@@ -262,7 +299,7 @@ export default function ChatPage() {
                             />
                             <button
                                 type="submit"
-                                disabled={!input?.trim() || isLoading}
+                                disabled={!effectiveInput?.trim() || isLoading}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                             >
                                 <Send className="w-5 h-5" />
