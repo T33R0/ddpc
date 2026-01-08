@@ -91,18 +91,43 @@ export default function ChatPage() {
 
     const isLoading = status === 'submitted' || status === 'streaming';
     const scrollRef = useRef<HTMLDivElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const messagesRef = useRef(messages);
+    const userHasScrolledRef = useRef(false);
+    const shouldAutoScrollRef = useRef(true);
     messagesRef.current = messages; // Keep ref in sync
 
-    // Auto-scroll logic
+    // Smart auto-scroll logic - only scroll if user is at bottom
     useEffect(() => {
-        if (scrollRef.current) {
+        if (!chatContainerRef.current || !scrollRef.current) return;
+        
+        const container = chatContainerRef.current;
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        
+        // Only auto-scroll if user is near bottom or hasn't manually scrolled
+        if (shouldAutoScrollRef.current && isNearBottom) {
             scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+            userHasScrolledRef.current = false;
         }
     }, [messages]);
+
+    // Track user scroll behavior
+    useEffect(() => {
+        const container = chatContainerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+            userHasScrolledRef.current = !isAtBottom;
+            shouldAutoScrollRef.current = isAtBottom;
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
 
     // Poll for new messages when loading or when session changes
     useEffect(() => {
@@ -509,17 +534,17 @@ export default function ChatPage() {
 
     if (!mounted || loading || !user || isProfileLoading || isUnauthorized) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-black text-white">
+            <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
                 <div className="animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                    <p className="font-mono text-sm text-white/50">Initializing Secure Link...</p>
+                    <div className="h-8 w-8 rounded-full border-2 border-border border-t-primary animate-spin" />
+                    <p className="font-mono text-sm text-muted-foreground">Initializing Secure Link...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen w-full bg-[#0a0a0a] text-[#e0e0e0] font-sans overflow-hidden">
+        <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden">
             <ChatSidebar
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
@@ -528,16 +553,16 @@ export default function ChatPage() {
                 refreshTrigger={refreshTrigger}
             />
 
-            <div className="flex-1 flex flex-col relative min-w-0">
+            <div className="flex-1 flex flex-col relative min-w-0 h-full">
                 {/* Header */}
-                <header className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0a0a0a]/50 backdrop-blur-md sticky top-0 w-full z-10">
+                <header className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-background/95 backdrop-blur-md sticky top-0 w-full z-10 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                            <Terminal className="w-5 h-5 text-indigo-400" />
+                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                            <Terminal className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold tracking-tight text-white">Ogma</h1>
-                            <p className="text-xs text-white/40 font-mono">Trinity Synergistic Intelligence</p>
+                            <h1 className="text-base md:text-lg font-bold tracking-tight text-foreground">Ogma</h1>
+                            <p className="text-xs text-muted-foreground font-mono">Trinity Synergistic Intelligence</p>
                         </div>
                     </div>
                     <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
@@ -549,14 +574,17 @@ export default function ChatPage() {
                 </header>
 
                 {/* Chat Area */}
-                <main className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
+                <main 
+                    ref={chatContainerRef}
+                    className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth min-h-0"
+                >
                     <div className="max-w-4xl mx-auto space-y-8 pb-32">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 opacity-50">
-                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-4">
-                                    <Terminal className="w-10 h-10 text-white/40" />
+                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
+                                    <Terminal className="w-10 h-10 text-muted-foreground" />
                                 </div>
-                                <p className="text-sm font-mono tracking-wider">SYSTEM READY. AWAITING INPUT.</p>
+                                <p className="text-sm font-mono tracking-wider text-muted-foreground">SYSTEM READY. AWAITING INPUT.</p>
                             </div>
                         )}
 
@@ -595,9 +623,9 @@ export default function ChatPage() {
                                                 <div 
                                                     key={`${t.agent}-${i}`} 
                                                     className={`p-3 rounded-lg border text-xs leading-relaxed font-mono relative overflow-hidden group
-                                                        ${t.agent === 'architect' ? 'bg-blue-950/30 border-blue-500/30 text-blue-200/90' : ''}
-                                                        ${t.agent === 'visionary' ? 'bg-purple-950/30 border-purple-500/30 text-purple-200/90' : ''}
-                                                        ${t.agent === 'engineer' ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200/90' : ''}
+                                                        ${t.agent === 'architect' ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' : ''}
+                                                        ${t.agent === 'visionary' ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400' : ''}
+                                                        ${t.agent === 'engineer' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : ''}
                                                     `}
                                                 >
                                                     <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-2">
@@ -619,23 +647,23 @@ export default function ChatPage() {
                                     {/* --- MAIN MESSAGE --- */}
                                     {(m.content || m.role === 'user' || showSynthesizing) && (
                                         <div
-                                            className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 border backdrop-blur-sm ${m.role === 'user'
-                                                ? 'bg-white/5 border-white/10 text-white rounded-br-sm'
-                                                : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-100 rounded-bl-sm'
+                                            className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 md:px-6 py-3 md:py-4 border backdrop-blur-sm ${m.role === 'user'
+                                                ? 'bg-muted/50 border-border text-foreground rounded-br-sm'
+                                                : 'bg-primary/5 border-primary/20 text-foreground rounded-bl-sm'
                                                 }`}
                                         >
-                                            <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest">
+                                            <div className="flex items-center gap-2 mb-2 opacity-50 text-xs font-mono uppercase tracking-widest text-muted-foreground">
                                                 {m.role === 'user' ? 'Operator' : 'Ogma'}
                                             </div>
                                             <div className="prose prose-invert prose-sm max-w-none leading-relaxed whitespace-pre-wrap">
                                                 {showSynthesizing ? (
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex gap-1.5 items-center h-6">
-                                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce" />
+                                                            <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                                            <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                                            <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" />
                                                         </div>
-                                                        <span className="text-xs font-mono text-indigo-400/50 tracking-widest animate-pulse">
+                                                        <span className="text-xs font-mono text-primary/70 tracking-widest animate-pulse">
                                                             SYNTHESIZING...
                                                         </span>
                                                     </div>
@@ -658,20 +686,20 @@ export default function ChatPage() {
                                         {/* Architect */}
                                         <div className={`p-3 rounded-lg border text-xs transition-all ${
                                             trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                ? 'bg-blue-950/50 border-blue-500/50 shadow-lg shadow-blue-500/20'
-                                                : 'bg-blue-950/20 border-blue-500/20'
+                                                ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/20'
+                                                : 'bg-blue-500/5 border-blue-500/20'
                                         }`}>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <PenTool className={`w-4 h-4 ${
                                                     trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                        ? 'text-blue-400 animate-pulse'
-                                                        : 'text-blue-400/50'
+                                                        ? 'text-blue-600 dark:text-blue-400 animate-pulse'
+                                                        : 'text-blue-600/50 dark:text-blue-400/50'
                                                 }`} />
-                                                <span className="uppercase tracking-widest font-bold text-[10px] text-blue-300/80">
+                                                <span className="uppercase tracking-widest font-bold text-[10px] text-blue-600 dark:text-blue-300">
                                                     ARCHITECT
                                                 </span>
                                             </div>
-                                            <div className="text-blue-200/60 font-mono text-[10px]">
+                                            <div className="text-blue-600/70 dark:text-blue-300/70 font-mono text-[10px]">
                                                 {trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
                                                     ? 'Processing...'
                                                     : 'Standby'}
@@ -681,20 +709,20 @@ export default function ChatPage() {
                                         {/* Visionary */}
                                         <div className={`p-3 rounded-lg border text-xs transition-all ${
                                             trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                ? 'bg-purple-950/50 border-purple-500/50 shadow-lg shadow-purple-500/20'
-                                                : 'bg-purple-950/20 border-purple-500/20'
+                                                ? 'bg-purple-500/10 border-purple-500/50 shadow-lg shadow-purple-500/20'
+                                                : 'bg-purple-500/5 border-purple-500/20'
                                         }`}>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Lightbulb className={`w-4 h-4 ${
                                                     trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                        ? 'text-purple-400 animate-pulse'
-                                                        : 'text-purple-400/50'
+                                                        ? 'text-purple-600 dark:text-purple-400 animate-pulse'
+                                                        : 'text-purple-600/50 dark:text-purple-400/50'
                                                 }`} />
-                                                <span className="uppercase tracking-widest font-bold text-[10px] text-purple-300/80">
+                                                <span className="uppercase tracking-widest font-bold text-[10px] text-purple-600 dark:text-purple-300">
                                                     VISIONARY
                                                 </span>
                                             </div>
-                                            <div className="text-purple-200/60 font-mono text-[10px]">
+                                            <div className="text-purple-600/70 dark:text-purple-300/70 font-mono text-[10px]">
                                                 {trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
                                                     ? 'Processing...'
                                                     : 'Standby'}
@@ -704,20 +732,20 @@ export default function ChatPage() {
                                         {/* Engineer */}
                                         <div className={`p-3 rounded-lg border text-xs transition-all ${
                                             trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                ? 'bg-emerald-950/50 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
-                                                : 'bg-emerald-950/20 border-emerald-500/20'
+                                                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
+                                                : 'bg-emerald-500/5 border-emerald-500/20'
                                         }`}>
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Cpu className={`w-4 h-4 ${
                                                     trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                        ? 'text-emerald-400 animate-pulse'
-                                                        : 'text-emerald-400/50'
+                                                        ? 'text-emerald-600 dark:text-emerald-400 animate-pulse'
+                                                        : 'text-emerald-600/50 dark:text-emerald-400/50'
                                                 }`} />
-                                                <span className="uppercase tracking-widest font-bold text-[10px] text-emerald-300/80">
+                                                <span className="uppercase tracking-widest font-bold text-[10px] text-emerald-600 dark:text-emerald-300">
                                                     ENGINEER
                                                 </span>
                                             </div>
-                                            <div className="text-emerald-200/60 font-mono text-[10px]">
+                                            <div className="text-emerald-600/70 dark:text-emerald-300/70 font-mono text-[10px]">
                                                 {trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
                                                     ? 'Processing...'
                                                     : 'Standby'}
@@ -727,19 +755,19 @@ export default function ChatPage() {
                                 )}
 
                                 {/* Main Loading Indicator */}
-                                <div className="max-w-[75%] rounded-2xl rounded-bl-sm px-6 py-4 bg-indigo-500/5 border border-indigo-500/10">
+                                <div className="max-w-[75%] rounded-2xl rounded-bl-sm px-4 md:px-6 py-3 md:py-4 bg-primary/5 border border-primary/20">
                                     <div className="flex items-center gap-3">
                                         <div className="flex gap-1.5 items-center h-6">
-                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                            <span className="w-1.5 h-1.5 bg-indigo-400/50 rounded-full animate-bounce" />
+                                            <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" />
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-mono text-indigo-400/50 tracking-widest animate-pulse">
+                                            <span className="text-xs font-mono text-primary/70 tracking-widest animate-pulse">
                                                 {trinityProgress?.message || 'SYNTHESIZING...'}
                                             </span>
                                             {trinityProgress?.round && (
-                                                <span className="text-[10px] font-mono text-indigo-400/30">
+                                                <span className="text-[10px] font-mono text-primary/50">
                                                     Round {trinityProgress.round} of 4
                                                 </span>
                                             )}
@@ -752,7 +780,7 @@ export default function ChatPage() {
                     </div>
                 </main>
 
-                <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent pt-10 z-10">
+                <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-background via-background to-transparent pt-10 z-10 shrink-0">
                     <div className="max-w-3xl mx-auto">
                         <form 
                             onSubmit={handleFormSubmit}
@@ -761,13 +789,15 @@ export default function ChatPage() {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                className="w-full bg-[#111] hover:bg-[#161616] focus:bg-[#111] transition-all border border-white/10 text-white placeholder-white/20 rounded-2xl px-6 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 shadow-2xl shadow-black/50"
+                                className="w-full bg-muted hover:bg-muted/80 focus:bg-muted transition-all border border-border text-foreground placeholder-muted-foreground rounded-2xl px-4 md:px-6 py-3 md:py-4 pr-14 md:pr-16 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-lg"
                                 value={effectiveInput || ''}
                                 onChange={handleInputChangeSafe}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
                                         handleFormSubmit(e as any);
+                                        // Reset auto-scroll when sending message
+                                        shouldAutoScrollRef.current = true;
                                     }
                                 }}
                                 placeholder="Query the Trinity..."
@@ -778,13 +808,13 @@ export default function ChatPage() {
                             <button
                                 type="submit"
                                 disabled={!effectiveInput?.trim() || isLoading}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                             >
-                                <Send className="w-5 h-5" />
+                                <Send className="w-4 h-4 md:w-5 md:h-5" />
                             </button>
                         </form>
                         <div className="text-center mt-3">
-                            <p className="text-[10px] text-white/20 font-mono tracking-widest">SECURE CHANNEL // ADMIN EYES ONLY</p>
+                            <p className="text-[10px] text-muted-foreground font-mono tracking-widest">SECURE CHANNEL // ADMIN EYES ONLY</p>
                         </div>
                     </div>
                 </div>

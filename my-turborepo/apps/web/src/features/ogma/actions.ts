@@ -29,7 +29,7 @@ export async function createChatSession(title?: string) {
   return data.id;
 }
 
-export async function getChatSessions() {
+export async function getChatSessions(includeArchived: boolean = false) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -38,7 +38,7 @@ export async function getChatSessions() {
   }
 
   // Get sessions with their first message for preview
-  const { data, error } = await supabase
+  let query = supabase
     .from('ogma_chat_sessions')
     .select(`
       *,
@@ -48,8 +48,16 @@ export async function getChatSessions() {
         created_at
       )
     `)
-    .eq('user_id', user.id)
-    .order('updated_at', { ascending: false });
+    .eq('user_id', user.id);
+
+  // Filter by archived status
+  if (!includeArchived) {
+    query = query.eq('archived', false);
+  } else {
+    query = query.eq('archived', true);
+  }
+
+  const { data, error } = await query.order('updated_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching chat sessions:', error);
@@ -69,6 +77,7 @@ export async function getChatSessions() {
       title: session.title,
       created_at: session.created_at,
       updated_at: session.updated_at,
+      archived: session.archived || false,
       snippet,
     };
   });
@@ -95,6 +104,50 @@ export async function getChatMessages(sessionId: string) {
   }
 
   return data;
+}
+
+export async function archiveChatSession(sessionId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  const { error } = await supabase
+    .from('ogma_chat_sessions')
+    .update({ archived: true })
+    .eq('id', sessionId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error archiving chat session:', error);
+    throw new Error('Failed to archive chat session');
+  }
+
+  revalidatePath('/admin/ogma');
+}
+
+export async function restoreChatSession(sessionId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  const { error } = await supabase
+    .from('ogma_chat_sessions')
+    .update({ archived: false })
+    .eq('id', sessionId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error restoring chat session:', error);
+    throw new Error('Failed to restore chat session');
+  }
+
+  revalidatePath('/admin/ogma');
 }
 
 export async function deleteChatSession(sessionId: string) {

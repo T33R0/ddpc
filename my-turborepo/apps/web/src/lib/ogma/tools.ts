@@ -9,6 +9,11 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+// Server-side verification log for debugging
+if (typeof window === 'undefined') {
+  console.log(`GitHub Token Present: ${!!process.env.GITHUB_TOKEN}`);
+}
+
 // Get repository owner and name from environment or defaults
 const getRepoInfo = () => {
   const owner = process.env.GITHUB_OWNER || '';
@@ -73,6 +78,12 @@ export const get_repo_structure = tool({
   // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
   execute: async (args: any) => {
     const { path } = args as z.infer<typeof getRepoStructureSchema>;
+    
+    // Server-side debug logging
+    if (typeof window === 'undefined') {
+      console.log(`[get_repo_structure] Tool called with path: ${path || 'root'}`);
+    }
+    
     try {
       // Determine repository root (assuming we're in apps/web)
       const currentDir = process.cwd();
@@ -90,15 +101,23 @@ export const get_repo_structure = tool({
       const treeLines = buildFileTree(repoRoot, repoRoot);
       const treeString = treeLines.join('\n');
       
+      if (typeof window === 'undefined') {
+        console.log(`[get_repo_structure] Successfully built tree from: ${repoRoot} (${treeLines.length} items)`);
+      }
+      
       return {
         success: true,
         tree: treeString,
         root: repoRoot,
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (typeof window === 'undefined') {
+        console.error(`[get_repo_structure] Error: ${errorMessage}`);
+      }
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: errorMessage,
       };
     }
   },
@@ -119,6 +138,12 @@ export const read_file_content = tool({
   // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
   execute: async (args: any) => {
     const { path } = args as z.infer<typeof readFileContentSchema>;
+    
+    // Server-side debug logging
+    if (typeof window === 'undefined') {
+      console.log(`[read_file_content] Tool called with path: ${path}`);
+    }
+    
     try {
       // Determine repository root
       const currentDir = process.cwd();
@@ -137,7 +162,15 @@ export const read_file_content = tool({
         throw new Error('Access denied: path is outside repository root or in node_modules');
       }
 
+      if (typeof window === 'undefined') {
+        console.log(`[read_file_content] Resolved path: ${filePath} (from repo root: ${repoRoot})`);
+      }
+
       const content = readFileSync(filePath, 'utf-8');
+      
+      if (typeof window === 'undefined') {
+        console.log(`[read_file_content] Successfully read file: ${filePath} (${content.length} bytes)`);
+      }
       
       return {
         success: true,
@@ -146,9 +179,13 @@ export const read_file_content = tool({
         size: content.length,
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (typeof window === 'undefined') {
+        console.error(`[read_file_content] Error reading file: ${errorMessage}`);
+      }
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: errorMessage,
       };
     }
   },

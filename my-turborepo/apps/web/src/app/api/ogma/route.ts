@@ -250,13 +250,24 @@ export async function POST(req: Request) {
         };
       })(),
 
-      // Engineer - Uses streamText with maxSteps for multi-step tool execution
+      // Engineer - Uses generateText with maxSteps for multi-step tool execution
       (async (): Promise<AgentResult> => {
         const model = TRINITY.engineer.model;
         const modelName = 'google/gemini-1.5-flash';
         
-        // Use streamText for Engineer to enable maxSteps (multi-step tool execution)
-        const streamResult = await streamText({
+        // Verify tools are available (server-side only)
+        if (typeof window === 'undefined') {
+          console.log('[Engineer] Tools available:', {
+            get_repo_structure: !!get_repo_structure,
+            read_file_content: !!read_file_content,
+            create_issue: !!create_issue,
+            create_pull_request: !!create_pull_request
+          });
+        }
+        
+        // Use generateText for Engineer to enable maxSteps (multi-step tool execution)
+        // This ensures tools are properly executed before final response
+        const result = await generateText({
           model,
           system: personaPrompts.engineer,
           prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
@@ -266,17 +277,29 @@ export async function POST(req: Request) {
             create_issue,
             create_pull_request
           },
-          // @ts-ignore - maxSteps is valid at runtime for streamText with tools
-          maxSteps: 5 // Allow Engineer to read files in multiple steps
+          // @ts-ignore - maxSteps is valid at runtime for generateText with tools
+          maxSteps: 5 // Allow Engineer to read files in multiple steps (Think -> Call Tool -> Read Result -> Answer)
         });
-
-        // Extract final text from stream
-        let finalText = '';
-        for await (const chunk of streamResult.textStream) {
-          finalText += chunk;
+        
+        // Log tool execution info (server-side only)
+        if (typeof window === 'undefined') {
+          // Check for tool execution in result (structure may vary by SDK version)
+          if ((result as any).steps) {
+            const steps = (result as any).steps;
+            console.log(`[Engineer] Tool execution steps: ${steps.length}`);
+            steps.forEach((step: any, idx: number) => {
+              if (step.toolCalls && step.toolCalls.length > 0) {
+                console.log(`[Engineer] Step ${idx + 1} tool calls:`, step.toolCalls.map((tc: any) => tc.toolName || tc.tool));
+              }
+            });
+          } else if ((result as any).toolCalls) {
+            console.log(`[Engineer] Tool calls:`, (result as any).toolCalls.map((tc: any) => tc.toolName || tc.tool));
+          } else {
+            console.log('[Engineer] No tool execution detected in result structure');
+          }
         }
 
-        const usage = streamResult.usage || { promptTokens: 0, completionTokens: 0 };
+        const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
         const cost = calculateCost(modelName, inputTokens, outputTokens);
@@ -285,7 +308,7 @@ export async function POST(req: Request) {
 
         return {
           agent: 'engineer',
-          content: finalText,
+          content: result.text,
           inputTokens,
           outputTokens,
           cost,
