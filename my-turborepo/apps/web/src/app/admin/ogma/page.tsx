@@ -38,47 +38,19 @@ export default function ChatPage() {
     
     // Extract all possible properties from the hook with proper typing
     const messages = chatHook.messages || [];
-    const input = (chatHook as any).input || '';
-    const handleInputChange = (chatHook as any).handleInputChange;
     const handleSubmit = (chatHook as any).handleSubmit;
     const append = (chatHook as any).append;
     const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
-    const setInput = (chatHook as any).setInput;
     const status = (chatHook as any).status || chatHook.status || 'ready';
 
-    // Sync local input with hook input when available
-    useEffect(() => {
-        if (input !== undefined && input !== null) {
-            setLocalInput(input);
-        }
-    }, [input]);
+    // Use ONLY local state for input - completely independent from hook
+    // This prevents any conflicts with the useChat hook's internal state
+    const effectiveInput = localInput;
     
-    // Use local input if hook doesn't provide it
-    const effectiveInput = input !== undefined && input !== null ? input : localInput;
-    
-    // Simple input handler that always works
+    // Simple input handler that ONLY updates local state
     const handleInputChangeSafe = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        // Update local state immediately for responsive UI
         setLocalInput(value);
-        
-        // Also try to update hook state if available
-        if (setInput && typeof setInput === 'function') {
-            try {
-                setInput(value);
-            } catch (err) {
-                // Ignore errors, local state will handle it
-            }
-        }
-        
-        // Try handleInputChange if it exists and is a function
-        if (handleInputChange && typeof handleInputChange === 'function') {
-            try {
-                handleInputChange(e);
-            } catch (err) {
-                // Ignore errors, we have local state as fallback
-            }
-        }
     };
 
     const isLoading = status === 'submitted' || status === 'streaming';
@@ -141,11 +113,8 @@ export default function ChatPage() {
         // Store the input value
         const messageContent = messageText;
         
-        // Clear input immediately
+        // Clear input immediately (only local state, hook will handle its own)
         setLocalInput('');
-        if (setInput && typeof setInput === 'function') {
-            setInput('');
-        }
 
         // Try to use append first (most reliable)
         if (append && typeof append === 'function') {
@@ -160,20 +129,65 @@ export default function ChatPage() {
             }
         }
 
-        // Fallback to handleSubmit
+        // Fallback to handleSubmit - but we need to manually add the message first
+        // since handleSubmit expects the input to be in the hook's state
         if (handleSubmit && typeof handleSubmit === 'function') {
-            // Set input first so handleSubmit can use it
-            if (setInput && typeof setInput === 'function') {
-                setInput(messageContent);
-                // Wait for state update
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
+            // Manually add user message to hook's messages
+            const userMessage = {
+                id: `user-${Date.now()}`,
+                role: 'user' as const,
+                content: messageContent,
+            };
+            setMessages([...messages, userMessage]);
             
+            // Then trigger the API call manually
             try {
-                handleSubmit(e);
+                const response = await fetch('/api/ogma', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [...messages, userMessage],
+                        sessionId: activeSessionId,
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                
+                // Stream the response
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+                let assistantMessage = { 
+                    id: `assistant-${Date.now()}`, 
+                    role: 'assistant' as const, 
+                    content: '' 
+                };
+                setMessages([...messages, userMessage, assistantMessage]);
+                
+                if (reader) {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('0:"')) {
+                                try {
+                                    const text = JSON.parse(line.substring(2));
+                                    assistantMessage.content += text;
+                                    setMessages([...messages, userMessage, { ...assistantMessage }]);
+                                } catch (parseErr) {
+                                    // Ignore parse errors
+                                }
+                            }
+                        }
+                    }
+                }
                 return;
             } catch (err) {
-                console.error('handleSubmit failed:', err);
+                console.error('handleSubmit fallback failed:', err);
             }
         }
 
@@ -226,9 +240,6 @@ export default function ChatPage() {
             console.error('Manual API call failed:', err);
             // Restore input on error
             setLocalInput(messageContent);
-            if (setInput) {
-                setInput(messageContent);
-            }
         }
     };
 
@@ -386,16 +397,7 @@ export default function ChatPage() {
                 <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent pt-10 z-10">
                     <div className="max-w-3xl mx-auto">
                         <form 
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                // Try native handleSubmit first if available
-                                if (handleSubmit && typeof handleSubmit === 'function') {
-                                    handleSubmit(e);
-                                } else {
-                                    // Fallback to our custom handler
-                                    handleFormSubmit(e);
-                                }
-                            }} 
+                            onSubmit={handleFormSubmit}
                             className="relative group"
                         >
                             <input
