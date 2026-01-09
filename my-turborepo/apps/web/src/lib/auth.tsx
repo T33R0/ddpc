@@ -289,10 +289,13 @@ export function AuthProvider({
   }, [initialSession, fetchProfile]);
 
   const signUp = async (email: string, password: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${baseUrl}/api/auth/callback?next=/hub`,
         data: {
           username: email.split('@')[0],
           display_name: email.split('@')[0],
@@ -300,9 +303,27 @@ export function AuthProvider({
       }
     });
 
-    // Create user profile logic handled by server-side callback/route or here if needed
-    // The previous server-side fix handles duplicate insertion protection
-    // We can optimistically create here if needed, but redundant with callback
+    // If signup was successful, try to create profile immediately
+    // (The callback route will also handle this when email is confirmed, with duplicate protection)
+    if (!error && data.user) {
+      try {
+        // Attempt to create profile immediately (will be idempotent due to duplicate protection)
+        const response = await fetch('/api/auth/create-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: data.user.id }),
+        });
+        
+        if (!response.ok) {
+          console.warn('[SignUp] Profile creation failed, will be created on email confirmation:', await response.text());
+        }
+      } catch (profileError) {
+        // Don't fail signup if profile creation fails - callback route will handle it
+        console.warn('[SignUp] Profile creation error (non-fatal):', profileError);
+      }
+    }
 
     return { error };
   };
