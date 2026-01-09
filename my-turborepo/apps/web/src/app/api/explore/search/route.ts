@@ -1,9 +1,8 @@
 
 import { createClient } from '@/lib/supabase/server';
-import { embed, generateObject } from 'ai';
+import { embed, generateText } from 'ai';
 import { vercelGateway } from '@/lib/ai-gateway';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import type { VehicleSummary } from '@repo/types';
 
 export async function GET(request: Request) {
@@ -57,24 +56,43 @@ export async function GET(request: Request) {
         // 4. MODE: Magic Search (Query Present)
         else {
             // 4a. MAGIC STEP: Extract Filters using AI
-            // We use a cheap models for this logic extraction
-            const { object: filters } = await generateObject({
-                model: vercelGateway.languageModel('gpt-4o-mini'),
-                schema: z.object({
-                    year_min: z.number().optional(),
-                    year_max: z.number().optional(),
-                    make: z.string().optional(),
-                    model: z.string().optional(),
-                    price_max: z.number().optional(),
-                    price_min: z.number().optional(),
-                    search_query: z.string().describe("The remaining semantic search query after extracting filters, or the original query if inseparable.")
-                }),
-                prompt: `Extract vehicle search filters from this query: "${query}".
-                If the user says "Toyota", set make="Toyota". 
-                If "Cheap track car", set keywords="Cheap track car" (don't set price unless explicit).
-                If "under 20k", set price_max=20000.
-                Output the refined search query for the vector search.`
-            });
+            // We use generateText + Manual Parsing instead of generateObject to avoid
+            // "response_format" errors with certain Vercel AI Gateway paths.
+            let filters: any = {};
+            try {
+                const { text } = await generateText({
+                    model: vercelGateway.languageModel('gpt-4o-mini'),
+                    system: 'You are a search query optimizer. Output ONLY valid JSON. No markdown code blocks.',
+                    prompt: `Extract vehicle search filters from this query: "${query}".
+                    Schema:
+                    {
+                      "year_min": number | null,
+                      "year_max": number | null,
+                      "make": string | null,
+                      "model": string | null,
+                      "price_max": number | null,
+                      "search_query": string (refined keyword query)
+                    }
+
+                    Rules:
+                    - If user says "Toyota", set make="Toyota".
+                    - If "Cheap track car", set search_query="Cheap track car" (don't set price unless explicit).
+                    - If "under 20k", set price_max=20000.
+                    
+                    Respond with the JSON object only.`
+                });
+
+                // Robust parsing: extract JSON from potential markdown wrappers
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    filters = JSON.parse(jsonMatch[0]);
+                    console.log('[Magic Search] Extracted:', filters);
+                }
+            } catch (e) {
+                console.warn('[Magic Search] Extraction failed, falling back to raw query:', e);
+                // Fallback: Use original query, no filters
+                filters = {};
+            }
 
             console.log('[Magic Search] Extracted:', filters);
 
