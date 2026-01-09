@@ -146,7 +146,7 @@ export async function addPartToVehicle(
 
         if (createError || !newPart) {
           console.error('Error creating master part:', createError);
-          return { error: 'Failed to create part' };
+          return { error: createError?.message || 'Failed to create part. Please check database permissions.' };
         }
         masterPartId = newPart.id;
       }
@@ -164,7 +164,7 @@ export async function addPartToVehicle(
 
       if (createError || !newPart) {
         console.error('Error creating master part:', createError);
-        return { error: 'Failed to create part' };
+        return { error: createError?.message || 'Failed to create part. Please check database permissions.' };
       }
       masterPartId = newPart.id;
     }
@@ -206,7 +206,7 @@ export async function addPartToVehicle(
 
       if (insertError) {
         console.error('Error creating installed component:', insertError);
-        return { error: 'Failed to install part' };
+        return { error: insertError?.message || 'Failed to install part. Please check database permissions.' };
       }
     }
 
