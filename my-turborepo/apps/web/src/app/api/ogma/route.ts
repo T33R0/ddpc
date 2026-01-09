@@ -1,4 +1,4 @@
-import { streamText, generateText } from 'ai';
+import { streamText, generateText, generateObject } from 'ai';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/lib/ogma/compute-costs';
@@ -128,8 +128,9 @@ async function extractAndSaveImprovements(
     console.log('[Ogma] Starting Hot Wash (Improvement Extraction)...');
     const startTime = Date.now();
 
-    const extractionResult = await generateText({
+    const extractionResult = await generateObject({
       model: hotWashModel,
+      schema: improvementsSchema,
       system: `You are Ogma performing "The Hot Wash" - mandatory end-of-interaction self-assessment per the Constitution.
 
 ${sophiaContext}
@@ -161,8 +162,7 @@ Extract any valuable improvements from this interaction. Focus on:
 - What strategies or approaches worked well or should be refined?
 - Any important insights about the codebase, architecture, or domain?
 
-Be selective - only include improvements that are genuinely valuable and have high confidence.`,
-      schema: improvementsSchema
+Be selective - only include improvements that are genuinely valuable and have high confidence.`
     });
 
     const improvements = extractionResult.object.improvements;
