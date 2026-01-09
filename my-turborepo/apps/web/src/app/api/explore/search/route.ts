@@ -21,10 +21,20 @@ export async function GET(request: Request) {
         // --- MODE: Fetch All IDs (For Random Shuffle) ---
         if (mode === 'ids') {
             // Return ALL valid vehicle IDs for client-side shuffling (limit to 10000 for now)
-            const { data: allIds, error: idError } = await supabase
-                .from('v_vehicle_data_typed') // Use view if possible for speed, or table
-                .select('id')
-                .limit(10000); // Ensure we get a large sample, default is often 1000
+            let pool = supabase.from('v_vehicle_data_typed').select('id').limit(10000);
+
+            let { data: allIds, error: idError } = await pool;
+
+            // Fallback to table if View doesn't exist (Error 42P01)
+            if (idError && idError.code === '42P01') {
+                console.warn('View v_vehicle_data_typed not found, falling back to vehicle_data for IDs.');
+                const fallback = await supabase
+                    .from('vehicle_data')
+                    .select('id')
+                    .limit(10000);
+                allIds = fallback.data;
+                idError = fallback.error;
+            }
 
             if (idError) throw idError;
 

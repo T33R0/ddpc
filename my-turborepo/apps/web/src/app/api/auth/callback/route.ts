@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
+import { render } from '@react-email/render'
+import { WelcomeEmail } from '@/emails/WelcomeEmail'
 
 // Helper function to generate a random suffix
 function createRandomSuffix(length = 4) {
@@ -55,6 +57,8 @@ export async function GET(request: Request) {
           .from('user_profile')
           .insert(profileData)
 
+        let profileCreated = false
+
         // 4. Check for unique violation (likely username collision since we checked user_id)
         if (profileError && profileError.code === '23505') {
           // This username is taken. Retry ONCE with a random suffix.
@@ -67,9 +71,29 @@ export async function GET(request: Request) {
 
           if (retryError) {
             console.error('FATAL: Auth callback profile retry failed:', retryError)
+          } else {
+            profileCreated = true
           }
         } else if (profileError) {
           console.error('Auth callback profile insert error:', profileError)
+        } else {
+          profileCreated = true
+        }
+
+        // Send welcome email if profile was successfully created
+        if (profileCreated && user.email) {
+          try {
+            const emailHtml = await render(WelcomeEmail())
+            await sendEmail({
+              to: user.email,
+              subject: 'Welcome to the Build',
+              html: emailHtml,
+            })
+            console.log('[Welcome Email] Sent welcome email to new user:', user.email)
+          } catch (welcomeEmailError) {
+            console.error('[Welcome Email] Failed to send welcome email:', welcomeEmailError)
+            // Don't fail the auth flow if email fails
+          }
         }
 
         // --- NEW USER NOTIFICATION ---
