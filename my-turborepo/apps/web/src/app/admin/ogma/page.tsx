@@ -4,9 +4,9 @@ import { useChat } from '@ai-sdk/react';
 import { useAuth } from '@/lib/auth';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Terminal, Cpu, Lightbulb, PenTool } from 'lucide-react';
+import { Send, Terminal, Cpu, Lightbulb, PenTool, Archive, Trash2 } from 'lucide-react';
 import { ChatSidebar } from '@/features/ogma/components/ChatSidebar';
-import { createChatSession } from '@/features/ogma/actions';
+import { createChatSession, archiveChatSession, deleteChatSession } from '@/features/ogma/actions';
 
 // Define the shape of our custom thought annotation from the Trinity
 type Thought = {
@@ -99,6 +99,17 @@ export default function ChatPage() {
     const userHasScrolledRef = useRef(false);
     const shouldAutoScrollRef = useRef(true);
     messagesRef.current = messages; // Keep ref in sync
+
+    // Clear trinity progress when response completes
+    useEffect(() => {
+        if (status === 'ready' && trinityProgress) {
+            // Small delay to ensure UI updates smoothly
+            const timer = setTimeout(() => {
+                setTrinityProgress(null);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [status, trinityProgress]);
 
     // Smart auto-scroll logic - only scroll if user is at bottom
     useEffect(() => {
@@ -555,30 +566,68 @@ export default function ChatPage() {
 
             <div className="flex-1 flex flex-col relative min-w-0 h-full">
                 {/* Header */}
-                <header className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-background/95 backdrop-blur-md sticky top-0 w-full z-10 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                            <Terminal className="w-5 h-5 text-primary" />
+                <header className="flex items-center justify-between px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 border-b border-border bg-background/95 backdrop-blur-md sticky top-0 w-full z-10 shrink-0">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                        <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 border border-primary/20 shrink-0">
+                            <Terminal className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                         </div>
-                        <div>
-                            <h1 className="text-base md:text-lg font-bold tracking-tight text-foreground">Ogma</h1>
-                            <p className="text-xs text-muted-foreground font-mono">Trinity Synergistic Intelligence</p>
+                        <div className="min-w-0">
+                            <h1 className="text-sm md:text-base lg:text-lg font-bold tracking-tight text-foreground truncate">Ogma</h1>
+                            <p className="text-[10px] md:text-xs text-muted-foreground font-mono hidden sm:block">Trinity Synergistic Intelligence</p>
                         </div>
                     </div>
-                    <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                        <span className="text-xs font-medium text-emerald-400 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            ONLINE
-                        </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {currentSessionId && (
+                            <>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await archiveChatSession(currentSessionId);
+                                            setCurrentSessionId(null);
+                                            setRefreshTrigger(prev => prev + 1);
+                                        } catch (err) {
+                                            console.error('Failed to archive session', err);
+                                        }
+                                    }}
+                                    className="p-1.5 md:p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                    title="Archive session"
+                                >
+                                    <Archive className="w-4 h-4 md:w-5 md:h-5" />
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (confirm('Delete this conversation forever?')) {
+                                            try {
+                                                await deleteChatSession(currentSessionId);
+                                                setCurrentSessionId(null);
+                                                setRefreshTrigger(prev => prev + 1);
+                                            } catch (err) {
+                                                console.error('Failed to delete session', err);
+                                            }
+                                        }
+                                    }}
+                                    className="p-1.5 md:p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
+                                    title="Delete session"
+                                >
+                                    <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                                </button>
+                            </>
+                        )}
+                        <div className="px-2 md:px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 hidden sm:flex">
+                            <span className="text-[10px] md:text-xs font-medium text-emerald-400 flex items-center gap-1.5 md:gap-2">
+                                <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="hidden md:inline">ONLINE</span>
+                            </span>
+                        </div>
                     </div>
                 </header>
 
                 {/* Chat Area */}
                 <main 
                     ref={chatContainerRef}
-                    className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth min-h-0"
+                    className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 scroll-smooth min-h-0"
                 >
-                    <div className="max-w-4xl mx-auto space-y-8 pb-32">
+                    <div className="max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 lg:space-y-8 pb-24 md:pb-32">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 opacity-50">
                                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
@@ -618,7 +667,7 @@ export default function ChatPage() {
                                 >
                                     {/* --- TRINITY THOUGHT CARDS --- */}
                                     {thoughts && thoughts.length > 0 && (
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2 w-full max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3 mb-2 w-full max-w-full sm:max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-500">
                                             {thoughts.map((t, i) => (
                                                 <div 
                                                     key={`${t.agent}-${i}`} 
@@ -682,7 +731,7 @@ export default function ChatPage() {
                             <div className="flex flex-col gap-3 justify-start">
                                 {/* Trinity Models Status */}
                                 {trinityProgress && (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-[90%]">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3 max-w-full sm:max-w-[90%]">
                                         {/* Architect */}
                                         <div className={`p-3 rounded-lg border text-xs transition-all ${
                                             trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
@@ -780,8 +829,8 @@ export default function ChatPage() {
                     </div>
                 </main>
 
-                <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-background via-background to-transparent pt-10 z-10 shrink-0">
-                    <div className="max-w-3xl mx-auto">
+                <div className="absolute bottom-0 w-full p-3 md:p-4 bg-gradient-to-t from-background via-background to-transparent pt-8 md:pt-10 z-10 shrink-0">
+                    <div className="max-w-3xl lg:max-w-4xl mx-auto">
                         <form 
                             onSubmit={handleFormSubmit}
                             className="relative group"

@@ -8,7 +8,7 @@
         "supabase": {
             "command": "node",
             "args": [
-                "${workspaceFolder}/my-turborepo/apps/web/scripts/mcp-supabase.js"
+                "f:/ddpc_wwv5d/my-turborepo/apps/web/scripts/mcp-supabase.js"
             ]
         }
     }
