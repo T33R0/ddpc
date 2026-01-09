@@ -183,20 +183,20 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
   const searchVehicles = async (year: string, make: string, model: string) => {
     try {
       // Fetch vehicle data based on year/make/model
-      const filters = {
-        minYear: parseInt(year),
-        maxYear: parseInt(year),
-        make: make,
-        model: model,
-      };
 
-      const response = await fetch('/api/explore/vehicles?page=1&pageSize=1&' +
-        new URLSearchParams({
-          minYear: filters.minYear.toString(),
-          maxYear: filters.maxYear.toString(),
-          make: filters.make,
-          model: filters.model,
-        }).toString());
+      const filters = [
+        { id: 'year', column: 'year', operator: 'eq', value: year },
+        { id: 'make', column: 'make', operator: 'eq', value: make },
+        { id: 'model', column: 'model', operator: 'eq', value: model },
+      ];
+
+      const params = new URLSearchParams({
+        page: '1',
+        pageSize: '50',
+        filters: JSON.stringify(filters),
+      });
+
+      const response = await fetch(`/api/explore/vehicles?${params.toString()}`);
 
       if (response.ok) {
         const data = await response.json();

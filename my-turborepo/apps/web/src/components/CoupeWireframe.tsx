@@ -1,20 +1,35 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '@/lib/theme-context';
 
 interface CoupeWireframeProps {
     onZoneClick: (zone: string) => void;
     selectedZone: string | null;
 }
 
+// Updated zones aligned with the vehicle image (Tesla Model S-like, three-quarter front view)
+// Coordinates adjusted to match the actual vehicle components in the image
 const zones = [
-    { name: 'Engine', path: 'M40,265 L50,190 Q60,140 180,135 L260,130 V265 H120', textX: 130, textY: 200, icon: '⚙️' },
-    { name: 'Interior', path: 'M260,130 L320,80 H520 L580,135 V240 H260 V130 Z', textX: 400, textY: 160, icon: '🚗' },
-    { name: 'Exterior', path: 'M580,135 L680,140 Q750,145 760,190 L750,265 H650 V240 H580 Z', textX: 650, textY: 200, icon: '🚙' },
-    { name: 'Braking', cx: 185, cy: 265, r: 40, textX: 185, textY: 265, icon: '🛞', isCircle: true },
-    { name: 'Suspension', cx: 615, cy: 265, r: 40, textX: 615, textY: 265, icon: '⚡', isCircle: true },
+    // Engine - Front of the car (left side, lower front area)
+    { name: 'Engine', path: 'M80,280 L100,200 Q120,150 200,145 L320,140 V280 H150', textX: 200, textY: 220, icon: '⚙️' },
+    // Interior - Middle cabin section
+    { name: 'Interior', path: 'M320,140 L400,90 H680 L760,145 V250 H320 V140 Z', textX: 540, textY: 180, icon: '🚗' },
+    // Exterior - Body panels and rear section
+    { name: 'Exterior', path: 'M760,145 L840,150 Q920,155 930,200 L920,280 H820 V250 H760 Z', textX: 850, textY: 220, icon: '🚙' },
+    // Braking - Front wheel (left side of image)
+    { name: 'Braking', cx: 240, cy: 280, r: 50, textX: 240, textY: 280, icon: '🛞', isCircle: true },
+    // Suspension - Rear wheel (right side of image)
+    { name: 'Suspension', cx: 880, cy: 280, r: 50, textX: 880, textY: 280, icon: '⚡', isCircle: true },
 ];
 
 export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, selectedZone }) => {
+    const { resolvedTheme } = useTheme();
+    
+    // Select image based on theme
+    const vehicleImageSrc = resolvedTheme === 'dark' 
+        ? '/media/images/interactive parts diagram generic vehicle.png'
+        : '/media/images/interactive parts diagram generic vehicle light.png';
+
     const getZoneStyle = (zoneName: string) => {
         const isSelected = selectedZone === zoneName;
         const baseFill = isSelected 
@@ -35,22 +50,24 @@ export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, sel
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto p-4">
+        <div className="w-full max-w-5xl mx-auto p-4">
             <svg 
-                viewBox="0 0 800 350" 
-                className="w-full h-auto min-h-[350px] bg-background border rounded-lg shadow-md"
+                viewBox="0 0 1000 400" 
+                className="w-full h-auto min-h-[400px] bg-background border rounded-lg shadow-md"
                 strokeLinecap="round" 
                 strokeLinejoin="round"
+                preserveAspectRatio="xMidYMid meet"
             >
-                {/* Background */}
-                <rect x="0" y="0" width="800" height="350" className="fill-background" />
-
-                {/* Ground Shadow */}
-                <path d="M40,315 H760" className="stroke-gray-300 dark:stroke-gray-600 stroke-2 opacity-50" />
-
-                {/* WHEELS (Static reference) */}
-                <circle cx="185" cy="265" r="42" className="stroke-gray-800 dark:stroke-gray-200 stroke-3 fill-gray-900/30 dark:fill-gray-100/20" />
-                <circle cx="615" cy="265" r="42" className="stroke-gray-800 dark:stroke-gray-200 stroke-3 fill-gray-900/30 dark:fill-gray-100/20" />
+                {/* Vehicle Image Background - Theme Aware */}
+                <image 
+                    href={vehicleImageSrc}
+                    x="0"
+                    y="0"
+                    width="1000"
+                    height="400"
+                    preserveAspectRatio="xMidYMid meet"
+                    opacity="0.9"
+                />
 
                 {/* ZONES */}
                 {zones.map((zone) => {

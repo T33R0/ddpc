@@ -120,13 +120,12 @@ export const ComponentDetailModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="partName">Part Name</Label>

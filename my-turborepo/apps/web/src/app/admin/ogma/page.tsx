@@ -58,10 +58,23 @@ export default function ChatPage() {
     // Extract all possible properties from the hook with proper typing
     const messages = chatHook.messages || [];
     const handleSubmit = (chatHook as any).handleSubmit;
-    const append = (chatHook as any).append;
+    const append = (chatHook as any).append || chatHook.append;
+    const sendMessage = (chatHook as any).sendMessage || chatHook.sendMessage;
     const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
     const status = (chatHook as any).status || chatHook.status || 'ready';
     const error = (chatHook as any).error;
+    
+    // Debug: log what's available from useChat
+    useEffect(() => {
+        console.log('[Ogma] useChat hook properties:', {
+            hasAppend: !!append,
+            hasSendMessage: !!sendMessage,
+            hasHandleSubmit: !!handleSubmit,
+            messagesCount: messages.length,
+            status,
+            error: error?.message
+        });
+    }, [append, sendMessage, handleSubmit, messages.length, status, error]);
     
     // Log errors from useChat
     useEffect(() => {
@@ -115,6 +128,8 @@ export default function ChatPage() {
     const messagesRef = useRef(messages);
     const userHasScrolledRef = useRef(false);
     const shouldAutoScrollRef = useRef(true);
+    const lastMessageCountRef = useRef(0);
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     messagesRef.current = messages; // Keep ref in sync
 
     // Clear trinity progress when response completes
@@ -128,17 +143,33 @@ export default function ChatPage() {
         }
     }, [status, trinityProgress]);
 
-    // Smart auto-scroll logic - only scroll if user is at bottom
+    // Smart auto-scroll logic - only scroll if user is at bottom and message count changed
     useEffect(() => {
         if (!chatContainerRef.current || !scrollRef.current) return;
         
-        const container = chatContainerRef.current;
-        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        // Only scroll if message count actually changed
+        if (messages.length === lastMessageCountRef.current) return;
+        lastMessageCountRef.current = messages.length;
         
-        // Only auto-scroll if user is near bottom or hasn't manually scrolled
+        const container = chatContainerRef.current;
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
+        
+        // Only auto-scroll if user is near bottom
+        // Debounce scroll to prevent multiple rapid scrolls
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+        }
+        
         if (shouldAutoScrollRef.current && isNearBottom) {
-            scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-            userHasScrolledRef.current = false;
+            scrollTimeoutRef.current = setTimeout(() => {
+                if (scrollRef.current && chatContainerRef.current) {
+                    const container = chatContainerRef.current;
+                    container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
         }
     }, [messages]);
 
@@ -261,9 +292,18 @@ export default function ChatPage() {
         // Clear pending thoughts for new conversation
         setPendingThoughts(new Map());
 
-        // Try to use append first (most reliable)
-        console.log('[Ogma] Attempting to send message via append...', { hasAppend: !!append, sessionId: activeSessionId });
+        // Check what's available from useChat
+        console.log('[Ogma] Attempting to send message...', { 
+            hasAppend: !!append, 
+            hasSendMessage: !!sendMessage,
+            hasHandleSubmit: !!handleSubmit,
+            sessionId: activeSessionId,
+            chatHookKeys: Object.keys(chatHook)
+        });
+        
+        // Try append if available (preferred method)
         if (append && typeof append === 'function') {
+            console.log('[Ogma] Using append from useChat');
             try {
                 console.log('[Ogma] Calling append with message:', messageContent);
                 // Intercept fetch to capture annotations
@@ -494,52 +534,123 @@ export default function ChatPage() {
         }
 
         // Last resort: manually add message and call API
-        console.warn('Using manual API call fallback');
+        console.warn('[Ogma] Using manual API call fallback');
         const userMessage = {
-            id: `temp-${Date.now()}`,
+            id: `user-${Date.now()}`,
             role: 'user' as const,
             content: messageContent,
         };
-        setMessages([...messages, userMessage]);
+        const initialMessages = [...messages, userMessage];
+        setMessages(initialMessages);
         
         try {
+            console.log('[Ogma] Calling API manually...');
             const response = await fetch('/api/ogma', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    messages: [...messages, userMessage],
+                    messages: initialMessages,
                     sessionId: activeSessionId,
                 }),
             });
             
+            console.log('[Ogma] API response status:', response.status, response.ok);
+            
             if (!response.ok) {
-                throw new Error('Failed to send message');
+                const errorText = await response.text();
+                console.error('[Ogma] API error response:', errorText);
+                throw new Error(`Failed to send message: ${response.status} ${errorText}`);
             }
             
             // Read the stream and update messages manually
             const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            let assistantMessage = { id: `assistant-${Date.now()}`, role: 'assistant' as const, content: '' };
-            setMessages([...messages, userMessage, assistantMessage]);
+            if (!reader) {
+                throw new Error('No response body reader available');
+            }
             
-            if (reader) {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+            const decoder = new TextDecoder();
+            let assistantMessage = { 
+                id: `assistant-${Date.now()}`, 
+                role: 'assistant' as const, 
+                content: '' 
+            };
+            let currentMessages = [...initialMessages, assistantMessage];
+            setMessages(currentMessages);
+            
+            console.log('[Ogma] Starting to read stream...');
+            let buffer = '';
+            let hasReceivedData = false;
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    console.log('[Ogma] Stream finished', { hasReceivedData, finalContentLength: assistantMessage.content.length });
+                    break;
+                }
+                
+                hasReceivedData = true;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+                
+                for (const line of lines) {
+                    if (line.trim() === '') continue;
                     
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-                    for (const line of lines) {
-                        if (line.startsWith('0:"')) {
-                            const text = JSON.parse(line.substring(2));
-                            assistantMessage.content += text;
-                            setMessages([...messages, userMessage, { ...assistantMessage }]);
+                    // Vercel AI SDK stream format: "0:"text" or "0:"text\n" or just "0:"text
+                    // Handle both complete and partial lines
+                    if (line.startsWith('0:"')) {
+                        try {
+                            // Try to parse as complete JSON string
+                            let text = '';
+                            if (line.endsWith('"')) {
+                                // Complete line
+                                const textMatch = line.match(/^0:"(.*)"$/);
+                                if (textMatch) {
+                                    text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                                }
+                            } else {
+                                // Partial line - extract what we can
+                                const textMatch = line.match(/^0:"(.*)$/);
+                                if (textMatch) {
+                                    text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                                }
+                            }
+                            
+                            if (text) {
+                                assistantMessage.content += text;
+                                currentMessages = [...initialMessages, { ...assistantMessage }];
+                                setMessages(currentMessages);
+                            }
+                        } catch (parseErr) {
+                            console.warn('[Ogma] Parse error on line:', line.substring(0, 50), parseErr);
+                        }
+                    } else if (line.startsWith('0:')) {
+                        // Might be a continuation or different format
+                        try {
+                            const text = line.substring(2);
+                            if (text) {
+                                assistantMessage.content += text;
+                                currentMessages = [...initialMessages, { ...assistantMessage }];
+                                setMessages(currentMessages);
+                            }
+                        } catch (parseErr) {
+                            // Ignore
                         }
                     }
                 }
             }
+            
+            if (!hasReceivedData) {
+                console.error('[Ogma] No data received from stream');
+            }
+            
+            // Final update with complete message
+            setMessages([...initialMessages, assistantMessage]);
+            setTrinityProgress(null);
+            console.log('[Ogma] Manual API call completed successfully');
         } catch (err) {
-            console.error('Manual API call failed:', err);
+            console.error('[Ogma] Manual API call failed:', err);
+            setTrinityProgress(null);
             // Restore input on error
             setLocalInput(messageContent);
         }
@@ -582,7 +693,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden max-h-screen">
+        <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden">
             <ChatSidebar
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
@@ -591,7 +702,7 @@ export default function ChatPage() {
                 refreshTrigger={refreshTrigger}
             />
 
-            <div className="flex-1 flex flex-col relative min-w-0 h-screen overflow-hidden">
+            <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden" style={{ height: '100vh' }}>
                 {/* Header */}
                 <header className="flex items-center justify-between px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 border-b border-border bg-background/95 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -898,4 +1009,5 @@ export default function ChatPage() {
             </div>
         </div>
     );
+}
 }
