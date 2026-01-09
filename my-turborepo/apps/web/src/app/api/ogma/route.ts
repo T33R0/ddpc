@@ -209,8 +209,17 @@ export async function POST(req: Request) {
   const costTracking: Array<{ model: string; cost: number; inputTokens: number; outputTokens: number }> = [];
 
   try {
+    console.log('[Ogma] API route called at', new Date().toISOString());
     const { messages, sessionId } = await req.json();
+    console.log('[Ogma] Received request:', { messageCount: messages?.length, sessionId, hasMessages: !!messages });
+    
+    if (!messages || messages.length === 0) {
+      console.error('[Ogma] No messages in request');
+      return new Response(JSON.stringify({ error: 'No messages provided' }), { status: 400 });
+    }
+    
     const supabase = await createClient();
+    console.log('[Ogma] Supabase client created');
 
     const lastMsg = messages[messages.length - 1];
     const userPrompt = typeof lastMsg.content === 'string'
@@ -430,6 +439,7 @@ CRITICAL:
     }
 
     console.log('[Ogma] Starting Final Synthesis (Streaming)...');
+    console.log('[Ogma] Synthesis prompt length:', allSolutions.length);
 
     const synthesisResult = await streamText({
       model: ogmaVoice,
@@ -482,7 +492,10 @@ Speak as one unified consciousness.`,
     });
 
     // Return the stream response - useChat expects this format
-    return synthesisResult.toTextStreamResponse();
+    console.log('[Ogma] Creating stream response...');
+    const streamResponse = synthesisResult.toTextStreamResponse();
+    console.log('[Ogma] Stream response created, returning to client');
+    return streamResponse;
 
   } catch (error) {
     console.error('[Ogma] Error in API route:', error);

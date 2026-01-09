@@ -45,6 +45,14 @@ export default function ChatPage() {
         api: '/api/ogma',
         body: chatBody,
         id: 'ogma-chat', // Use a stable ID to prevent re-initialization
+        onError: (error) => {
+            console.error('[Ogma] useChat error:', error);
+            setTrinityProgress(null);
+        },
+        onFinish: (message) => {
+            console.log('[Ogma] Response finished:', message);
+            setTrinityProgress(null);
+        },
     });
     
     // Extract all possible properties from the hook with proper typing
@@ -53,6 +61,15 @@ export default function ChatPage() {
     const append = (chatHook as any).append;
     const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
     const status = (chatHook as any).status || chatHook.status || 'ready';
+    const error = (chatHook as any).error;
+    
+    // Log errors from useChat
+    useEffect(() => {
+        if (error) {
+            console.error('[Ogma] Chat hook error:', error);
+            setTrinityProgress(null);
+        }
+    }, [error]);
     
     // Extract annotations from messages as they update
     useEffect(() => {
@@ -245,8 +262,10 @@ export default function ChatPage() {
         setPendingThoughts(new Map());
 
         // Try to use append first (most reliable)
+        console.log('[Ogma] Attempting to send message via append...', { hasAppend: !!append, sessionId: activeSessionId });
         if (append && typeof append === 'function') {
             try {
+                console.log('[Ogma] Calling append with message:', messageContent);
                 // Intercept fetch to capture annotations
                 const originalFetch = window.fetch;
                 const messageCountBefore = messages.length;
@@ -346,15 +365,23 @@ export default function ChatPage() {
                     return response;
                 };
                 
-                await append({
-                    role: 'user',
-                    content: messageContent,
-                });
-                
-                // Restore fetch after a delay
-                setTimeout(() => {
+                console.log('[Ogma] Calling append with:', { role: 'user', content: messageContent.substring(0, 50) + '...' });
+                try {
+                    await append({
+                        role: 'user',
+                        content: messageContent,
+                    });
+                    console.log('[Ogma] Append completed successfully');
+                    
+                    // Restore fetch after a delay
+                    setTimeout(() => {
+                        window.fetch = originalFetch;
+                    }, 10000);
+                } catch (appendError) {
+                    console.error('[Ogma] Append failed:', appendError);
                     window.fetch = originalFetch;
-                }, 10000);
+                    throw appendError; // Re-throw to trigger fallback
+                }
                 
                 // Update progress based on time elapsed (simulated progress)
                 let elapsed = 0;
@@ -564,9 +591,9 @@ export default function ChatPage() {
                 refreshTrigger={refreshTrigger}
             />
 
-            <div className="flex-1 flex flex-col relative min-w-0 h-full max-h-screen overflow-hidden">
+            <div className="flex-1 flex flex-col relative min-w-0 h-screen overflow-hidden">
                 {/* Header */}
-                <header className="flex items-center justify-between px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 border-b border-border bg-background/95 backdrop-blur-md sticky top-0 w-full z-10 shrink-0">
+                <header className="flex items-center justify-between px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 border-b border-border bg-background/95 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                         <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 border border-primary/20 shrink-0">
                             <Terminal className="w-4 h-4 md:w-5 md:h-5 text-primary" />
@@ -625,9 +652,9 @@ export default function ChatPage() {
                 {/* Chat Area */}
                 <main 
                     ref={chatContainerRef}
-                    className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 scroll-smooth min-h-0 max-h-full"
+                    className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 scroll-smooth min-h-0"
                 >
-                    <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto space-y-3 md:space-y-4 lg:space-y-6 pb-20 md:pb-24 lg:pb-32">
+                    <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto space-y-3 md:space-y-4 lg:space-y-6 pb-20">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 opacity-50">
                                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
@@ -829,7 +856,8 @@ export default function ChatPage() {
                     </div>
                 </main>
 
-                <div className="absolute bottom-0 left-0 right-0 w-full p-3 md:p-4 bg-gradient-to-t from-background via-background to-transparent pt-6 md:pt-8 lg:pt-10 z-10 shrink-0 border-t border-border/50">
+                {/* Input Area - Fixed at bottom */}
+                <div className="w-full p-3 md:p-4 bg-background border-t border-border/50 shrink-0">
                     <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto">
                         <form 
                             onSubmit={handleFormSubmit}
