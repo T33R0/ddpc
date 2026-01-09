@@ -14,6 +14,8 @@ import {
 } from '@repo/ui/modal';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
+import { Label } from '@repo/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@repo/ui/tabs';
 import { Search } from 'lucide-react';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { getVehicleImageSources } from '@/lib/vehicle-images';
@@ -368,7 +370,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+      <ModalContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
         <ModalHeader>
           <ModalTitle>Add a Vehicle to Your Garage</ModalTitle>
           <ModalDescription>
@@ -376,65 +378,44 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
           </ModalDescription>
         </ModalHeader>
 
-        {/* Tab Navigation */}
-        <div className="px-6 pt-4">
-          <div className="flex space-x-1 bg-muted p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('vin')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'vin'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                }`}
-            >
-              VIN Decoder
-            </button>
-            <button
-              onClick={() => setActiveTab('manual')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'manual'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                }`}
-            >
-              Manual Entry
-            </button>
-          </div>
-        </div>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="vin">VIN Decoder</TabsTrigger>
+            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+          </TabsList>
 
-        {/* Content */}
-        <div className="p-6">
-          {activeTab === 'vin' ? (
-            /* VIN Decoder Tab */
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  value={vin}
-                  onChange={(e) => setVin(e.target.value.toUpperCase())}
-                  placeholder="Enter VIN (17 characters)"
-                  className="flex-1"
-                  maxLength={17}
-                />
-                <Button
-                  onClick={handleVinDecode}
-                  disabled={isDecodingVin || vin.length !== 17}
-                  variant="secondary"
-                >
-                  {isDecodingVin ? 'Decoding...' : 'Decode'}
-                </Button>
-              </div>
-
-              {vinVehicleData && (
-                <div className="text-sm text-muted-foreground">
-                  VIN decoding will show vehicle details here once implemented.
-                </div>
-              )}
+          <TabsContent value="vin" className="space-y-4 mt-4">
+            <div className="flex gap-2">
+              <Input
+                value={vin}
+                onChange={(e) => setVin(e.target.value.toUpperCase())}
+                placeholder="Enter VIN (17 characters)"
+                className="flex-1"
+                maxLength={17}
+              />
+              <Button
+                onClick={handleVinDecode}
+                disabled={isDecodingVin || vin.length !== 17}
+                variant="secondary"
+              >
+                {isDecodingVin ? 'Decoding...' : 'Decode'}
+              </Button>
             </div>
-          ) : (
-            /* Manual Entry Tab */
+
+            {vinVehicleData && (
+              <div className="text-sm text-muted-foreground">
+                VIN decoding will show vehicle details here once implemented.
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="manual" className="space-y-4 mt-4">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground block">Year:</label>
+                  <Label htmlFor="year-select">Year</Label>
                   <select
+                    id="year-select"
                     value={selectedYear}
                     onChange={(e) => {
                       setSelectedYear(e.target.value);
@@ -455,8 +436,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground block">Make:</label>
+                  <Label htmlFor="make-select">Make</Label>
                   <select
+                    id="make-select"
                     value={selectedMake}
                     onChange={(e) => {
                       setSelectedMake(e.target.value);
@@ -477,8 +459,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground block">Model:</label>
+                  <Label htmlFor="model-select">Model</Label>
                   <select
+                    id="model-select"
                     value={selectedModel}
                     onChange={(e) => {
                       setSelectedModel(e.target.value);
@@ -511,8 +494,9 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
               {manualVehicleData && (
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground block">Trim:</label>
+                  <Label htmlFor="trim-select">Trim</Label>
                   <select
+                    id="trim-select"
                     value={selectedTrimId}
                     onChange={(e) => setSelectedTrimId(e.target.value)}
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -526,7 +510,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 </div>
               )}
             </div>
-          )}
+          </TabsContent>
 
           {/* Vehicle Details Display */}
           {currentVehicleData && selectedTrim && (
@@ -618,7 +602,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
               </div>
             </div>
           )}
-        </div>
+        </Tabs>
 
         <ModalFooter>
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-between items-center">
@@ -640,7 +624,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
               <Button
                 onClick={handleAddToGarage}
                 disabled={!canAddToGarage}
-                className={isAddedToGarage ? 'bg-green-600 hover:bg-green-700' : ''}
+                variant={isAddedToGarage ? 'default' : 'default'}
               >
                 {isAddingToGarage
                   ? 'Adding...'

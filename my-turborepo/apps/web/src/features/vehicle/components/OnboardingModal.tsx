@@ -79,7 +79,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
 
   return (
     <Modal open={open} onOpenChange={(val) => !val && onClose()}>
-      <ModalContent className="sm:max-w-lg bg-card text-card-foreground border-border">
+      <ModalContent className="sm:max-w-lg">
         <ModalHeader>
           <ModalTitle>Setup Your Vehicle</ModalTitle>
           <ModalDescription>
@@ -87,7 +87,7 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
           </ModalDescription>
         </ModalHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="space-y-4">
           {step === 1 && (
             <>
               <div className="space-y-2">
@@ -97,7 +97,6 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                   type="date"
                   value={acquisitionDate}
                   onChange={(e) => setAcquisitionDate(e.target.value)}
-                  className="bg-background text-foreground border-input"
                   required
                 />
               </div>
@@ -128,7 +127,6 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                   placeholder="0.00"
                   value={acquisitionCost}
                   onChange={(e) => setAcquisitionCost(e.target.value)}
-                  className="bg-background text-foreground border-input"
                 />
               </div>
             </>
@@ -189,7 +187,6 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="bg-background text-foreground border-input"
                       required
                     />
                   </div>
@@ -212,12 +209,16 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
         </div>
 
         <ModalFooter>
-          {step === 2 && (
-            <Button variant="outline" onClick={() => setStep(1)} disabled={isSubmitting}>Back</Button>
-          )}
-          <Button onClick={step === 1 ? handleNext : handleSubmit} disabled={isSubmitting}>
-            {step === 1 ? 'Next' : (isSubmitting ? 'Saving...' : 'Finish')}
-          </Button>
+          <div className="flex w-full justify-end gap-4">
+            {step === 2 && (
+              <Button variant="outline" onClick={() => setStep(1)} disabled={isSubmitting}>
+                Back
+              </Button>
+            )}
+            <Button onClick={step === 1 ? handleNext : handleSubmit} disabled={isSubmitting}>
+              {step === 1 ? 'Next' : (isSubmitting ? 'Saving...' : 'Finish')}
+            </Button>
+          </div>
         </ModalFooter>
       </ModalContent>
     </Modal>
