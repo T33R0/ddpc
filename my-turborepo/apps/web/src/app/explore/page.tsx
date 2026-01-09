@@ -15,20 +15,6 @@ const PAGE_SIZE = 24;
 
 
 
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const valI = newArray[i];
-    const valJ = newArray[j];
-    if (valI !== undefined && valJ !== undefined) {
-      newArray[i] = valJ;
-      newArray[j] = valI;
-    }
-  }
-  return newArray;
-}
-
 function ExploreContent() {
   const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,31 +24,17 @@ function ExploreContent() {
 
   // Advanced State
 
-  const [vehicleIds, setVehicleIds] = useState<string[]>([]);
+
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   // Ref to track the timeout ID for debouncing
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch all IDs for random shuffle
-  const fetchAllIds = useCallback(async () => {
-    try {
-      const res = await fetch('/api/explore/search?mode=ids');
-      if (!res.ok) throw new Error('Failed to fetch IDs');
-      const data = await res.json();
-      return data.ids as string[];
-    } catch (err) {
-      console.error('Failed to fetch IDs:', err);
-      return [];
-    }
-  }, []);
-
   // Main search/fetch logic
   const performSearch = useCallback(async (
     searchQuery: string,
     pageNum: number,
-    currentIds: string[] = [], // For random mode
     isLoadMore = false
   ) => {
     if (!isLoadMore) {
@@ -73,62 +45,18 @@ function ExploreContent() {
     }
 
     try {
-      let data: VehicleSummary[] = [];
-      let newHasMore = false;
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('q', searchQuery);
+      params.set('page', pageNum.toString());
+      params.set('pageSize', PAGE_SIZE.toString());
 
+      const res = await fetch(`/api/explore/search?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch results');
 
+      const payload = await res.json();
+      const data = payload.data || [];
 
-      // 1. Random Mode (No Query)
-      if (!searchQuery) { // Always random when no query
-        // If we don't have IDs yet, fetch and shuffle them
-        let targetIds = currentIds;
-        if (pageNum === 1 && (targetIds.length === 0)) {
-          const ids = await fetchAllIds();
-          targetIds = shuffleArray(ids);
-          setVehicleIds(targetIds);
-        } else if (pageNum === 1 && targetIds.length > 0) {
-          // Check if we need to re-shuffle for a "new" random (e.g. initial load or reset)
-          // If pageNum is 1, and we passed in currentIds, we assume they are already prepared.
-          setVehicleIds(targetIds);
-        }
-
-        // Slice IDs for current page
-        const start = (pageNum - 1) * PAGE_SIZE;
-        const end = start + PAGE_SIZE;
-        const pageIds = targetIds.slice(start, end);
-
-        if (pageIds.length > 0) {
-          const params = new URLSearchParams();
-          params.set('ids', pageIds.join(','));
-          const res = await fetch(`/api/explore/search?${params.toString()}`);
-          if (!res.ok) throw new Error('Failed to fetch vehicle details');
-          const payload = await res.json();
-          data = payload.data || [];
-        }
-
-        newHasMore = targetIds.length > end;
-      }
-      // 2. Standard Search
-      else {
-        const params = new URLSearchParams();
-        if (searchQuery) params.set('q', searchQuery);
-
-        params.set('page', pageNum.toString());
-        params.set('pageSize', PAGE_SIZE.toString());
-
-        const res = await fetch(`/api/explore/search?${params.toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch results');
-
-        const payload = await res.json();
-        data = payload.data || [];
-        // Heuristic: if we got less than requested (or exactly 0), no more. 
-        // Note: API fetches extra for grouping, so checking length against 0 is safe, 
-        // but for accurate infinite scroll we usually check if data.length >= PAGE_SIZE (approx).
-        // The API returns distinct groups. If we got groups, we might have more.
-        newHasMore = data.length >= PAGE_SIZE;
-        // If query is present, it might return fewer results total. 
-        // Ideally API should return hasMore. For now, this heuristic works okay-ish.
-      }
+      const newHasMore = data.length >= PAGE_SIZE;
 
       setAllVehicles(prev => isLoadMore ? [...prev, ...data] : data);
       setHasMore(newHasMore);
@@ -140,7 +68,7 @@ function ExploreContent() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [fetchAllIds]);
+  }, []);
 
   // Handle Input Change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,7 +81,7 @@ function ExploreContent() {
     debounceRef.current = setTimeout(() => {
       setPage(1);
       // If query exists, Random sort doesn't really apply.
-      performSearch(value, 1, vehicleIds);
+      performSearch(value, 1);
     }, 300);
   };
 
@@ -163,8 +91,7 @@ function ExploreContent() {
   const handleRandomize = useCallback(() => {
     setQuery(''); // Clear search
     setPage(1);
-    setVehicleIds([]); // Clear any legacy specific ID targeting
-    performSearch('', 1, [], false); // Force new fetch
+    performSearch('', 1, false); // Force new fetch
   }, [performSearch]);
 
   // Handle Load More
@@ -172,9 +99,9 @@ function ExploreContent() {
     if (!loadingMore && hasMore) {
       const nextPage = page + 1;
       setPage(nextPage);
-      performSearch(query, nextPage, vehicleIds, true);
+      performSearch(query, nextPage, true);
     }
-  }, [loadingMore, hasMore, page, query, vehicleIds, performSearch]);
+  }, [loadingMore, hasMore, page, query, performSearch]);
 
 
   // Initial load
