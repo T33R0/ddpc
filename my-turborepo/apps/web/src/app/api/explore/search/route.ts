@@ -20,8 +20,12 @@ export async function GET(request: Request) {
 
         // --- MODE: Fetch All IDs (For Random Shuffle) ---
         if (mode === 'ids') {
-            // Return ALL valid vehicle IDs for client-side shuffling (limit to 10000 for now)
-            let pool = supabase.from('v_vehicle_data_typed').select('id').limit(10000);
+            // Return ALL valid vehicle IDs for client-side shuffling (limit to 100,000 to cover full DB)
+            let pool = supabase
+                .from('v_vehicle_data_typed')
+                .select('id')
+                .order('id') // Added to avoid implicit year sorting
+                .limit(100000); // 73.7k rows, this covers all
 
             let { data: allIds, error: idError } = await pool;
 
@@ -31,7 +35,8 @@ export async function GET(request: Request) {
                 const fallback = await supabase
                     .from('vehicle_data')
                     .select('id')
-                    .limit(10000);
+                    .order('id') // Added to avoid implicit year sorting
+                    .limit(100000);
                 allIds = fallback.data;
                 idError = fallback.error;
             }
