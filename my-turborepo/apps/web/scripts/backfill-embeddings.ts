@@ -1,6 +1,5 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { generateVehicleEmbedding } from '../src/lib/embeddings';
 import { config } from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,19 +8,28 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Try loading from .env if .env.local is missing (or relying on system envs)
+// Load envs FIRST, before importing libraries that rely on them
 config({ path: path.resolve(__dirname, '../.env.local') });
-config({ path: path.resolve(__dirname, '../.env') }); // Fallback to .env
+config({ path: path.resolve(__dirname, '../.env') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase credentials. Make sure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are in apps/web/.env.local');
+// Check keys immediately
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('❌ Missing Supabase credentials in .env.local');
+    process.exit(1);
+}
+if (!process.env.AI_GATEWAY_API_KEY) {
+    console.error('❌ Missing AI_GATEWAY_API_KEY in .env.local');
     process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Dynamically import the embedder so it sees the populated env vars
+// This solves the "Missing Authorization header" issue
+const { generateVehicleEmbedding } = await import('../src/lib/embeddings');
+
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function backfill() {
     console.log('Starting backfill...');
@@ -55,12 +63,18 @@ async function backfill() {
             try {
                 const embedding = await generateVehicleEmbedding(vehicle as any);
 
-                const { error: updateError } = await supabase
+                // Update and confirm it actually worked
+                const { data: updated, error: updateError } = await supabase
                     .from('vehicle_data')
                     .update({ description_embedding: embedding })
-                    .eq('id', vehicle.id);
+                    .eq('id', vehicle.id)
+                    .select();
 
                 if (updateError) throw updateError;
+
+                if (!updated || updated.length === 0) {
+                    console.warn(`\n⚠️ Update returned no data for ${vehicle.id}. RLS might be blocking it.`);
+                }
 
                 process.stdout.write('.'); // Progress dot
             } catch (err: any) {
@@ -71,7 +85,7 @@ async function backfill() {
         totalProcessed += vehicles.length;
         console.log(`\nBatch done. Total processed: ${totalProcessed}`);
 
-        // Tiny pause to avoid hitting rate limits too hard
+        // Tiny pause
         await new Promise(r => setTimeout(r, 1000));
     }
 
