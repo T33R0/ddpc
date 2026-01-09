@@ -45,11 +45,11 @@ export default function ChatPage() {
         api: '/api/ogma',
         body: chatBody,
         id: 'ogma-chat', // Use a stable ID to prevent re-initialization
-        onError: (error) => {
+        onError: (error: Error) => {
             console.error('[Ogma] useChat error:', error);
             setTrinityProgress(null);
         },
-        onFinish: (message) => {
+        onFinish: (message: any) => {
             console.log('[Ogma] Response finished:', message);
             setTrinityProgress(null);
         },
