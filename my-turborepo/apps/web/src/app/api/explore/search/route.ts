@@ -60,6 +60,7 @@ export async function GET(request: Request) {
             // We use a cheap models for this logic extraction
             const { object: filters } = await generateObject({
                 model: vercelGateway.languageModel('gpt-4o-mini'),
+                mode: 'json', // Force JSON mode to compatible with Gateway/Model
                 schema: z.object({
                     year_min: z.number().optional(),
                     year_max: z.number().optional(),
