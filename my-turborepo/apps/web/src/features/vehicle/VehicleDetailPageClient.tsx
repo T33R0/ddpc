@@ -810,16 +810,7 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
             ]}
             disabled={!isOwner}
           />
-          <NavigationCard
-            icon={Puzzle}
-            title="Parts"
-            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/parts`)}
-            stats={[
-              { label: 'Diagram', value: 'Interactive' },
-              { label: 'Health', value: 'Monitor' }
-            ]}
-            disabled={!isOwner}
-          />
+
         </div>
 
         {/* Detailed Specs Grid */}

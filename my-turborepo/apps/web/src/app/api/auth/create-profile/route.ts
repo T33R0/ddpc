@@ -88,6 +88,8 @@ export async function POST(request: Request) {
       .from('user_profile')
       .insert(profileData)
 
+    let profileWasCreated = false
+
     // Handle username collision
     if (profileError && profileError.code === '23505') {
       console.warn(`Username collision for: ${username}. Retrying with suffix.`)
@@ -103,6 +105,8 @@ export async function POST(request: Request) {
           { error: 'Failed to create profile', details: retryError.message },
           { status: 500 }
         )
+      } else {
+        profileWasCreated = true
       }
     } else if (profileError) {
       console.error('Profile creation error:', profileError)
@@ -110,12 +114,27 @@ export async function POST(request: Request) {
         { error: 'Failed to create profile', details: profileError.message },
         { status: 500 }
       )
+    } else {
+      profileWasCreated = true
     }
 
     // Send welcome email if profile was successfully created
-    if (user.email) {
+    if (profileWasCreated && user.email) {
       try {
-        const emailHtml = await render(WelcomeEmail())
+        // render() can be sync or async depending on version - try both
+        let emailHtml: string
+        try {
+          emailHtml = await render(WelcomeEmail())
+        } catch {
+          // If async fails, try sync
+          emailHtml = render(WelcomeEmail())
+        }
+        
+        if (!emailHtml || emailHtml.trim().length === 0) {
+          console.error('[Welcome Email] Rendered HTML is empty')
+          throw new Error('Rendered email HTML is empty')
+        }
+        
         await sendEmail({
           to: user.email,
           subject: 'Welcome to the Build',
@@ -125,6 +144,51 @@ export async function POST(request: Request) {
       } catch (welcomeEmailError) {
         console.error('[Welcome Email] Failed to send welcome email:', welcomeEmailError)
         // Don't fail profile creation if email fails
+      }
+    }
+
+    // Send admin notification if profile was successfully created
+    if (profileWasCreated) {
+      try {
+        // Find admins to notify
+        const { data: admins } = await dbClient
+          .from('user_profile')
+          .select('user_id')
+          .eq('role', 'admin')
+          .eq('notify_on_new_user', true)
+
+        if (admins && admins.length > 0) {
+          const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+          if (serviceRoleKey) {
+            const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+            const supabaseAdmin = createSupabaseClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              serviceRoleKey,
+              { auth: { autoRefreshToken: false, persistSession: false } }
+            )
+
+            const adminIds = admins.map(a => a.user_id)
+            const { data: { users: allUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 })
+
+            if (!listError && allUsers) {
+              const adminEmails = allUsers
+                .filter(u => adminIds.includes(u.id) && u.email)
+                .map(u => u.email as string)
+
+              if (adminEmails.length > 0) {
+                await sendEmail({
+                  to: adminEmails,
+                  subject: 'New User Signup - DDPC',
+                  html: `<p>A new user has signed up!</p><p><strong>Email:</strong> ${user.email}</p><p><strong>ID:</strong> ${user.id}</p>`
+                })
+                console.log('[Admin Notification] Sent new user notification to admins:', adminEmails.length)
+              }
+            }
+          }
+        }
+      } catch (notifyError) {
+        console.error('[Admin Notification] Failed to send new user notification:', notifyError)
+        // Don't fail profile creation if notification fails
       }
     }
 

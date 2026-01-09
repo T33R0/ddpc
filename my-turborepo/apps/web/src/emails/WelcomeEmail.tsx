@@ -51,20 +51,20 @@ import {
               <Section className="my-[20px]">
                 <Row>
                   <Column className="align-top w-1/2 pr-2">
-                    <div className="bg-neutral-900 p-4 rounded border border-neutral-800 h-full">
+                    <Section className="bg-neutral-900 p-4 rounded border border-neutral-800">
                       <Text className="text-red-600 font-bold text-[14px] m-0 mb-2 uppercase tracking-wide">1. Park It</Text>
                       <Text className="text-neutral-400 text-[12px] m-0 leading-[18px]">
                         Add your first vehicle to the Garage. Even if it's stock (for now).
                       </Text>
-                    </div>
+                    </Section>
                   </Column>
                   <Column className="align-top w-1/2 pl-2">
-                    <div className="bg-neutral-900 p-4 rounded border border-neutral-800 h-full">
+                    <Section className="bg-neutral-900 p-4 rounded border border-neutral-800">
                       <Text className="text-red-600 font-bold text-[14px] m-0 mb-2 uppercase tracking-wide">2. Log It</Text>
                       <Text className="text-neutral-400 text-[12px] m-0 leading-[18px]">
                         Document your last maintenance item or mod. Data is leverage.
                       </Text>
-                    </div>
+                    </Section>
                   </Column>
                 </Row>
               </Section>

@@ -83,7 +83,20 @@ export async function GET(request: Request) {
         // Send welcome email if profile was successfully created
         if (profileCreated && user.email) {
           try {
-            const emailHtml = await render(WelcomeEmail())
+            // render() can be sync or async depending on version - try both
+            let emailHtml: string
+            try {
+              emailHtml = await render(WelcomeEmail())
+            } catch {
+              // If async fails, try sync
+              emailHtml = render(WelcomeEmail())
+            }
+            
+            if (!emailHtml || emailHtml.trim().length === 0) {
+              console.error('[Welcome Email] Rendered HTML is empty')
+              throw new Error('Rendered email HTML is empty')
+            }
+            
             await sendEmail({
               to: user.email,
               subject: 'Welcome to the Build',
