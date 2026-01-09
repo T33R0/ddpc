@@ -96,8 +96,8 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
   return (
     <div
       className={cn(
-        "flex flex-col border-r border-border bg-background transition-all duration-300 relative z-20 h-screen pt-20",
-        isOpen ? "w-64" : "w-16"
+        "flex flex-col border-r border-border bg-background transition-all duration-300 relative z-20 h-screen pt-20 shrink-0 overflow-hidden",
+        isOpen ? "w-56 md:w-64" : "w-12 md:w-16"
       )}
     >
         {/* Toggle Button - positioned absolutely to be visible even when collapsed */}
@@ -122,25 +122,25 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 px-2">
+      <ScrollArea className="flex-1 px-2 min-h-0">
         <div className="space-y-1">
           {sessions.map((session) => (
             <div
               key={session.id}
               onClick={() => onSelectSession(session.id)}
               className={cn(
-                "group relative flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-all cursor-pointer border",
+                "group relative flex items-center gap-2 md:gap-3 rounded-lg px-2 md:px-3 py-2 md:py-3 text-sm transition-all cursor-pointer border",
                 currentSessionId === session.id
                   ? "bg-primary/10 text-primary border-primary/20"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
               )}
             >
-              <MessageSquare className="w-4 h-4 shrink-0" />
+              <MessageSquare className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
 
               {isOpen && (
                 <>
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate text-xs font-medium">
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className="truncate text-[11px] md:text-xs font-medium">
                       {session.title !== 'New Conversation' ? session.title : format(new Date(session.created_at), 'MMM d, h:mm a')}
                     </div>
                     {session.snippet && (
@@ -150,20 +150,13 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
                       onClick={(e) => handleArchive(e, session.id)}
                       className="p-1 hover:text-foreground transition-colors"
                       title="Archive"
                     >
                       <Archive className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(e, session.id, false)}
-                      className="p-1 hover:text-destructive transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </>
@@ -199,19 +192,19 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
                     key={session.id}
                     onClick={() => onSelectSession(session.id)}
                     className={cn(
-                      "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all cursor-pointer border border-transparent",
+                      "group relative flex items-center gap-2 md:gap-3 rounded-lg px-2 md:px-3 py-2 text-sm transition-all cursor-pointer border border-transparent",
                       currentSessionId === session.id
                         ? "bg-primary/10 text-primary border-primary/20"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     <MessageSquare className="w-3 h-3 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate text-xs font-medium">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="truncate text-[11px] md:text-xs font-medium">
                         {session.title !== 'New Conversation' ? session.title : format(new Date(session.created_at), 'MMM d, h:mm a')}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex items-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button
                         onClick={(e) => handleRestore(e, session.id)}
                         className="p-1 hover:text-foreground transition-colors"

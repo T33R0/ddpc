@@ -37,11 +37,14 @@ const env = {
     SUPABASE_ACCESS_TOKEN: supabaseAccessToken,
 };
 
-// Spawn the Supabase MCP server
-const mcpProcess = spawn('npx', ['-y', '@supabase/mcp-server-supabase'], {
+// Resolve the path to the MCP server executable
+// It is likely in the root node_modules due to hoisting
+const mcpServerPath = path.resolve(__dirname, '../../../node_modules/@supabase/mcp-server-supabase/dist/index.js');
+
+// Spawn the Supabase MCP server using node directly
+const mcpProcess = spawn('node', [mcpServerPath], {
     env,
     stdio: 'inherit', // Pipe stdin/stdout/stderr directly
-    shell: true,      // Use shell to ensure npx is found
 });
 
 mcpProcess.on('error', (err) => {

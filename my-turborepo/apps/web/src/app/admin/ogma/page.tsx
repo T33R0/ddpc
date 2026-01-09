@@ -555,7 +555,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden">
+        <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden max-h-screen">
             <ChatSidebar
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
@@ -564,7 +564,7 @@ export default function ChatPage() {
                 refreshTrigger={refreshTrigger}
             />
 
-            <div className="flex-1 flex flex-col relative min-w-0 h-full">
+            <div className="flex-1 flex flex-col relative min-w-0 h-full max-h-screen overflow-hidden">
                 {/* Header */}
                 <header className="flex items-center justify-between px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 border-b border-border bg-background/95 backdrop-blur-md sticky top-0 w-full z-10 shrink-0">
                     <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -625,9 +625,9 @@ export default function ChatPage() {
                 {/* Chat Area */}
                 <main 
                     ref={chatContainerRef}
-                    className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 scroll-smooth min-h-0"
+                    className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 scroll-smooth min-h-0 max-h-full"
                 >
-                    <div className="max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 lg:space-y-8 pb-24 md:pb-32">
+                    <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto space-y-3 md:space-y-4 lg:space-y-6 pb-20 md:pb-24 lg:pb-32">
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 opacity-50">
                                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
@@ -829,8 +829,8 @@ export default function ChatPage() {
                     </div>
                 </main>
 
-                <div className="absolute bottom-0 w-full p-3 md:p-4 bg-gradient-to-t from-background via-background to-transparent pt-8 md:pt-10 z-10 shrink-0">
-                    <div className="max-w-3xl lg:max-w-4xl mx-auto">
+                <div className="absolute bottom-0 left-0 right-0 w-full p-3 md:p-4 bg-gradient-to-t from-background via-background to-transparent pt-6 md:pt-8 lg:pt-10 z-10 shrink-0 border-t border-border/50">
+                    <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto">
                         <form 
                             onSubmit={handleFormSubmit}
                             className="relative group"

@@ -345,11 +345,30 @@ ${improvementsContext}
           return { agent: 'engineer', content: result.text, inputTokens, outputTokens, cost, modelName };
         } catch (e: any) {
           console.error('[Ogma] Engineering stream failed:', e);
-          throw e;
+          // Return a fallback response instead of throwing to prevent complete failure
+          return { 
+            agent: 'engineer', 
+            content: 'Engineering stream encountered an error. Continuing with available streams.', 
+            inputTokens: 0, 
+            outputTokens: 0, 
+            cost: 0, 
+            modelName: 'error' 
+          };
         }
       })()
     ]);
     console.log(`[Ogma] Parallel thinking streams converged in ${Date.now() - trinityStartTime}ms`);
+    
+    // Log any failures
+    if (architectResult.status === 'rejected') {
+      console.error('[Ogma] Architectural stream failed:', architectResult.reason);
+    }
+    if (visionaryResult.status === 'rejected') {
+      console.error('[Ogma] Visionary stream failed:', visionaryResult.reason);
+    }
+    if (engineerResult.status === 'rejected') {
+      console.error('[Ogma] Engineering stream failed:', engineerResult.reason);
+    }
 
     const architect = architectResult.status === 'fulfilled' ? architectResult.value : null;
     const visionary = visionaryResult.status === 'fulfilled' ? visionaryResult.value : null;
@@ -379,6 +398,21 @@ ${improvementsContext}
     ].filter(Boolean).join('\n\n');
 
     console.log(`[Ogma] Internal deliberation complete. Thinking modes active: ${[architect ? 'Architectural' : '', visionary ? 'Visionary' : '', engineer ? 'Engineering' : ''].filter(Boolean).join(', ')}`);
+    
+    // Safety check: ensure we have at least one stream's output
+    if (!allSolutions || allSolutions.trim().length === 0) {
+      console.error('[Ogma] No thinking streams produced output. All streams may have failed.');
+      return new Response(
+        JSON.stringify({ 
+          error: 'All thinking streams failed. Please try again.',
+          message: 'Ogma encountered an error processing your request.'
+        }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. Your parallel thinking streams have converged.
 
@@ -447,10 +481,23 @@ Speak as one unified consciousness.`,
       }
     });
 
+    // Return the stream response - useChat expects this format
     return synthesisResult.toTextStreamResponse();
 
   } catch (error) {
-    console.error('Error in Ogma API:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    console.error('[Ogma] Error in API route:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal Server Error',
+        message: errorMessage 
+      }), 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
 }
