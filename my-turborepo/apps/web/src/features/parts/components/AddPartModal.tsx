@@ -35,6 +35,9 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
     const vendorLink = formData.get('vendorLink') as string;
     const installedDate = formData.get('installedDate') as string;
     const installedMileage = formData.get('installedMileage') as string;
+    const purchaseCost = formData.get('purchaseCost') as string;
+    const customLifespanMiles = formData.get('customLifespanMiles') as string;
+    const customLifespanMonths = formData.get('customLifespanMonths') as string;
 
     try {
       const result = await addPartToVehicle(vehicleId, slot.id, {
@@ -43,6 +46,9 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
         vendorLink: vendorLink || undefined,
         installedDate: installedDate || undefined,
         installedMileage: installedMileage ? parseInt(installedMileage, 10) : undefined,
+        purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
+        customLifespanMiles: customLifespanMiles ? parseInt(customLifespanMiles, 10) : undefined,
+        customLifespanMonths: customLifespanMonths ? parseInt(customLifespanMonths, 10) : undefined,
       });
 
       if ('error' in result) {
@@ -104,6 +110,42 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
             <div className="space-y-2">
                 <Label htmlFor="installedMileage">Mileage Installed</Label>
                 <Input id="installedMileage" name="installedMileage" type="number" inputMode="numeric" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="purchaseCost">Purchase Cost ($)</Label>
+            <Input id="purchaseCost" name="purchaseCost" type="number" step="0.01" inputMode="decimal" placeholder="0.00" />
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-semibold mb-3">Lifespan Override (Optional)</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Override default lifespan for this specific part installation. Leave blank to use defaults.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customLifespanMiles">
+                  Custom Lifespan (Miles)
+                  {slot?.default_lifespan_miles && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (Default: {slot.default_lifespan_miles.toLocaleString()})
+                    </span>
+                  )}
+                </Label>
+                <Input id="customLifespanMiles" name="customLifespanMiles" type="number" inputMode="numeric" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customLifespanMonths">
+                  Custom Lifespan (Months)
+                  {slot?.default_lifespan_months && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (Default: {slot.default_lifespan_months})
+                    </span>
+                  )}
+                </Label>
+                <Input id="customLifespanMonths" name="customLifespanMonths" type="number" inputMode="numeric" />
+              </div>
             </div>
           </div>
 

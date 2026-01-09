@@ -14,11 +14,15 @@ export interface MasterPart {
 }
 
 export interface VehicleInstalledComponent {
+  id?: string;
   user_vehicle_id: string;
   component_definition_id: string;
   current_part_id: string;
   installed_date: string | null; // ISO Date string
   installed_mileage: number | null;
+  custom_lifespan_miles: number | null;
+  custom_lifespan_months: number | null;
+  purchase_cost: number | null;
   master_part?: MasterPart; // Joined data
 }
 

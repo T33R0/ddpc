@@ -24,7 +24,7 @@ export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, sel
             ? 'stroke-blue-600 dark:stroke-blue-400' 
             : 'stroke-gray-600 dark:stroke-gray-400';
         
-        return `${baseFill} ${baseStroke} stroke-2 cursor-pointer transition-all duration-200 hover:fill-blue-400/30 hover:stroke-blue-500`;
+        return `${baseFill} ${baseStroke} stroke-2 cursor-pointer transition-all duration-200 hover:fill-blue-400/30 dark:hover:fill-blue-500/30 hover:stroke-blue-500 dark:hover:stroke-blue-400`;
     };
 
     const getTextStyle = (zoneName: string) => {
