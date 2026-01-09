@@ -76,6 +76,25 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
     setIsModalOpen(true);
   };
 
+  // Handler for successful part addition - refresh data
+  const handlePartAdded = async () => {
+    try {
+      setLoading(true);
+      const result = await getPartsData(vehicleId);
+      if ('error' in result) {
+        setError(result.error);
+      } else {
+        setSlots(result.slots);
+        setVehicle(result.vehicle);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to refresh parts data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter Slots based on Selected Zone
   const filteredSlots = slots.filter((slot) => {
     if (!selectedZone) return true; // Show all if no zone (optional behavior)
@@ -156,6 +175,8 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         slot={selectedSlotForAdd}
+        vehicleId={vehicleId}
+        onSuccess={handlePartAdded}
       />
     </div>
   );

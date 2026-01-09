@@ -7,17 +7,17 @@ interface CoupeWireframeProps {
 }
 
 export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, selectedZone }) => {
-    const baseStyle = "cursor-pointer transition-all duration-300 stroke-gray-600 stroke-2";
+    const baseStyle = "cursor-pointer transition-all duration-300 stroke-gray-700 dark:stroke-gray-400 stroke-2 fill-gray-100/50 dark:fill-gray-800/50";
     const hoverStyle = "hover:fill-blue-500/20 hover:stroke-blue-500";
     const activeStyle = "fill-blue-500/30 stroke-blue-600";
 
     // Helper to determine class based on state
     const getZoneClass = (zoneName: string) =>
-        `${baseStyle} ${hoverStyle} ${selectedZone === zoneName ? activeStyle : 'fill-transparent'}`;
+        `${baseStyle} ${hoverStyle} ${selectedZone === zoneName ? activeStyle : ''}`;
 
     return (
         <div className="w-full max-w-4xl mx-auto p-4">
-            <svg viewBox="0 0 800 350" className="w-full h-auto drop-shadow-xl" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 800 350" className="w-full h-auto min-h-[350px] drop-shadow-xl bg-muted/30 rounded-lg" fill="none" strokeLinecap="round" strokeLinejoin="round">
 
                 {/* WHEELS (Static reference, mostly) */}
                 <circle cx="185" cy="265" r="42" className="stroke-gray-800 stroke-4 fill-gray-900/50" />
