@@ -25,8 +25,8 @@ export async function GET(request: Request) {
         }
 
         // 3. Select batch of vehicles with missing embeddings
-        // Limiting to 20 to avoid timeouts (Vercel functions have strict limits)
-        const BATCH_SIZE = 20;
+        // Limiting to 5 to avoid timeouts (Vercel functions have strict limits, embeddings take time)
+        const BATCH_SIZE = 5;
         const { data: vehicles, error: fetchError } = await supabase
             .from('vehicle_data')
             .select('*')

@@ -34,7 +34,7 @@ export async function GET(request: Request) {
             // Semantic Search via RPC
             const { data: matches, error: rpcError } = await supabase.rpc('match_vehicles', {
                 query_embedding: embedding,
-                match_threshold: 0.5,
+                match_threshold: 0.1,
                 match_count: 50, // Fetch more to allow for grouping
             });
 

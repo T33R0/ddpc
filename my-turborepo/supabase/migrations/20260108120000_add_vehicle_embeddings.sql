@@ -12,13 +12,15 @@ on vehicle_data
 using hnsw (description_embedding vector_cosine_ops);
 
 -- Create a function to search for vehicles
+drop function if exists match_vehicles(vector(1536), float, int);
+
 create or replace function match_vehicles (
   query_embedding vector(1536),
   match_threshold float,
   match_count int
 )
 returns table (
-  id uuid,
+  id text,
   make text,
   model text,
   year text,
