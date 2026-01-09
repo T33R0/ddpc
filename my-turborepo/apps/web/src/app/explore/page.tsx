@@ -158,14 +158,14 @@ function ExploreContent() {
   };
 
   // Handle Randomize Button (Shuffle)
-  const handleRandomize = async () => {
+  // New Logic: The API now handles randomization efficiently via RPC.
+  // We just need to trigger a fresh fetch without a query.
+  const handleRandomize = useCallback(() => {
+    setQuery(''); // Clear search
     setPage(1);
-    // Re-fetch ALL IDs and shuffle to get a truly new random set
-    setLoading(true);
-    const ids = await fetchAllIds();
-    const shuffled = shuffleArray(ids);
-    performSearch(query, 1, shuffled);
-  };
+    setVehicleIds([]); // Clear any legacy specific ID targeting
+    performSearch('', 1, [], false); // Force new fetch
+  }, [performSearch]);
 
   // Handle Load More
   const loadMore = useCallback(() => {

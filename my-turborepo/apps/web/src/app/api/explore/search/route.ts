@@ -1,8 +1,9 @@
 
 import { createClient } from '@/lib/supabase/server';
-import { embed } from 'ai';
+import { embed, generateObject } from 'ai';
 import { vercelGateway } from '@/lib/ai-gateway';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import type { VehicleSummary } from '@repo/types';
 
 export async function GET(request: Request) {
@@ -10,136 +11,102 @@ export async function GET(request: Request) {
     const query = searchParams.get('q');
     const mode = searchParams.get('mode'); // 'ids' or undefined
     const idsParam = searchParams.get('ids'); // comma separated ids
-    const sort = searchParams.get('sort'); // 'newest', 'year_desc', 'year_asc'
     const page = Math.max(parseInt(searchParams.get('page') ?? '1', 10), 1);
     const pageSize = parseInt(searchParams.get('pageSize') ?? '24', 10);
-    const fetchLimit = pageSize * 2; // Fetch slightly more to ensure grouping filling
+    const fetchLimit = pageSize * 2;
 
     try {
         const supabase = await createClient();
 
-        // --- MODE: Fetch All IDs (For Random Shuffle) ---
+        // 1. MODE: Fetch All IDs (Legacy Shuffle) - Keeping for compatibility if needed
         if (mode === 'ids') {
-            // Return ALL valid vehicle IDs for client-side shuffling (limit to 100,000 to cover full DB)
-            let pool = supabase
-                .from('v_vehicle_data_typed')
-                .select('id')
-                .order('id') // Added to avoid implicit year sorting
-                .limit(100000); // 73.7k rows, this covers all
-
-            let { data: allIds, error: idError } = await pool;
-
-            // Fallback to table if View doesn't exist (Error 42P01)
-            if (idError && idError.code === '42P01') {
-                console.warn('View v_vehicle_data_typed not found, falling back to vehicle_data for IDs.');
-                const fallback = await supabase
-                    .from('vehicle_data')
-                    .select('id')
-                    .order('id') // Added to avoid implicit year sorting
-                    .limit(100000);
-                allIds = fallback.data;
-                idError = fallback.error;
-            }
-
-            if (idError) throw idError;
-
-            return NextResponse.json({
-                ids: allIds?.map(r => r.id) || []
-            });
+            // ... existing logic can remain or be deprecated. 
+            // Ideally we use RPC for random now, so client doesn't need to shuffle 70k IDs.
+            // But let's leave valid logic for now to not break pending client requests.
+            let pool = supabase.from('v_vehicle_data_typed').select('id').limit(100000);
+            const { data } = await pool;
+            return NextResponse.json({ ids: data?.map(r => r.id) || [] });
         }
 
         let data: any[] | null = [];
         let error: any = null;
 
-        // --- MODE: ID Lookup (For Random Pages) ---
+        // 2. MODE: ID Lookup (Legacy Shuffle Pagination)
         if (idsParam) {
             const targetIds = idsParam.split(',').filter(Boolean);
             if (targetIds.length > 0) {
-                const res = await supabase
-                    .from('vehicle_data')
-                    .select('*')
-                    .in('id', targetIds);
+                // ... same logic
+                const res = await supabase.from('vehicle_data').select('*').in('id', targetIds);
                 data = res.data;
-                error = res.error;
-
-                // Re-sort data to match the order of targetIds (which might be shuffled)
-                if (data && data.length > 0) {
-                    data.sort((a, b) => {
-                        return targetIds.indexOf(a.id) - targetIds.indexOf(b.id);
-                    });
+                if (data) {
+                    data.sort((a, b) => targetIds.indexOf(a.id) - targetIds.indexOf(b.id));
                 }
             }
         }
-        // --- MODE: Search or Standard Browse ---
+        // 3. MODE: Random Browse (Empty Query)
         else if (!query || query.trim() === '') {
-            // Standard Browse with Sort/Pagination
-            let dbQuery = supabase
-                .from('vehicle_data')
-                .select('*');
-
-            // Sorting
-            switch (sort) {
-                case 'year_asc':
-                    dbQuery = dbQuery.order('year', { ascending: true });
-                    break;
-                case 'year_desc':
-                    dbQuery = dbQuery.order('year', { ascending: false });
-                    break;
-                case 'newest':
-                default:
-                    dbQuery = dbQuery.order('date_added', { ascending: false });
-                    break;
-            }
-
-            // Secondary sort for stability
-            if (sort !== 'newest') {
-                dbQuery = dbQuery.order('make', { ascending: true }).order('model', { ascending: true });
-            }
-
-            // Pagination
-            const from = (page - 1) * pageSize;
-            const to = from + fetchLimit - 1; // Fetch limit is higher for grouping
-            dbQuery = dbQuery.range(from, to);
-
-            const res = await dbQuery;
-            data = res.data;
-            error = res.error;
-        } else {
-            // Semantic Search (Overrides Sort for now, or applies after? Applying after matches is hard with RPC)
-            // For now, search matches are sorted by similarity.
-
-            // Generate Embedding
-            const { embedding } = await embed({
-                model: vercelGateway.textEmbeddingModel('text-embedding-3-small'),
-                value: query,
+            // NEW: Use the RPC for true random selection!
+            // This fixes the "2001 bias"
+            const { data: randomVehicles, error: randError } = await supabase.rpc('get_random_vehicles', {
+                limit_val: fetchLimit
             });
 
-            // Semantic Search via RPC
+            if (randError) throw randError;
+            data = randomVehicles;
+        }
+        // 4. MODE: Magic Search (Query Present)
+        else {
+            // 4a. MAGIC STEP: Extract Filters using AI
+            // We use a cheap models for this logic extraction
+            const { object: filters } = await generateObject({
+                model: vercelGateway.languageModel('gpt-4o-mini'),
+                schema: z.object({
+                    year_min: z.number().optional(),
+                    year_max: z.number().optional(),
+                    make: z.string().optional(),
+                    model: z.string().optional(),
+                    price_max: z.number().optional(),
+                    price_min: z.number().optional(),
+                    search_query: z.string().describe("The remaining semantic search query after extracting filters, or the original query if inseparable.")
+                }),
+                prompt: `Extract vehicle search filters from this query: "${query}".
+                If the user says "Toyota", set make="Toyota". 
+                If "Cheap track car", set keywords="Cheap track car" (don't set price unless explicit).
+                If "under 20k", set price_max=20000.
+                Output the refined search query for the vector search.`
+            });
+
+            console.log('[Magic Search] Extracted:', filters);
+
+            // 4b. Embed the REFINED query (or original if extraction was partial)
+            // Use specific search_query if AI suggests it, otherwise fallback to user input
+            const textToEmbed = filters.search_query || query;
+
+            const { embedding } = await embed({
+                model: vercelGateway.textEmbeddingModel('text-embedding-3-small'),
+                value: textToEmbed,
+            });
+
+            // 4c. Call RPC with Filters
             const { data: matches, error: rpcError } = await supabase.rpc('match_vehicles', {
                 query_embedding: embedding,
-                match_threshold: 0.1,
-                match_count: 50, // Fetch more to allow for grouping
+                match_threshold: 0.1, // Keep loose threshold, let filters constrain hard
+                match_count: 50,
+                filters: filters // Pass the JSONB filters
             });
 
             if (rpcError) throw rpcError;
 
             if (matches && matches.length > 0) {
                 const ids = matches.map((m: any) => m.id);
-                const res = await supabase
-                    .from('vehicle_data')
-                    .select('*')
-                    .in('id', ids);
+                const res = await supabase.from('vehicle_data').select('*').in('id', ids);
 
-                if (res.error) throw res.error;
-
-                // Sort by similarity
-                data = res.data?.map((vehicle) => {
-                    const match = matches.find((m: any) => m.id === vehicle.id);
-                    return {
-                        ...vehicle,
-                        _similarity: match ? match.similarity : 0
-                    };
-                }).sort((a, b) => b._similarity - a._similarity) || [];
+                if (res.data) {
+                    data = res.data.map((vehicle) => {
+                        const match = matches.find((m: any) => m.id === vehicle.id);
+                        return { ...vehicle, _similarity: match ? match.similarity : 0 };
+                    }).sort((a, b) => b._similarity - a._similarity);
+                }
             }
         }
 
