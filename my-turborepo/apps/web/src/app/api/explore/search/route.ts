@@ -20,10 +20,11 @@ export async function GET(request: Request) {
 
         // --- MODE: Fetch All IDs (For Random Shuffle) ---
         if (mode === 'ids') {
-            // Return ALL valid vehicle IDs for client-side shuffling
+            // Return ALL valid vehicle IDs for client-side shuffling (limit to 10000 for now)
             const { data: allIds, error: idError } = await supabase
                 .from('v_vehicle_data_typed') // Use view if possible for speed, or table
-                .select('id');
+                .select('id')
+                .limit(10000); // Ensure we get a large sample, default is often 1000
 
             if (idError) throw idError;
 
