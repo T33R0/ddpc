@@ -442,7 +442,9 @@ CRITICAL:
     console.log('[Ogma] Synthesis prompt length:', allSolutions.length);
     console.log('[Ogma] All solutions preview:', allSolutions.substring(0, 200));
 
-    const synthesisResult = await streamText({
+    let synthesisResult;
+    try {
+      synthesisResult = await streamText({
       model: ogmaVoice,
       system: synthesisSystemPrompt,
       prompt: `User Request: ${userPrompt}
@@ -482,26 +484,41 @@ Speak as one unified consciousness.`,
             else console.log('[Ogma] Response saved to DB.');
 
             // Perform Hot Wash - extract and save improvements (Fire and Forget)
-            extractAndSaveImprovements(userPrompt, event.text, sessionId, sophiaContext).catch(err => {
-              console.error('[Ogma] Hot Wash error (non-blocking):', err);
-            });
+            // TEMPORARILY DISABLED FOR DEBUGGING
+            // extractAndSaveImprovements(userPrompt, event.text, sessionId, sophiaContext).catch(err => {
+            //   console.error('[Ogma] Hot Wash error (non-blocking):', err);
+            // });
           } catch (e) {
             console.error('[Ogma] DB Save Error:', e);
           }
         }
       }
     });
+    } catch (streamError) {
+      console.error('[Ogma] streamText failed:', streamError);
+      throw streamError;
+    }
 
     // Return the stream response - useChat expects this format
     console.log('[Ogma] Creating stream response...');
     console.log('[Ogma] Stream result:', {
       hasStream: !!synthesisResult,
-      textStream: synthesisResult.textStream ? 'exists' : 'missing'
+      textStream: synthesisResult.textStream ? 'exists' : 'missing',
+      fullText: synthesisResult.fullStream ? 'exists' : 'missing'
     });
+    
+    if (!synthesisResult) {
+      console.error('[Ogma] synthesisResult is null/undefined!');
+      return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
+    }
     
     const streamResponse = synthesisResult.toTextStreamResponse();
     console.log('[Ogma] Stream response created, returning to client');
-    console.log('[Ogma] Stream response body:', streamResponse.body ? 'exists' : 'missing');
+    console.log('[Ogma] Stream response:', {
+      body: streamResponse.body ? 'exists' : 'missing',
+      status: streamResponse.status,
+      headers: Object.fromEntries(streamResponse.headers.entries())
+    });
     return streamResponse;
 
   } catch (error) {

@@ -8,19 +8,19 @@ interface CoupeWireframeProps {
     selectedZone: string | null;
 }
 
-// Updated zones aligned with the vehicle image (Tesla Model S-like, three-quarter front view)
-// Coordinates adjusted to match the actual vehicle components in the image
+// Icon positions as percentages of the image (0-100%)
+// These positions are relative to the vehicle image and will scale responsively
 const zones = [
-    // Engine - Front of the car (left side, lower front area)
-    { name: 'Engine', path: 'M80,280 L100,200 Q120,150 200,145 L320,140 V280 H150', iconX: 200, iconY: 220, icon: Cog, isCircle: false },
-    // Interior - Middle cabin section
-    { name: 'Interior', path: 'M320,140 L400,90 H680 L760,145 V250 H320 V140 Z', iconX: 540, iconY: 180, icon: Car, isCircle: false },
-    // Exterior - Body panels and rear section
-    { name: 'Exterior', path: 'M760,145 L840,150 Q920,155 930,200 L920,280 H820 V250 H760 Z', iconX: 850, iconY: 220, icon: Package, isCircle: false },
-    // Braking - Front wheel (left side of image)
-    { name: 'Braking', cx: 240, cy: 280, r: 50, iconX: 240, iconY: 280, icon: CircleDot, isCircle: true },
-    // Suspension - Rear wheel (right side of image)
-    { name: 'Suspension', cx: 880, cy: 280, r: 50, iconX: 880, iconY: 280, icon: Zap, isCircle: true },
+    // Engine - Front of the car (left side, lower front area) - good position
+    { name: 'Engine', iconXPercent: 20, iconYPercent: 55, icon: Cog },
+    // Interior - Middle cabin section - decent position
+    { name: 'Interior', iconXPercent: 54, iconYPercent: 45, icon: Car },
+    // Exterior - Body panels and rear section - moved up
+    { name: 'Exterior', iconXPercent: 85, iconYPercent: 45, icon: Package },
+    // Braking - Front left wheel - moved to wheel position
+    { name: 'Braking', iconXPercent: 18, iconYPercent: 70, icon: CircleDot },
+    // Suspension - Rear wheel - moved up
+    { name: 'Suspension', iconXPercent: 88, iconYPercent: 60, icon: Zap },
 ];
 
 export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, selectedZone }) => {
@@ -30,11 +30,6 @@ export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, sel
     const vehicleImageSrc = resolvedTheme === 'dark' 
         ? '/media/images/interactive parts diagram generic vehicle.png'
         : '/media/images/interactive parts diagram generic vehicle light.png';
-
-    // Invisible clickable area style - no fill, no stroke, but still clickable
-    const getInvisibleZoneStyle = () => {
-        return 'fill-transparent stroke-transparent cursor-pointer';
-    };
 
     // Icon color based on selection and theme
     const getIconColor = (zoneName: string) => {
@@ -48,66 +43,27 @@ export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, sel
 
     return (
         <div className="w-full max-w-5xl mx-auto p-4">
-            <div className="relative w-full bg-background border rounded-lg shadow-md overflow-hidden" style={{ minHeight: '400px' }}>
+            <div className="relative w-full overflow-hidden rounded-lg" style={{ minHeight: '400px' }}>
                 {/* Vehicle Image Background - Theme Aware */}
                 <img 
                     src={vehicleImageSrc}
                     alt="Vehicle parts diagram"
-                    className="w-full h-auto"
-                    style={{ opacity: 0.9 }}
+                    className="w-full h-auto block"
                 />
 
-                {/* SVG overlay for invisible clickable zones */}
-                <svg 
-                    viewBox="0 0 1000 400" 
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    preserveAspectRatio="xMidYMid meet"
-                >
-                    {/* Invisible clickable zones */}
-                    {zones.map((zone) => {
-                        if (zone.isCircle) {
-                            return (
-                                <circle
-                                    key={`${zone.name}-clickable`}
-                                    cx={zone.cx}
-                                    cy={zone.cy}
-                                    r={zone.r}
-                                    className={getInvisibleZoneStyle()}
-                                    onClick={() => onZoneClick(zone.name)}
-                                    style={{ pointerEvents: 'auto' }}
-                                />
-                            );
-                        } else {
-                            return (
-                                <path
-                                    key={`${zone.name}-clickable`}
-                                    d={zone.path}
-                                    className={getInvisibleZoneStyle()}
-                                    onClick={() => onZoneClick(zone.name)}
-                                    style={{ pointerEvents: 'auto' }}
-                                />
-                            );
-                        }
-                    })}
-                </svg>
-
-                {/* Icon overlays - absolutely positioned */}
+                {/* Icon overlays - absolutely positioned relative to image */}
                 {zones.map((zone) => {
                     const IconComponent = zone.icon;
                     const iconColor = getIconColor(zone.name);
                     const isSelected = selectedZone === zone.name;
                     
-                    // Convert SVG coordinates to percentage for absolute positioning
-                    const iconXPercent = (zone.iconX / 1000) * 100;
-                    const iconYPercent = (zone.iconY / 400) * 100;
-                    
                     return (
                         <div
                             key={`${zone.name}-icon`}
-                            className="absolute pointer-events-none"
+                            className="absolute"
                             style={{
-                                left: `${iconXPercent}%`,
-                                top: `${iconYPercent}%`,
+                                left: `${zone.iconXPercent}%`,
+                                top: `${zone.iconYPercent}%`,
                                 transform: 'translate(-50%, -50%)',
                             }}
                         >
@@ -121,7 +77,6 @@ export const CoupeWireframe: React.FC<CoupeWireframeProps> = ({ onZoneClick, sel
                                 whileTap={{ scale: 1.1 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                 onClick={() => onZoneClick(zone.name)}
-                                style={{ pointerEvents: 'auto' }}
                             >
                                 <IconComponent 
                                     size={48} 

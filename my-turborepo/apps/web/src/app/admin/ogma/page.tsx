@@ -593,18 +593,25 @@ export default function ChatPage() {
             setMessages(currentMessages);
             
             console.log('[Ogma] Starting to read stream...');
+            console.log('[Ogma] Response headers:', Object.fromEntries(response.headers.entries()));
+            console.log('[Ogma] Response body locked:', response.bodyUsed);
+            
             let buffer = '';
             let hasReceivedData = false;
             let rawChunks: string[] = []; // Debug: collect raw chunks
+            let chunkCount = 0;
             
             while (true) {
                 const { done, value } = await reader.read();
+                chunkCount++;
+                
                 if (done) {
                     console.log('[Ogma] Stream finished', { 
                         hasReceivedData, 
                         finalContentLength: assistantMessage.content.length,
                         bufferLength: buffer.length,
                         rawChunksCount: rawChunks.length,
+                        chunkCount,
                         firstChunk: rawChunks[0]?.substring(0, 100),
                         allChunks: rawChunks.map(c => c.substring(0, 50))
                     });
@@ -614,7 +621,9 @@ export default function ChatPage() {
                 hasReceivedData = true;
                 const chunk = decoder.decode(value, { stream: true });
                 rawChunks.push(chunk); // Debug
-                console.log('[Ogma] Received chunk:', chunk.substring(0, 100));
+                if (chunkCount <= 5) {
+                    console.log(`[Ogma] Received chunk ${chunkCount}:`, chunk.substring(0, 200));
+                }
                 buffer += chunk;
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || ''; // Keep incomplete line in buffer
