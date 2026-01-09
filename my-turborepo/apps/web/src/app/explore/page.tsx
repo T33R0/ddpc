@@ -76,7 +76,7 @@ function ExploreContent() {
       let data: VehicleSummary[] = [];
       let newHasMore = false;
 
-      let newHasMore = false;
+
 
       // 1. Random Mode (No Query)
       if (!searchQuery) { // Always random when no query
