@@ -84,6 +84,29 @@ export async function GET(request: Request) {
         // Send welcome email if profile was successfully created
         if (profileCreated && user.email) {
           try {
+            // Plain text version of the welcome email
+            const emailText = `DDPC // GARAGE
+
+Welcome to the Build.
+
+You've just completed an important step. Great work.
+
+We built ddpc for the people who actually turn wrenches and track miles. Since you're here to build, not just browse, here are the best ways to break in your new account:
+
+1. PARK IT
+Add your first vehicle to the Garage. Even if it's stock (for now).
+
+2. LOG IT
+Document your last maintenance item or mod. Data is leverage.
+
+Enter Garage: https://ddpc.app/garage
+
+Just lean into your tinkerer brain and figure it out.
+
+---
+
+ddpc // Fort Collins, CO`
+
             // render() needs the React element - use createElement for server-side
             const emailHtml = await render(React.createElement(WelcomeEmail))
             
@@ -91,15 +114,12 @@ export async function GET(request: Request) {
             console.log('[Welcome Email] Rendered HTML preview:', emailHtml.substring(0, 500))
             console.log('[Welcome Email] Rendered HTML length:', emailHtml.length)
             
-            if (!emailHtml || emailHtml.trim().length === 0) {
-              console.error('[Welcome Email] Rendered HTML is empty')
-              throw new Error('Rendered email HTML is empty')
-            }
-            
+            // Send email with both HTML and plain text versions
             await sendEmail({
               to: user.email,
               subject: 'Welcome to the Build',
-              html: emailHtml,
+              html: emailHtml || emailText.replace(/\n/g, '<br>'), // Fallback to text if HTML is empty
+              text: emailText,
             })
             console.log('[Welcome Email] Sent welcome email to new user:', user.email)
           } catch (welcomeEmailError) {
