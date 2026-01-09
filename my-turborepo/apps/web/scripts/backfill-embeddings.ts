@@ -3,9 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 import { generateVehicleEmbedding } from '../src/lib/embeddings';
 import { config } from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load environment variables from .env.local
+// Fix for __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Try loading from .env if .env.local is missing (or relying on system envs)
 config({ path: path.resolve(__dirname, '../.env.local') });
+config({ path: path.resolve(__dirname, '../.env') }); // Fallback to .env
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
