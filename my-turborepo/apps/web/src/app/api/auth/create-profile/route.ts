@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
 import { render } from '@react-email/render'
 import { WelcomeEmail } from '@/emails/WelcomeEmail'
+import React from 'react'
 
 // Helper function to generate a random suffix
 function createRandomSuffix(length = 4) {
@@ -121,8 +122,12 @@ export async function POST(request: Request) {
     // Send welcome email if profile was successfully created
     if (profileWasCreated && user.email) {
       try {
-        // render() returns a Promise<string>
-        const emailHtml = await render(WelcomeEmail())
+        // render() needs the React element - use createElement for server-side
+        const emailHtml = await render(React.createElement(WelcomeEmail))
+        
+        // Debug: log first 500 chars of HTML to verify rendering
+        console.log('[Welcome Email] Rendered HTML preview:', emailHtml.substring(0, 500))
+        console.log('[Welcome Email] Rendered HTML length:', emailHtml.length)
         
         if (!emailHtml || emailHtml.trim().length === 0) {
           console.error('[Welcome Email] Rendered HTML is empty')
