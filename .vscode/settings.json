@@ -3,5 +3,13 @@
     "deno.enablePaths": [
         "my-turborepo/supabase/functions"
     ],
-    "deno.unstable": true
+    "deno.unstable": true,
+    "mcpServers": {
+        "supabase": {
+            "command": "node",
+            "args": [
+                "${workspaceFolder}/apps/web/scripts/mcp-supabase.js"
+            ]
+        }
+    }
 }

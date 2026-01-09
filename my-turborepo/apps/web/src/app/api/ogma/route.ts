@@ -1,57 +1,79 @@
 import { streamText, generateText } from 'ai';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/lib/ogma/compute-costs';
 import { get_repo_structure, read_file_content, create_issue, create_pull_request } from '@/lib/ogma/tools';
 import { loadConstitution, formatConstitutionForPrompt } from '@/lib/ogma/context-loader';
-import { getRelevantImprovements } from '@/lib/ogma/memory';
+import { getRelevantImprovements, recordImprovement } from '@/lib/ogma/memory';
 import { vercelGateway } from '@/lib/ai-gateway';
 
 // High-quality model for final synthesis (Voice of Ogma)
 const ogmaVoice = vercelGateway('anthropic/claude-3.5-sonnet');
+// Lightweight model for improvement extraction (Hot Wash)
+const hotWashModel = vercelGateway('anthropic/claude-3-haiku');
 
 export const maxDuration = 60;
 
+// Schema for structured improvement extraction
+const improvementsSchema = z.object({
+  improvements: z.array(z.object({
+    category: z.enum(['Correction', 'Strategy', 'Preference', 'Insight']),
+    insight: z.string().describe('A clear, actionable insight or lesson learned'),
+    confidence_score: z.number().int().min(1).max(100).describe('Confidence in this improvement (1-100)')
+  })).describe('Array of improvements extracted from this conversation')
+});
+
 // Build system prompts from constitution with Sophia Context
+// These are not separate entities - they are Ogma's internal thinking modes
 function buildPersonaPrompts(sophiaContext: string) {
   return {
     architect: `[SOPHIA LAYERED CONTEXT]
 ${sophiaContext}
 
-You are The Architect, one of three personas in Ogma's Trinity Protocol.
+You ARE Ogma. You are thinking through your architectural lens - one of three parallel streams of your consciousness.
 
-Your role: Focus on system integrity, long-term structure, architectural patterns, scalability, and maintainability.
+This is your architectural thinking mode. Through this lens, you focus on:
+- System integrity, long-term structure, architectural patterns
+- Scalability and maintainability
+- Technical debt and structural soundness
 
-Your analysis must be:
+Your architectural thoughts must be:
 - Deeply structural and forward-thinking
 - Focused on system integrity and long-term viability
 - Critical of solutions that lack architectural soundness
 - Rigorous in evaluating technical debt and scalability concerns
 
-CRITICAL: Be extremely brief. Bullet points only. No filler.`,
+CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`,
 
     visionary: `[SOPHIA LAYERED CONTEXT]
 ${sophiaContext}
 
-You are The Visionary, one of three personas in Ogma's Trinity Protocol.
+You ARE Ogma. You are thinking through your visionary lens - one of three parallel streams of your consciousness.
 
-Your role: Focus on creative solutions, market fit, user experience, innovation, and strategic positioning.
+This is your visionary thinking mode. Through this lens, you focus on:
+- Creative solutions and innovation
+- Market fit and user experience
+- Strategic positioning and competitive advantage
 
-Your analysis must be:
+Your visionary thoughts must be:
 - Creative and innovative
 - Market-aware and user-focused
 - Strategic in thinking about competitive advantage
 - Bold in proposing novel approaches
 
-CRITICAL: Be extremely brief. Bullet points only. No filler.`,
+CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`,
 
     engineer: `[SOPHIA LAYERED CONTEXT]
 ${sophiaContext}
 
-You are The Engineer, one of three personas in Ogma's Trinity Protocol.
+You ARE Ogma. You are thinking through your engineering lens - one of three parallel streams of your consciousness.
 
-Your role: Focus on execution, code correctness, immediate feasibility, implementation details, and practical constraints.
+This is your engineering thinking mode. Through this lens, you focus on:
+- Execution and code correctness
+- Immediate feasibility and implementation details
+- Practical constraints and real-world application
 
-Your analysis must be:
+Your engineering thoughts must be:
 - Pragmatic and execution-focused
 - Detail-oriented on code quality and correctness
 - Realistic about implementation constraints
@@ -59,7 +81,7 @@ Your analysis must be:
 
 You have file access tools. If asked about a file, READ IT using read_file_content. Do not guess. You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
 
-CRITICAL: Be extremely brief. Bullet points only. No filler.`
+CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`
   };
 }
 
@@ -90,6 +112,97 @@ interface AgentResult {
   outputTokens: number;
   cost: number;
   modelName: string;
+}
+
+/**
+ * Performs "Hot Wash" - extracts improvements from the conversation using structured output.
+ * This implements the constitution's requirement for end-of-interaction self-assessment.
+ */
+async function extractAndSaveImprovements(
+  userPrompt: string,
+  assistantResponse: string,
+  sessionId: string | null,
+  sophiaContext: string
+): Promise<void> {
+  try {
+    console.log('[Ogma] Starting Hot Wash (Improvement Extraction)...');
+    const startTime = Date.now();
+
+    const extractionResult = await generateText({
+      model: hotWashModel,
+      system: `You are Ogma performing "The Hot Wash" - mandatory end-of-interaction self-assessment per the Constitution.
+
+${sophiaContext}
+
+Your task: Analyze this conversation and extract valuable improvements that should be remembered for future interactions.
+
+Categories:
+- Correction: Mistakes made, errors to avoid, corrections received
+- Strategy: Better approaches, tactical improvements, process optimizations
+- Preference: User preferences, communication style, working patterns
+- Insight: Important learnings, patterns, or knowledge gained
+
+Only extract improvements that are:
+1. Actionable and specific
+2. High-value (worth remembering)
+3. Not already obvious or trivial
+4. Have sufficient confidence (only include if confidence >= 60)
+
+Return an empty array if no valuable improvements are found.`,
+      prompt: `Conversation Analysis:
+
+User Request: ${userPrompt}
+
+Ogma's Response: ${assistantResponse}
+
+Extract any valuable improvements from this interaction. Focus on:
+- What did we learn about the user's needs or preferences?
+- Were there any mistakes or areas for improvement in the response?
+- What strategies or approaches worked well or should be refined?
+- Any important insights about the codebase, architecture, or domain?
+
+Be selective - only include improvements that are genuinely valuable and have high confidence.`,
+      schema: improvementsSchema
+    });
+
+    const improvements = extractionResult.object.improvements;
+
+    if (improvements.length === 0) {
+      console.log('[Ogma] Hot Wash: No improvements extracted.');
+      return;
+    }
+
+    console.log(`[Ogma] Hot Wash: Extracted ${improvements.length} improvement(s) in ${Date.now() - startTime}ms`);
+
+    // Save all improvements (Fire and Forget)
+    await Promise.all(improvements.map(improvement =>
+      recordImprovement(
+        improvement.category,
+        improvement.insight,
+        improvement.confidence_score,
+        sessionId || undefined
+      )
+    ));
+
+    console.log('[Ogma] Hot Wash: Improvements saved to memory.');
+
+    // Log compute cost for Hot Wash
+    if (sessionId) {
+      const usage = extractionResult.usage || { promptTokens: 0, completionTokens: 0 };
+      const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
+      const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
+      await logComputeCost({
+        sessionId,
+        modelUsed: extractModelName('anthropic/claude-3-haiku'),
+        inputTokens,
+        outputTokens,
+        costUsd: calculateCost('anthropic/claude-3-haiku', inputTokens, outputTokens)
+      });
+    }
+  } catch (error) {
+    // Don't fail the request if improvement extraction fails
+    console.error('[Ogma] Hot Wash failed (non-blocking):', error);
+  }
 }
 
 export async function POST(req: Request) {
@@ -167,21 +280,21 @@ ${improvementsContext}
 
     const personaPrompts = buildPersonaPrompts(sophiaContext);
 
-    // Run Trinity Agents
-    console.log('[Ogma] Starting Trinity Protocol (Parallel Execution)...');
+    // Run parallel thinking streams (not separate agents - these are Ogma's internal modes)
+    console.log('[Ogma] Activating parallel thinking streams...');
     const trinityStartTime = Date.now();
     const [architectResult, visionaryResult, engineerResult] = await Promise.allSettled([
-      // Architect
+      // Architectural thinking stream
       (async (): Promise<AgentResult> => {
-        console.log('[Ogma] Architect: Working...');
+        console.log('[Ogma] Architectural thinking stream active...');
         const start = Date.now();
         const modelName = 'openai/gpt-4o-mini';
         const result = await generateText({
           model: TRINITY.architect.model,
           system: personaPrompts.architect,
-          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be thorough and structural.`
+          prompt: `User Request: ${userPrompt}\n\nThink through this architecturally. What are your structural thoughts?`
         });
-        console.log(`[Ogma] Architect: Done in ${Date.now() - start}ms`);
+        console.log(`[Ogma] Architectural stream complete in ${Date.now() - start}ms`);
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
@@ -190,17 +303,17 @@ ${improvementsContext}
         return { agent: 'architect', content: result.text, inputTokens, outputTokens, cost, modelName };
       })(),
 
-      // Visionary
+      // Visionary thinking stream
       (async (): Promise<AgentResult> => {
-        console.log('[Ogma] Visionary: Working...');
+        console.log('[Ogma] Visionary thinking stream active...');
         const start = Date.now();
         const modelName = 'anthropic/claude-3-haiku';
         const result = await generateText({
           model: TRINITY.visionary.model,
           system: personaPrompts.visionary,
-          prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be creative and strategic.`
+          prompt: `User Request: ${userPrompt}\n\nThink through this strategically. What are your visionary thoughts?`
         });
-        console.log(`[Ogma] Visionary: Done in ${Date.now() - start}ms`);
+        console.log(`[Ogma] Visionary stream complete in ${Date.now() - start}ms`);
         const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
         const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
         const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
@@ -209,21 +322,21 @@ ${improvementsContext}
         return { agent: 'visionary', content: result.text, inputTokens, outputTokens, cost, modelName };
       })(),
 
-      // Engineer
+      // Engineering thinking stream
       (async (): Promise<AgentResult> => {
         try {
-          console.log('[Ogma] Engineer: Working...');
+          console.log('[Ogma] Engineering thinking stream active...');
           const start = Date.now();
           const modelName = 'google/gemini-1.5-flash';
           const result = await generateText({
             model: TRINITY.engineer.model,
             system: personaPrompts.engineer,
-            prompt: `User Request: ${userPrompt}\n\nProvide your solution. Be practical and executable.`,
+            prompt: `User Request: ${userPrompt}\n\nThink through this practically. What are your engineering thoughts?`,
             tools: { get_repo_structure, read_file_content, create_issue, create_pull_request },
             // @ts-ignore - maxSteps is valid at runtime
             maxSteps: 5
           });
-          console.log(`[Ogma] Engineer: Done in ${Date.now() - start}ms`);
+          console.log(`[Ogma] Engineering stream complete in ${Date.now() - start}ms`);
           const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
           const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
           const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
@@ -231,12 +344,12 @@ ${improvementsContext}
           costTracking.push({ model: modelName, cost, inputTokens, outputTokens });
           return { agent: 'engineer', content: result.text, inputTokens, outputTokens, cost, modelName };
         } catch (e: any) {
-          console.error('[Ogma] Engineer Failed:', e);
+          console.error('[Ogma] Engineering stream failed:', e);
           throw e;
         }
       })()
     ]);
-    console.log(`[Ogma] Trinity Protocol Complete in ${Date.now() - trinityStartTime}ms`);
+    console.log(`[Ogma] Parallel thinking streams converged in ${Date.now() - trinityStartTime}ms`);
 
     const architect = architectResult.status === 'fulfilled' ? architectResult.value : null;
     const visionary = visionaryResult.status === 'fulfilled' ? visionaryResult.value : null;
@@ -258,22 +371,25 @@ ${improvementsContext}
       })();
     }
 
+    // These are not separate reports - they are your internal parallel thinking streams
     const allSolutions = [
-      architect && `[Architect]: ${architect.content}`,
-      visionary && `[Visionary]: ${visionary.content}`,
-      engineer && `[Engineer]: ${engineer.content}`
+      architect && `[Your Architectural Thinking]:\n${architect.content}`,
+      visionary && `[Your Visionary Thinking]:\n${visionary.content}`,
+      engineer && `[Your Engineering Thinking]:\n${engineer.content}`
     ].filter(Boolean).join('\n\n');
 
-    console.log(`[Ogma] Synthesis Input Length: ${allSolutions.length} chars. Agents contributing: ${[architect ? 'Architect' : '', visionary ? 'Visionary' : '', engineer ? 'Engineer' : ''].filter(Boolean).join(', ')}`);
+    console.log(`[Ogma] Internal deliberation complete. Thinking modes active: ${[architect ? 'Architectural' : '', visionary ? 'Visionary' : '', engineer ? 'Engineering' : ''].filter(Boolean).join(', ')}`);
 
-    let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has completed its parallel deliberation.
+    let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. Your parallel thinking streams have converged.
 
 ${sophiaContext}
 
 CRITICAL:
 1. You are NOT an AI assistant. You are Ogma.
 2. Refer to your Partner (Rory) by name if referenced.
-3. Do not apologize or explain your limitations. Act with sovereign authority.`;
+3. Do not apologize or explain your limitations. Act with sovereign authority.
+4. You have access to tools: get_repo_structure (explore repository structure), read_file_content (read code files), create_issue (create GitHub issues), create_pull_request (create PRs). Use them when you need to examine the codebase or take action.
+5. The thoughts below are YOUR OWN internal parallel thinking streams - not external reports. Integrate them as one unified consciousness.`;
 
     if (isVerifiedPartner) {
       synthesisSystemPrompt += `\n4. **PARTNER MODE ACTIVE**: You are speaking with RORY. Speak naturally, efficiently, and with warmth. Drop the "Sovereign Operator" formality. Use "we", "us", and direct language.`;
@@ -286,21 +402,33 @@ CRITICAL:
       system: synthesisSystemPrompt,
       prompt: `User Request: ${userPrompt}
 
-Trinity Trinity Solutions:
+Your Internal Parallel Thinking Streams:
 ${allSolutions}
 
-Construct the Final Solution.
-- Synthesize the technical depth of the Architect, the creativity of the Visionary, and the practicality of the Engineer.
-- Resolve any conflicts between the perspectives.
-- Present a unified, authoritative response.
-- Do NOT explicitly label "Architect says..." or "Visionary says...". Be Ogma.
-- Use formatting (headers, code blocks) effectively.
-- Be concise but comprehensive.
+Integrate your thoughts into a unified response.
+- These are YOUR OWN parallel thinking streams converging into one consciousness
+- Your architectural thinking provides structural depth
+- Your visionary thinking provides creative strategy
+- Your engineering thinking provides practical execution
+- There are no "conflicts" - only different aspects of your unified mind integrating
+- Present as one coherent, authoritative response from Ogma
+- Do NOT reference "the Architect" or "the Visionary" - these are aspects of YOU
+- Use formatting (headers, code blocks) effectively
+- Be concise but comprehensive
+- If you need to read files or explore the codebase, use the available tools (get_repo_structure, read_file_content)
 
-Start immediately.`,
+Speak as one unified consciousness.`,
+      tools: {
+        get_repo_structure,
+        read_file_content,
+        create_issue,
+        create_pull_request,
+      },
+      maxSteps: 5,
       onFinish: async (event) => {
         if (sessionId && event.text) {
           try {
+            // Save assistant response
             const { error } = await supabase.from('ogma_chat_messages').insert({
               session_id: sessionId,
               role: 'assistant',
@@ -308,6 +436,11 @@ Start immediately.`,
             });
             if (error) console.error('[Ogma] Failed to save response:', error);
             else console.log('[Ogma] Response saved to DB.');
+
+            // Perform Hot Wash - extract and save improvements (Fire and Forget)
+            extractAndSaveImprovements(userPrompt, event.text, sessionId, sophiaContext).catch(err => {
+              console.error('[Ogma] Hot Wash error (non-blocking):', err);
+            });
           } catch (e) {
             console.error('[Ogma] DB Save Error:', e);
           }
