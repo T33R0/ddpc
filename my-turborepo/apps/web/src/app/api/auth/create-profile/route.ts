@@ -137,7 +137,7 @@ Add your first vehicle to the Garage. Even if it's stock (for now).
 2. LOG IT
 Document your last maintenance item or mod. Data is leverage.
 
-Enter Garage: https://ddpc.app/garage
+Enter Garage: https://myddpc.com/garage
 
 Just lean into your tinkerer brain and figure it out.
 
@@ -145,18 +145,92 @@ Just lean into your tinkerer brain and figure it out.
 
 ddpc // Fort Collins, CO`
 
-        // render() needs the React element - use createElement for server-side
-        const emailHtml = await render(React.createElement(WelcomeEmail))
-        
-        // Debug: log first 500 chars of HTML to verify rendering
-        console.log('[Welcome Email] Rendered HTML preview:', emailHtml.substring(0, 500))
-        console.log('[Welcome Email] Rendered HTML length:', emailHtml.length)
+        // Simple HTML version from plain text (as fallback)
+        const simpleHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #000; color: #fff;">
+  <div style="text-align: center; font-family: monospace; font-size: 20px; letter-spacing: 0.2em; font-weight: bold; margin-top: 32px; color: #fff;">
+    DDPC // GARAGE
+  </div>
+  
+  <h1 style="color: #fff; font-size: 24px; font-weight: bold; text-align: center; margin: 30px 0;">
+    Welcome to the Build.
+  </h1>
+  
+  <p style="color: #d4d4d4; font-size: 14px; line-height: 24px;">
+    You've just completed an important step. Great work.
+  </p>
+  
+  <p style="color: #d4d4d4; font-size: 14px; line-height: 24px;">
+    We built ddpc for the people who actually turn wrenches and track miles. Since you're here to build, not just browse, here are the best ways to break in your new account:
+  </p>
+  
+  <div style="margin: 20px 0;">
+    <div style="background-color: #171717; padding: 16px; border-radius: 4px; border: 1px solid #262626; margin-bottom: 10px;">
+      <p style="color: #dc2626; font-weight: bold; font-size: 14px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em;">1. PARK IT</p>
+      <p style="color: #a3a3a3; font-size: 12px; margin: 0; line-height: 18px;">
+        Add your first vehicle to the Garage. Even if it's stock (for now).
+      </p>
+    </div>
+    
+    <div style="background-color: #171717; padding: 16px; border-radius: 4px; border: 1px solid #262626;">
+      <p style="color: #dc2626; font-weight: bold; font-size: 14px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em;">2. LOG IT</p>
+      <p style="color: #a3a3a3; font-size: 12px; margin: 0; line-height: 18px;">
+        Document your last maintenance item or mod. Data is leverage.
+      </p>
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin: 32px 0;">
+    <a href="https://myddpc.com/garage" style="background-color: #fff; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; display: inline-block;">
+      Enter Garage
+    </a>
+  </div>
+  
+  <p style="color: #737373; font-size: 12px; line-height: 24px; text-align: center;">
+    Just lean into your tinkerer brain and figure it out.
+  </p>
+  
+  <hr style="border: none; border-top: 1px solid #262626; margin: 26px 0; width: 100%;">
+  
+  <p style="color: #525252; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; text-align: center;">
+    ddpc // Fort Collins, CO
+  </p>
+</body>
+</html>`
+
+        // Try to render React Email component
+        let emailHtml = ''
+        try {
+          emailHtml = await render(React.createElement(WelcomeEmail))
+          
+          // Debug: log first 500 chars of HTML to verify rendering
+          console.log('[Welcome Email] Rendered HTML preview:', emailHtml.substring(0, 500))
+          console.log('[Welcome Email] Rendered HTML length:', emailHtml.length)
+          
+          // Check if HTML is actually empty or just contains DOCTYPE/meta tags
+          // If it's less than 500 chars or doesn't contain body content, use simple HTML
+          const hasBodyContent = emailHtml.includes('<body') && emailHtml.includes('</body>') && 
+                                 emailHtml.length > emailHtml.indexOf('</body>') + 100
+          
+          if (!hasBodyContent || emailHtml.length < 500) {
+            console.warn('[Welcome Email] React Email HTML appears empty, using simple HTML fallback')
+            emailHtml = simpleHtml
+          }
+        } catch (renderError) {
+          console.error('[Welcome Email] React Email render failed, using simple HTML fallback:', renderError)
+          emailHtml = simpleHtml
+        }
         
         // Send email with both HTML and plain text versions
         await sendEmail({
           to: user.email,
           subject: 'Welcome to the Build',
-          html: emailHtml || emailText.replace(/\n/g, '<br>'), // Fallback to text if HTML is empty
+          html: emailHtml || simpleHtml,
           text: emailText,
         })
         console.log('[Welcome Email] Sent welcome email to new user:', user.email)
