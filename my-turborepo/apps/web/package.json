@@ -57,6 +57,7 @@
     "@repo/tailwind-config": "*",
     "@repo/types": "*",
     "@repo/typescript-config": "*",
+    "@supabase/mcp-server-supabase": "^0.6.1",
     "@types/glob": "^8.1.0",
     "@types/node": "^22.15.3",
     "@types/react": "^19.2.7",
