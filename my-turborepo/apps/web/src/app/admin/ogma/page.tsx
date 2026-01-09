@@ -57,12 +57,13 @@ export default function ChatPage() {
     
     // Extract all possible properties from the hook with proper typing
     const messages = chatHook.messages || [];
-    const handleSubmit = (chatHook as any).handleSubmit;
-    const append = (chatHook as any).append || chatHook.append;
-    const sendMessage = (chatHook as any).sendMessage || chatHook.sendMessage;
-    const setMessages = (chatHook as any).setMessages || chatHook.setMessages;
-    const status = (chatHook as any).status || chatHook.status || 'ready';
-    const error = (chatHook as any).error;
+    const chatHookAny = chatHook as any;
+    const handleSubmit = chatHookAny.handleSubmit;
+    const append = chatHookAny.append;
+    const sendMessage = chatHookAny.sendMessage;
+    const setMessages = chatHookAny.setMessages || chatHook.setMessages;
+    const status = chatHookAny.status || chatHook.status || 'ready';
+    const error = chatHookAny.error;
     
     // Debug: log what's available from useChat
     useEffect(() => {
