@@ -600,22 +600,22 @@ export default function ChatPage() {
                     // Vercel AI SDK stream format: "0:"text" or "0:"text\n" or just "0:"text
                     // Handle both complete and partial lines
                     if (line.startsWith('0:"')) {
-                        try {
-                            // Try to parse as complete JSON string
-                            let text = '';
-                            if (line.endsWith('"')) {
-                                // Complete line
-                                const textMatch = line.match(/^0:"(.*)"$/);
-                                if (textMatch) {
-                                    text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                            try {
+                                // Try to parse as complete JSON string
+                                let text = '';
+                                if (line.endsWith('"')) {
+                                    // Complete line
+                                    const textMatch = line.match(/^0:"(.*)"$/);
+                                    if (textMatch && textMatch[1] !== undefined) {
+                                        text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                                    }
+                                } else {
+                                    // Partial line - extract what we can
+                                    const textMatch = line.match(/^0:"(.*)$/);
+                                    if (textMatch && textMatch[1] !== undefined) {
+                                        text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                                    }
                                 }
-                            } else {
-                                // Partial line - extract what we can
-                                const textMatch = line.match(/^0:"(.*)$/);
-                                if (textMatch) {
-                                    text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-                                }
-                            }
                             
                             if (text) {
                                 assistantMessage.content += text;
