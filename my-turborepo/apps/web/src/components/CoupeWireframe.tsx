@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/lib/theme-context';
-import { Cog, CarFront, CarSide, CircleDot, Zap } from 'lucide-react';
+import { Cog, Car, CircleDot, Zap, Package } from 'lucide-react';
 
 interface CoupeWireframeProps {
     onZoneClick: (zone: string) => void;
@@ -14,9 +14,9 @@ const zones = [
     // Engine - Front of the car (left side, lower front area)
     { name: 'Engine', path: 'M80,280 L100,200 Q120,150 200,145 L320,140 V280 H150', iconX: 200, iconY: 220, icon: Cog, isCircle: false },
     // Interior - Middle cabin section
-    { name: 'Interior', path: 'M320,140 L400,90 H680 L760,145 V250 H320 V140 Z', iconX: 540, iconY: 180, icon: CarFront, isCircle: false },
+    { name: 'Interior', path: 'M320,140 L400,90 H680 L760,145 V250 H320 V140 Z', iconX: 540, iconY: 180, icon: Car, isCircle: false },
     // Exterior - Body panels and rear section
-    { name: 'Exterior', path: 'M760,145 L840,150 Q920,155 930,200 L920,280 H820 V250 H760 Z', iconX: 850, iconY: 220, icon: CarSide, isCircle: false },
+    { name: 'Exterior', path: 'M760,145 L840,150 Q920,155 930,200 L920,280 H820 V250 H760 Z', iconX: 850, iconY: 220, icon: Package, isCircle: false },
     // Braking - Front wheel (left side of image)
     { name: 'Braking', cx: 240, cy: 280, r: 50, iconX: 240, iconY: 280, icon: CircleDot, isCircle: true },
     // Suspension - Rear wheel (right side of image)

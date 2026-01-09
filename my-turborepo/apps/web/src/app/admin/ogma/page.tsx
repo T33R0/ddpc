@@ -302,7 +302,21 @@ export default function ChatPage() {
             chatHookKeys: Object.keys(chatHook)
         });
         
-        // Try append if available (preferred method)
+        // Try sendMessage first (it's available and should handle streaming properly)
+        if (sendMessage && typeof sendMessage === 'function') {
+            console.log('[Ogma] Using sendMessage from useChat');
+            try {
+                // sendMessage expects just the content string, not an object
+                await sendMessage(messageContent);
+                console.log('[Ogma] sendMessage completed successfully');
+                return;
+            } catch (sendError) {
+                console.error('[Ogma] sendMessage failed:', sendError);
+                // Fall through to manual API call
+            }
+        }
+        
+        // Try append if available
         if (append && typeof append === 'function') {
             console.log('[Ogma] Using append from useChat');
             try {
@@ -581,16 +595,27 @@ export default function ChatPage() {
             console.log('[Ogma] Starting to read stream...');
             let buffer = '';
             let hasReceivedData = false;
+            let rawChunks: string[] = []; // Debug: collect raw chunks
             
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) {
-                    console.log('[Ogma] Stream finished', { hasReceivedData, finalContentLength: assistantMessage.content.length });
+                    console.log('[Ogma] Stream finished', { 
+                        hasReceivedData, 
+                        finalContentLength: assistantMessage.content.length,
+                        bufferLength: buffer.length,
+                        rawChunksCount: rawChunks.length,
+                        firstChunk: rawChunks[0]?.substring(0, 100),
+                        allChunks: rawChunks.map(c => c.substring(0, 50))
+                    });
                     break;
                 }
                 
                 hasReceivedData = true;
-                buffer += decoder.decode(value, { stream: true });
+                const chunk = decoder.decode(value, { stream: true });
+                rawChunks.push(chunk); // Debug
+                console.log('[Ogma] Received chunk:', chunk.substring(0, 100));
+                buffer += chunk;
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || ''; // Keep incomplete line in buffer
                 

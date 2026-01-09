@@ -440,6 +440,7 @@ CRITICAL:
 
     console.log('[Ogma] Starting Final Synthesis (Streaming)...');
     console.log('[Ogma] Synthesis prompt length:', allSolutions.length);
+    console.log('[Ogma] All solutions preview:', allSolutions.substring(0, 200));
 
     const synthesisResult = await streamText({
       model: ogmaVoice,
@@ -493,8 +494,14 @@ Speak as one unified consciousness.`,
 
     // Return the stream response - useChat expects this format
     console.log('[Ogma] Creating stream response...');
+    console.log('[Ogma] Stream result:', {
+      hasStream: !!synthesisResult,
+      textStream: synthesisResult.textStream ? 'exists' : 'missing'
+    });
+    
     const streamResponse = synthesisResult.toTextStreamResponse();
     console.log('[Ogma] Stream response created, returning to client');
+    console.log('[Ogma] Stream response body:', streamResponse.body ? 'exists' : 'missing');
     return streamResponse;
 
   } catch (error) {
