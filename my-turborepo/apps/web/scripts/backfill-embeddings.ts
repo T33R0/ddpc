@@ -43,7 +43,7 @@ async function backfill() {
             .from('vehicle_data')
             .select('*')
             .is('description_embedding', null)
-            .limit(10);
+            .limit(100);
 
         if (error) {
             console.error('Error fetching vehicles:', error);
