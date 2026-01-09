@@ -1,10 +1,14 @@
-'use client';
-
 import React from 'react';
 import LandingLayout from '../landing-layout';
 import { Hero, Features, Testimonials, Pricing, ZoomParallax } from '@repo/ui/landing';
-import Lenis from 'lenis';
 import { getApprovedTestimonials } from '../../actions/testimonials';
+import SmoothScroll from './smooth-scroll';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'More Features - DDPC',
+  description: 'Explore the features, testimonials, and pricing plans of the Digital Diecast Paddock Club.',
+};
 
 const images = [
   { src: '/images/sven-vahaja-nWfqEExkprE-unsplash.jpg', alt: 'enthusiast race cars in a paddock garage' },
@@ -16,33 +20,19 @@ const images = [
   { src: '/images/hans-eiskonen-D9TK2X0Nj-U-unsplash.jpg', alt: 'rundown saab in a dark alley' },
 ];
 
-export default function MorePage() {
-  const [testimonials, setTestimonials] = React.useState<{ text: string; image: string; name: string; role: string }[]>([]);
+export default async function MorePage() {
+  const data = await getApprovedTestimonials();
 
-  React.useEffect(() => {
-    const lenis = new Lenis();
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
-    // Fetch testimonials
-    getApprovedTestimonials().then(data => {
-      const formatted = data.map((t: any) => ({
-        text: t.content,
-        image: t.avatar_url || '',
-        name: t.display_name,
-        role: t.role
-      }));
-      setTestimonials(formatted);
-    });
-  }, []);
+  const testimonials = data.map((t: any) => ({
+    text: t.content,
+    image: t.avatar_url || '',
+    name: t.display_name,
+    role: t.role
+  }));
 
   return (
     <LandingLayout>
+      <SmoothScroll />
       <Hero />
       <ZoomParallax images={images} />
       <Features />
@@ -51,4 +41,3 @@ export default function MorePage() {
     </LandingLayout>
   );
 }
-

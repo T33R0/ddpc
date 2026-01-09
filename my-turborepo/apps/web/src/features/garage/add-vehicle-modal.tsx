@@ -308,7 +308,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
     try {
       console.log('Calling addVehicleToGarage server action...');
-      const result = await addVehicleToGarage(selectedTrim.id);
+      const result = await addVehicleToGarage(selectedTrim.id, vin);
       console.log('addVehicleToGarage result:', result);
 
       if (result.error) {

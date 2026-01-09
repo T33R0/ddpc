@@ -11,9 +11,10 @@ export type AddVehicleState = {
 }
 
 export async function addVehicleToGarage(
-    vehicleDataId: string
+    vehicleDataId: string,
+    vin?: string
 ): Promise<AddVehicleState> {
-    const schema = z.string().uuid()
+    const schema = z.string().min(1)
     const parse = schema.safeParse(vehicleDataId)
 
     if (!parse.success) {
@@ -21,7 +22,7 @@ export async function addVehicleToGarage(
         return { error: 'Invalid Vehicle ID' }
     }
 
-    console.log(`[addVehicleToGarage] Starting for vehicleDataId: ${vehicleDataId}`)
+    console.log(`[addVehicleToGarage] Starting for vehicleDataId: ${vehicleDataId}, VIN: ${vin || 'none'}`)
     const supabase = await createClient()
 
     try {
@@ -64,7 +65,7 @@ export async function addVehicleToGarage(
             .insert({
                 owner_id: user.id,
                 stock_data_id: vehicleDataId,
-                vin: null, // You'll get this later
+                vin: vin || null, // Use the provided VIN
                 year: stockData.year ? parseInt(stockData.year) : null,
                 make: stockData.make,
                 model: stockData.model,
@@ -157,63 +158,63 @@ export async function addVehicleToGarage(
 }
 
 export type OnboardingData = {
-  vehicleId: string
-  acquisitionDate: string // ISO date string
-  acquisitionType: string
-  acquisitionCost?: number
-  ownershipEndDate?: string // ISO date string
-  status?: string
+    vehicleId: string
+    acquisitionDate: string // ISO date string
+    acquisitionType: string
+    acquisitionCost?: number
+    ownershipEndDate?: string // ISO date string
+    status?: string
 }
 
 export async function completeOnboarding(data: OnboardingData) {
-  const schema = z.object({
-    vehicleId: z.string().uuid(),
-    acquisitionDate: z.string().min(1),
-    acquisitionType: z.string().min(1),
-    acquisitionCost: z.number().nonnegative().optional(),
-    ownershipEndDate: z.string().optional(),
-    status: z.enum(['active', 'inactive', 'archived']).optional()
-  })
+    const schema = z.object({
+        vehicleId: z.string().uuid(),
+        acquisitionDate: z.string().min(1),
+        acquisitionType: z.string().min(1),
+        acquisitionCost: z.number().nonnegative().optional(),
+        ownershipEndDate: z.string().optional(),
+        status: z.enum(['active', 'inactive', 'archived']).optional()
+    })
 
-  const parse = schema.safeParse(data)
-  if (!parse.success) {
-    console.error('Validation error in completeOnboarding:', parse.error)
-    return { error: 'Invalid input data' }
-  }
+    const parse = schema.safeParse(data)
+    if (!parse.success) {
+        console.error('Validation error in completeOnboarding:', parse.error)
+        return { error: 'Invalid input data' }
+    }
 
-  const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (authError || !user) {
-    return { error: 'Unauthorized' }
-  }
+    if (authError || !user) {
+        return { error: 'Unauthorized' }
+    }
 
-  const updates: any = {
-    is_onboarding_completed: true,
-    acquisition_date: data.acquisitionDate,
-    acquisition_type: data.acquisitionType,
-    acquisition_cost: data.acquisitionCost,
-  }
+    const updates: any = {
+        is_onboarding_completed: true,
+        acquisition_date: data.acquisitionDate,
+        acquisition_type: data.acquisitionType,
+        acquisition_cost: data.acquisitionCost,
+    }
 
-  if (data.ownershipEndDate) {
-    updates.ownership_end_date = data.ownershipEndDate
-  }
+    if (data.ownershipEndDate) {
+        updates.ownership_end_date = data.ownershipEndDate
+    }
 
-  if (data.status) {
-    updates.current_status = data.status
-  }
+    if (data.status) {
+        updates.current_status = data.status
+    }
 
-  const { error } = await supabase
-    .from('user_vehicle')
-    .update(updates)
-    .eq('id', data.vehicleId)
-    .eq('owner_id', user.id)
+    const { error } = await supabase
+        .from('user_vehicle')
+        .update(updates)
+        .eq('id', data.vehicleId)
+        .eq('owner_id', user.id)
 
-  if (error) {
-    console.error('Error completing onboarding:', error)
-    return { error: error.message }
-  }
+    if (error) {
+        console.error('Error completing onboarding:', error)
+        return { error: error.message }
+    }
 
-  revalidatePath(`/vehicle/${data.vehicleId}`)
-  return { success: true }
+    revalidatePath(`/vehicle/${data.vehicleId}`)
+    return { success: true }
 }

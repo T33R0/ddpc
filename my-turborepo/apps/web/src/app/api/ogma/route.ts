@@ -444,10 +444,13 @@ CRITICAL:
 
     let synthesisResult;
     try {
+      console.log('[Ogma] Calling streamText with model:', ogmaVoice);
+      console.log('[Ogma] Prompt length:', userPrompt.length, 'Solutions length:', allSolutions.length);
+      
       synthesisResult = await streamText({
-      model: ogmaVoice,
-      system: synthesisSystemPrompt,
-      prompt: `User Request: ${userPrompt}
+        model: ogmaVoice,
+        system: synthesisSystemPrompt,
+        prompt: `User Request: ${userPrompt}
 
 Your Internal Parallel Thinking Streams:
 ${allSolutions}
@@ -465,37 +468,42 @@ Integrate your thoughts into a unified response.
 - If you need to read files or explore the codebase, use the available tools (get_repo_structure, read_file_content)
 
 Speak as one unified consciousness.`,
-      tools: {
-        get_repo_structure,
-        read_file_content,
-        create_issue,
-        create_pull_request,
-      },
-      onFinish: async (event) => {
-        if (sessionId && event.text) {
-          try {
-            // Save assistant response
-            const { error } = await supabase.from('ogma_chat_messages').insert({
-              session_id: sessionId,
-              role: 'assistant',
-              content: event.text
-            });
-            if (error) console.error('[Ogma] Failed to save response:', error);
-            else console.log('[Ogma] Response saved to DB.');
-
-            // Perform Hot Wash - extract and save improvements (Fire and Forget)
-            // TEMPORARILY DISABLED FOR DEBUGGING
-            // extractAndSaveImprovements(userPrompt, event.text, sessionId, sophiaContext).catch(err => {
-            //   console.error('[Ogma] Hot Wash error (non-blocking):', err);
-            // });
-          } catch (e) {
-            console.error('[Ogma] DB Save Error:', e);
+        tools: {
+          get_repo_structure,
+          read_file_content,
+          create_issue,
+          create_pull_request,
+        },
+        onFinish: async (event) => {
+          console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
+          if (sessionId && event.text) {
+            try {
+              // Save assistant response
+              const { error } = await supabase.from('ogma_chat_messages').insert({
+                session_id: sessionId,
+                role: 'assistant',
+                content: event.text
+              });
+              if (error) console.error('[Ogma] Failed to save response:', error);
+              else console.log('[Ogma] Response saved to DB.');
+            } catch (e) {
+              console.error('[Ogma] DB Save Error:', e);
+            }
           }
         }
-      }
-    });
+      });
+      
+      console.log('[Ogma] streamText completed, result:', {
+        hasResult: !!synthesisResult,
+        hasTextStream: !!synthesisResult?.textStream,
+        hasFullStream: !!synthesisResult?.fullStream
+      });
     } catch (streamError) {
       console.error('[Ogma] streamText failed:', streamError);
+      console.error('[Ogma] streamText error details:', {
+        message: streamError instanceof Error ? streamError.message : 'Unknown error',
+        stack: streamError instanceof Error ? streamError.stack : undefined
+      });
       throw streamError;
     }
 
@@ -512,12 +520,25 @@ Speak as one unified consciousness.`,
       return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
     }
     
+    // Check if we have a text stream before creating response
+    if (!synthesisResult.textStream) {
+      console.error('[Ogma] No textStream available!');
+      return new Response(
+        JSON.stringify({ error: 'Stream generation failed - no text stream available' }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     const streamResponse = synthesisResult.toTextStreamResponse();
     console.log('[Ogma] Stream response created, returning to client');
     console.log('[Ogma] Stream response:', {
       body: streamResponse.body ? 'exists' : 'missing',
       status: streamResponse.status,
-      headers: Object.fromEntries(streamResponse.headers.entries())
+      headers: Object.fromEntries(streamResponse.headers.entries()),
+      contentType: streamResponse.headers.get('content-type')
     });
     return streamResponse;
 
