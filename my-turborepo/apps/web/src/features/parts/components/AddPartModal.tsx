@@ -1,32 +1,73 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@repo/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@repo/ui/dialog';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
 import { useState } from 'react';
 import { PartSlot } from '../types';
+import { addPartToVehicle } from '../actions';
+import { useRouter } from 'next/navigation';
 
 interface AddPartModalProps {
   isOpen: boolean;
   onClose: () => void;
   slot: PartSlot | null;
+  vehicleId: string;
+  onSuccess?: () => void;
 }
 
-export const AddPartModal = ({ isOpen, onClose, slot }: AddPartModalProps) => {
+export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: AddPartModalProps) => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    // Placeholder for backend mutation
-    console.log('Adding part to slot:', slot?.name);
+    if (!slot) return;
 
-    // Simulate delay
-    setTimeout(() => {
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const partName = formData.get('partName') as string;
+    const partNumber = formData.get('partNumber') as string;
+    const vendorLink = formData.get('vendorLink') as string;
+    const installedDate = formData.get('installedDate') as string;
+    const installedMileage = formData.get('installedMileage') as string;
+    const purchaseCost = formData.get('purchaseCost') as string;
+    const customLifespanMiles = formData.get('customLifespanMiles') as string;
+    const customLifespanMonths = formData.get('customLifespanMonths') as string;
+
+    try {
+      const result = await addPartToVehicle(vehicleId, slot.id, {
+        name: partName,
+        partNumber: partNumber || undefined,
+        vendorLink: vendorLink || undefined,
+        installedDate: installedDate || undefined,
+        installedMileage: installedMileage ? parseInt(installedMileage, 10) : undefined,
+        purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
+        customLifespanMiles: customLifespanMiles ? parseInt(customLifespanMiles, 10) : undefined,
+        customLifespanMonths: customLifespanMonths ? parseInt(customLifespanMonths, 10) : undefined,
+      });
+
+      if ('error' in result) {
+        setError(result.error);
         setLoading(false);
+      } else {
+        // Success - refresh the data
         onClose();
-    }, 500);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
+      }
+    } catch (err) {
+      console.error('Error adding part:', err);
+      setError('Failed to add part. Please try again.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,37 +75,82 @@ export const AddPartModal = ({ isOpen, onClose, slot }: AddPartModalProps) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Part: {slot?.name}</DialogTitle>
+          <DialogDescription>
+            Add a part to track in this component slot. The part will be saved to your vehicle&apos;s parts list.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="partName">Part Name</Label>
-            <Input id="partName" placeholder="e.g. Interstate Battery" required />
+            <Input id="partName" name="partName" placeholder="e.g. Interstate Battery" required />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="partNumber">Part Number</Label>
-            <Input id="partNumber" placeholder="e.g. MTZ-34" />
+            <Input id="partNumber" name="partNumber" placeholder="e.g. MTZ-34" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="vendorLink">Vendor Link</Label>
-            <Input id="vendorLink" type="url" placeholder="https://..." />
+            <Input id="vendorLink" name="vendorLink" type="url" placeholder="https://..." />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="installedDate">Date Installed</Label>
-                <Input id="installedDate" type="date" />
+                <Input id="installedDate" name="installedDate" type="date" />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="installedMileage">Mileage Installed</Label>
-                <Input id="installedMileage" type="number" inputMode="numeric" />
+                <Input id="installedMileage" name="installedMileage" type="number" inputMode="numeric" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="purchaseCost">Purchase Cost ($)</Label>
+            <Input id="purchaseCost" name="purchaseCost" type="number" step="0.01" inputMode="decimal" placeholder="0.00" />
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-semibold mb-3">Lifespan Override (Optional)</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Override default lifespan for this specific part installation. Leave blank to use defaults.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customLifespanMiles">
+                  Custom Lifespan (Miles)
+                  {slot?.default_lifespan_miles && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (Default: {slot.default_lifespan_miles.toLocaleString()})
+                    </span>
+                  )}
+                </Label>
+                <Input id="customLifespanMiles" name="customLifespanMiles" type="number" inputMode="numeric" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customLifespanMonths">
+                  Custom Lifespan (Months)
+                  {slot?.default_lifespan_months && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (Default: {slot.default_lifespan_months})
+                    </span>
+                  )}
+                </Label>
+                <Input id="customLifespanMonths" name="customLifespanMonths" type="number" inputMode="numeric" />
+              </div>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>

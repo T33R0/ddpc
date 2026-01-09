@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { CoupeWireframe } from '@/components/CoupeWireframe';
 import { PartCard } from './components/PartCard';
 import { AddPartModal } from './components/AddPartModal';
+import { ComponentDetailModal } from './components/ComponentDetailModal';
 import { getPartsData } from './actions';
 import { PartSlot, UserVehicle } from './types';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -33,7 +34,9 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedSlotForAdd, setSelectedSlotForAdd] = useState<PartSlot | null>(null);
+  const [selectedSlotForDetail, setSelectedSlotForDetail] = useState<PartSlot | null>(null);
 
   // Fetch Data on Mount
   useEffect(() => {
@@ -74,6 +77,31 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
   const handleAddPart = (slot: PartSlot) => {
     setSelectedSlotForAdd(slot);
     setIsModalOpen(true);
+  };
+
+  // Handler for View Details
+  const handleViewDetails = (slot: PartSlot) => {
+    setSelectedSlotForDetail(slot);
+    setIsDetailModalOpen(true);
+  };
+
+  // Handler for successful part addition - refresh data
+  const handlePartAdded = async () => {
+    try {
+      setLoading(true);
+      const result = await getPartsData(vehicleId);
+      if ('error' in result) {
+        setError(result.error);
+      } else {
+        setSlots(result.slots);
+        setVehicle(result.vehicle);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to refresh parts data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Filter Slots based on Selected Zone
@@ -145,6 +173,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
                 slot={slot}
                 currentOdometer={vehicle?.odometer || 0}
                 onAddPart={handleAddPart}
+                onViewDetails={handleViewDetails}
               />
             ))}
           </div>
@@ -156,6 +185,16 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         slot={selectedSlotForAdd}
+        vehicleId={vehicleId}
+        onSuccess={handlePartAdded}
+      />
+      <ComponentDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        slot={selectedSlotForDetail}
+        vehicleId={vehicleId}
+        currentOdometer={vehicle?.odometer || 0}
+        onSuccess={handlePartAdded}
       />
     </div>
   );

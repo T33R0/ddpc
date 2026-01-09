@@ -10,9 +10,10 @@ interface PartCardProps {
   slot: PartSlot;
   currentOdometer: number;
   onAddPart: (slot: PartSlot) => void;
+  onViewDetails?: (slot: PartSlot) => void;
 }
 
-export const PartCard = ({ slot, currentOdometer, onAddPart }: PartCardProps) => {
+export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: PartCardProps) => {
   const isInstalled = !!slot.installedComponent;
 
   // Calculate health if installed
@@ -37,7 +38,10 @@ export const PartCard = ({ slot, currentOdometer, onAddPart }: PartCardProps) =>
   const healthValue = health ? Math.max(0, 100 - health.percentageUsed) : 0;
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card 
+      className={`h-full flex flex-col ${isInstalled && onViewDetails ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={isInstalled && onViewDetails ? () => onViewDetails(slot) : undefined}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
           {slot.name}
@@ -75,28 +79,37 @@ export const PartCard = ({ slot, currentOdometer, onAddPart }: PartCardProps) =>
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              className="w-full gap-2 mt-auto"
-              disabled={!slot.installedComponent.master_part.vendor_link}
-              asChild={!!slot.installedComponent.master_part.vendor_link}
-            >
-              {slot.installedComponent.master_part.vendor_link ? (
-                <a
-                  href={slot.installedComponent.master_part.vendor_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
+            <div className="flex gap-2 mt-auto">
+              {slot.installedComponent.master_part.vendor_link && (
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  asChild
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  Buy Again
-                </a>
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4" />
-                  Buy Again
-                </>
+                  <a
+                    href={slot.installedComponent.master_part.vendor_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Buy
+                  </a>
+                </Button>
               )}
-            </Button>
+              {onViewDetails && (
+                <Button
+                  variant="default"
+                  className={slot.installedComponent.master_part.vendor_link ? "flex-1" : "w-full"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetails(slot);
+                  }}
+                >
+                  View Details
+                </Button>
+              )}
+            </div>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-muted rounded-md min-h-[120px]">
