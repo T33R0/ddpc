@@ -65,6 +65,7 @@ export async function addVehicleToGarage(
             .insert({
                 owner_id: user.id,
                 stock_data_id: vehicleDataId,
+                current_status: 'active',
                 vin: vin || null, // Use the provided VIN
                 year: stockData.year ? parseInt(stockData.year) : null,
                 make: stockData.make,
