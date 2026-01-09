@@ -12,13 +12,20 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, '../.env.local');
 dotenv.config({ path: envPath });
 
+
 // Extract Supabase credentials
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAccessToken = process.env.MCP_SERVER_ACCESS;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('Error: Could not find Supabase credentials in .env.local');
     console.error('Make sure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY) are set.');
+    process.exit(1);
+}
+
+if (!supabaseAccessToken) {
+    console.error('Error: Could not find MCP_SERVER_ACCESS (PAT) in .env.local');
     process.exit(1);
 }
 
@@ -27,10 +34,11 @@ const env = {
     ...process.env,
     SUPABASE_URL: supabaseUrl,
     SUPABASE_KEY: supabaseKey,
+    SUPABASE_ACCESS_TOKEN: supabaseAccessToken,
 };
 
 // Spawn the Supabase MCP server
-const mcpProcess = spawn('npx', ['-y', '@modelcontextprotocol/server-supabase'], {
+const mcpProcess = spawn('npx', ['-y', '@supabase/mcp-server-supabase'], {
     env,
     stdio: 'inherit', // Pipe stdin/stdout/stderr directly
     shell: true,      // Use shell to ensure npx is found

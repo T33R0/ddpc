@@ -239,8 +239,14 @@ export const read_file_content = tool({
             ref: branch || 'main',
           });
 
+          // GitHub API can return an array (for directories) or a single object (for files)
+          // We need a file, so if it's an array, that's an error
+          if (Array.isArray(fileData)) {
+            throw new Error(`Path is a directory, not a file: ${path}`);
+          }
+
           // GitHub API returns base64 encoded content for files
-          if (fileData.type === 'file' && 'content' in fileData) {
+          if (fileData.type === 'file' && 'content' in fileData && fileData.content) {
             const content = Buffer.from(fileData.content, 'base64').toString('utf-8');
             
             if (typeof window === 'undefined') {
