@@ -424,7 +424,6 @@ Speak as one unified consciousness.`,
         create_issue,
         create_pull_request,
       },
-      maxSteps: 5,
       onFinish: async (event) => {
         if (sessionId && event.text) {
           try {
