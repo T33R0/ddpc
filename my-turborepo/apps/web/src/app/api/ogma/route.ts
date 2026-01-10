@@ -513,8 +513,7 @@ Speak as one unified consciousness.`,
       hasStream: !!synthesisResult,
       textStream: synthesisResult.textStream ? 'exists' : 'missing',
       fullStream: synthesisResult.fullStream ? 'exists' : 'missing',
-      hasText: !!synthesisResult.text,
-      textLength: synthesisResult.text?.length || 0
+      hasText: !!synthesisResult.text
     });
     
     if (!synthesisResult) {
@@ -525,14 +524,6 @@ Speak as one unified consciousness.`,
     // Check if we have a text stream before creating response
     if (!synthesisResult.textStream) {
       console.error('[Ogma] No textStream available!');
-      // If we have text but no stream, return it as a simple response
-      if (synthesisResult.text) {
-        console.log('[Ogma] Returning text directly since stream is not available');
-        return new Response(synthesisResult.text, {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      }
       return new Response(
         JSON.stringify({ error: 'Stream generation failed - no text stream available' }), 
         { 
@@ -556,13 +547,6 @@ Speak as one unified consciousness.`,
       // Verify the response body exists
       if (!streamResponse.body) {
         console.error('[Ogma] Stream response has no body!');
-        // Fallback: return text directly if available
-        if (synthesisResult.text) {
-          return new Response(synthesisResult.text, {
-            status: 200,
-            headers: { 'Content-Type': 'text/plain' }
-          });
-        }
         return new Response(
           JSON.stringify({ error: 'Stream response has no body' }),
           { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -572,14 +556,6 @@ Speak as one unified consciousness.`,
       return streamResponse;
     } catch (responseError) {
       console.error('[Ogma] Error creating stream response:', responseError);
-      // Fallback: return text directly if available
-      if (synthesisResult.text) {
-        console.log('[Ogma] Falling back to direct text response');
-        return new Response(synthesisResult.text, {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      }
       throw responseError;
     }
 
