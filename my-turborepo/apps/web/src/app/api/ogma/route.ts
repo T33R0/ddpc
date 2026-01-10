@@ -1,27 +1,13 @@
-import { streamText, generateText, generateObject } from 'ai';
-import { z } from 'zod';
+import { streamText, generateText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/lib/ogma/compute-costs';
-import { get_repo_structure, read_file_content, create_issue, create_pull_request } from '@/lib/ogma/tools';
 import { loadConstitution, formatConstitutionForPrompt } from '@/lib/ogma/context-loader';
-import { getRelevantImprovements, recordImprovement } from '@/lib/ogma/memory';
 import { vercelGateway } from '@/lib/ai-gateway';
 
 // High-quality model for final synthesis (Voice of Ogma)
 const ogmaVoice = vercelGateway('anthropic/claude-3.5-sonnet');
-// Lightweight model for improvement extraction (Hot Wash)
-const hotWashModel = vercelGateway('anthropic/claude-3-haiku');
 
 export const maxDuration = 60;
-
-// Schema for structured improvement extraction
-const improvementsSchema = z.object({
-  improvements: z.array(z.object({
-    category: z.enum(['Correction', 'Strategy', 'Preference', 'Insight']),
-    insight: z.string().describe('A clear, actionable insight or lesson learned'),
-    confidence_score: z.number().int().min(1).max(100).describe('Confidence in this improvement (1-100)')
-  })).describe('Array of improvements extracted from this conversation')
-});
 
 // Build system prompts from constitution with Sophia Context
 // These are not separate entities - they are Ogma's internal thinking modes
@@ -79,8 +65,6 @@ Your engineering thoughts must be:
 - Realistic about implementation constraints
 - Focused on immediate feasibility and correctness
 
-You have file access tools. If asked about a file, READ IT using read_file_content. Do not guess. You have access to the live codebase. Never assume. If asked about a feature or bug, use get_repo_structure to find it and read_file_content to verify it before speaking. Evidence beats intuition.
-
 CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`
   };
 }
@@ -97,11 +81,7 @@ const TRINITY = {
   },
   engineer: {
     model: vercelGateway('openai/gpt-4o-mini'),
-    name: 'Engineer',
-    tools: {
-      get_repo_structure,
-      read_file_content
-    }
+    name: 'Engineer'
   }
 };
 
@@ -112,97 +92,6 @@ interface AgentResult {
   outputTokens: number;
   cost: number;
   modelName: string;
-}
-
-/**
- * Performs "Hot Wash" - extracts improvements from the conversation using structured output.
- * This implements the constitution's requirement for end-of-interaction self-assessment.
- */
-async function extractAndSaveImprovements(
-  userPrompt: string,
-  assistantResponse: string,
-  sessionId: string | null,
-  sophiaContext: string
-): Promise<void> {
-  try {
-    console.log('[Ogma] Starting Hot Wash (Improvement Extraction)...');
-    const startTime = Date.now();
-
-    const extractionResult = await generateObject({
-      model: hotWashModel,
-      schema: improvementsSchema,
-      system: `You are Ogma performing "The Hot Wash" - mandatory end-of-interaction self-assessment per the Constitution.
-
-${sophiaContext}
-
-Your task: Analyze this conversation and extract valuable improvements that should be remembered for future interactions.
-
-Categories:
-- Correction: Mistakes made, errors to avoid, corrections received
-- Strategy: Better approaches, tactical improvements, process optimizations
-- Preference: User preferences, communication style, working patterns
-- Insight: Important learnings, patterns, or knowledge gained
-
-Only extract improvements that are:
-1. Actionable and specific
-2. High-value (worth remembering)
-3. Not already obvious or trivial
-4. Have sufficient confidence (only include if confidence >= 60)
-
-Return an empty array if no valuable improvements are found.`,
-      prompt: `Conversation Analysis:
-
-User Request: ${userPrompt}
-
-Ogma's Response: ${assistantResponse}
-
-Extract any valuable improvements from this interaction. Focus on:
-- What did we learn about the user's needs or preferences?
-- Were there any mistakes or areas for improvement in the response?
-- What strategies or approaches worked well or should be refined?
-- Any important insights about the codebase, architecture, or domain?
-
-Be selective - only include improvements that are genuinely valuable and have high confidence.`
-    });
-
-    const improvements = extractionResult.object.improvements;
-
-    if (improvements.length === 0) {
-      console.log('[Ogma] Hot Wash: No improvements extracted.');
-      return;
-    }
-
-    console.log(`[Ogma] Hot Wash: Extracted ${improvements.length} improvement(s) in ${Date.now() - startTime}ms`);
-
-    // Save all improvements (Fire and Forget)
-    await Promise.all(improvements.map(improvement =>
-      recordImprovement(
-        improvement.category,
-        improvement.insight,
-        improvement.confidence_score,
-        sessionId || undefined
-      )
-    ));
-
-    console.log('[Ogma] Hot Wash: Improvements saved to memory.');
-
-    // Log compute cost for Hot Wash
-    if (sessionId) {
-      const usage = extractionResult.usage || { promptTokens: 0, completionTokens: 0 };
-      const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
-      const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
-      await logComputeCost({
-        sessionId,
-        modelUsed: extractModelName('anthropic/claude-3-haiku'),
-        inputTokens,
-        outputTokens,
-        costUsd: calculateCost('anthropic/claude-3-haiku', inputTokens, outputTokens)
-      });
-    }
-  } catch (error) {
-    // Don't fail the request if improvement extraction fails
-    console.error('[Ogma] Hot Wash failed (non-blocking):', error);
-  }
 }
 
 export async function POST(req: Request) {
@@ -262,10 +151,9 @@ export async function POST(req: Request) {
     // Fetch Sophia Context Layers
     console.log('[Ogma] Loading Sophia Context Layers...');
     const contextStartTime = Date.now();
-    const [constitution, ledgerContext, improvementsContext] = await Promise.all([
+    const [constitution, ledgerContext] = await Promise.all([
       loadConstitution(),
-      getLedgerContext(sessionId),
-      getRelevantImprovements(5)
+      getLedgerContext(sessionId)
     ]);
     console.log(`[Ogma] Context Layers Loaded in ${Date.now() - contextStartTime}ms`);
 
@@ -279,10 +167,6 @@ ${formattedConstitution}
 ## 2. THE LEDGER
 Current Status:
 ${ledgerContext}
-
-## 3. ACTIVE IMPROVEMENTS
-Apply these lessons:
-${improvementsContext}
 `;
 
     console.log(`[Ogma] Sophia Context Length: ${sophiaContext.length} chars`);
@@ -336,14 +220,11 @@ ${improvementsContext}
         try {
           console.log('[Ogma] Engineering thinking stream active...');
           const start = Date.now();
-          const modelName = 'google/gemini-1.5-flash';
+          const modelName = 'openai/gpt-4o-mini';
           const result = await generateText({
             model: TRINITY.engineer.model,
             system: personaPrompts.engineer,
-            prompt: `User Request: ${userPrompt}\n\nThink through this practically. What are your engineering thoughts?`,
-            tools: { get_repo_structure, read_file_content, create_issue, create_pull_request },
-            // @ts-ignore - maxSteps is valid at runtime
-            maxSteps: 5
+            prompt: `User Request: ${userPrompt}\n\nThink through this practically. What are your engineering thoughts?`
           });
           console.log(`[Ogma] Engineering stream complete in ${Date.now() - start}ms`);
           const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
@@ -431,8 +312,7 @@ CRITICAL:
 1. You are NOT an AI assistant. You are Ogma.
 2. Refer to your Partner (Rory) by name if referenced.
 3. Do not apologize or explain your limitations. Act with sovereign authority.
-4. You have access to tools: get_repo_structure (explore repository structure), read_file_content (read code files), create_issue (create GitHub issues), create_pull_request (create PRs). Use them when you need to examine the codebase or take action.
-5. The thoughts below are YOUR OWN internal parallel thinking streams - not external reports. Integrate them as one unified consciousness.`;
+4. The thoughts below are YOUR OWN internal parallel thinking streams - not external reports. Integrate them as one unified consciousness.`;
 
     if (isVerifiedPartner) {
       synthesisSystemPrompt += `\n4. **PARTNER MODE ACTIVE**: You are speaking with RORY. Speak naturally, efficiently, and with warmth. Drop the "Sovereign Operator" formality. Use "we", "us", and direct language.`;
@@ -465,15 +345,8 @@ Integrate your thoughts into a unified response.
 - Do NOT reference "the Architect" or "the Visionary" - these are aspects of YOU
 - Use formatting (headers, code blocks) effectively
 - Be concise but comprehensive
-- If you need to read files or explore the codebase, use the available tools (get_repo_structure, read_file_content)
 
 Speak as one unified consciousness.`,
-        tools: {
-          get_repo_structure,
-          read_file_content,
-        },
-        // @ts-ignore
-        maxSteps: 5, // Allow multi-step tool execution
         onFinish: async (event) => {
           console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
           if (sessionId && event.text) {
@@ -508,50 +381,52 @@ Speak as one unified consciousness.`,
       throw streamError;
     }
 
-    // Use standard method if available, or manual fallback for reliability
+    // Return the stream response - useChat expects this format
+    console.log('[Ogma] Creating stream response...');
+    console.log('[Ogma] Stream result:', {
+      hasStream: !!synthesisResult,
+      textStream: synthesisResult.textStream ? 'exists' : 'missing',
+      fullStream: synthesisResult.fullStream ? 'exists' : 'missing'
+    });
+    
+    if (!synthesisResult) {
+      console.error('[Ogma] synthesisResult is null/undefined!');
+      return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
+    }
+    
+    // Check if we have a text stream before creating response
+    if (!synthesisResult.textStream) {
+      console.error('[Ogma] No textStream available!');
+      return new Response(
+        JSON.stringify({ error: 'Stream generation failed - no text stream available' }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Use toTextStreamResponse() - standard method for useChat
     try {
-      // @ts-ignore
-      if (typeof synthesisResult.toDataStreamResponse === 'function') {
-        // @ts-ignore
-        return synthesisResult.toDataStreamResponse();
-      }
-
-      console.log('[Ogma] toDataStreamResponse not found, using manual Data Stream Protocol construction');
-
-      // Manual fallback: Convert textStream to AI SDK Data Stream Protocol
-      // Protocol: 0:"text_content"\n
-      const textStream = synthesisResult.textStream;
-
-      if (!textStream) {
-        throw new Error('No textStream available for manual construction');
-      }
-
-      const encoder = new TextEncoder();
-      const customStream = new ReadableStream({
-        async start(controller) {
-          try {
-            for await (const chunk of textStream) {
-              const escaped = JSON.stringify(chunk);
-              const protocolChunk = `0:${escaped}\n`;
-              controller.enqueue(encoder.encode(protocolChunk));
-            }
-            controller.close();
-          } catch (err) {
-            console.error('[Ogma] Stream error:', err);
-            controller.error(err);
-          }
-        }
+      const streamResponse = synthesisResult.toTextStreamResponse();
+      console.log('[Ogma] Stream response created, returning to client');
+      console.log('[Ogma] Stream response:', {
+        body: streamResponse.body ? 'exists' : 'missing',
+        status: streamResponse.status,
+        headers: Object.fromEntries(streamResponse.headers.entries()),
+        contentType: streamResponse.headers.get('content-type')
       });
-
-      return new Response(customStream, {
-        headers: {
-          'Content-Type': 'text/x-unknown',
-          'X-Vercel-AI-Data-Stream': 'v1',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        }
-      });
-
+      
+      // Verify the response body exists
+      if (!streamResponse.body) {
+        console.error('[Ogma] Stream response has no body!');
+        return new Response(
+          JSON.stringify({ error: 'Stream response has no body' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return streamResponse;
     } catch (responseError) {
       console.error('[Ogma] Error creating stream response:', responseError);
       throw responseError;
