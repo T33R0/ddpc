@@ -555,6 +555,8 @@ Speak as one unified consciousness.`,
       console.error('[Ogma] Error creating stream response:', responseError);
       throw responseError;
     }
+
+  } catch (error) {
     console.error('[Ogma] Error in API route:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
     return new Response(
