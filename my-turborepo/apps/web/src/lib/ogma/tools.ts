@@ -31,12 +31,12 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
     .filter(item => {
       const name = item.name;
       // Ignore common directories and files
-      return !name.startsWith('.') && 
-             name !== 'node_modules' && 
-             name !== 'dist' && 
-             name !== 'build' &&
-             name !== '.next' &&
-             name !== '.turbo';
+      return !name.startsWith('.') &&
+        name !== 'node_modules' &&
+        name !== 'dist' &&
+        name !== 'build' &&
+        name !== '.next' &&
+        name !== '.turbo';
     })
     .sort((a, b) => {
       // Directories first, then files
@@ -49,9 +49,9 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
     const isLast = index === items.length - 1;
     const currentPrefix = isLast ? '└── ' : '├── ';
     const relativePath = relative(repoRoot, join(dirPath, item.name));
-    
+
     lines.push(`${prefix}${currentPrefix}${item.name}`);
-    
+
     if (item.isDirectory()) {
       const nextPrefix = prefix + (isLast ? '    ' : '│   ');
       const subTree = buildFileTree(join(dirPath, item.name), repoRoot, nextPrefix);
@@ -70,28 +70,28 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
  */
 const getRepoStructureSchema = z.object({
   path: z.string().describe('Subdirectory path to scan. Use "." or "/" to scan from the repository root.'),
-  use_github: z.boolean().optional().describe('Force use of GitHub API. If false or not provided, tries GitHub first, then filesystem.'),
+  use_github: z.boolean().describe('Force use of GitHub API. Set to false to use local filesystem (preferred for speed).'),
 });
 
 export const get_repo_structure = tool({
-  description: 'Returns a tree view of the repository structure (ignoring node_modules, .git, dist, build, .next, .turbo). Tries GitHub API first if GITHUB_TOKEN is available, otherwise uses local filesystem. Allows Ogma to orient himself in the repository structure.',
+  description: 'Returns a tree view of the repository structure. path is required (use "." for root). use_github is required (pass false for local files).',
   parameters: getRepoStructureSchema,
   // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
   execute: async (args: any) => {
     const { path, use_github } = args as z.infer<typeof getRepoStructureSchema>;
-    
+
     // Server-side debug logging
     if (typeof window === 'undefined') {
       console.log(`[get_repo_structure] Tool called with path: ${path}, use_github: ${use_github}`);
     }
-    
+
     // Try GitHub API first if token is available and not explicitly disabled
-    if (process.env.GITHUB_TOKEN && use_github !== false) {
+    if (process.env.GITHUB_TOKEN && use_github) {
       try {
         const { owner, repo } = getRepoInfo();
         if (owner && repo) {
           const githubPath = path === '.' || path === '/' ? '' : path;
-          
+
           // Get repository contents
           const { data: contents } = await octokit.repos.getContent({
             owner,
@@ -102,17 +102,17 @@ export const get_repo_structure = tool({
           // Build tree structure from GitHub response
           const buildGitHubTree = (items: any[], prefix: string = '', depth: number = 0): string[] => {
             if (depth > 10) return []; // Prevent infinite recursion
-            
+
             const lines: string[] = [];
             const filtered = items
               .filter((item: any) => {
                 const name = item.name;
-                return !name.startsWith('.') && 
-                       name !== 'node_modules' && 
-                       name !== 'dist' && 
-                       name !== 'build' &&
-                       name !== '.next' &&
-                       name !== '.turbo';
+                return !name.startsWith('.') &&
+                  name !== 'node_modules' &&
+                  name !== 'dist' &&
+                  name !== 'build' &&
+                  name !== '.next' &&
+                  name !== '.turbo';
               })
               .sort((a: any, b: any) => {
                 // Directories first, then files
@@ -125,7 +125,7 @@ export const get_repo_structure = tool({
               const isLast = index === filtered.length - 1;
               const currentPrefix = isLast ? '└── ' : '├── ';
               lines.push(`${prefix}${currentPrefix}${item.name}${item.type === 'dir' ? '/' : ''}`);
-              
+
               // Recursively get subdirectory contents
               if (item.type === 'dir') {
                 const nextPrefix = prefix + (isLast ? '    ' : '│   ');
@@ -141,11 +141,11 @@ export const get_repo_structure = tool({
           const items = Array.isArray(contents) ? contents : [contents];
           const treeLines = buildGitHubTree(items);
           const treeString = treeLines.join('\n');
-          
+
           if (typeof window === 'undefined') {
             console.log(`[get_repo_structure] Successfully built tree from GitHub: ${owner}/${repo}${githubPath ? '/' + githubPath : ''} (${treeLines.length} items)`);
           }
-          
+
           return {
             success: true,
             tree: treeString,
@@ -167,13 +167,13 @@ export const get_repo_structure = tool({
     try {
       const currentDir = process.cwd();
       // Determine the true repository root
-      const repoRoot = currentDir.includes('apps/web') 
-          ? join(currentDir, '../..')
-          : currentDir;
+      const repoRoot = currentDir.includes('apps/web')
+        ? join(currentDir, '../..')
+        : currentDir;
 
       // Resolve the target directory relative to the repo root
-      const targetDir = (path === '.' || path === '/') 
-        ? repoRoot 
+      const targetDir = (path === '.' || path === '/')
+        ? repoRoot
         : join(repoRoot, path);
 
       // Verify the path exists
@@ -183,11 +183,11 @@ export const get_repo_structure = tool({
 
       const treeLines = buildFileTree(targetDir, repoRoot);
       const treeString = treeLines.join('\n');
-      
+
       if (typeof window === 'undefined') {
         console.log(`[get_repo_structure] Successfully built tree from filesystem: ${targetDir} (${treeLines.length} items)`);
       }
-      
+
       return {
         success: true,
         tree: treeString,
@@ -215,24 +215,24 @@ export const get_repo_structure = tool({
  */
 const readFileContentSchema = z.object({
   path: z.string().describe('Relative path to the file from repository root, or absolute path.'),
-  use_github: z.boolean().optional().describe('Force use of GitHub API. If false or not provided, tries GitHub first, then filesystem.'),
-  branch: z.string().optional().describe('GitHub branch to read from. Defaults to main.'),
+  use_github: z.boolean().describe('Force use of GitHub API. Set to false to use local filesystem (preferred for speed).'),
+  branch: z.string().describe('GitHub branch to read from. Use "main" as default.'),
 });
 
 export const read_file_content = tool({
-  description: 'Takes a file path and returns the raw text content. Tries GitHub API first if GITHUB_TOKEN is available, otherwise uses local filesystem. Allows Ogma to read code files from the repository.',
+  description: 'Takes a file path and returns the raw text content. path, use_github (false for local), and branch ("main") are required.',
   parameters: readFileContentSchema,
   // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
   execute: async (args: any) => {
     const { path, use_github, branch } = args as z.infer<typeof readFileContentSchema>;
-    
+
     // Server-side debug logging
     if (typeof window === 'undefined') {
-      console.log(`[read_file_content] Tool called with path: ${path}, use_github: ${use_github}, branch: ${branch || 'main'}`);
+      console.log(`[read_file_content] Tool called with path: ${path}, use_github: ${use_github}, branch: ${branch}`);
     }
-    
+
     // Try GitHub API first if token is available and not explicitly disabled
-    if (process.env.GITHUB_TOKEN && use_github !== false) {
+    if (process.env.GITHUB_TOKEN && use_github) {
       try {
         const { owner, repo } = getRepoInfo();
         if (owner && repo) {
@@ -252,11 +252,11 @@ export const read_file_content = tool({
           // GitHub API returns base64 encoded content for files
           if (fileData.type === 'file' && 'content' in fileData && fileData.content) {
             const content = Buffer.from(fileData.content, 'base64').toString('utf-8');
-            
+
             if (typeof window === 'undefined') {
               console.log(`[read_file_content] Successfully read file from GitHub: ${owner}/${repo}/${path} (${content.length} bytes)`);
             }
-            
+
             return {
               success: true,
               path: path,
@@ -282,13 +282,13 @@ export const read_file_content = tool({
     // Fallback to local filesystem
     try {
       const currentDir = process.cwd();
-      const repoRoot = currentDir.includes('apps/web') 
+      const repoRoot = currentDir.includes('apps/web')
         ? join(currentDir, '../..')
         : currentDir;
 
       // Resolve the file path
-      const filePath = path.startsWith('/') || path.includes(':') 
-        ? path 
+      const filePath = path.startsWith('/') || path.includes(':')
+        ? path
         : join(repoRoot, path);
 
       // Security: ensure the path is within the repo root
@@ -302,11 +302,11 @@ export const read_file_content = tool({
       }
 
       const content = readFileSync(filePath, 'utf-8');
-      
+
       if (typeof window === 'undefined') {
         console.log(`[read_file_content] Successfully read file from filesystem: ${filePath} (${content.length} bytes)`);
       }
-      
+
       return {
         success: true,
         path: filePath,
@@ -335,12 +335,12 @@ export const read_file_content = tool({
 const createIssueSchema = z.object({
   title: z.string().describe('The title of the GitHub issue.'),
   body: z.string().describe('The body/description of the GitHub issue.'),
-  owner: z.string().optional().describe('GitHub repository owner. If not provided, uses GITHUB_OWNER env var.'),
-  repo: z.string().optional().describe('GitHub repository name. If not provided, uses GITHUB_REPO env var.'),
+  owner: z.string().describe('GitHub repository owner. Pass empty string to use GITHUB_OWNER env var.'),
+  repo: z.string().describe('GitHub repository name. Pass empty string to use GITHUB_REPO env var.'),
 });
 
 export const create_issue = tool({
-  description: 'Creates a GitHub Issue with the provided title and body. Useful for feature tracking and task management.',
+  description: 'Creates a GitHub Issue with the provided title and body. All parameters are required.',
   parameters: createIssueSchema,
   // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
   execute: async (args: any) => {
@@ -395,13 +395,13 @@ const createPullRequestSchema = z.object({
     path: z.string().describe('Relative path to the file from repository root.'),
     content: z.string().describe('The full content of the file to create or update.'),
   })).describe('Array of file changes to commit. Each change includes a path and content.'),
-  owner: z.string().optional().describe('GitHub repository owner. If not provided, uses GITHUB_OWNER env var.'),
-  repo: z.string().optional().describe('GitHub repository name. If not provided, uses GITHUB_REPO env var.'),
-  base_branch: z.string().default('main').describe('The base branch to create the PR against. Defaults to "main".'),
+  owner: z.string().describe('GitHub repository owner. Pass empty string to use GITHUB_OWNER env var.'),
+  repo: z.string().describe('GitHub repository name. Pass empty string to use GITHUB_REPO env var.'),
+  base_branch: z.string().describe('The base branch to create the PR against. Use "main" as default.'),
 });
 
 export const create_pull_request = tool({
-  description: 'Creates a new branch, commits the provided file changes, and opens a pull request against the main branch.',
+  description: 'Creates a new branch, commits the provided file changes, and opens a pull request against the main branch. All parameters are required.',
   parameters: createPullRequestSchema,
   // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
   execute: async (args: any) => {
