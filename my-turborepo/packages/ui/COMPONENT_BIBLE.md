@@ -74,7 +74,9 @@
 **Import:** `import { Modal } from '@repo/ui/modal'` (Preferred wrapper) or `@repo/ui/dialog`
 
 **Guideline:**
-*   Use `Modal` for responsive behavior (Dialog on Desktop, Drawer on Mobile).
+*   Use `Modal` for responsive behavior.
+*   **Standard:** We use centered Dialogs for all devices.
+*   **Prohibited:** Do not use Drawers (Bottom Sheets) for modals on mobile.
 *   Avoid direct `Dialog` usage unless strictly necessary for complex flows.
 
 ---
