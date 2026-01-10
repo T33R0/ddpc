@@ -53,10 +53,10 @@ export async function POST(request: Request) {
     // Use admin client if we're working with an unconfirmed user
     const dbClient = useAdminClient && process.env.SUPABASE_SERVICE_ROLE_KEY
       ? (await import('@supabase/supabase-js')).createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY,
-          { auth: { autoRefreshToken: false, persistSession: false } }
-        )
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      )
       : supabase
 
     // Check if profile already exists

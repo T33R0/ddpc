@@ -320,13 +320,13 @@ export default function ConsolePage() {
                     </Button>
                   </div>
                 </div>
-              </div >
-            </div >
-          </div >
-        </ProGate >
-      </div >
+              </div>
+            </div>
+          </div>
+        </ProGate>
+      </div>
 
 
-    </section >
+    </section>
   );
 }
