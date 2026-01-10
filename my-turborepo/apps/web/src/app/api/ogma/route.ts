@@ -472,6 +472,7 @@ Speak as one unified consciousness.`,
           get_repo_structure,
           read_file_content,
         },
+        maxSteps: 5, // Allow multi-step tool execution
         onFinish: async (event) => {
           console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
           if (sessionId && event.text) {
@@ -491,6 +492,7 @@ Speak as one unified consciousness.`,
         }
       });
 
+      console.log('[Ogma] streamText completed, result keys:', Object.keys(synthesisResult));
       console.log('[Ogma] streamText completed, result:', {
         hasResult: !!synthesisResult,
         hasTextStream: !!synthesisResult?.textStream,
@@ -505,40 +507,12 @@ Speak as one unified consciousness.`,
       throw streamError;
     }
 
-    // Return the stream response - useChat expects this format
-    console.log('[Ogma] Creating stream response...');
-    console.log('[Ogma] Stream result:', {
-      hasStream: !!synthesisResult,
-      textStream: synthesisResult.textStream ? 'exists' : 'missing',
-      fullStream: synthesisResult.fullStream ? 'exists' : 'missing',
-      hasText: !!synthesisResult.text
-    });
-
-    if (!synthesisResult) {
-      console.error('[Ogma] synthesisResult is null/undefined!');
-      return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
-    }
-
-    // Check if we have a text stream before creating response
-    if (!synthesisResult.textStream) {
-      console.error('[Ogma] No textStream available!');
-      return new Response(
-        JSON.stringify({ error: 'Stream generation failed - no text stream available' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     // Use standard method if available, or manual fallback for reliability
     try {
-      // @ts-ignore - method exists at runtime in newer SDK versions, but types might lag
+      // @ts-ignore
       if (typeof synthesisResult.toDataStreamResponse === 'function') {
         // @ts-ignore
-        const streamResponse = synthesisResult.toDataStreamResponse();
-        console.log('[Ogma] Using standard toDataStreamResponse');
-        return streamResponse;
+        return synthesisResult.toDataStreamResponse();
       }
 
       console.log('[Ogma] toDataStreamResponse not found, using manual Data Stream Protocol construction');
@@ -556,8 +530,7 @@ Speak as one unified consciousness.`,
         async start(controller) {
           try {
             for await (const chunk of textStream) {
-              // Format: 0:"<json_escaped_text>"\n
-              const escaped = JSON.stringify(chunk); // This adds quotes
+              const escaped = JSON.stringify(chunk);
               const protocolChunk = `0:${escaped}\n`;
               controller.enqueue(encoder.encode(protocolChunk));
             }
@@ -571,7 +544,7 @@ Speak as one unified consciousness.`,
 
       return new Response(customStream, {
         headers: {
-          'Content-Type': 'text/x-unknown', // Standard for AI SDK data stream
+          'Content-Type': 'text/x-unknown',
           'X-Vercel-AI-Data-Stream': 'v1',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
@@ -582,8 +555,6 @@ Speak as one unified consciousness.`,
       console.error('[Ogma] Error creating stream response:', responseError);
       throw responseError;
     }
-
-  } catch (error) {
     console.error('[Ogma] Error in API route:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
     return new Response(
