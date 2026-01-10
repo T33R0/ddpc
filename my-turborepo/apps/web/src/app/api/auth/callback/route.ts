@@ -89,14 +89,14 @@ export async function GET(request: Request) {
               emailHtml = await render(WelcomeEmail())
             } catch {
               // If async fails, try sync
-              emailHtml = render(WelcomeEmail())
+              emailHtml = await render(WelcomeEmail())
             }
-            
+
             if (!emailHtml || emailHtml.trim().length === 0) {
               console.error('[Welcome Email] Rendered HTML is empty')
               throw new Error('Rendered email HTML is empty')
             }
-            
+
             await sendEmail({
               to: user.email,
               subject: 'Welcome to the Build',
@@ -120,32 +120,32 @@ export async function GET(request: Request) {
             .eq('notify_on_new_user', true);
 
           if (admins && admins.length > 0) {
-             const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-             if (serviceRoleKey) {
-                 const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
-                 const supabaseAdmin = createSupabaseClient(
-                     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                     serviceRoleKey,
-                     { auth: { autoRefreshToken: false, persistSession: false } }
-                 );
+            const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            if (serviceRoleKey) {
+              const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+              const supabaseAdmin = createSupabaseClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                serviceRoleKey,
+                { auth: { autoRefreshToken: false, persistSession: false } }
+              );
 
-                 const adminIds = admins.map(a => a.user_id);
-                 const { data: { users: allUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+              const adminIds = admins.map(a => a.user_id);
+              const { data: { users: allUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
 
-                 if (!listError && allUsers) {
-                     const adminEmails = allUsers
-                         .filter(u => adminIds.includes(u.id) && u.email)
-                         .map(u => u.email as string);
+              if (!listError && allUsers) {
+                const adminEmails = allUsers
+                  .filter(u => adminIds.includes(u.id) && u.email)
+                  .map(u => u.email as string);
 
-                     if (adminEmails.length > 0) {
-                         await sendEmail({
-                             to: adminEmails,
-                             subject: 'New User Signup - DDPC',
-                             html: `<p>A new user has signed up!</p><p><strong>Email:</strong> ${user.email}</p><p><strong>ID:</strong> ${user.id}</p>`
-                         });
-                     }
-                 }
-             }
+                if (adminEmails.length > 0) {
+                  await sendEmail({
+                    to: adminEmails,
+                    subject: 'New User Signup - DDPC',
+                    html: `<p>A new user has signed up!</p><p><strong>Email:</strong> ${user.email}</p><p><strong>ID:</strong> ${user.id}</p>`
+                  });
+                }
+              }
+            }
           }
         } catch (notifyError) {
           console.error('Failed to send new user notification:', notifyError);
