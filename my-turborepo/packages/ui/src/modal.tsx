@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { cn } from './lib/utils';
-import { useIsMobile } from './hooks/use-media-query';
 import {
   Dialog,
   DialogClose,
@@ -13,16 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from './dialog';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from './drawer';
+// Drawer imports removed
 
 const ModalContext = React.createContext<{ isMobile: boolean } | null>(null);
 
@@ -40,16 +30,16 @@ type ModalProps = {
   defaultOpen?: boolean;
   children: React.ReactNode;
   dialogProps?: React.ComponentProps<typeof Dialog>;
-  drawerProps?: React.ComponentProps<typeof Drawer>;
+  drawerProps?: any; // Kept for type compatibility but ignored
 };
 
-const Modal = ({ dialogProps, open, onOpenChange, drawerProps, children }: ModalProps) => {
-  const isMobile = useIsMobile();
-  const Component = isMobile ? Drawer : Dialog;
-  const props = isMobile ? drawerProps : dialogProps;
+const Modal = ({ dialogProps, open, onOpenChange, children }: ModalProps) => {
+  // Always use Dialog
+  const Component = Dialog;
+  const props = dialogProps;
 
   return (
-    <ModalContext.Provider value={{ isMobile }}>
+    <ModalContext.Provider value={{ isMobile: false }}>
       <Component open={open} onOpenChange={onOpenChange} {...props}>
         {children}
       </Component>
@@ -61,14 +51,13 @@ type ModalTriggerProps = {
   className?: string;
   children: React.ReactNode;
   asChild?: boolean;
-  drawerProps?: React.ComponentProps<typeof DrawerTrigger>;
+  drawerProps?: any;
   popoverProps?: React.ComponentProps<typeof DialogTrigger>;
 };
 
-const ModalTrigger = ({ className, children, asChild, drawerProps, popoverProps }: ModalTriggerProps) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerTrigger : DialogTrigger;
-  const props = isMobile ? drawerProps : popoverProps;
+const ModalTrigger = ({ className, children, asChild, popoverProps }: ModalTriggerProps) => {
+  const Component = DialogTrigger;
+  const props = popoverProps;
 
   return (
     <Component className={className} asChild={asChild} {...props}>
@@ -81,14 +70,13 @@ type ModalCloseProps = {
   className?: string;
   children?: React.ReactNode;
   asChild?: boolean;
-  drawerProps?: React.ComponentProps<typeof DrawerClose>;
+  drawerProps?: any;
   popoverProps?: React.ComponentProps<typeof DialogClose>;
 };
 
-const ModalClose = ({ className, children, asChild, drawerProps, popoverProps }: ModalCloseProps) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerClose : DialogClose;
-  const props = isMobile ? drawerProps : popoverProps;
+const ModalClose = ({ className, children, asChild, popoverProps }: ModalCloseProps) => {
+  const Component = DialogClose;
+  const props = popoverProps;
 
   return (
     <Component className={className} asChild={asChild} {...props}>
@@ -100,14 +88,13 @@ const ModalClose = ({ className, children, asChild, drawerProps, popoverProps }:
 type ModalContentProps = {
   children: React.ReactNode;
   className?: string;
-  drawerProps?: React.ComponentProps<typeof DrawerContent>;
+  drawerProps?: any;
   popoverProps?: React.ComponentProps<typeof DialogContent>;
 } & React.ComponentProps<'div'>;
 
-const ModalContent = ({ className, children, drawerProps, popoverProps, ...rest }: ModalContentProps) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerContent : DialogContent;
-  const props = isMobile ? drawerProps : popoverProps;
+const ModalContent = ({ className, children, popoverProps, ...rest }: ModalContentProps) => {
+  const Component = DialogContent;
+  const props = popoverProps;
 
   return (
     <Component className={className} {...props} {...rest}>
@@ -117,23 +104,20 @@ const ModalContent = ({ className, children, drawerProps, popoverProps, ...rest 
 };
 
 const ModalHeader = ({ className, ...props }: React.ComponentProps<'div'>) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerHeader : DialogHeader;
-
+  const Component = DialogHeader;
   return <Component className={className} {...props} />;
 };
 
 type ModalTitleProps = {
   className?: string;
   children: React.ReactNode;
-  drawerProps?: React.ComponentProps<typeof DrawerTitle>;
+  drawerProps?: any;
   popoverProps?: React.ComponentProps<typeof DialogTitle>;
 };
 
-const ModalTitle = ({ className, children, drawerProps, popoverProps }: ModalTitleProps) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerTitle : DialogTitle;
-  const props = isMobile ? drawerProps : popoverProps;
+const ModalTitle = ({ className, children, popoverProps }: ModalTitleProps) => {
+  const Component = DialogTitle;
+  const props = popoverProps;
 
   return (
     <Component className={className} {...props}>
@@ -145,14 +129,13 @@ const ModalTitle = ({ className, children, drawerProps, popoverProps }: ModalTit
 type ModalDescriptionProps = {
   className?: string;
   children: React.ReactNode;
-  drawerProps?: React.ComponentProps<typeof DrawerDescription>;
+  drawerProps?: any;
   popoverProps?: React.ComponentProps<typeof DialogDescription>;
 };
 
-const ModalDescription = ({ className, children, drawerProps, popoverProps }: ModalDescriptionProps) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerDescription : DialogDescription;
-  const props = isMobile ? drawerProps : popoverProps;
+const ModalDescription = ({ className, children, popoverProps }: ModalDescriptionProps) => {
+  const Component = DialogDescription;
+  const props = popoverProps;
 
   return (
     <Component className={className} {...props}>
@@ -164,9 +147,9 @@ const ModalDescription = ({ className, children, drawerProps, popoverProps }: Mo
 const ModalBody = ({ className, ...props }: React.ComponentProps<'div'>) => {
   return <div className={cn('px-4 py-6', className)} {...props} />;
 };
+
 const ModalFooter = ({ className, ...props }: React.ComponentProps<'div'>) => {
-  const { isMobile } = useContext();
-  const Component = isMobile ? DrawerFooter : DialogFooter;
+  const Component = DialogFooter;
   return <Component className={className} {...props} />;
 };
 
