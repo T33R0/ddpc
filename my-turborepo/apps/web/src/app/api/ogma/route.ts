@@ -524,38 +524,76 @@ Speak as one unified consciousness.`,
       console.error('[Ogma] No textStream available!');
       return new Response(
         JSON.stringify({ error: 'Stream generation failed - no text stream available' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-      
-      return new Response(customStream, {
-            headers: {
-              'Content-Type': 'text/x-unknown', // Standard for AI SDK data stream
-              'X-Vercel-AI-Data-Stream': 'v1',
-              'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive',
-            }
-          });
-
-        } catch (responseError) {
-          console.error('[Ogma] Error creating stream response:', responseError);
-          throw responseError;
-        }
-
-    } catch (error) {
-      console.error('[Ogma] Error in API route:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
-      return new Response(
-        JSON.stringify({
-          error: 'Internal Server Error',
-          message: errorMessage
-        }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-          },
         }
       );
+  }
+
+    // Use standard method if available, or manual fallback for reliability
+    try {
+    // @ts-ignore - method exists at runtime in newer SDK versions, but types might lag
+    if (typeof synthesisResult.toDataStreamResponse === 'function') {
+      // @ts-ignore
+      const streamResponse = synthesisResult.toDataStreamResponse();
+      console.log('[Ogma] Using standard toDataStreamResponse');
+      return streamResponse;
     }
+
+    console.log('[Ogma] toDataStreamResponse not found, using manual Data Stream Protocol construction');
+
+    // Manual fallback: Convert textStream to AI SDK Data Stream Protocol
+    // Protocol: 0:"text_content"\n
+    const textStream = synthesisResult.textStream;
+
+    if (!textStream) {
+      throw new Error('No textStream available for manual construction');
+    }
+
+    const encoder = new TextEncoder();
+    const customStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of textStream) {
+            // Format: 0:"<json_escaped_text>"\n
+            const escaped = JSON.stringify(chunk); // This adds quotes
+            const protocolChunk = `0:${escaped}\n`;
+            controller.enqueue(encoder.encode(protocolChunk));
+          }
+          controller.close();
+        } catch (err) {
+          console.error('[Ogma] Stream error:', err);
+          controller.error(err);
+        }
+      }
+    });
+
+    return new Response(customStream, {
+      headers: {
+        'Content-Type': 'text/x-unknown', // Standard for AI SDK data stream
+        'X-Vercel-AI-Data-Stream': 'v1',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      }
+    });
+
+  } catch (responseError) {
+    console.error('[Ogma] Error creating stream response:', responseError);
+    throw responseError;
+  }
+
+} catch (error) {
+  console.error('[Ogma] Error in API route:', error);
+  const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
+  return new Response(
+    JSON.stringify({
+      error: 'Internal Server Error',
+      message: errorMessage
+    }),
+    {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+}
   }
