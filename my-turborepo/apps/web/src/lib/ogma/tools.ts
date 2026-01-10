@@ -69,7 +69,7 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
  * Allows Ogma to 'orient' himself
  */
 const getRepoStructureSchema = z.object({
-  path: z.string().optional().describe('Optional subdirectory path to scan. If not provided, scans from repository root.'),
+  path: z.string().describe('Subdirectory path to scan. Use "." or "/" to scan from the repository root.'),
   use_github: z.boolean().optional().describe('Force use of GitHub API. If false or not provided, tries GitHub first, then filesystem.'),
 });
 
@@ -82,7 +82,7 @@ export const get_repo_structure = tool({
     
     // Server-side debug logging
     if (typeof window === 'undefined') {
-      console.log(`[get_repo_structure] Tool called with path: ${path || 'root'}, use_github: ${use_github}`);
+      console.log(`[get_repo_structure] Tool called with path: ${path}, use_github: ${use_github}`);
     }
     
     // Try GitHub API first if token is available and not explicitly disabled
@@ -90,13 +90,13 @@ export const get_repo_structure = tool({
       try {
         const { owner, repo } = getRepoInfo();
         if (owner && repo) {
-          const githubPath = path || '';
+          const githubPath = path === '.' || path === '/' ? '' : path;
           
           // Get repository contents
           const { data: contents } = await octokit.repos.getContent({
             owner,
             repo,
-            path: githubPath || '',
+            path: githubPath,
           });
 
           // Build tree structure from GitHub response
@@ -166,29 +166,33 @@ export const get_repo_structure = tool({
     // Fallback to local filesystem
     try {
       const currentDir = process.cwd();
-      const repoRoot = path 
-        ? join(currentDir, path)
-        : currentDir.includes('apps/web') 
+      // Determine the true repository root
+      const repoRoot = currentDir.includes('apps/web') 
           ? join(currentDir, '../..')
           : currentDir;
 
+      // Resolve the target directory relative to the repo root
+      const targetDir = (path === '.' || path === '/') 
+        ? repoRoot 
+        : join(repoRoot, path);
+
       // Verify the path exists
-      if (!statSync(repoRoot).isDirectory()) {
-        throw new Error(`Path does not exist or is not a directory: ${repoRoot}`);
+      if (!statSync(targetDir).isDirectory()) {
+        throw new Error(`Path does not exist or is not a directory: ${targetDir}`);
       }
 
-      const treeLines = buildFileTree(repoRoot, repoRoot);
+      const treeLines = buildFileTree(targetDir, repoRoot);
       const treeString = treeLines.join('\n');
       
       if (typeof window === 'undefined') {
-        console.log(`[get_repo_structure] Successfully built tree from filesystem: ${repoRoot} (${treeLines.length} items)`);
+        console.log(`[get_repo_structure] Successfully built tree from filesystem: ${targetDir} (${treeLines.length} items)`);
       }
       
       return {
         success: true,
         tree: treeString,
         source: 'filesystem',
-        root: repoRoot,
+        root: targetDir,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
