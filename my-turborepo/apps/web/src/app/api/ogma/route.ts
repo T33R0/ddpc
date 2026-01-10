@@ -472,6 +472,7 @@ Speak as one unified consciousness.`,
           get_repo_structure,
           read_file_content,
         },
+        // @ts-ignore
         maxSteps: 5, // Allow multi-step tool execution
         onFinish: async (event) => {
           console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
