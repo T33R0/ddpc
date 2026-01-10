@@ -19,13 +19,13 @@ interface ComponentDetailModalProps {
   onSuccess?: () => void;
 }
 
-export const ComponentDetailModal = ({ 
-  isOpen, 
-  onClose, 
-  slot, 
-  vehicleId, 
+export const ComponentDetailModal = ({
+  isOpen,
+  onClose,
+  slot,
+  vehicleId,
   currentOdometer,
-  onSuccess 
+  onSuccess
 }: ComponentDetailModalProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -261,16 +261,22 @@ export const ComponentDetailModal = ({
                 <Button type="button" variant="outline" onClick={onClose}>
                   Close
                 </Button>
-                <Button type="button" onClick={() => setIsEditing(true)}>
+                <Button type="button" onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}>
                   Edit
                 </Button>
               </>
             ) : (
               <>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setIsEditing(false);
                     setError(null);
                     // Reset form data
