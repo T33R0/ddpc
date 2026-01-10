@@ -381,7 +381,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent className="sm:max-w-5xl max-h-[85vh] overflow-y-auto">
+      <ModalContent className="sm:max-w-5xl">
         <ModalHeader>
           <ModalTitle>Add a Vehicle to Your Garage</ModalTitle>
           <ModalDescription>
