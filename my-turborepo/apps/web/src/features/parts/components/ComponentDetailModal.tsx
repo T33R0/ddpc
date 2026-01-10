@@ -80,6 +80,7 @@ export const ComponentDetailModal = ({
         purchaseCost: formData.purchaseCost ? parseFloat(formData.purchaseCost) : undefined,
         customLifespanMiles: formData.customLifespanMiles ? parseInt(formData.customLifespanMiles, 10) : undefined,
         customLifespanMonths: formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : undefined,
+        status: (installed.status === 'planned' && formData.installedDate) ? 'installed' : undefined,
       });
 
       if ('error' in result) {
@@ -254,6 +255,36 @@ export const ComponentDetailModal = ({
               </div>
             </div>
           </div>
+
+          {/* Status Section for Planned Parts */}
+          {installed.status === 'planned' && (
+            <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 mt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-blue-900">Planned Part</h4>
+                  <p className="text-sm text-blue-700">This part is in your plan but not yet installed.</p>
+                </div>
+                {!isEditing && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsEditing(true);
+                      // Pre-fill date with today for convenience
+                      setFormData(prev => ({
+                        ...prev,
+                        installedDate: new Date().toISOString().split('T')[0]
+                      }));
+                    }}
+                  >
+                    Install Now
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4 border-t">
             {!isEditing ? (

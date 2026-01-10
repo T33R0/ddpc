@@ -30,6 +30,13 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+
+    // Determine action from the button clicked
+    // CAST: Accessing submitter from native event
+    const submitter = (e.nativeEvent as any).submitter as HTMLButtonElement;
+    const action = submitter?.value || 'install';
+    const status = action === 'plan' ? 'planned' : 'installed';
+
     const partName = formData.get('partName') as string;
     const partNumber = formData.get('partNumber') as string;
     const vendorLink = formData.get('vendorLink') as string;
@@ -49,6 +56,7 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
         purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
         customLifespanMiles: customLifespanMiles ? parseInt(customLifespanMiles, 10) : undefined,
         customLifespanMonths: customLifespanMonths ? parseInt(customLifespanMonths, 10) : undefined,
+        status,
       });
 
       if ('error' in result) {
@@ -104,12 +112,12 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-                <Label htmlFor="installedDate">Date Installed</Label>
-                <Input id="installedDate" name="installedDate" type="date" />
+              <Label htmlFor="installedDate">Date Installed</Label>
+              <Input id="installedDate" name="installedDate" type="date" />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="installedMileage">Mileage Installed</Label>
-                <Input id="installedMileage" name="installedMileage" type="number" inputMode="numeric" />
+              <Label htmlFor="installedMileage">Mileage Installed</Label>
+              <Input id="installedMileage" name="installedMileage" type="number" inputMode="numeric" />
             </div>
           </div>
 
@@ -153,8 +161,22 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Adding...' : 'Add Part'}
+            <Button
+              type="submit"
+              name="action"
+              value="plan"
+              variant="secondary"
+              disabled={loading}
+            >
+              Add as Plan
+            </Button>
+            <Button
+              type="submit"
+              name="action"
+              value="install"
+              disabled={loading}
+            >
+              {loading ? 'Adding...' : 'Add Installed Part'}
             </Button>
           </div>
         </form>

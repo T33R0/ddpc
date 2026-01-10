@@ -45,6 +45,7 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
         custom_lifespan_miles,
         custom_lifespan_months,
         purchase_cost,
+        status,
         master_part:master_parts_list (
           id,
           name,
@@ -74,8 +75,8 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
       return {
         ...def,
         installedComponent: installed ? {
-            ...installed,
-            master_part: installed.master_part // Ensure this is carried over
+          ...installed,
+          master_part: installed.master_part // Ensure this is carried over
         } : undefined,
       };
     });
@@ -105,7 +106,9 @@ export async function addPartToVehicle(
     installedMileage?: number;
     purchaseCost?: number;
     customLifespanMiles?: number;
+    customLifespanMiles?: number;
     customLifespanMonths?: number;
+    status?: 'installed' | 'planned';
   }
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
@@ -219,6 +222,7 @@ export async function addPartToVehicle(
           purchase_cost: partData.purchaseCost || null,
           custom_lifespan_miles: partData.customLifespanMiles || null,
           custom_lifespan_months: partData.customLifespanMonths || null,
+          status: partData.status || 'installed',
         });
 
       if (insertError) {
@@ -245,7 +249,9 @@ export async function updatePartInstallation(
     customLifespanMonths?: number;
     partName?: string;
     partNumber?: string;
+    partNumber?: string;
     vendorLink?: string;
+    status?: 'installed' | 'planned';
   }
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
@@ -303,7 +309,9 @@ export async function updatePartInstallation(
         ...(updateData.installedMileage !== undefined && { installed_mileage: updateData.installedMileage || null }),
         ...(updateData.purchaseCost !== undefined && { purchase_cost: updateData.purchaseCost || null }),
         ...(updateData.customLifespanMiles !== undefined && { custom_lifespan_miles: updateData.customLifespanMiles || null }),
+        ...(updateData.customLifespanMiles !== undefined && { custom_lifespan_miles: updateData.customLifespanMiles || null }),
         ...(updateData.customLifespanMonths !== undefined && { custom_lifespan_months: updateData.customLifespanMonths || null }),
+        ...(updateData.status && { status: updateData.status }),
       })
       .eq('id', installationId);
 

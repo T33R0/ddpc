@@ -38,8 +38,11 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
   const healthValue = health ? Math.max(0, 100 - health.percentageUsed) : 0;
 
   return (
-    <Card 
-      className={`h-full flex flex-col ${isInstalled && onViewDetails ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+    <Card
+      className={`h-full flex flex-col
+        ${isInstalled && onViewDetails ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+        ${slot.installedComponent?.status === 'planned' ? 'border-dashed border-blue-200 bg-blue-50/10' : ''}
+      `}
       onClick={isInstalled && onViewDetails ? () => onViewDetails(slot) : undefined}
     >
       <CardHeader className="pb-2">
@@ -64,19 +67,22 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
               <div className="flex justify-between text-xs">
                 <span>Health</span>
                 <span className={
-                  health?.status === 'Critical' ? 'text-red-500 font-bold' :
-                  health?.status === 'Warning' ? 'text-yellow-500 font-bold' : 'text-green-500'
+                  slot.installedComponent.status === 'planned' ? 'text-blue-500 font-bold' :
+                    health?.status === 'Critical' ? 'text-red-500 font-bold' :
+                      health?.status === 'Warning' ? 'text-yellow-500 font-bold' : 'text-green-500'
                 }>
-                  {health?.status}
+                  {slot.installedComponent.status === 'planned' ? 'Planned' : health?.status}
                 </span>
               </div>
               {/* Custom styled progress to apply semantic colors - replacing @repo/ui/progress */}
-              <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${statusColor} transition-all duration-500`}
-                  style={{ width: `${healthValue}%` }}
-                />
-              </div>
+              {slot.installedComponent.status !== 'planned' && (
+                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${statusColor} transition-all duration-500`}
+                    style={{ width: `${healthValue}%` }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 mt-auto">

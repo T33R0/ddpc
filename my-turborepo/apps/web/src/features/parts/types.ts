@@ -23,6 +23,7 @@ export interface VehicleInstalledComponent {
   custom_lifespan_miles: number | null;
   custom_lifespan_months: number | null;
   purchase_cost: number | null;
+  status: 'installed' | 'planned';
   master_part?: MasterPart; // Joined data
 }
 
