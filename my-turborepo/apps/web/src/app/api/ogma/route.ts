@@ -96,7 +96,7 @@ const TRINITY = {
     name: 'Visionary'
   },
   engineer: {
-    model: vercelGateway('google/gemini-1.5-flash'),
+    model: vercelGateway('openai/gpt-4o-mini'),
     name: 'Engineer',
     tools: {
       get_repo_structure,
@@ -212,12 +212,12 @@ export async function POST(req: Request) {
     console.log('[Ogma] API route called at', new Date().toISOString());
     const { messages, sessionId } = await req.json();
     console.log('[Ogma] Received request:', { messageCount: messages?.length, sessionId, hasMessages: !!messages });
-    
+
     if (!messages || messages.length === 0) {
       console.error('[Ogma] No messages in request');
       return new Response(JSON.stringify({ error: 'No messages provided' }), { status: 400 });
     }
-    
+
     const supabase = await createClient();
     console.log('[Ogma] Supabase client created');
 
@@ -355,19 +355,19 @@ ${improvementsContext}
         } catch (e: any) {
           console.error('[Ogma] Engineering stream failed:', e);
           // Return a fallback response instead of throwing to prevent complete failure
-          return { 
-            agent: 'engineer', 
-            content: 'Engineering stream encountered an error. Continuing with available streams.', 
-            inputTokens: 0, 
-            outputTokens: 0, 
-            cost: 0, 
-            modelName: 'error' 
+          return {
+            agent: 'engineer',
+            content: 'Engineering stream encountered an error. Continuing with available streams.',
+            inputTokens: 0,
+            outputTokens: 0,
+            cost: 0,
+            modelName: 'error'
           };
         }
       })()
     ]);
     console.log(`[Ogma] Parallel thinking streams converged in ${Date.now() - trinityStartTime}ms`);
-    
+
     // Log any failures
     if (architectResult.status === 'rejected') {
       console.error('[Ogma] Architectural stream failed:', architectResult.reason);
@@ -407,16 +407,16 @@ ${improvementsContext}
     ].filter(Boolean).join('\n\n');
 
     console.log(`[Ogma] Internal deliberation complete. Thinking modes active: ${[architect ? 'Architectural' : '', visionary ? 'Visionary' : '', engineer ? 'Engineering' : ''].filter(Boolean).join(', ')}`);
-    
+
     // Safety check: ensure we have at least one stream's output
     if (!allSolutions || allSolutions.trim().length === 0) {
       console.error('[Ogma] No thinking streams produced output. All streams may have failed.');
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'All thinking streams failed. Please try again.',
           message: 'Ogma encountered an error processing your request.'
-        }), 
-        { 
+        }),
+        {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
         }
@@ -446,7 +446,7 @@ CRITICAL:
     try {
       console.log('[Ogma] Calling streamText with model:', ogmaVoice);
       console.log('[Ogma] Prompt length:', userPrompt.length, 'Solutions length:', allSolutions.length);
-      
+
       synthesisResult = await streamText({
         model: ogmaVoice,
         system: synthesisSystemPrompt,
@@ -471,8 +471,6 @@ Speak as one unified consciousness.`,
         tools: {
           get_repo_structure,
           read_file_content,
-          create_issue,
-          create_pull_request,
         },
         onFinish: async (event) => {
           console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
@@ -492,7 +490,7 @@ Speak as one unified consciousness.`,
           }
         }
       });
-      
+
       console.log('[Ogma] streamText completed, result:', {
         hasResult: !!synthesisResult,
         hasTextStream: !!synthesisResult?.textStream,
@@ -515,27 +513,27 @@ Speak as one unified consciousness.`,
       fullStream: synthesisResult.fullStream ? 'exists' : 'missing',
       hasText: !!synthesisResult.text
     });
-    
+
     if (!synthesisResult) {
       console.error('[Ogma] synthesisResult is null/undefined!');
       return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
     }
-    
+
     // Check if we have a text stream before creating response
     if (!synthesisResult.textStream) {
       console.error('[Ogma] No textStream available!');
       return new Response(
-        JSON.stringify({ error: 'Stream generation failed - no text stream available' }), 
-        { 
+        JSON.stringify({ error: 'Stream generation failed - no text stream available' }),
+        {
           status: 500,
           headers: { 'Content-Type': 'application/json' }
         }
       );
     }
-    
+
     // Use toTextStreamResponse() - standard method for useChat
     try {
-      const streamResponse = synthesisResult.toTextStreamResponse();
+      const streamResponse = synthesisResult.toDataStreamResponse();
       console.log('[Ogma] Stream response created, returning to client');
       console.log('[Ogma] Stream response:', {
         body: streamResponse.body ? 'exists' : 'missing',
@@ -543,7 +541,7 @@ Speak as one unified consciousness.`,
         headers: Object.fromEntries(streamResponse.headers.entries()),
         contentType: streamResponse.headers.get('content-type')
       });
-      
+
       // Verify the response body exists
       if (!streamResponse.body) {
         console.error('[Ogma] Stream response has no body!');
@@ -552,7 +550,7 @@ Speak as one unified consciousness.`,
           { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
       }
-      
+
       return streamResponse;
     } catch (responseError) {
       console.error('[Ogma] Error creating stream response:', responseError);
@@ -563,11 +561,11 @@ Speak as one unified consciousness.`,
     console.error('[Ogma] Error in API route:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Internal Server Error',
-        message: errorMessage 
-      }), 
-      { 
+        message: errorMessage
+      }),
+      {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
