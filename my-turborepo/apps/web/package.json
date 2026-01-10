@@ -13,7 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "latest",
+    "@ai-sdk/openai-compatible": "^2.0.4",
     "@ai-sdk/react": "latest",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@gsap/react": "^2.1.2",
@@ -33,7 +33,7 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/kv": "^3.0.0",
     "@vercel/speed-insights": "*",
-    "ai": "latest",
+    "ai": "^6.0.26",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",

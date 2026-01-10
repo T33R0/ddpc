@@ -527,50 +527,35 @@ Speak as one unified consciousness.`,
         {
           status: 500,
           headers: { 'Content-Type': 'application/json' }
+      
+      return new Response(customStream, {
+            headers: {
+              'Content-Type': 'text/x-unknown', // Standard for AI SDK data stream
+              'X-Vercel-AI-Data-Stream': 'v1',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            }
+          });
+
+        } catch (responseError) {
+          console.error('[Ogma] Error creating stream response:', responseError);
+          throw responseError;
+        }
+
+    } catch (error) {
+      console.error('[Ogma] Error in API route:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
+      return new Response(
+        JSON.stringify({
+          error: 'Internal Server Error',
+          message: errorMessage
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
       );
     }
-
-    // Use toTextStreamResponse() - standard method for useChat
-    try {
-      const streamResponse = synthesisResult.toDataStreamResponse();
-      console.log('[Ogma] Stream response created, returning to client');
-      console.log('[Ogma] Stream response:', {
-        body: streamResponse.body ? 'exists' : 'missing',
-        status: streamResponse.status,
-        headers: Object.fromEntries(streamResponse.headers.entries()),
-        contentType: streamResponse.headers.get('content-type')
-      });
-
-      // Verify the response body exists
-      if (!streamResponse.body) {
-        console.error('[Ogma] Stream response has no body!');
-        return new Response(
-          JSON.stringify({ error: 'Stream response has no body' }),
-          { status: 500, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-
-      return streamResponse;
-    } catch (responseError) {
-      console.error('[Ogma] Error creating stream response:', responseError);
-      throw responseError;
-    }
-
-  } catch (error) {
-    console.error('[Ogma] Error in API route:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
-    return new Response(
-      JSON.stringify({
-        error: 'Internal Server Error',
-        message: errorMessage
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
   }
-}
