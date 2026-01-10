@@ -52,10 +52,10 @@ export async function POST(request: Request) {
     // Use admin client if we're working with an unconfirmed user
     const dbClient = useAdminClient && process.env.SUPABASE_SERVICE_ROLE_KEY
       ? (await import('@supabase/supabase-js')).createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY,
-          { auth: { autoRefreshToken: false, persistSession: false } }
-        )
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      )
       : supabase
 
     // Check if profile already exists
@@ -127,14 +127,14 @@ export async function POST(request: Request) {
           emailHtml = await render(WelcomeEmail())
         } catch {
           // If async fails, try sync
-          emailHtml = render(WelcomeEmail())
+          emailHtml = await render(WelcomeEmail())
         }
-        
+
         if (!emailHtml || emailHtml.trim().length === 0) {
           console.error('[Welcome Email] Rendered HTML is empty')
           throw new Error('Rendered email HTML is empty')
         }
-        
+
         await sendEmail({
           to: user.email,
           subject: 'Welcome to the Build',
