@@ -14,9 +14,10 @@ export interface SendEmailParams {
   to: string | string[];
   subject: string;
   html: string;
+  text?: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
   const resend = getResend();
   if (!resend) {
     console.error('[Email] Failed to initialize Resend: API key missing');
@@ -27,7 +28,8 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
   console.log('[Email] Attempting to send email:', {
     to: Array.isArray(to) ? to.join(', ') : to,
     subject,
-    from: 'monitor@myddpc.com'
+    from: 'monitor@myddpc.com',
+    hasText: !!text
   });
 
   try {
@@ -36,6 +38,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
       to,
       subject,
       html,
+      text,
     });
 
     if (data.error) {

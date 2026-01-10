@@ -263,10 +263,10 @@ export default function ConsolePage() {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </div >
 
               {/* Financial Snapshot */}
-              <div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border">
+              < div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border" >
                 <h3 className="text-lg font-semibold text-foreground mb-4">Financial Snapshot</h3>
                 <div className="space-y-4">
                   <div className="space-y-3">

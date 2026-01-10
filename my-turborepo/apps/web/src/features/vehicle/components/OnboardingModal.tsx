@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalFooter } from '@repo/ui/modal'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalBody, ModalFooter } from '@repo/ui/modal'
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
@@ -87,7 +87,8 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
           </ModalDescription>
         </ModalHeader>
 
-        <div className="space-y-4">
+        <ModalBody>
+          <div className="space-y-4">
           {step === 1 && (
             <>
               <div className="space-y-2">
@@ -206,7 +207,8 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
               )}
             </>
           )}
-        </div>
+          </div>
+        </ModalBody>
 
         <ModalFooter>
           <div className="flex w-full justify-end gap-4">

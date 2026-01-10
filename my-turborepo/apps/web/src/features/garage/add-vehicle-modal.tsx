@@ -320,30 +320,41 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
       setIsAddedToGarage(true);
       toast.success('Vehicle successfully added to your garage!');
 
-      // Trigger refresh of garage data
-      if (onVehicleAdded) {
-        onVehicleAdded();
-      }
+      // Close modal immediately
+      onOpenChange(false);
 
+      // Always navigate to the new vehicle page if we have a vehicleId
       if (result.vehicleId) {
-        // Always redirect to the new vehicle page
-        onOpenChange(false);
+        // Reset state before navigation
+        setVin('');
+        setVinVehicleData(null);
+        setSelectedVinTrimId('');
+        setSelectedYear('');
+        setSelectedMake('');
+        setSelectedModel('');
+        setSelectedTrimId('');
+        setManualVehicleData(null);
+        setIsAddedToGarage(false);
+        setActiveTab('vin');
+        
+        // Navigate immediately to the new vehicle page
         router.push(`/vehicle/${result.vehicleId}`);
       } else {
-        setTimeout(() => {
-          onOpenChange(false);
-          // Reset state
-          setVin('');
-          setVinVehicleData(null);
-          setSelectedVinTrimId('');
-          setSelectedYear('');
-          setSelectedMake('');
-          setSelectedModel('');
-          setSelectedTrimId('');
-          setManualVehicleData(null);
-          setIsAddedToGarage(false);
-          setActiveTab('vin');
-        }, 2000);
+        // Fallback: if no vehicleId, refresh garage and reset state
+        if (onVehicleAdded) {
+          onVehicleAdded();
+        }
+        // Reset state
+        setVin('');
+        setVinVehicleData(null);
+        setSelectedVinTrimId('');
+        setSelectedYear('');
+        setSelectedMake('');
+        setSelectedModel('');
+        setSelectedTrimId('');
+        setManualVehicleData(null);
+        setIsAddedToGarage(false);
+        setActiveTab('vin');
       }
     } catch (error) {
       console.error('Error adding vehicle to garage:', error);
@@ -378,13 +389,14 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
           </ModalDescription>
         </ModalHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="vin">VIN Decoder</TabsTrigger>
-            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-          </TabsList>
+        <div className="px-6 pb-6">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="vin">VIN Decoder</TabsTrigger>
+              <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="vin" className="space-y-4 mt-4">
+            <TabsContent value="vin" className="space-y-4 mt-4">
             <div className="flex gap-2">
               <Input
                 value={vin}
@@ -602,7 +614,8 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
               </div>
             </div>
           )}
-        </Tabs>
+          </Tabs>
+        </div>
 
         <ModalFooter>
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-between items-center">
