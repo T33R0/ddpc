@@ -194,140 +194,139 @@ export default function ConsolePage() {
                             </div>
 
                           </div>
+                        </DashboardCard>
                       </div>
-                      </DashboardCard>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Priority Alerts */}
+              <div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Priority Alerts &amp; Reminders</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500">
+                      <AlertTriangle className="w-4 h-4" />
                     </div>
-            );
-                })}
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Service Overdue</p>
+                      <p className="text-xs text-muted-foreground">---</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Registration Expiring</p>
+                      <p className="text-xs text-muted-foreground">---</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground text-sm">Document Pending</p>
+                      <p className="text-xs text-muted-foreground">---</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
+                      onClick={() => router.push('/console/alerts')}
+                    >
+                      View All
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
+                      onClick={() => router.push('/console/documents')}
+                    >
+                      Upload
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
+                      onClick={() => router.push('/console/schedule')}
+                    >
+                      Schedule
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Snapshot */}
+              <div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Financial Snapshot</h3>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Total Spend</p>
+                      <p className="text-lg font-bold text-foreground">
+                        ${consoleStats?.financials?.totalSpend?.toLocaleString() || '0'}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Avg Monthly</p>
+                      <p className="text-lg font-bold text-foreground">
+                        ${consoleStats?.financials?.avgMonthly?.toLocaleString() || '0'}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Total Logs</p>
+                      <p className="text-lg font-bold text-foreground">
+                        {consoleStats?.financials?.totalLogs || 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+                      onClick={() => router.push('/console/reports')}
+                    >
+                      <BarChart className="w-4 h-4 mr-2" />
+                      View Reports
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+                      onClick={() => router.push('/console/receipts')}
+                    >
+                      <Receipt className="w-4 h-4 mr-2" />
+                      Manage Receipts
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+                      onClick={() => router.push('/console/export')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Data
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-            )}
+        </ProGate>
       </div>
 
-      {/* Sidebar */}
-      < div className="space-y-6" >
-        {/* Priority Alerts */}
-        < div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border" >
-          <h3 className="text-lg font-semibold text-foreground mb-4">Priority Alerts &amp; Reminders</h3>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground text-sm">Service Overdue</p>
-                <p className="text-xs text-muted-foreground">---</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500">
-                <Calendar className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground text-sm">Registration Expiring</p>
-                <p className="text-xs text-muted-foreground">---</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground text-sm">Document Pending</p>
-                <p className="text-xs text-muted-foreground">---</p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-4">
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
-                onClick={() => router.push('/console/alerts')}
-              >
-                View All
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
-                onClick={() => router.push('/console/documents')}
-              >
-                Upload
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-card border-border hover:bg-accent text-muted-foreground hover:text-accent-foreground"
-                onClick={() => router.push('/console/schedule')}
-              >
-                Schedule
-              </Button>
-            </div>
-          </div>
-        </div >
-
-        {/* Financial Snapshot */}
-        < div className="bg-card backdrop-blur-lg rounded-2xl p-6 border border-border" >
-          <h3 className="text-lg font-semibold text-foreground mb-4">Financial Snapshot</h3>
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Total Spend</p>
-                <p className="text-lg font-bold text-foreground">
-                  ${consoleStats?.financials?.totalSpend?.toLocaleString() || '0'}
-                </p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Avg Monthly</p>
-                <p className="text-lg font-bold text-foreground">
-                  ${consoleStats?.financials?.avgMonthly?.toLocaleString() || '0'}
-                </p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Total Logs</p>
-                <p className="text-lg font-bold text-foreground">
-                  {consoleStats?.financials?.totalLogs || 0}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
-                onClick={() => router.push('/console/reports')}
-              >
-                <BarChart className="w-4 h-4 mr-2" />
-                View Reports
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
-                onClick={() => router.push('/console/receipts')}
-              >
-                <Receipt className="w-4 h-4 mr-2" />
-                Manage Receipts
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
-                onClick={() => router.push('/console/export')}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Data
-              </Button>
-            </div>
-          </div>
-        </div >
-      </div >
-    </div >
-        </ProGate >
-      </div >
-
-
-    </section >
+    </section>
   );
 }
