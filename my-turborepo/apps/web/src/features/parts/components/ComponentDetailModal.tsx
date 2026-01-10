@@ -273,9 +273,10 @@ export const ComponentDetailModal = ({
                       e.preventDefault();
                       setIsEditing(true);
                       // Pre-fill date with today for convenience
+                      const today = new Date().toISOString().split('T')[0] || '';
                       setFormData(prev => ({
                         ...prev,
-                        installedDate: new Date().toISOString().split('T')[0]
+                        installedDate: today
                       }));
                     }}
                   >
