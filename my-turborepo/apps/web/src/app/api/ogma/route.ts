@@ -512,7 +512,9 @@ Speak as one unified consciousness.`,
     console.log('[Ogma] Stream result:', {
       hasStream: !!synthesisResult,
       textStream: synthesisResult.textStream ? 'exists' : 'missing',
-      fullText: synthesisResult.fullStream ? 'exists' : 'missing'
+      fullStream: synthesisResult.fullStream ? 'exists' : 'missing',
+      hasText: !!synthesisResult.text,
+      textLength: synthesisResult.text?.length || 0
     });
     
     if (!synthesisResult) {
@@ -523,6 +525,14 @@ Speak as one unified consciousness.`,
     // Check if we have a text stream before creating response
     if (!synthesisResult.textStream) {
       console.error('[Ogma] No textStream available!');
+      // If we have text but no stream, return it as a simple response
+      if (synthesisResult.text) {
+        console.log('[Ogma] Returning text directly since stream is not available');
+        return new Response(synthesisResult.text, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
       return new Response(
         JSON.stringify({ error: 'Stream generation failed - no text stream available' }), 
         { 
@@ -532,15 +542,46 @@ Speak as one unified consciousness.`,
       );
     }
     
-    const streamResponse = synthesisResult.toTextStreamResponse();
-    console.log('[Ogma] Stream response created, returning to client');
-    console.log('[Ogma] Stream response:', {
-      body: streamResponse.body ? 'exists' : 'missing',
-      status: streamResponse.status,
-      headers: Object.fromEntries(streamResponse.headers.entries()),
-      contentType: streamResponse.headers.get('content-type')
-    });
-    return streamResponse;
+    // Use toTextStreamResponse() - standard method for useChat
+    try {
+      const streamResponse = synthesisResult.toTextStreamResponse();
+      console.log('[Ogma] Stream response created, returning to client');
+      console.log('[Ogma] Stream response:', {
+        body: streamResponse.body ? 'exists' : 'missing',
+        status: streamResponse.status,
+        headers: Object.fromEntries(streamResponse.headers.entries()),
+        contentType: streamResponse.headers.get('content-type')
+      });
+      
+      // Verify the response body exists
+      if (!streamResponse.body) {
+        console.error('[Ogma] Stream response has no body!');
+        // Fallback: return text directly if available
+        if (synthesisResult.text) {
+          return new Response(synthesisResult.text, {
+            status: 200,
+            headers: { 'Content-Type': 'text/plain' }
+          });
+        }
+        return new Response(
+          JSON.stringify({ error: 'Stream response has no body' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return streamResponse;
+    } catch (responseError) {
+      console.error('[Ogma] Error creating stream response:', responseError);
+      // Fallback: return text directly if available
+      if (synthesisResult.text) {
+        console.log('[Ogma] Falling back to direct text response');
+        return new Response(synthesisResult.text, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+      throw responseError;
+    }
 
   } catch (error) {
     console.error('[Ogma] Error in API route:', error);

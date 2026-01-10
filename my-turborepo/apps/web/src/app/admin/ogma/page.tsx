@@ -302,21 +302,8 @@ export default function ChatPage() {
             chatHookKeys: Object.keys(chatHook)
         });
         
-        // Try sendMessage first (it's available and should handle streaming properly)
-        if (sendMessage && typeof sendMessage === 'function') {
-            console.log('[Ogma] Using sendMessage from useChat');
-            try {
-                // sendMessage expects just the content string, not an object
-                await sendMessage(messageContent);
-                console.log('[Ogma] sendMessage completed successfully');
-                return;
-            } catch (sendError) {
-                console.error('[Ogma] sendMessage failed:', sendError);
-                // Fall through to manual API call
-            }
-        }
-        
-        // Try append if available
+        // Use append first (more reliable than sendMessage)
+        // sendMessage has issues with parameter format in some SDK versions
         if (append && typeof append === 'function') {
             console.log('[Ogma] Using append from useChat');
             try {
