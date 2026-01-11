@@ -1,4 +1,4 @@
-import { VehicleInstalledComponent, ComponentDefinition } from '../types';
+import { VehicleInstalledComponent, ComponentType } from '../types';
 
 export type HealthStatus = 'Good' | 'Warning' | 'Critical' | 'Unknown';
 
@@ -9,7 +9,7 @@ export interface HealthResult {
 
 export function calculateHealth(
   installed: VehicleInstalledComponent,
-  definition: ComponentDefinition,
+  definition: ComponentType,
   currentOdometer: number
 ): HealthResult {
   // If defaults are missing, we can't calculate full health unless we have the other.

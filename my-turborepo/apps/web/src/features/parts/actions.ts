@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { PartsDataResponse, PartSlot, ComponentDefinition, VehicleInstalledComponent, MasterPart } from './types';
+import { PartsDataResponse, PartSlot, ComponentType, VehicleInstalledComponent, MasterPart } from './types';
 
 export async function getPartsData(vehicleId: string): Promise<PartsDataResponse | { error: string }> {
   const supabase = await createClient();
@@ -19,17 +19,17 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
       return { error: 'Vehicle not found' };
     }
 
-    // 2. Fetch All Component Definitions (Slots)
+    // 2. Fetch All Component Types (Slots)
     const { data: definitionsData, error: definitionsError } = await supabase
-      .from('component_definitions')
+      .from('component_types')
       .select('*');
 
     if (definitionsError) {
-      console.error('Error fetching definitions:', definitionsError);
-      return { error: 'Failed to fetch component definitions' };
+      console.error('Error fetching component types:', definitionsError);
+      return { error: 'Failed to fetch component types' };
     }
 
-    const definitions = definitionsData as ComponentDefinition[];
+    const definitions = definitionsData as ComponentType[];
 
     // 3. Fetch Installed Components for this Vehicle
     // We also join master_parts_list to get part details
@@ -40,6 +40,8 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
         user_vehicle_id,
         component_definition_id,
         current_part_id,
+        bom_id,
+        specs,
         installed_date,
         installed_mileage,
         custom_lifespan_miles,
@@ -107,7 +109,10 @@ export async function addPartToVehicle(
     purchaseCost?: number;
     customLifespanMiles?: number;
     customLifespanMonths?: number;
+
     status?: 'installed' | 'planned';
+    specs?: Record<string, any>;
+    bomId?: string;
   }
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
@@ -201,7 +206,10 @@ export async function addPartToVehicle(
           purchase_cost: partData.purchaseCost || null,
           custom_lifespan_miles: partData.customLifespanMiles || null,
           custom_lifespan_months: partData.customLifespanMonths || null,
+
           status: partData.status || 'installed',
+          specs: partData.specs || {},
+          // bom_id: partData.bomId // Should we update BOM ID on existing install? Maybe.
         })
         .eq('id', existingInstall.id);
 
@@ -222,7 +230,10 @@ export async function addPartToVehicle(
           purchase_cost: partData.purchaseCost || null,
           custom_lifespan_miles: partData.customLifespanMiles || null,
           custom_lifespan_months: partData.customLifespanMonths || null,
+
           status: partData.status || 'installed',
+          specs: partData.specs || {},
+          bom_id: partData.bomId || null,
         });
 
       if (insertError) {
@@ -251,6 +262,7 @@ export async function updatePartInstallation(
     partNumber?: string;
     vendorLink?: string;
     status?: 'installed' | 'planned';
+    specs?: Record<string, any>;
   }
 ): Promise<{ success: true } | { error: string }> {
   const supabase = await createClient();
@@ -310,6 +322,7 @@ export async function updatePartInstallation(
         ...(updateData.customLifespanMiles !== undefined && { custom_lifespan_miles: updateData.customLifespanMiles || null }),
         ...(updateData.customLifespanMonths !== undefined && { custom_lifespan_months: updateData.customLifespanMonths || null }),
         ...(updateData.status && { status: updateData.status }),
+        ...(updateData.specs && { specs: updateData.specs }),
       })
       .eq('id', installationId);
 
