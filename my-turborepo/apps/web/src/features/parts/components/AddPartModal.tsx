@@ -1,9 +1,9 @@
-'use client';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@repo/ui/dialog';
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
 import { useState } from 'react';
 import { PartSlot } from '../types';
 import { addPartToVehicle } from '../actions';
@@ -46,6 +46,17 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
     const customLifespanMiles = formData.get('customLifespanMiles') as string;
     const customLifespanMonths = formData.get('customLifespanMonths') as string;
 
+    // Parse dynamic specs
+    const specs: Record<string, any> = {};
+    if (slot && slot.spec_schema && slot.spec_schema.fields) {
+      slot.spec_schema.fields.forEach((field: any) => {
+        const val = formData.get(`spec-${field.key}`);
+        if (val) {
+          specs[field.key] = field.type === 'number' ? parseFloat(val as string) : val;
+        }
+      });
+    }
+
     try {
       const result = await addPartToVehicle(vehicleId, slot.id, {
         name: partName,
@@ -57,6 +68,7 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
         customLifespanMiles: customLifespanMiles ? parseInt(customLifespanMiles, 10) : undefined,
         customLifespanMonths: customLifespanMonths ? parseInt(customLifespanMonths, 10) : undefined,
         status,
+        specs,
       });
 
       if ('error' in result) {
@@ -156,6 +168,45 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
               </div>
             </div>
           </div>
+
+          {/* Dynamic Spec Fields */}
+          {slot?.spec_schema?.fields && slot.spec_schema.fields.length > 0 && (
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3">Specifications</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {slot.spec_schema.fields.map((field: any) => (
+                  <div key={field.key} className="space-y-2">
+                    <Label htmlFor={`spec-${field.key}`}>
+                      {field.label || field.key}
+                      {field.unit && <span className="text-xs text-muted-foreground ml-1">({field.unit})</span>}
+                      {field.required && <span className="text-destructive ml-1">*</span>}
+                    </Label>
+
+                    {field.type === 'select' && field.options ? (
+                      <Select name={`spec-${field.key}`} required={field.required}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          {field.options.map((opt: string) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id={`spec-${field.key}`}
+                        name={`spec-${field.key}`}
+                        type={field.type === 'number' ? 'number' : 'text'}
+                        required={field.required}
+                        step={field.type === 'number' ? 'any' : undefined}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>

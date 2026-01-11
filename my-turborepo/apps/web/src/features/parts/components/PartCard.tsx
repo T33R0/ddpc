@@ -61,6 +61,28 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
               <p className="text-sm text-muted-foreground font-mono">
                 {slot.installedComponent.master_part.part_number}
               </p>
+
+              {/* Display Specs */}
+              {slot.installedComponent.specs && Object.keys(slot.installedComponent.specs).length > 0 && (
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 mb-2 p-2 bg-muted/30 rounded text-xs">
+                  {Object.entries(slot.installedComponent.specs).map(([key, val]) => {
+                    // Try to find matching field definition for nice label/unit
+                    const fieldDef = slot.spec_schema?.fields?.find((f: any) => f.key === key);
+                    const labels = fieldDef?.label || key;
+                    const displayVal = val;
+                    const unit = fieldDef?.unit ? ` ${fieldDef.unit}` : '';
+
+                    return (
+                      <div key={key} className="flex flex-col">
+                        <span className="text-muted-foreground uppercase text-[10px]">{labels}</span>
+                        <span className="font-medium truncate" title={`${displayVal}${unit}`}>
+                          {displayVal}{unit}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="space-y-1">
