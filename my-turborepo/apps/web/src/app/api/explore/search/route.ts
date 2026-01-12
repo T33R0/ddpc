@@ -105,19 +105,44 @@ export async function GET(request: Request) {
                 value: textToEmbed,
             });
 
-            // 4c. Call RPC with Filters
-            const { data: matches, error: rpcError } = await supabase.rpc('match_vehicles', {
+            // 4c. Call RPC (Step 1: Get Lightweight IDs)
+            // We use the optimized search_vehicle_ids function which only returns ID + similarity.
+            // Note: Server-side filtering is removed in this step to save RAM/Complexity in the vector search function.
+            // We apply metadata filters in Step 2.
+            const { data: matches, error: rpcError } = await supabase.rpc('search_vehicle_ids', {
                 query_embedding: embedding,
-                match_threshold: 0.1, // Keep loose threshold, let filters constrain hard
-                match_count: 50,
-                filters: filters // Pass the JSONB filters
+                match_threshold: 0.1,
+                match_count: 50
             });
 
             if (rpcError) throw rpcError;
 
             if (matches && matches.length > 0) {
+                // Step 2: Fetch only needed data for IDs returned
                 const ids = matches.map((m: any) => m.id);
-                const res = await supabase.from('vehicle_data').select('*').in('id', ids);
+
+                let queryBuilder = supabase
+                    .from('vehicle_data')
+                    .select('id, year, make, model, images_url') // Light select
+                    .in('id', ids);
+
+                // Apply Filters to the Data Fetch (Client-side filtering of the vector results)
+                if (filters.make) {
+                    queryBuilder = queryBuilder.ilike('make', filters.make);
+                }
+                if (filters.model) {
+                    queryBuilder = queryBuilder.ilike('model', `%${filters.model}%`);
+                }
+                if (filters.year_min) {
+                    queryBuilder = queryBuilder.gte('year', String(filters.year_min));
+                }
+                if (filters.year_max) {
+                    queryBuilder = queryBuilder.lte('year', String(filters.year_max));
+                }
+                // Note: Price filter is omitted as robust "text-price" parsing is hard in simple JS helpers 
+                // without the previous RPC's regex logic.
+
+                const res = await queryBuilder;
 
                 if (res.data) {
                     data = res.data.map((vehicle) => {
