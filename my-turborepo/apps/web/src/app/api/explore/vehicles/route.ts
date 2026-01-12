@@ -269,9 +269,9 @@ export async function GET(request: NextRequest) {
       console.log('[Explore API] Results count:', data?.length || 0);
     }
 
-    // Fallback to table if View doesn't exist
-    if (error && error.code === '42P01') {
-      console.warn('View v_vehicle_data_typed not found, falling back to vehicle_data table. Numeric filters may be inaccurate.');
+    // Fallback to table if View doesn't exist or is not in schema cache
+    if (error && (error.code === '42P01' || error.code === 'PGRST205')) {
+      console.warn('View v_vehicle_data_typed not found (Code: ' + error.code + '), falling back to vehicle_data table. Numeric filters may be inaccurate.');
       usingView = false;
       query = supabase.from('vehicle_data').select(EXPLORE_SELECT_FIELDS.join(','));
       query = applyFilters(query, false);
