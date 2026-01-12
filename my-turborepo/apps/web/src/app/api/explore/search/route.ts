@@ -101,14 +101,14 @@ export async function GET(request: Request) {
             const textToEmbed = filters.search_query || query;
 
             const { embedding } = await embed({
-                model: vercelGateway.textEmbeddingModel('text-embedding-3-small'),
+                model: vercelGateway.textEmbeddingModel('text-embedding-3-small', {
+                    dimensions: 512
+                }),
                 value: textToEmbed,
             });
 
             // 4c. Call RPC (Step 1: Get Lightweight IDs)
             // We use the optimized search_vehicle_ids function which only returns ID + similarity.
-            // Note: Server-side filtering is removed in this step to save RAM/Complexity in the vector search function.
-            // We apply metadata filters in Step 2.
             const { data: matches, error: rpcError } = await supabase.rpc('search_vehicle_ids', {
                 query_embedding: embedding,
                 match_threshold: 0.1,
