@@ -61,8 +61,6 @@ const EXPLORE_SELECT_FIELDS = [
   'max_cargo_capacity_cuft',
   'images_url',
   'base_msrp',
-  'new_price_range',
-  'used_price_range',
   'doors',
   'length_in',
   'width_in',
@@ -96,14 +94,14 @@ export async function GET(request: NextRequest) {
     const applyFilters = (q: any, isView: boolean) => {
       // Filter out empty values and ensure we have valid filters
       const validFilters = filters.filter((f) => f.value && String(f.value).trim() !== '');
-      
+
       if (validFilters.length === 0) {
         return q;
       }
 
       // Group filters by column to handle same-column filters efficiently
       const filtersByColumn = new Map<string, typeof validFilters>();
-      
+
       validFilters.forEach((filter) => {
         if (!filtersByColumn.has(filter.column)) {
           filtersByColumn.set(filter.column, []);
@@ -116,7 +114,7 @@ export async function GET(request: NextRequest) {
       filtersByColumn.forEach((columnFilters, column) => {
         const isNumericColumn = NUMERIC_COLUMNS.includes(column);
         const isRangeOp = (op: string) => ['gt', 'lt', 'gte', 'lte'].includes(op);
-        
+
         if (columnFilters.length === 1) {
           // Single filter on this column - apply directly
           const filter = columnFilters[0];
@@ -127,7 +125,7 @@ export async function GET(request: NextRequest) {
           // Multiple filters on same column
           const allEq = columnFilters.every(f => f.operator === 'eq');
           const allIlike = columnFilters.every(f => f.operator === 'ilike');
-          
+
           if (allEq) {
             // Multiple "Equals" filters on same column - use .in() for OR logic (efficient)
             const values = columnFilters.map(f => {
@@ -138,7 +136,7 @@ export async function GET(request: NextRequest) {
               }
               return value;
             }).filter(v => v !== '' && v !== null && v !== undefined);
-            
+
             if (values.length > 0) {
               q = q.in(column, values);
             }
@@ -155,7 +153,7 @@ export async function GET(request: NextRequest) {
               })
               .filter((condition): condition is string => condition !== null)
               .join(',');
-            
+
             if (orConditions) {
               q = q.or(orConditions);
             }
@@ -174,9 +172,9 @@ export async function GET(request: NextRequest) {
 
     // Helper function to apply a single filter
     const applySingleFilter = (
-      q: any, 
-      filter: SupabaseFilter, 
-      column: string, 
+      q: any,
+      filter: SupabaseFilter,
+      column: string,
       isView: boolean,
       isNumericColumn: boolean,
       isRangeOp: (op: string) => boolean
@@ -264,7 +262,7 @@ export async function GET(request: NextRequest) {
     query = query.order('year', { ascending: false }).order('make').order('model');
 
     let { data, error } = await query;
-    
+
     // Log filter application for debugging (only in development)
     if (process.env.NODE_ENV === 'development' && filters.length > 0) {
       console.log('[Explore API] Applied filters:', JSON.stringify(filters, null, 2));

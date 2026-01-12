@@ -11,5 +11,6 @@
                 "f:/ddpc_wwv5d/my-turborepo/apps/web/scripts/mcp-supabase.js"
             ]
         }
-    }
+    },
+    "workbench.colorTheme": "Abyss"
 }
