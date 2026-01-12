@@ -336,7 +336,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
         setManualVehicleData(null);
         setIsAddedToGarage(false);
         setActiveTab('vin');
-        
+
         // Navigate immediately to the new vehicle page
         router.push(`/vehicle/${result.vehicleId}`);
       } else {
@@ -371,7 +371,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
   };
 
   const imageSources = selectedTrim ? getVehicleImageSources(
-    selectedTrim.image_url || currentVehicleData?.heroImage,
+    selectedTrim.primaryImage || currentVehicleData?.heroImage,
     currentVehicleData?.make,
     currentVehicleData?.model,
     currentVehicleData?.year
@@ -397,223 +397,223 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
             </TabsList>
 
             <TabsContent value="vin" className="space-y-4 mt-4">
-            <div className="flex gap-2">
-              <Input
-                value={vin}
-                onChange={(e) => setVin(e.target.value.toUpperCase())}
-                placeholder="Enter VIN (17 characters)"
-                className="flex-1"
-                maxLength={17}
-              />
-              <Button
-                onClick={handleVinDecode}
-                disabled={isDecodingVin || vin.length !== 17}
-                variant="secondary"
-              >
-                {isDecodingVin ? 'Decoding...' : 'Decode'}
-              </Button>
-            </div>
-
-            {vinVehicleData && (
-              <div className="text-sm text-muted-foreground">
-                VIN decoding will show vehicle details here once implemented.
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="manual" className="space-y-4 mt-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="year-select">Year</Label>
-                  <select
-                    id="year-select"
-                    value={selectedYear}
-                    onChange={(e) => {
-                      setSelectedYear(e.target.value);
-                      setSelectedMake('');
-                      setSelectedModel('');
-                      setSelectedTrimId('');
-                      setManualVehicleData(null);
-                    }}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select Year</option>
-                    {filterOptions?.years.map((year) => (
-                      <option key={year} value={year.toString()}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="make-select">Make</Label>
-                  <select
-                    id="make-select"
-                    value={selectedMake}
-                    onChange={(e) => {
-                      setSelectedMake(e.target.value);
-                      setSelectedModel('');
-                      setSelectedTrimId('');
-                      setManualVehicleData(null);
-                    }}
-                    disabled={!selectedYear}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select Make</option>
-                    {availableMakes.map((make) => (
-                      <option key={make} value={make}>
-                        {make}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="model-select">Model</Label>
-                  <select
-                    id="model-select"
-                    value={selectedModel}
-                    onChange={(e) => {
-                      setSelectedModel(e.target.value);
-                      setSelectedTrimId('');
-                      setManualVehicleData(null);
-                    }}
-                    disabled={!selectedMake}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Select Model</option>
-                    {availableModels.map((model) => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-end">
-                  <Button
-                    onClick={handleManualSearch}
-                    disabled={!selectedYear || !selectedMake || !selectedModel}
-                    className="w-full"
-                  >
-                    <Search className="w-4 h-4 mr-2" />
-                    Search
-                  </Button>
-                </div>
+              <div className="flex gap-2">
+                <Input
+                  value={vin}
+                  onChange={(e) => setVin(e.target.value.toUpperCase())}
+                  placeholder="Enter VIN (17 characters)"
+                  className="flex-1"
+                  maxLength={17}
+                />
+                <Button
+                  onClick={handleVinDecode}
+                  disabled={isDecodingVin || vin.length !== 17}
+                  variant="secondary"
+                >
+                  {isDecodingVin ? 'Decoding...' : 'Decode'}
+                </Button>
               </div>
 
-              {manualVehicleData && (
-                <div className="space-y-2">
-                  <Label htmlFor="trim-select">Trim</Label>
-                  <select
-                    id="trim-select"
-                    value={selectedTrimId}
-                    onChange={(e) => setSelectedTrimId(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {manualVehicleData.trims.map((trim) => (
-                      <option key={trim.id} value={trim.id}>
-                        {trim.trim || trim.trim_description || trim.model}
-                      </option>
-                    ))}
-                  </select>
+              {vinVehicleData && (
+                <div className="text-sm text-muted-foreground">
+                  VIN decoding will show vehicle details here once implemented.
                 </div>
               )}
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          {/* Vehicle Details Display */}
-          {currentVehicleData && selectedTrim && (
-            <div className="mt-6 border-t border-border pt-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Left Column - Image and Trim Selector */}
-                <div className="space-y-4">
-                  <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted">
-                    <ImageWithFallback
-                      src={imageSources}
-                      fallbackSrc="/branding/fallback-logo.png"
-                      alt={`${currentVehicleData.make} ${currentVehicleData.model}`}
-                      width={600}
-                      height={338}
-                      className="w-full h-full object-cover"
-                    />
+            <TabsContent value="manual" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="year-select">Year</Label>
+                    <select
+                      id="year-select"
+                      value={selectedYear}
+                      onChange={(e) => {
+                        setSelectedYear(e.target.value);
+                        setSelectedMake('');
+                        setSelectedModel('');
+                        setSelectedTrimId('');
+                        setManualVehicleData(null);
+                      }}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select Year</option>
+                      {filterOptions?.years.map((year) => (
+                        <option key={year} value={year.toString()}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className="text-center">
-                    <h3 className="font-bold text-lg text-foreground">
-                      {currentVehicleData.year} {currentVehicleData.make} {currentVehicleData.model}
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      {selectedTrim.trim || `${currentVehicleData.trims.length} trims available`}
-                    </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="make-select">Make</Label>
+                    <select
+                      id="make-select"
+                      value={selectedMake}
+                      onChange={(e) => {
+                        setSelectedMake(e.target.value);
+                        setSelectedModel('');
+                        setSelectedTrimId('');
+                        setManualVehicleData(null);
+                      }}
+                      disabled={!selectedYear}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select Make</option>
+                      {availableMakes.map((make) => (
+                        <option key={make} value={make}>
+                          {make}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="model-select">Model</Label>
+                    <select
+                      id="model-select"
+                      value={selectedModel}
+                      onChange={(e) => {
+                        setSelectedModel(e.target.value);
+                        setSelectedTrimId('');
+                        setManualVehicleData(null);
+                      }}
+                      disabled={!selectedMake}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select Model</option>
+                      {availableModels.map((model) => (
+                        <option key={model} value={model}>
+                          {model}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <Button
+                      onClick={handleManualSearch}
+                      disabled={!selectedYear || !selectedMake || !selectedModel}
+                      className="w-full"
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      Search
+                    </Button>
                   </div>
                 </div>
 
-                {/* Right Column - Specifications */}
-                <div className="space-y-4">
-                  {/* Vehicle Type */}
-                  {(selectedTrim.body_type || selectedTrim.drive_type) && (
-                    <div className="text-muted-foreground">
-                      <span className="text-lg text-foreground">
-                        {[selectedTrim.body_type, selectedTrim.drive_type].filter(Boolean).join(', ')}
-                      </span>
-                    </div>
-                  )}
+                {manualVehicleData && (
+                  <div className="space-y-2">
+                    <Label htmlFor="trim-select">Trim</Label>
+                    <select
+                      id="trim-select"
+                      value={selectedTrimId}
+                      onChange={(e) => setSelectedTrimId(e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {manualVehicleData.trims.map((trim) => (
+                        <option key={trim.id} value={trim.id}>
+                          {trim.trim || trim.trim_description || trim.model}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
-                  {/* Engine */}
-                  {selectedTrim.engine_size_l && (
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-sm">Engine:</div>
-                      <div className="text-foreground">
-                        {formatEngine(selectedTrim)}
-                        {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type}`}
+            {/* Vehicle Details Display */}
+            {currentVehicleData && selectedTrim && (
+              <div className="mt-6 border-t border-border pt-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Left Column - Image and Trim Selector */}
+                  <div className="space-y-4">
+                    <div className="w-full aspect-video overflow-hidden rounded-lg bg-muted">
+                      <ImageWithFallback
+                        src={imageSources}
+                        fallbackSrc="/branding/fallback-logo.png"
+                        alt={`${currentVehicleData.make} ${currentVehicleData.model}`}
+                        width={600}
+                        height={338}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="text-center">
+                      <h3 className="font-bold text-lg text-foreground">
+                        {currentVehicleData.year} {currentVehicleData.make} {currentVehicleData.model}
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        {selectedTrim.trim || `${currentVehicleData.trims.length} trims available`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Specifications */}
+                  <div className="space-y-4">
+                    {/* Vehicle Type */}
+                    {(selectedTrim.body_type || selectedTrim.drive_type) && (
+                      <div className="text-muted-foreground">
+                        <span className="text-lg text-foreground">
+                          {[selectedTrim.body_type, selectedTrim.drive_type].filter(Boolean).join(', ')}
+                        </span>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Output */}
-                  {(selectedTrim.horsepower_hp || selectedTrim.torque_ft_lbs) && (
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-sm">Output:</div>
-                      <div className="text-foreground">
-                        {selectedTrim.horsepower_hp && (
-                          <>
-                            {selectedTrim.horsepower_hp} hp
-                            {selectedTrim.horsepower_rpm && ` @ ${selectedTrim.horsepower_rpm} rpm`}
-                          </>
-                        )}
-                        {selectedTrim.torque_ft_lbs && (
-                          <>
-                            {selectedTrim.horsepower_hp && ' • '}
-                            {selectedTrim.torque_ft_lbs} lb-ft
-                            {selectedTrim.torque_rpm && ` @ ${selectedTrim.torque_rpm} rpm`}
-                          </>
-                        )}
+                    {/* Engine */}
+                    {selectedTrim.engine_size_l && (
+                      <div className="space-y-1">
+                        <div className="text-muted-foreground text-sm">Engine:</div>
+                        <div className="text-foreground">
+                          {formatEngine(selectedTrim)}
+                          {selectedTrim.fuel_type && ` • ${selectedTrim.fuel_type}`}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Transmission */}
-                  {selectedTrim.transmission && (
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-sm">Transmission:</div>
-                      <div className="text-foreground">{selectedTrim.transmission}</div>
-                    </div>
-                  )}
+                    {/* Output */}
+                    {(selectedTrim.horsepower_hp || selectedTrim.torque_ft_lbs) && (
+                      <div className="space-y-1">
+                        <div className="text-muted-foreground text-sm">Output:</div>
+                        <div className="text-foreground">
+                          {selectedTrim.horsepower_hp && (
+                            <>
+                              {selectedTrim.horsepower_hp} hp
+                              {selectedTrim.horsepower_rpm && ` @ ${selectedTrim.horsepower_rpm} rpm`}
+                            </>
+                          )}
+                          {selectedTrim.torque_ft_lbs && (
+                            <>
+                              {selectedTrim.horsepower_hp && ' • '}
+                              {selectedTrim.torque_ft_lbs} lb-ft
+                              {selectedTrim.torque_rpm && ` @ ${selectedTrim.torque_rpm} rpm`}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Fuel Economy/Range */}
-                  {selectedTrim.epa_combined_mpg && (
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-sm">Fuel Economy/Range:</div>
-                      <div className="text-foreground">{formatFuelEconomy(selectedTrim)}</div>
-                    </div>
-                  )}
+                    {/* Transmission */}
+                    {selectedTrim.transmission && (
+                      <div className="space-y-1">
+                        <div className="text-muted-foreground text-sm">Transmission:</div>
+                        <div className="text-foreground">{selectedTrim.transmission}</div>
+                      </div>
+                    )}
+
+                    {/* Fuel Economy/Range */}
+                    {selectedTrim.epa_combined_mpg && (
+                      <div className="space-y-1">
+                        <div className="text-muted-foreground text-sm">Fuel Economy/Range:</div>
+                        <div className="text-foreground">{formatFuelEconomy(selectedTrim)}</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
           </Tabs>
         </div>
 

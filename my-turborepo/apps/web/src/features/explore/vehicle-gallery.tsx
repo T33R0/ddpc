@@ -60,11 +60,11 @@ export function VehicleGallery({ vehicles, onLoadMore, loadingMore, hasMore }: V
             key={vehicle.id}
           >
             <VehicleCard
-                title={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                subtitle={vehicle.trims && vehicle.trims.length > 0 ? `${vehicle.trims.length} Trim${vehicle.trims.length !== 1 ? 's' : ''} Available` : undefined}
-                imageUrl={vehicle.heroImage || vehicle.trims[0]?.image_url}
-                onClick={() => setSelectedVehicle({ summary: vehicle, index })}
-                className="cursor-pointer"
+              title={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+              subtitle={vehicle.trims && vehicle.trims.length > 0 ? `${vehicle.trims.length} Trim${vehicle.trims.length !== 1 ? 's' : ''} Available` : undefined}
+              imageUrl={vehicle.heroImage}
+              onClick={() => setSelectedVehicle({ summary: vehicle, index })}
+              className="cursor-pointer"
             />
           </div>
         ))}

@@ -105,7 +105,7 @@ const formatSpec = (value: string | number | undefined | null, unit: string = ''
 
 function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; vehicleId: string; isOwner: boolean }) {
   const [isUploading, setIsUploading] = useState(false)
-  const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || vehicle.image_url || null)
+  const [imageUrl, setImageUrl] = useState(vehicle.vehicle_image || null)
   const [isHovered, setIsHovered] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -870,11 +870,11 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
           <div className="space-y-4">
             <h3 className="text-xl font-semibold border-b border-border pb-2">Chassis & Suspension</h3>
             <dl className="space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Suspension</dt><dd className="font-medium text-right">{formatSpec(vehicle.suspension)}</dd></div>
+
               {/* Note: front_brakes and rear_brakes might not be in Vehicle type, checking... */}
               {/* They were in the details page but maybe not mapped in Vehicle type. I'll check the type definition if I can, or just use them and see if TS complains. */}
               {/* Based on page.tsx mapping, they are NOT mapped. I will omit them for now or use '—' */}
-              <div className="flex justify-between"><dt className="text-muted-foreground">Tires</dt><dd className="font-medium text-right">{formatSpec(vehicle.tires_and_wheels)}</dd></div>
+
               <div className="flex justify-between"><dt className="text-muted-foreground">Turning Circle</dt><dd className="font-medium text-right">{formatSpec(vehicle.turning_circle_ft, ' ft')}</dd></div>
             </dl>
           </div>

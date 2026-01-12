@@ -243,7 +243,7 @@ const VehicleDetailsModal = ({
   }
 
   // Use heroImage or selected trim image. Fallback is handled by the Image component (DDPC logo)
-  const primaryImageUrl = summary.heroImage || selectedTrim.image_url || null;
+  const primaryImageUrl = summary.heroImage || null;
 
   return (
     <Modal open={open} onOpenChange={(open) => !open && onClose()}>
@@ -452,13 +452,7 @@ const VehicleDetailsModal = ({
                 </div>
               )}
 
-              {/* Suspension */}
-              {selectedTrim.suspension && (
-                <div className="space-y-1">
-                  <div className="text-muted-foreground text-sm">Suspension:</div>
-                  <div className="text-foreground">{selectedTrim.suspension}</div>
-                </div>
-              )}
+
 
               {/* Drivetrain */}
               {selectedTrim.drive_type && (

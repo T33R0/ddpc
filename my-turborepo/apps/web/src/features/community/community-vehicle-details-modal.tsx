@@ -184,7 +184,7 @@ const CommunityVehicleDetailsModal = ({
   };
 
   // Prioritize user uploaded image, then stock photo
-  const primaryImageUrl = selectedTrim.vehicle_image || summary.heroImage || selectedTrim.image_url || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
+  const primaryImageUrl = selectedTrim.vehicle_image || summary.heroImage || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center";
 
   // Format YMMT (Year Make Model Trim)
   const ymmt = `${summary.year} ${summary.make} ${summary.model} ${selectedTrim.trim || ''} `.trim();
@@ -323,13 +323,7 @@ const CommunityVehicleDetailsModal = ({
                 </div>
               )}
 
-              {/* Suspension */}
-              {selectedTrim.suspension && (
-                <div className="space-y-1">
-                  <div className="text-muted-foreground text-sm">Suspension:</div>
-                  <div className="text-foreground">{selectedTrim.suspension}</div>
-                </div>
-              )}
+
 
               {/* Drivetrain */}
               {selectedTrim.drive_type && (

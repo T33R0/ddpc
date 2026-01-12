@@ -65,7 +65,7 @@ export function CommunityGallery({ vehicles, onLoadMore, loadingMore = false, ha
                   imageSrc={
                     summary.trims[0]?.vehicle_image ||
                     summary.heroImage ||
-                    summary.trims[0]?.image_url ||
+
                     undefined
                   }
                   href={`/vehicle/${encodeURIComponent(summary.id)}`}

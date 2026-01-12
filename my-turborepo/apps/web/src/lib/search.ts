@@ -28,12 +28,7 @@ export const searchVehicleSummary = (vehicle: VehicleSummary, terms: string[]): 
             fieldContains(trim.cylinders, term) ||
             fieldContains(trim.engine_size_l, term) ||
             fieldContains(trim.horsepower_hp, term) ||
-            fieldContains(trim.doors, term) ||
-            fieldContains(trim.pros, term) ||
-            fieldContains(trim.cons, term) ||
-            fieldContains(trim.country_of_origin, term) ||
-            fieldContains(trim.car_classification, term) ||
-            fieldContains(trim.platform_code_generation, term)
+            fieldContains(trim.doors, term)
         )
     );
 
