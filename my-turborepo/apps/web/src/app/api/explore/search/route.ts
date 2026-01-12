@@ -100,12 +100,14 @@ export async function GET(request: Request) {
             // Use specific search_query if AI suggests it, otherwise fallback to user input
             const textToEmbed = filters.search_query || query;
 
-            const { embedding } = await embed({
-                model: vercelGateway.textEmbeddingModel('text-embedding-3-small', {
-                    dimensions: 512
-                }),
+            const { embedding: rawEmbedding } = await embed({
+                model: vercelGateway.textEmbeddingModel('text-embedding-3-small'),
                 value: textToEmbed,
             });
+
+            // Vercel Gateway ignores dimensions param, so we manually slice to 512
+            // to match our database column.
+            const embedding = rawEmbedding.slice(0, 512);
 
             // 4c. Call RPC (Step 1: Get Lightweight IDs)
             // We use the optimized search_vehicle_ids function which only returns ID + similarity.
