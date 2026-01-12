@@ -32,6 +32,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
   refreshProfile: () => Promise<void>;
   showLogoutModal: boolean;
   setShowLogoutModal: (show: boolean) => void;
@@ -85,14 +87,14 @@ export function AuthProvider({
           .select('user_id, username, display_name, avatar_url, role, plan')
           .eq('user_id', userId)
           .maybeSingle();
-        
-        const timeoutPromise = new Promise<{ data: null; error: { message: string; code: string } }>((resolve) => 
-          setTimeout(() => resolve({ 
-            data: null, 
-            error: { message: 'Profile query timeout after 10 seconds', code: 'TIMEOUT' } 
+
+        const timeoutPromise = new Promise<{ data: null; error: { message: string; code: string } }>((resolve) =>
+          setTimeout(() => resolve({
+            data: null,
+            error: { message: 'Profile query timeout after 10 seconds', code: 'TIMEOUT' }
           }), 10000)
         );
-        
+
         let data, error;
         try {
           const result = await Promise.race([queryPromise, timeoutPromise]);
@@ -143,7 +145,7 @@ export function AuthProvider({
       // If we have an initial session (SSR), we just need to fetch the profile
       if (initialSession) {
         handlingInitialSession.current = true;
-        
+
         // The browser client should read cookies automatically, but we set the session
         // and wait for it to be ready before querying to ensure RLS policies work
         try {
@@ -151,7 +153,7 @@ export function AuthProvider({
             access_token: initialSession.access_token,
             refresh_token: initialSession.refresh_token || '',
           });
-          
+
           if (setSessionError) {
             console.error('[AUTH] Error setting session:', setSessionError);
           } else {
@@ -161,7 +163,7 @@ export function AuthProvider({
             const maxWait = 1500; // 1.5 seconds max
             const pollInterval = 100; // Check every 100ms
             const maxAttempts = maxWait / pollInterval;
-            
+
             for (let i = 0; i < maxAttempts; i++) {
               const { data: { session } } = await supabase.auth.getSession();
               if (session?.access_token) {
@@ -172,7 +174,7 @@ export function AuthProvider({
                 await new Promise(resolve => setTimeout(resolve, pollInterval));
               }
             }
-            
+
             if (!sessionReady) {
               console.warn('[AUTH] Session not ready after', maxWait, 'ms, proceeding anyway');
             }
@@ -180,15 +182,15 @@ export function AuthProvider({
         } catch (setSessionErr: any) {
           console.error('[AUTH] Exception setting session:', setSessionErr);
         }
-        
+
         if (initialSession.user?.id) {
           // Skip auth check since we have the user ID from SSR and session should be ready
           await fetchProfile(initialSession.user.id, true);
           profileFetchedForInitialSession.current = true;
         }
-        
+
         handlingInitialSession.current = false;
-        
+
         if (mounted.current) {
           setLoading(false);
         }
@@ -290,7 +292,7 @@ export function AuthProvider({
 
   const signUp = async (email: string, password: string) => {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -315,7 +317,7 @@ export function AuthProvider({
           },
           body: JSON.stringify({ userId: data.user.id }),
         });
-        
+
         if (!response.ok) {
           console.warn('[SignUp] Profile creation failed, will be created on email confirmation:', await response.text());
         }
@@ -343,6 +345,18 @@ export function AuthProvider({
         redirectTo: `${window.location.origin}/api/auth/callback?next=/hub`,
       },
     });
+    return { error };
+  };
+
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
     return { error };
   };
 
@@ -375,6 +389,8 @@ export function AuthProvider({
     signIn,
     signInWithGoogle,
     signOut,
+    resetPasswordForEmail,
+    updatePassword,
     refreshProfile,
     showLogoutModal,
     setShowLogoutModal,
@@ -401,6 +417,8 @@ export function useAuth() {
         signIn: async () => ({ error: null }),
         signInWithGoogle: async () => ({ error: null }),
         signOut: async () => { },
+        resetPasswordForEmail: async () => ({ error: null }),
+        updatePassword: async () => ({ error: null }),
         refreshProfile: async () => { },
         showLogoutModal: false,
         setShowLogoutModal: () => { },

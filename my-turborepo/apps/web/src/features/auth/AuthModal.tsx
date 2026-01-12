@@ -27,17 +27,19 @@ export function AuthModal({
   onSuccess
 }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(defaultMode === 'signup');
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { signUp, signIn, signInWithGoogle, resetPasswordForEmail } = useAuth();
 
   // Reset form when modal opens or mode changes
   useState(() => {
     if (isOpen) {
       setIsSignUp(defaultMode === 'signup');
+      setIsForgotPassword(false);
     }
   });
 
@@ -46,7 +48,16 @@ export function AuthModal({
     setLoading(true);
 
     try {
-      if (isSignUp) {
+      if (isForgotPassword) {
+        const { error } = await resetPasswordForEmail(email);
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success('Check your email for the reset link!');
+          setIsForgotPassword(false);
+          // Optional: close modal or switch to sign in
+        }
+      } else if (isSignUp) {
         if (password !== confirmPassword) {
           toast.error('Passwords do not match');
           return;
@@ -99,7 +110,9 @@ export function AuthModal({
     setEmail('');
     setPassword('');
     setConfirmPassword('');
+    setConfirmPassword('');
     setShowPassword(false);
+    setIsForgotPassword(false);
   };
 
   const toggleMode = () => {
@@ -112,10 +125,10 @@ export function AuthModal({
       <ModalContent className="sm:max-w-md">
         <ModalHeader>
           <ModalTitle className="text-center">
-            {title || (isSignUp ? 'Create Account' : 'Welcome Back')}
+            {title || (isForgotPassword ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back')}
           </ModalTitle>
           <ModalDescription className="text-center">
-            {description || (isSignUp ? 'Sign up to get started with DDPC' : 'Sign in to your account')}
+            {description || (isForgotPassword ? "Enter your email and we'll send you a link to reset your password" : isSignUp ? 'Sign up to get started with DDPC' : 'Sign in to your account')}
           </ModalDescription>
         </ModalHeader>
         <ModalBody>
@@ -136,6 +149,9 @@ export function AuthModal({
               </div>
             </div>
 
+          </div>
+
+          {!isForgotPassword && (
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -159,30 +175,46 @@ export function AuthModal({
                 </button>
               </div>
             </div>
+          )}
 
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
               </div>
+            </div>
+          )}
+
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
-            </Button>
-          </form>
+          {!isSignUp && !isForgotPassword && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(true)}
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Loading...' : isForgotPassword ? 'Send Reset Link' : isSignUp ? 'Create Account' : 'Sign In'}
+          </Button>
+        </form>
+
+        {!isForgotPassword && (
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
@@ -191,7 +223,9 @@ export function AuthModal({
               <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
             </div>
           </div>
+        )}
 
+        {!isForgotPassword && (
           <Button
             type="button"
             variant="outline"
@@ -202,19 +236,43 @@ export function AuthModal({
             <Chrome className="mr-2 h-4 w-4" />
             Google
           </Button>
+        )}
 
-          <div className="text-center text-sm text-muted-foreground mt-4">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+        <div className="text-center text-sm text-muted-foreground mt-4">
+          {isForgotPassword ? (
             <button
               type="button"
-              onClick={toggleMode}
+              onClick={() => setIsForgotPassword(false)}
               className="text-primary hover:underline font-medium"
             >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
+              Back to Sign In
             </button>
-          </div>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+          ) : isSignUp ? (
+            <>
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="text-primary hover:underline font-medium"
+              >
+                Sign In
+              </button>
+            </>
+          ) : (
+            <>
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="text-primary hover:underline font-medium"
+              >
+                Sign Up
+              </button>
+            </>
+          )}
+        </div>
+      </ModalBody>
+    </ModalContent>
+    </Modal >
   );
 }
