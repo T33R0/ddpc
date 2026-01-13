@@ -286,6 +286,15 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.privacy = vehicle.privacy || 'PRIVATE'
   vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 
+  // Fetch stock image from vehicle_primary_image
+  const { data: primaryImage } = await supabase
+    .from('vehicle_primary_image')
+    .select('url')
+    .eq('vehicle_id', vehicle.id)
+    .maybeSingle()
+
+  vehicleWithData.stock_image = primaryImage?.url || null
+
   // Add onboarding and ownership fields
   // @ts-expect-error - Extending vehicle type with new fields
   vehicleWithData.is_onboarding_completed = vehicle.is_onboarding_completed

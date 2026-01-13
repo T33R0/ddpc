@@ -28,6 +28,7 @@ export interface Vehicle {
   current_status?: string; // Vehicle status
   privacy?: 'PUBLIC' | 'PRIVATE'; // Privacy setting
   vehicle_image?: string | null; // User-uploaded vehicle image URL
+  stock_image?: string | null; // Stock image URL from vehicle_primary_image table
   trim_description?: string;
   base_msrp?: string;
   base_invoice?: string;

@@ -176,6 +176,12 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
     }
   }
 
+  // Image Priority:
+  // 1. User Uploaded Image (imageUrl state)
+  // 2. Stock Image from DB (vehicle.stock_image)
+  // 3. DDPC Logo Fallback
+  const displayImage = imageUrl || vehicle.stock_image || "/branding/fallback-logo.png"
+
   return (
     <Card
       className={`bg-card rounded-2xl overflow-hidden h-full relative border border-border ${isOwner ? 'cursor-pointer' : ''}`}
@@ -183,8 +189,8 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
       onMouseLeave={isOwner ? () => setIsHovered(false) : undefined}
     >
       <ImageWithTimeoutFallback
-        key={imageUrl || 'default'}
-        src={imageUrl || "https://images.unsplash.com/photo-1494905998402-395d579af36f?w=800&h=600&fit=crop&crop=center"}
+        key={displayImage}
+        src={displayImage}
         fallbackSrc="/branding/fallback-logo.png"
         alt={`${vehicle.name || 'Vehicle'} vehicle`}
         className="w-full h-full object-cover"
