@@ -287,13 +287,21 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   vehicleWithData.vehicle_image = vehicle.vehicle_image || null
 
   // Fetch stock image from vehicle_primary_image
-  const { data: primaryImage } = await supabase
-    .from('vehicle_primary_image')
-    .select('url')
-    .eq('vehicle_id', vehicle.id)
-    .maybeSingle()
+  // IMPORTANT: vehicle_primary_image is keyed on vehicle_data_id (the generic vehicle), not user_vehicle.id
+  const vehicleDataId = vehicle.vehicle_data?.id;
+  let stockImageUrl: string | null = null;
 
-  vehicleWithData.stock_image = primaryImage?.url || null
+  if (vehicleDataId) {
+    const { data: primaryImage } = await supabase
+      .from('vehicle_primary_image')
+      .select('url')
+      .eq('vehicle_id', vehicleDataId)
+      .maybeSingle()
+
+    stockImageUrl = primaryImage?.url || null;
+  }
+
+  vehicleWithData.stock_image = stockImageUrl
 
   // Add onboarding and ownership fields
   // @ts-expect-error - Extending vehicle type with new fields
