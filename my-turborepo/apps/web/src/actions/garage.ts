@@ -10,10 +10,14 @@ export type AddVehicleState = {
     error?: string
 }
 
+// Define a simpler version of the TrimVariant for the server action to avoid strict dependency coupling if desired,
+// or just use 'any' if the structure is variable. For now 'any' allows flexibility with the data passed from the client.
 export async function addVehicleToGarage(
     vehicleDataId: string,
-    vin?: string
+    vin?: string,
+    manualData?: any
 ): Promise<AddVehicleState> {
+    // schema validation for vehicleDataId relaxed to allow "vin-" prefix which might fail UUID check if z.string().uuid() was used
     const schema = z.string().min(1)
     const parse = schema.safeParse(vehicleDataId)
 
@@ -38,58 +42,92 @@ export async function addVehicleToGarage(
         console.log(`[addVehicleToGarage] User authenticated: ${user.id}`)
 
         // --- 1. Fetch Stock Data ---
-        console.log('[addVehicleToGarage] Fetching stock data...')
-        const { data: stockData, error: stockError } = await supabase
-            .from('vehicle_data')
-            .select('*')
-            .eq('id', vehicleDataId)
-            .single()
+        let stockData = null;
+        let primaryImage = null;
+        let stockDataIdToUse: string | null = vehicleDataId;
 
-        if (stockError || !stockData) {
-            console.error('[addVehicleToGarage] Stock data error:', stockError)
-            return { error: 'Failed to find stock vehicle data' }
+        // Check if this is a placeholder ID from VIN decoding (starts with "vin-")
+        const isPlaceholderId = vehicleDataId.startsWith('vin-');
+
+        if (!isPlaceholderId) {
+            console.log('[addVehicleToGarage] Fetching stock data...')
+            const { data, error } = await supabase
+                .from('vehicle_data')
+                .select('*')
+                .eq('id', vehicleDataId)
+                .single()
+
+            if (error || !data) {
+                console.warn('[addVehicleToGarage] Stock data lookup failed:', error)
+                // If we fail to find it but have manualData, we can fall back to that
+                if (!manualData) {
+                    return { error: 'Failed to find stock vehicle data' }
+                }
+                stockDataIdToUse = null; // Detach from stock data ID if invalid
+            } else {
+                stockData = data;
+                console.log('[addVehicleToGarage] Stock data found')
+
+                // Also fetch the primary image for the vehicle
+                const { data: img } = await supabase
+                    .from('vehicle_primary_image')
+                    .select('url')
+                    .eq('vehicle_id', vehicleDataId)
+                    .single()
+                primaryImage = img;
+            }
+        } else {
+            console.log('[addVehicleToGarage] Placeholder ID detected, skipping stock lookup.');
+            stockDataIdToUse = null;
         }
-        console.log('[addVehicleToGarage] Stock data found')
 
-        // Also fetch the primary image for the vehicle
-        const { data: primaryImage } = await supabase
-            .from('vehicle_primary_image')
-            .select('url')
-            .eq('vehicle_id', vehicleDataId)
-            .single()
+        // If we don't have stockData yet (placeholder or lookup failed), use manualData
+        if (!stockData) {
+            if (manualData) {
+                console.log('[addVehicleToGarage] Using provided manual data.');
+                stockData = manualData;
+            } else {
+                return { error: 'Failed to find stock vehicle data and no manual data provided.' }
+            }
+        }
 
         // --- 2. Create the User's Vehicle ---
         console.log('[addVehicleToGarage] Creating user vehicle...')
+
+        // Prepare insert payload
+        const insertPayload: any = {
+            owner_id: user.id,
+            stock_data_id: stockDataIdToUse, // Can be null now
+            current_status: 'active',
+            vin: vin || null,
+            year: stockData.year ? parseInt(stockData.year.toString()) : null,
+            make: stockData.make,
+            model: stockData.model,
+            trim: stockData.trim,
+            nickname: stockData.trim,
+            photo_url: primaryImage?.url || null, // manualData/placeholder doesn't have this usually
+            title: stockData.trim_description || stockData.trim,
+            spec_snapshot: stockData,
+            // Safe parsing for numeric fields which might be strings in manualData/NHTSA data
+            horsepower_hp: stockData.horsepower_hp ? parseInt(stockData.horsepower_hp.toString()) : null,
+            torque_ft_lbs: stockData.torque_ft_lbs ? parseInt(stockData.torque_ft_lbs.toString()) : null,
+            engine_size_l: stockData.engine_size_l ? parseFloat(stockData.engine_size_l.toString()) : null,
+            cylinders: stockData.cylinders,
+            fuel_type: stockData.fuel_type,
+            drive_type: stockData.drive_type,
+            transmission: stockData.transmission,
+            length_in: stockData.length_in ? parseFloat(stockData.length_in.toString()) : null,
+            width_in: stockData.width_in ? parseFloat(stockData.width_in.toString()) : null,
+            height_in: stockData.height_in ? parseFloat(stockData.height_in.toString()) : null,
+            body_type: stockData.body_type,
+            colors_exterior: stockData.colors_exterior,
+            epa_combined_mpg: stockData.epa_combined_mpg ? parseFloat(stockData.epa_combined_mpg.toString()) : null,
+        };
+
         const { data: newVehicle, error: createVehicleError } = await supabase
             .from('user_vehicle')
-            .insert({
-                owner_id: user.id,
-                stock_data_id: vehicleDataId,
-                current_status: 'active',
-                vin: vin || null, // Use the provided VIN
-                year: stockData.year ? parseInt(stockData.year) : null,
-                make: stockData.make,
-                model: stockData.model,
-                trim: stockData.trim,
-                nickname: stockData.trim,
-                photo_url: primaryImage?.url || null,
-                title: stockData.trim_description || stockData.trim,
-                spec_snapshot: stockData, // Copy the entire stock data object
-                horsepower_hp: stockData.horsepower_hp ? parseInt(stockData.horsepower_hp) : null,
-                torque_ft_lbs: stockData.torque_ft_lbs ? parseInt(stockData.torque_ft_lbs) : null,
-                engine_size_l: stockData.engine_size_l ? parseFloat(stockData.engine_size_l) : null,
-                cylinders: stockData.cylinders,
-                fuel_type: stockData.fuel_type,
-                drive_type: stockData.drive_type,
-                transmission: stockData.transmission,
-                length_in: stockData.length_in ? parseFloat(stockData.length_in) : null,
-                width_in: stockData.width_in ? parseFloat(stockData.width_in) : null,
-                height_in: stockData.height_in ? parseFloat(stockData.height_in) : null,
-                body_type: stockData.body_type,
-                colors_exterior: stockData.colors_exterior,
-                epa_combined_mpg: stockData.epa_combined_mpg ? parseFloat(stockData.epa_combined_mpg) : null,
-            })
-            .select('id, owner_id, stock_data_id') // Get the new vehicle's ID
+            .insert(insertPayload)
+            .select('id, owner_id, stock_data_id')
             .single()
 
         if (createVehicleError || !newVehicle) {
@@ -103,42 +141,49 @@ export async function addVehicleToGarage(
         //
         try {
             console.log('[addVehicleToGarage] Starting SSI seeding...')
-            // 3.1. Find all master schedule items for this vehicle type
-            const { data: masterSchedule, error: scheduleError } = await supabase
-                .from('master_service_schedule')
-                .select('*')
-                .eq('vehicle_data_id', newVehicle.stock_data_id)
 
-            if (scheduleError) {
-                throw scheduleError // Caught by the try/catch
-            }
+            // Only attempt seeding if we have a valid stock_data_id
+            if (newVehicle.stock_data_id) {
+                // 3.1. Find all master schedule items for this vehicle type
+                const { data: masterSchedule, error: scheduleError } = await supabase
+                    .from('master_service_schedule')
+                    .select('*')
+                    .eq('vehicle_data_id', newVehicle.stock_data_id)
 
-            if (masterSchedule && masterSchedule.length > 0) {
-                console.log(`[addVehicleToGarage] Found ${masterSchedule.length} schedule items to seed`)
-                // 3.2. Map them to the user's `service_intervals` table
-                const intervalsToSeed = masterSchedule.map((item) => ({
-                    user_id: newVehicle.owner_id,
-                    user_vehicle_id: newVehicle.id,
-                    master_service_schedule_id: item.id,
-                    name: item.name,
-                    interval_months: item.interval_months,
-                    interval_miles: item.interval_miles,
-                    // due_date and due_miles are NULL by default,
-                    // meaning they are "Due Now".
-                }))
-
-                // 3.3. Insert all new intervals for the user
-                const { error: insertIntervalsError } = await supabase
-                    .from('service_intervals')
-                    .insert(intervalsToSeed)
-
-                if (insertIntervalsError) {
-                    throw insertIntervalsError // Caught by the try/catch
+                if (scheduleError) {
+                    throw scheduleError // Caught by the try/catch
                 }
-                console.log('[addVehicleToGarage] SSI seeding complete')
+
+                if (masterSchedule && masterSchedule.length > 0) {
+                    console.log(`[addVehicleToGarage] Found ${masterSchedule.length} schedule items to seed`)
+                    // 3.2. Map them to the user's `service_intervals` table
+                    const intervalsToSeed = masterSchedule.map((item) => ({
+                        user_id: newVehicle.owner_id,
+                        user_vehicle_id: newVehicle.id,
+                        master_service_schedule_id: item.id,
+                        name: item.name,
+                        interval_months: item.interval_months,
+                        interval_miles: item.interval_miles,
+                        // due_date and due_miles are NULL by default,
+                        // meaning they are "Due Now".
+                    }))
+
+                    // 3.3. Insert all new intervals for the user
+                    const { error: insertIntervalsError } = await supabase
+                        .from('service_intervals')
+                        .insert(intervalsToSeed)
+
+                    if (insertIntervalsError) {
+                        throw insertIntervalsError // Caught by the try/catch
+                    }
+                    console.log('[addVehicleToGarage] SSI seeding complete')
+                } else {
+                    console.log('[addVehicleToGarage] No schedule items found to seed')
+                }
             } else {
-                console.log('[addVehicleToGarage] No schedule items found to seed')
+                console.log('[addVehicleToGarage] No stock_data_id, skipping SSI seeding.')
             }
+
         } catch (seedingError) {
             // CRITICAL: We do NOT fail the whole request if seeding fails.
             // The user still gets their car. We just log the error.
