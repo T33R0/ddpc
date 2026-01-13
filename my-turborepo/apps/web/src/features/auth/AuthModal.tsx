@@ -122,7 +122,7 @@ export function AuthModal({
 
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-md">
+      <ModalContent className="max-w-md">
         <ModalHeader>
           <ModalTitle className="text-center">
             {title || (isForgotPassword ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back')}
@@ -132,6 +132,30 @@ export function AuthModal({
           </ModalDescription>
         </ModalHeader>
         <ModalBody>
+          {!isForgotPassword && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleSignIn}
+                className="w-full"
+                disabled={loading}
+              >
+                <Chrome className="mr-2 h-4 w-4" />
+                Google
+              </Button>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+                </div>
+              </div>
+            </>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -210,29 +234,6 @@ export function AuthModal({
             </Button>
           </form>
 
-          {!isForgotPassword && (
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-          )}
-
-          {!isForgotPassword && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleSignIn}
-              className="w-full"
-              disabled={loading}
-            >
-              <Chrome className="mr-2 h-4 w-4" />
-              Google
-            </Button>
-          )}
 
           <div className="text-center text-sm text-muted-foreground mt-4">
             {isForgotPassword ? (
