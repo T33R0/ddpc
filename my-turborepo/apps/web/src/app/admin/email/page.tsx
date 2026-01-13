@@ -42,7 +42,7 @@ export default function EmailAdminPage() {
 
     // Form State
     const [buildLogData, setBuildLogData] = useState<WeeklyBuildLogData>({
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split('T')[0] ?? '',
         features: [''],
         fixes: [''],
         proTip: '',
