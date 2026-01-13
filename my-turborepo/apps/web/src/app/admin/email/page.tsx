@@ -34,7 +34,7 @@ type WeeklyBuildLogData = {
 };
 
 export default function EmailAdminPage() {
-    const { user, loading } = useAuth();
+    const { user, profile, loading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabType>('compose');
     const [channels, setChannels] = useState<EmailChannel[]>([]);
@@ -42,7 +42,7 @@ export default function EmailAdminPage() {
 
     // Form State
     const [buildLogData, setBuildLogData] = useState<WeeklyBuildLogData>({
-        date: new Date().toISOString().split('T')[0] ?? '',
+        date: '',
         features: [''],
         fixes: [''],
         proTip: '',
@@ -50,6 +50,14 @@ export default function EmailAdminPage() {
     });
 
     const [isSending, setIsSending] = useState(false);
+
+    // Set default date on client-side only to avoid hydration mismatch
+    useEffect(() => {
+        setBuildLogData(prev => ({
+            ...prev,
+            date: new Date().toISOString().split('T')[0] ?? ''
+        }));
+    }, []);
 
     // Fetch Channels
     const fetchChannels = useCallback(async () => {
@@ -72,12 +80,18 @@ export default function EmailAdminPage() {
     }, [selectedChannelId]);
 
     useEffect(() => {
-        if (!loading && user?.role !== 'admin') {
+        if (loading) return;
+
+        if (!user || profile?.role !== 'admin') {
             router.push('/');
             return;
         }
         fetchChannels();
-    }, [loading, user, router, fetchChannels]);
+    }, [loading, user, profile, router, fetchChannels]);
+
+    if (loading) {
+        return <div className="p-10 text-center">Loading...</div>;
+    }
 
     // Form Handlers
     const handleFeatureChange = (index: number, value: string) => {
