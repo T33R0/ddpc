@@ -10,8 +10,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
     try {
         // 1. Verify Admin (using standard client for session check)
-        const supabase = createClient();
-        const { data: { user }, error: authError } = await await supabase.auth.getUser();
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user || user.user_metadata.role !== 'admin') { // Assuming role is in metadata or we check a profile table
             // If role is not in metadata, we might need a DB lookup. 
