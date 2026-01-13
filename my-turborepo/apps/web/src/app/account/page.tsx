@@ -62,10 +62,48 @@ export default function AccountPage() {
   const [notifyOnNewUser, setNotifyOnNewUser] = useState(false);
   const [notifyOnIssueReport, setNotifyOnIssueReport] = useState(false);
 
+  // Email Preferences State
+  const [emailChannels, setEmailChannels] = useState<any[]>([]);
+  const [userPreferences, setUserPreferences] = useState<Record<string, boolean>>({});
+
   // Security form state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const fetchEmailPreferences = useCallback(async () => {
+    if (!session?.access_token) return;
+
+    try {
+      // Fetch active channels
+      const { data: channels, error: channelsError } = await supabase
+        .from('email_channels')
+        .select('*')
+        .eq('is_active', true);
+
+      if (channelsError) throw channelsError;
+      setEmailChannels(channels || []);
+
+      // Fetch user preferences
+      const { data: preferences, error: prefError } = await supabase
+        .from('user_email_preferences')
+        .select('*')
+        .eq('user_id', authUser?.id);
+
+      if (prefError) throw prefError;
+
+      // Map preferences for easy lookup
+      const prefMap: Record<string, boolean> = {};
+      preferences?.forEach((p: any) => {
+        prefMap[p.channel_id] = p.is_subscribed;
+      });
+      setUserPreferences(prefMap);
+
+    } catch (error) {
+      console.error('Error fetching email preferences:', error);
+      // Don't block the UI, just log error
+    }
+  }, [session?.access_token, authUser?.id]);
 
   const fetchUserProfile = useCallback(async (retry = true) => {
     if (!session?.access_token) return;
@@ -90,6 +128,10 @@ export default function AccountPage() {
         setIsPublic(data.user.isPublic);
         setNotifyOnNewUser(data.user.notifyOnNewUser || false);
         setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
+
+        // Fetch specific email preferences
+        fetchEmailPreferences();
+
         return data.user;
       } else if (response.status === 401 && retry) {
         // Attempt to refresh session and retry once
@@ -121,6 +163,9 @@ export default function AccountPage() {
           setIsPublic(data.user.isPublic);
           setNotifyOnNewUser(data.user.notifyOnNewUser || false);
           setNotifyOnIssueReport(data.user.notifyOnIssueReport || false);
+
+          fetchEmailPreferences();
+
           return data.user;
         } else {
           const errorData = await retryResponse.json().catch(() => ({}));
@@ -139,7 +184,7 @@ export default function AccountPage() {
       toast.error('Failed to load profile data');
       return null;
     }
-  }, [session?.access_token, signOut]);
+  }, [session?.access_token, signOut, fetchEmailPreferences]);
 
   // Initial load
   useEffect(() => {
@@ -415,6 +460,35 @@ export default function AccountPage() {
       toast.error('Failed to update password');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePreferenceToggle = async (channelId: string, currentState: boolean) => {
+    // Optimistic update
+    const newState = !currentState;
+    setUserPreferences(prev => ({ ...prev, [channelId]: newState }));
+
+    if (!session?.access_token || !authUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_email_preferences')
+        .upsert({
+          user_id: authUser.id,
+          channel_id: channelId,
+          is_subscribed: newState,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        throw error;
+      }
+      toast.success('Preferences updated');
+    } catch (error) {
+      console.error('Error updating preference:', error);
+      toast.error('Failed to update preference');
+      // Revert on error
+      setUserPreferences(prev => ({ ...prev, [channelId]: currentState }));
     }
   };
 
@@ -816,49 +890,75 @@ export default function AccountPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {user.role === 'admin' ? (
-                        <>
-                          <div className="flex items-center justify-between space-x-2">
-                            <Label htmlFor="notifyOnNewUser" className="flex flex-col space-y-1">
-                              <span>New User Signup</span>
-                              <span className="font-normal text-xs text-muted-foreground">
-                                Receive an email when a new user creates an account
-                              </span>
-                            </Label>
-                            <Switch
-                              id="notifyOnNewUser"
-                              checked={notifyOnNewUser}
-                              onCheckedChange={setNotifyOnNewUser}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between space-x-2">
-                            <Label htmlFor="notifyOnIssueReport" className="flex flex-col space-y-1">
-                              <span>New Issue Report</span>
-                              <span className="font-normal text-xs text-muted-foreground">
-                                Receive an email when a user reports an issue
-                              </span>
-                            </Label>
-                            <Switch
-                              id="notifyOnIssueReport"
-                              checked={notifyOnIssueReport}
-                              onCheckedChange={setNotifyOnIssueReport}
-                            />
-                          </div>
-                          <div className="pt-4">
-                            <Button
-                              onClick={handleUpdateProfile}
-                              disabled={isLoading || isUpdated}
-                              className="w-full"
-                            >
-                              {isLoading ? 'Updating...' : isUpdated ? 'Saved' : 'Save Preferences'}
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-sm text-muted-foreground text-center py-6">
-                          No email preferences available for your account type.
+                      {/* Dynamic Channels (Available to all users) */}
+                      {emailChannels.map((channel) => (
+                        <div key={channel.id} className="flex items-center justify-between space-x-2">
+                          <Label htmlFor={`channel-${channel.id}`} className="flex flex-col space-y-1">
+                            <span>{channel.name}</span>
+                            <span className="font-normal text-xs text-muted-foreground">
+                              {channel.description}
+                            </span>
+                          </Label>
+                          <Switch
+                            id={`channel-${channel.id}`}
+                            checked={userPreferences[channel.id] ?? true} // Default to true
+                            onCheckedChange={(checked) => handlePreferenceToggle(channel.id, checked)}
+                          />
+                        </div>
+                      ))}
+
+                      {emailChannels.length === 0 && (
+                        <div className="text-sm text-muted-foreground text-center py-2">
+                          No active email subscriptions available.
                         </div>
                       )}
+
+                      {/* Admin Only Notifications */}
+                      {user.role === 'admin' && (
+                        <>
+                          <div className="border-t border-border my-4 pt-4">
+                            <h4 className="text-sm font-medium mb-3">Admin Notifications</h4>
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between space-x-2">
+                                <Label htmlFor="notifyOnNewUser" className="flex flex-col space-y-1">
+                                  <span>New User Signup</span>
+                                  <span className="font-normal text-xs text-muted-foreground">
+                                    Receive an email when a new user creates an account
+                                  </span>
+                                </Label>
+                                <Switch
+                                  id="notifyOnNewUser"
+                                  checked={notifyOnNewUser}
+                                  onCheckedChange={setNotifyOnNewUser}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between space-x-2">
+                                <Label htmlFor="notifyOnIssueReport" className="flex flex-col space-y-1">
+                                  <span>New Issue Report</span>
+                                  <span className="font-normal text-xs text-muted-foreground">
+                                    Receive an email when a user reports an issue
+                                  </span>
+                                </Label>
+                                <Switch
+                                  id="notifyOnIssueReport"
+                                  checked={notifyOnIssueReport}
+                                  onCheckedChange={setNotifyOnIssueReport}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="pt-4">
+                        <Button
+                          onClick={handleUpdateProfile}
+                          disabled={isLoading || isUpdated}
+                          className="w-full"
+                        >
+                          {isLoading ? 'Updating...' : isUpdated ? 'Saved' : 'Save Preferences'}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -1024,12 +1124,12 @@ export default function AccountPage() {
                       )}
 
                       {user.plan === 'pro' && (
-                         <div className="col-span-2 text-center py-8">
-                            <p className="text-muted-foreground">You are on the highest plan!</p>
-                            <Button variant="outline" onClick={handleManageBilling} className="mt-4">
-                              Manage Subscription
-                            </Button>
-                         </div>
+                        <div className="col-span-2 text-center py-8">
+                          <p className="text-muted-foreground">You are on the highest plan!</p>
+                          <Button variant="outline" onClick={handleManageBilling} className="mt-4">
+                            Manage Subscription
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </CardContent>

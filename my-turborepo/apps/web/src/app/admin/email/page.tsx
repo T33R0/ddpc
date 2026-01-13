@@ -1,0 +1,429 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../../lib/auth';
+import { supabase } from '../../../lib/supabase';
+import { Button } from '@repo/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
+import { Input } from '@repo/ui/input';
+import { Label } from '@repo/ui/label';
+import { Textarea } from '@repo/ui/textarea';
+import { Switch } from '@repo/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
+import { Plus, Trash2, Send, Calendar, Clock, Save, Eye } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+type TabType = 'compose' | 'settings';
+
+type EmailChannel = {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    is_active: boolean;
+};
+
+// Types for the Weekly Build Log form
+type WeeklyBuildLogData = {
+    date: string;
+    features: string[];
+    fixes: string[];
+    proTip: string;
+    scheduledAt: string;
+};
+
+export default function EmailAdminPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState<TabType>('compose');
+    const [channels, setChannels] = useState<EmailChannel[]>([]);
+    const [selectedChannelId, setSelectedChannelId] = useState<string>('');
+
+    // Form State
+    const [buildLogData, setBuildLogData] = useState<WeeklyBuildLogData>({
+        date: new Date().toISOString().split('T')[0],
+        features: [''],
+        fixes: [''],
+        proTip: '',
+        scheduledAt: '',
+    });
+
+    const [isSending, setIsSending] = useState(false);
+
+    // Fetch Channels
+    const fetchChannels = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('email_channels')
+            .select('*')
+            .order('name');
+
+        if (error) {
+            toast.error('Failed to load channels');
+            console.error(error);
+        } else {
+            setChannels(data || []);
+            if (data && data.length > 0 && !selectedChannelId) {
+                // Default to Weekly Build Log if present
+                const wbl = data.find(c => c.slug === 'weekly-build-log');
+                setSelectedChannelId(wbl ? wbl.id : data[0].id);
+            }
+        }
+    }, [selectedChannelId]);
+
+    useEffect(() => {
+        if (!loading && user?.role !== 'admin') {
+            router.push('/');
+            return;
+        }
+        fetchChannels();
+    }, [loading, user, router, fetchChannels]);
+
+    // Form Handlers
+    const handleFeatureChange = (index: number, value: string) => {
+        const newFeatures = [...buildLogData.features];
+        newFeatures[index] = value;
+        setBuildLogData(prev => ({ ...prev, features: newFeatures }));
+    };
+
+    const addFeature = () => {
+        setBuildLogData(prev => ({ ...prev, features: [...prev.features, ''] }));
+    };
+
+    const removeFeature = (index: number) => {
+        setBuildLogData(prev => ({ ...prev, features: prev.features.filter((_, i) => i !== index) }));
+    };
+
+    const handleFixChange = (index: number, value: string) => {
+        const newFixes = [...buildLogData.fixes];
+        newFixes[index] = value;
+        setBuildLogData(prev => ({ ...prev, fixes: newFixes }));
+    };
+
+    const addFix = () => {
+        setBuildLogData(prev => ({ ...prev, fixes: [...prev.fixes, ''] }));
+    };
+
+    const removeFix = (index: number) => {
+        setBuildLogData(prev => ({ ...prev, fixes: prev.fixes.filter((_, i) => i !== index) }));
+    };
+
+    const toggleChannelActive = async (id: string, currentState: boolean) => {
+        const { error } = await supabase
+            .from('email_channels')
+            .update({ is_active: !currentState })
+            .eq('id', id);
+
+        if (error) {
+            toast.error('Failed to update channel status');
+        } else {
+            toast.success('Channel status updated');
+            fetchChannels();
+        }
+    };
+
+    const handleSend = async () => {
+        if (!selectedChannelId) return;
+
+        // Basic Validation
+        if (!buildLogData.features.some(f => f.trim()) && !buildLogData.fixes.some(f => f.trim())) {
+            if (!confirm('No features or fixes listed. Send anyway?')) return;
+        }
+
+        setIsSending(true);
+        try {
+            const response = await fetch('/api/admin/send-newsletter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                },
+                body: JSON.stringify({
+                    channelId: selectedChannelId,
+                    data: buildLogData,
+                    scheduledAt: buildLogData.scheduledAt || null
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                toast.success(`Newsletter ${buildLogData.scheduledAt ? 'scheduled' : 'sent'} successfully!`);
+                // Reset Logic or redirect could go here
+            } else {
+                toast.error(result.error || 'Failed to send newsletter');
+            }
+        } catch (error) {
+            console.error('Send error:', error);
+            toast.error('An error occurred while sending');
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    // Live Preview Component
+    const Preview = () => (
+        <div className="bg-white text-black font-sans p-8 rounded-lg shadow-lg border border-gray-200 max-w-2xl mx-auto">
+            <div className="border-b border-gray-200 pb-4 mb-6">
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">DDPC // BUILD LOG</h1>
+                <p className="text-gray-500 text-sm mt-1">Progress for the week of {new Date(buildLogData.date).toLocaleDateString()}</p>
+            </div>
+
+            <div className="space-y-6">
+                {buildLogData.features.some(f => f.trim()) && (
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">New Features</h3>
+                        <ul className="space-y-3">
+                            {buildLogData.features.filter(f => f.trim()).map((feature, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 shrink-0 mt-0.5">
+                                        NEW
+                                    </span>
+                                    <span className="text-gray-700 leading-relaxed">{feature}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {buildLogData.fixes.some(f => f.trim()) && (
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Fixes & Improvements</h3>
+                        <ul className="space-y-3">
+                            {buildLogData.fixes.filter(f => f.trim()).map((fix, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 shrink-0 mt-0.5">
+                                        FIX
+                                    </span>
+                                    <span className="text-gray-700 leading-relaxed">{fix}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {buildLogData.proTip && (
+                    <div className="bg-gray-50 p-4 rounded-md border border-gray-100 my-6">
+                        <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                            💡 Pro Tip
+                        </h4>
+                        <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                            {buildLogData.proTip}
+                        </div>
+                    </div>
+                )}
+
+                <div className="pt-8 border-t border-gray-200 text-center">
+                    <p className="text-xs text-gray-400">
+                        You received this email because you are subscribed to the Weekly Build Log.
+                        <br />
+                        <a href="#" className="underline hover:text-gray-600">Unsubscribe</a> from updates.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="container mx-auto py-10 px-4 max-w-7xl">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Email Operations Center</h1>
+                    <p className="text-muted-foreground mt-1">Manage and dispatch newsletters to your community.</p>
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <ToggleGroup type="single" value={activeTab} onValueChange={(v) => v && setActiveTab(v as TabType)}>
+                    <ToggleGroupItem value="compose" className="gap-2">
+                        <Send className="h-4 w-4" /> Compose
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="settings" className="gap-2">
+                        <Save className="h-4 w-4" /> Settings
+                    </ToggleGroupItem>
+                </ToggleGroup>
+            </div>
+
+            {activeTab === 'compose' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Editor Column */}
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Configuration</CardTitle>
+                                <CardDescription>Select channel and schedule</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Channel</Label>
+                                    <select
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={selectedChannelId}
+                                        onChange={(e) => setSelectedChannelId(e.target.value)}
+                                    >
+                                        {channels.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Log Date</Label>
+                                        <div className="relative">
+                                            <Input
+                                                type="date"
+                                                value={buildLogData.date}
+                                                onChange={(e) => setBuildLogData(prev => ({ ...prev, date: e.target.value }))}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Schedule Send (Optional)</Label>
+                                        <div className="relative">
+                                            <Input
+                                                type="datetime-local"
+                                                value={buildLogData.scheduledAt}
+                                                onChange={(e) => setBuildLogData(prev => ({ ...prev, scheduledAt: e.target.value }))}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Content</CardTitle>
+                                <CardDescription>What's new this week?</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+
+                                {/* Features */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-green-500 font-semibold">New Features</Label>
+                                        <Button variant="outline" size="sm" onClick={addFeature} type="button">
+                                            <Plus className="h-3 w-3 mr-1" /> Add
+                                        </Button>
+                                    </div>
+                                    {buildLogData.features.map((feature, idx) => (
+                                        <div key={idx} className="flex gap-2">
+                                            <Input
+                                                value={feature}
+                                                onChange={(e) => handleFeatureChange(idx, e.target.value)}
+                                                placeholder="e.g. Added User Preferences UI..."
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeFeature(idx)}
+                                                disabled={buildLogData.features.length === 1}
+                                            >
+                                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Fixes */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-red-500 font-semibold">Fixes & Improvements</Label>
+                                        <Button variant="outline" size="sm" onClick={addFix} type="button">
+                                            <Plus className="h-3 w-3 mr-1" /> Add
+                                        </Button>
+                                    </div>
+                                    {buildLogData.fixes.map((fix, idx) => (
+                                        <div key={idx} className="flex gap-2">
+                                            <Input
+                                                value={fix}
+                                                onChange={(e) => handleFixChange(idx, e.target.value)}
+                                                placeholder="e.g. Fixed navigation bug on mobile..."
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeFix(idx)}
+                                                disabled={buildLogData.fixes.length === 1}
+                                            >
+                                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Pro Tip */}
+                                <div className="space-y-2">
+                                    <Label>Pro Tip</Label>
+                                    <Textarea
+                                        value={buildLogData.proTip}
+                                        onChange={(e) => setBuildLogData(prev => ({ ...prev, proTip: e.target.value }))}
+                                        placeholder="Share a helpful tip for users..."
+                                        rows={4}
+                                    />
+                                </div>
+
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex justify-end pt-4">
+                            <Button onClick={handleSend} disabled={isSending} size="lg">
+                                <Send className="h-4 w-4 mr-2" />
+                                {isSending ? 'Processing...' : buildLogData.scheduledAt ? 'Schedule Newsletter' : 'Send Newsletter'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Preview Column */}
+                    <div className="space-y-4">
+                        <div className="bg-muted p-4 rounded-lg items-center flex gap-2 text-sm text-muted-foreground mb-4">
+                            <Eye className="h-4 w-4" /> Live Preview
+                        </div>
+                        <div className="border-4 border-muted rounded-xl p-4 md:p-8 bg-gray-100 min-h-[600px]">
+                            <Preview />
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                /* Settings Tab */
+                <Card className="max-w-3xl">
+                    <CardHeader>
+                        <CardTitle>Channel Management</CardTitle>
+                        <CardDescription>Manage available email channels for users.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {channels.map(channel => (
+                                <div key={channel.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                                    <div>
+                                        <h3 className="font-semibold">{channel.name}</h3>
+                                        <p className="text-sm text-muted-foreground">{channel.description}</p>
+                                        <div className="text-xs text-muted-foreground mt-1 font-mono">
+                                            Slug: {channel.slug}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-sm ${channel.is_active ? 'text-green-500' : 'text-gray-400'}`}>
+                                            {channel.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                        <Switch
+                                            checked={channel.is_active}
+                                            onCheckedChange={() => toggleChannelActive(channel.id, channel.is_active)}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+
+                            {channels.length === 0 && (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No channels found. Run the database migration.
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+}
