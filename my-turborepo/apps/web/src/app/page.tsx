@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import LandingLayout from './landing-layout';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
-import { AuthModal } from '@repo/ui/auth-modal';
+import { AuthModal } from '@/features/auth/AuthModal';
 import { useAuth } from '../lib/auth';
 import { useRouter } from 'next/navigation';
 
@@ -19,17 +19,7 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
-  const handleGoogleSignIn = () => {
-    signInWithGoogle();
-  };
 
-  const handleEmailSignUp = async (email: string, password: string) => {
-    return await signUp(email, password);
-  };
-
-  const handleEmailSignIn = async (email: string, password: string) => {
-    return await signIn(email, password);
-  };
 
   // If checking auth status or user is logged in (will redirect), don't show landing content
   // If checking auth status or user is logged in (will redirect), show loading
@@ -72,11 +62,8 @@ export default function Home() {
       </div>
 
       <AuthModal
-        open={isAuthModalOpen}
-        onOpenChange={setIsAuthModalOpen}
-        onGoogleSignIn={handleGoogleSignIn}
-        onEmailSignUp={handleEmailSignUp}
-        onEmailSignIn={handleEmailSignIn}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </LandingLayout>
   );
