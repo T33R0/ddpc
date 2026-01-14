@@ -9,5 +9,4 @@ export { AddFuelDialog } from './AddFuelDialog'
 export { FuelHistoryChart } from './FuelHistoryChart'
 export { FuelLogEntries } from './FuelLogEntries'
 export { FuelStatsCard } from './FuelStatsCard'
-// MpgHealthDial is now inlined in FuelPageClient.tsx to avoid import issues
-
+export { FuelEfficiencyGauge } from './FuelEfficiencyGauge'
