@@ -301,7 +301,7 @@ export async function updateFuelLog(
   // Verify ownership and get current values (to recalculate derived fields if needed)
   const { data: log, error: fetchError } = await supabase
     .from('fuel_log')
-    .select('user_vehicle_id, gallons, user_vehicle:user_vehicle_id(owner_id)')
+    .select('user_vehicle_id, gallons, odometer, user_vehicle:user_vehicle_id(owner_id)')
     .eq('id', uuid)
     .single()
 
@@ -324,6 +324,10 @@ export async function updateFuelLog(
     price_per_gallon = data.cost / log.gallons;
   }
 
+  // 1. Get Old Values (to find the "Old Next" if we move it)
+  const oldOdometer = log.odometer
+
+  // 2. Perform Update
   const { error } = await supabase
     .from('fuel_log')
     .update({
@@ -331,10 +335,6 @@ export async function updateFuelLog(
       odometer: data.odometer,
       total_cost: data.cost,
       price_per_gallon: price_per_gallon,
-      // We don't update trip_miles or mpg here because that requires complex chain recalculation
-      // which is out of scope for a simple edit, unless we built a full recalculation engine.
-      // Ideally trigger should handle this, or we accept potential data inconsistency in derived fields.
-      // For now, updating cost/price/odometer/date is good. Odometer change MIGHT invalidate next trip_miles.
     })
     .eq('id', uuid)
 
@@ -343,7 +343,90 @@ export async function updateFuelLog(
     return { success: false, error: 'Failed to update fuel log' }
   }
 
+  // 3. Robust MPG Recalculation Chain
+  // A. Recalculate SELF (This Log)
+  await recalculateMpg(supabase, uuid)
+
+  // B. Recalculate NEW NEXT (The log immediately following the new odometer)
+  const { data: newNextLog } = await supabase
+    .from('fuel_log')
+    .select('id')
+    .eq('user_vehicle_id', log.user_vehicle_id)
+    .gt('odometer', data.odometer) // > New Odometer
+    .order('odometer', { ascending: true })
+    .limit(1)
+    .single()
+
+  if (newNextLog) {
+    await recalculateMpg(supabase, newNextLog.id)
+  }
+
+  // C. Recalculate OLD NEXT (The log that *used* to follow this one, if we moved it)
+  // Only necessary if odometer changed significantly enough to potentially jump another log,
+  // or simply if odometer changed at all, the "gap" needs closing.
+  if (oldOdometer !== data.odometer) {
+    const { data: oldNextLog } = await supabase
+      .from('fuel_log')
+      .select('id')
+      .eq('user_vehicle_id', log.user_vehicle_id)
+      .gt('odometer', oldOdometer) // > Old Odometer
+      .neq('id', uuid) // Don't pick self if self moved slightly but check logic handles this
+      .order('odometer', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (oldNextLog) {
+      // If we moved "down", newNext might be same as oldNext, but `recalculateMpg` is cheap enough just to run.
+      // Uniqueness check: if oldNextLog.id === newNextLog.id, we already did it.
+      if (!newNextLog || newNextLog.id !== oldNextLog.id) {
+        await recalculateMpg(supabase, oldNextLog.id)
+      }
+    }
+  }
+
   revalidatePath('/vehicle/[id]/history', 'page')
   revalidatePath('/vehicle/[id]/fuel', 'page')
   return { success: true }
+}
+
+// Helper for Robust MPG Calculation (Duplicated from fuel/actions.ts or should be shared lib)
+// For now duplicating to keep actions self-contained as requested.
+async function recalculateMpg(supabase: any, logId: string) {
+  // 1. Get current log details
+  const { data: currentLog } = await supabase
+    .from('fuel_log')
+    .select('id, user_vehicle_id, odometer, gallons')
+    .eq('id', logId)
+    .single()
+
+  if (!currentLog) return
+
+  // 2. Find immediate predecessor
+  const { data: prevLog } = await supabase
+    .from('fuel_log')
+    .select('odometer')
+    .eq('user_vehicle_id', currentLog.user_vehicle_id)
+    .lt('odometer', currentLog.odometer)
+    .order('odometer', { ascending: false })
+    .limit(1)
+    .single()
+
+  let mpg = null
+  let trip_miles = null
+
+  if (prevLog) {
+    trip_miles = currentLog.odometer - prevLog.odometer
+    if (trip_miles > 0 && currentLog.gallons > 0 && currentLog.gallons !== null) {
+      mpg = trip_miles / currentLog.gallons
+    }
+  }
+
+  // 3. Update the log
+  await supabase
+    .from('fuel_log')
+    .update({
+      trip_miles: trip_miles,
+      mpg: mpg
+    })
+    .eq('id', logId)
 }
