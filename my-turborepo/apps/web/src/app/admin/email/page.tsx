@@ -11,10 +11,10 @@ import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
 import { Switch } from '@repo/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
-import { Plus, Trash2, Send, Calendar, Clock, Save, Eye } from 'lucide-react';
+import { Plus, Trash2, Send, Calendar, Clock, Save, Eye, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type TabType = 'compose' | 'settings';
+type TabType = 'compose' | 'settings' | 'recipients';
 
 type EmailChannel = {
     id: string;
@@ -80,12 +80,17 @@ export default function EmailAdminPage() {
     }, [selectedChannelId]);
 
     useEffect(() => {
-        if (loading) return;
-
-        if (!user || profile?.role !== 'admin') {
+        // Only redirect if we are DEFINITELY loaded and DEFINITELY not an admin
+        if (!loading && user && profile && profile.role !== 'admin') {
             router.push('/');
-            return;
         }
+        // If loaded but no user, redirect to login (or root)
+        if (!loading && !user) {
+            router.push('/');
+        }
+
+        if (loading || !user || profile?.role !== 'admin') return;
+
         fetchChannels();
     }, [loading, user, profile, router, fetchChannels]);
 
@@ -255,6 +260,9 @@ export default function EmailAdminPage() {
                     <ToggleGroupItem value="settings" className="gap-2">
                         <Save className="h-4 w-4" /> Settings
                     </ToggleGroupItem>
+                    <ToggleGroupItem value="recipients" className="gap-2">
+                        <Users className="h-4 w-4" /> Recipients
+                    </ToggleGroupItem>
                 </ToggleGroup>
             </div>
 
@@ -399,6 +407,9 @@ export default function EmailAdminPage() {
                         </div>
                     </div>
                 </div>
+            ) : activeTab === 'recipients' ? (
+                /* Recipients Tab */
+                <RecipientsView channelId={selectedChannelId} />
             ) : (
                 /* Settings Tab */
                 <Card className="max-w-3xl">
@@ -439,5 +450,83 @@ export default function EmailAdminPage() {
                 </Card>
             )}
         </div>
+    );
+}
+
+// Recipients Component
+function RecipientsView({ channelId }: { channelId: string }) {
+    const [recipients, setRecipients] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!channelId) return;
+
+        const fetchRecipients = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(`/api/admin/recipients?channelId=${channelId}`);
+                const data = await res.json();
+                if (data.recipients) {
+                    setRecipients(data.recipients);
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('Failed to fetch recipients');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRecipients();
+    }, [channelId]);
+
+    if (!channelId) {
+        return <div className="text-muted-foreground p-4">Please select a channel first.</div>;
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Recipients List</CardTitle>
+                <CardDescription>
+                    {loading ? 'Loading...' : `Found ${recipients.length} active subscribers for this channel.`}
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <div className="py-8 text-center">Loading recipients...</div>
+                ) : (
+                    <div className="rounded-md border">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-muted/50 text-muted-foreground">
+                                <tr>
+                                    <th className="p-4 font-medium">Email</th>
+                                    <th className="p-4 font-medium">User ID</th>
+                                    <th className="p-4 font-medium">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recipients.map((user) => (
+                                    <tr key={user.id} className="border-t">
+                                        <td className="p-4">{user.email}</td>
+                                        <td className="p-4 font-mono text-xs">{user.id}</td>
+                                        <td className="p-4 text-muted-foreground">
+                                            {new Date(user.created_at).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {recipients.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                                            No recipients found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
