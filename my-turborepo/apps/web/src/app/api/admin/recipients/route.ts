@@ -12,9 +12,14 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Role check - assuming consistent metadata location
-        const role = user.user_metadata?.role || user.app_metadata?.role;
-        if (role !== 'admin') {
+        // Check role from profile table for consistency
+        const { data: profile } = await supabase
+            .from('user_profile')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+        if (profile?.role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
