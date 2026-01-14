@@ -8,12 +8,32 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { FuelEntry } from '../lib/getVehicleFuelData'
+import { HistoryDetailSheet } from '../../timeline/components/HistoryDetailSheet'
+import { VehicleEvent } from '../../timeline/lib/getVehicleEvents'
+import { useState } from 'react'
 
 interface FuelLogEntriesProps {
   fuelEntries: FuelEntry[]
 }
 
 export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
+  const [selectedEvent, setSelectedEvent] = useState<VehicleEvent | null>(null)
+
+  const handleEntryClick = (entry: FuelEntry) => {
+    // Convert FuelEntry to VehicleEvent for the sheet
+    const event: VehicleEvent = {
+      id: `fuel-${entry.id}`, // Ensure ID matches what getVehicleEvents produces
+      date: entry.date,
+      title: `Fuel Up: ${entry.gallons.toFixed(2)} gal`,
+      description: entry.mpg ? `${entry.mpg.toFixed(1)} MPG` : 'Fuel log',
+      type: 'fuel',
+      cost: entry.cost,
+      odometer: entry.odometer,
+      // Pass other fields if needed by standardizing VehicleEvent or custom handling
+    }
+    setSelectedEvent(event)
+  }
+
   if (fuelEntries.length === 0) {
     return (
       <Card
@@ -53,7 +73,8 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
           {sortedEntries.map((entry) => (
             <div
               key={entry.id}
-              className="bg-muted/50 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-accent transition-colors"
+              onClick={() => handleEntryClick(entry)}
+              className="bg-muted/50 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-accent transition-colors cursor-pointer active:scale-[0.99]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -86,14 +107,16 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
                         <p className="text-foreground font-medium">{formatCurrency(entry.cost)}</p>
                       </div>
                     )}
-                    {entry.mpg && (
-                      <div>
-                        <p className="text-muted-foreground">Price/Gal</p>
-                        <p className="text-foreground font-medium">
-                          {entry.cost ? formatCurrency(entry.cost / entry.gallons) : 'N/A'}
-                        </p>
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-muted-foreground">Price/Gal</p>
+                      <p className="text-foreground font-medium">
+                        {entry.price_per_gallon
+                          ? formatCurrency(entry.price_per_gallon)
+                          : entry.cost
+                            ? formatCurrency(entry.cost / entry.gallons)
+                            : 'N/A'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -101,6 +124,12 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
           ))}
         </div>
       </CardContent>
+
+      <HistoryDetailSheet
+        event={selectedEvent}
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </Card>
   )
 }

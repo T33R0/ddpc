@@ -262,3 +262,88 @@ export async function updateMileage(
   revalidatePath('/vehicle/[id]/history', 'page')
   return { success: true }
 }
+
+export async function updateFuelLog(
+  logId: string,
+  data: {
+    event_date: Date
+    odometer: number
+    cost: number
+    notes?: string
+    // TODO: support gallons, price_per_gallon, octane if we add them to the simple edit form
+  }
+): Promise<UpdateResult> {
+  const uuid = logId.replace('fuel-', '')
+  const idSchema = z.string().uuid()
+
+  if (!idSchema.safeParse(uuid).success) {
+    return { success: false, error: 'Invalid Log ID' }
+  }
+
+  const dataSchema = z.object({
+    event_date: z.date(),
+    odometer: z.number().nonnegative(),
+    cost: z.number().nonnegative(),
+    notes: z.string().optional()
+  })
+
+  if (!dataSchema.safeParse(data).success) {
+    return { success: false, error: 'Invalid input data' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  // Verify ownership and get current values (to recalculate derived fields if needed)
+  const { data: log, error: fetchError } = await supabase
+    .from('fuel_log')
+    .select('user_vehicle_id, gallons, user_vehicle:user_vehicle_id(owner_id)')
+    .eq('id', uuid)
+    .single()
+
+  if (fetchError || !log) {
+    return { success: false, error: 'Record not found' }
+  }
+
+  // @ts-expect-error user_vehicle relation type inference
+  if (log.user_vehicle.owner_id !== user.id) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  // We are currently ONLY editing date, odometer, cost, notes via the simple form.
+  // Gallons is NOT being edited.
+  // We MUST update price_per_gallon if cost changes, or keep it consistent.
+  // If we only update cost, and gallons is fixed, price_per_gallon = cost / gallons.
+
+  let price_per_gallon: number = 0;
+  if (log.gallons > 0 && data.cost > 0) {
+    price_per_gallon = data.cost / log.gallons;
+  }
+
+  const { error } = await supabase
+    .from('fuel_log')
+    .update({
+      event_date: data.event_date.toISOString(),
+      odometer: data.odometer,
+      total_cost: data.cost,
+      price_per_gallon: price_per_gallon,
+      // We don't update trip_miles or mpg here because that requires complex chain recalculation
+      // which is out of scope for a simple edit, unless we built a full recalculation engine.
+      // Ideally trigger should handle this, or we accept potential data inconsistency in derived fields.
+      // For now, updating cost/price/odometer/date is good. Odometer change MIGHT invalidate next trip_miles.
+    })
+    .eq('id', uuid)
+
+  if (error) {
+    console.error('Error updating fuel log:', error)
+    return { success: false, error: 'Failed to update fuel log' }
+  }
+
+  revalidatePath('/vehicle/[id]/history', 'page')
+  revalidatePath('/vehicle/[id]/fuel', 'page')
+  return { success: true }
+}

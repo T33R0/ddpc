@@ -6,7 +6,7 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Textarea } from '@repo/ui/textarea'
 import { Label } from '@repo/ui/label'
-import { updateMaintenanceLog, updateMod, updateMileage } from '../actions/timeline-actions'
+import { updateMaintenanceLog, updateMod, updateMileage, updateFuelLog } from '../actions/timeline-actions'
 import { useRouter } from 'next/navigation'
 import {
   Modal,
@@ -103,6 +103,13 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
           date: new Date(formData.date || new Date().toISOString()),
           odometer: parseInt(formData.odometer),
         })
+      } else if (event.type === 'fuel') {
+        result = await updateFuelLog(event.id, {
+          event_date: new Date(formData.date || new Date().toISOString()),
+          odometer: formData.odometer ? parseInt(formData.odometer) : 0,
+          cost: formData.cost ? parseFloat(formData.cost) : 0,
+          notes: formData.description,
+        })
       }
 
       if (result?.success) {
@@ -144,8 +151,9 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
           <span className={cn(
             "text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider",
             event.type === 'maintenance' ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" :
-            event.type === 'modification' ? "bg-lime-500/10 text-lime-600 dark:text-lime-400" :
-            "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+              event.type === 'modification' ? "bg-lime-500/10 text-lime-600 dark:text-lime-400" :
+                event.type === 'fuel' ? "bg-red-500/10 text-red-600 dark:text-red-400" :
+                  "bg-orange-500/10 text-orange-600 dark:text-orange-400"
           )}>
             {event.type}
           </span>
@@ -160,7 +168,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
           {isEditing && !isMileage ? (
             <Input
               value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
           ) : (
             <div className="text-lg font-bold text-foreground">{formData.title}</div>
@@ -171,10 +179,10 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
         <div className="space-y-2">
           <Label>Date</Label>
           {isEditing ? (
-             <Input
+            <Input
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData({...formData, date: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               disabled={isMileage} // Read-only for mileage as per request "except recorded time"
             />
           ) : (
@@ -191,7 +199,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
               type="number"
               inputMode="numeric"
               value={formData.odometer}
-              onChange={(e) => setFormData({...formData, odometer: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, odometer: e.target.value })}
             />
           ) : (
             <div className="text-foreground">
@@ -210,7 +218,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
                 step="0.01"
                 inputMode="decimal"
                 value={formData.cost}
-                onChange={(e) => setFormData({...formData, cost: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
               />
             ) : (
               <div className="text-foreground">
@@ -227,7 +235,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
             {isEditing ? (
               <Input
                 value={formData.serviceProvider}
-                onChange={(e) => setFormData({...formData, serviceProvider: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, serviceProvider: e.target.value })}
                 placeholder="e.g., Dealer, DIY"
               />
             ) : (
@@ -241,9 +249,9 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
           <div className="space-y-2">
             <Label>Status</Label>
             {isEditing ? (
-               <Input
+              <Input
                 value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 placeholder="e.g., Installed, Planned"
               />
             ) : (
@@ -259,7 +267,7 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
             <Textarea
               className="min-h-[100px]"
               value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           ) : (
             <div className="text-foreground whitespace-pre-wrap">{formData.description || 'No notes available.'}</div>

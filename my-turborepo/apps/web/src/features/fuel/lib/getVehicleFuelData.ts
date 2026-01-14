@@ -5,6 +5,7 @@ export interface FuelEntry {
   date: Date
   gallons: number
   cost?: number
+  price_per_gallon?: number
   odometer: number
   mpg?: number // calculated field
 }
@@ -50,7 +51,7 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
 
   // Decode the slug in case it's URL encoded
   const decodedSlug = decodeURIComponent(vehicleSlug)
-  
+
   // Determine if this looks like a UUID or a nickname
   const isLikelyUUID = isUUID(decodedSlug)
 
@@ -146,6 +147,7 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
         date: new Date(log.event_date),
         gallons: log.gallons,
         cost: log.total_cost || undefined,
+        price_per_gallon: log.price_per_gallon || undefined,
         odometer: log.odometer,
         mpg: log.mpg || undefined,
       }

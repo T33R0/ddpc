@@ -34,7 +34,8 @@ export function HistoryDetailSheet({ event, isOpen, onClose }: HistoryDetailShee
                     <DrawerTitle className="text-xl font-bold">
                       {event.type === 'maintenance' ? 'Maintenance Detail' :
                         event.type === 'modification' ? 'Modification Detail' :
-                          'Mileage Detail'}
+                          event.type === 'fuel' ? 'Fuel Detail' :
+                            'Mileage Detail'}
                     </DrawerTitle>
                     <DrawerClose asChild>
                       <button className="rounded-full p-2 hover:bg-muted transition-colors">
