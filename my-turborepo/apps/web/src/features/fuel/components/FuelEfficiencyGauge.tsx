@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
 interface FuelEfficiencyGaugeProps {
     averageMpg: number | undefined
@@ -26,33 +26,6 @@ export function FuelEfficiencyGauge({ averageMpg, factoryMpg }: FuelEfficiencyGa
         )
     }
 
-    // Calculate percentage relative to factory MPG
-    const percentage = (averageMpg / factoryMpg) * 100
-
-    // Cap visual percentage for the gauge (e.g., max 130% for visual purposes)
-    // We want the bar to fill up appropriate to the "health"
-    // Let's say Factory (100%) is the target. 
-    // If we want a "gauge" style:
-    // 0% - empty
-    // 100% - full circle? Or 100% = "Good"?
-    // Recharts RadialBar is good for "Progress".
-    // Let's do a 180 degree gauge.
-
-    // Angle: 180 (Left) -> 0 (Right) ? Or 210 -> -30 ?
-    // Let's do a standard semi-circle: startAngle={180} endAngle={0}
-
-    // Data for Recharts
-    // We need a background track (always 100% of the gauge) and the value bar.
-    // Actually RadialBarChart usually takes one data array.
-    // Let's normalize the value. If Factory is 100%, let's say max gauge is 133% (so 75% is roughly 9 o'clock if full circle, but for semicircle 100% is full).
-    // Actually for a semi-circle gauge, usually "100% efficiency" might be the goal.
-    // Let's mapping: 
-    // 0 MPG -> 0 degrees
-    // Factory * 1.2 MPG -> 180 degrees (Full)
-
-    const maxDomainMpg = factoryMpg * 1.25 // 125% of factory is the "Max" of the gauge
-    const gaugeValue = Math.min(averageMpg, maxDomainMpg)
-
     // Determine color
     const pctOfFactory = averageMpg / factoryMpg
     let fill = '#9CA3AF' // gray
@@ -61,12 +34,16 @@ export function FuelEfficiencyGauge({ averageMpg, factoryMpg }: FuelEfficiencyGa
     else if (pctOfFactory >= 0.85) fill = '#F59E0B' // Yellow (Okay)
     else fill = '#EF4444' // Red (Poor)
 
+    // Gauge Logic
+    // We want a semi-circle (180 degrees)
+    // Range: 0 to Max (125% of factory)
+    const maxDomainMpg = factoryMpg * 1.25
+    const gaugeValue = Math.min(averageMpg, maxDomainMpg)
+    const remainder = maxDomainMpg - gaugeValue
+
     const data = [
-        {
-            name: 'MPG',
-            value: gaugeValue,
-            fill: fill,
-        }
+        { name: 'Value', value: gaugeValue, color: fill },
+        { name: 'Remainder', value: remainder, color: 'hsl(var(--muted))' }, // Track color
     ]
 
     const difference = averageMpg - factoryMpg
@@ -78,36 +55,27 @@ export function FuelEfficiencyGauge({ averageMpg, factoryMpg }: FuelEfficiencyGa
             </CardHeader>
             <CardContent className="h-[250px] relative">
                 <ResponsiveContainer width="100%" height="100%">
-                    <RadialBarChart
-                        cx="50%"
-                        cy="70%"
-                        innerRadius="80%"
-                        outerRadius="100%"
-                        barSize={20}
-                        data={data}
-                        startAngle={180}
-                        endAngle={0}
-                    >
-                        {/* Background Track - simulated by PolarAngleAxis simply or a second RadialBar? 
-                Recharts implementation of "Track" often involves a second bar or axis configuration.
-                PolarAngleAxis type="number" domain={[0, maxDomainMpg]} will create the scale.
-            */}
-                        <PolarAngleAxis
-                            type="number"
-                            domain={[0, maxDomainMpg]}
-                            angleAxisId={0}
-                            tick={false}
-                        />
-                        <RadialBar
-                            background
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            cx="50%"
+                            cy="70%"
+                            startAngle={180}
+                            endAngle={0}
+                            innerRadius="80%"
+                            outerRadius="100%"
+                            paddingAngle={0}
                             dataKey="value"
-                            cornerRadius={10}
-                            label={false}
-                        />
-                    </RadialBarChart>
+                            stroke="none"
+                        >
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                        </Pie>
+                    </PieChart>
                 </ResponsiveContainer>
 
-                {/* Center Text Overlay - Positioned absolute to center over the semi-circle */}
+                {/* Center Text Overlay */}
                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 pointer-events-none">
                     <div className="text-center">
                         <p className="text-sm text-muted-foreground mb-1 uppercase tracking-wider font-medium">Average</p>
