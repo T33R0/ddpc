@@ -40,7 +40,7 @@ async function fetchFromGitHub(config: ContextLoaderConfig): Promise<string | nu
     }
 
     try {
-        const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/ogma_constitution.yaml?ref=${githubBranch}`;
+        const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/apps/docs/content/ogma/ogma_constitution.yaml?ref=${githubBranch}`;
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${githubToken}`,
@@ -74,7 +74,7 @@ async function loadFromFileSystem(): Promise<string | null> {
         // Search up to 6 levels up
         let currentDir = __dirname;
         for (let i = 0; i < 8; i++) {
-            const checkPath = path.join(currentDir, 'ogma_constitution.yaml');
+            const checkPath = path.join(currentDir, 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml');
             try {
                 const content = await readFile(checkPath, 'utf-8');
                 return content;
@@ -89,7 +89,7 @@ async function loadFromFileSystem(): Promise<string | null> {
 
         // Checking process.cwd as fallback
         try {
-            const cwdPath = path.join(process.cwd(), 'ogma_constitution.yaml');
+            const cwdPath = path.join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml');
             const content = await readFile(cwdPath, 'utf-8');
             return content;
         } catch {

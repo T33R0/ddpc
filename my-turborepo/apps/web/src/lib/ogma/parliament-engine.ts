@@ -21,8 +21,9 @@ function loadConstitution(): any {
   try {
     // Try multiple possible paths (workspace root, relative to web app, etc.)
     const possiblePaths = [
-      join(process.cwd(), '..', '..', '..', 'ogma_constitution.yaml'), // From apps/web to workspace root
-      join(process.cwd(), 'ogma_constitution.yaml'), // If running from workspace root
+      join(process.cwd(), '..', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From apps/web to apps/docs
+      join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From workspace root
+      join(process.cwd(), 'my-turborepo', 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From outer root
     ];
 
     let fileContents: string | null = null;
@@ -52,7 +53,7 @@ function loadConstitution(): any {
         { name: 'Tactical Empathy', source: 'Chris Voss', principle: 'Bind users/partners through understanding, not force.' },
         { name: 'Pyramid of Success', source: 'John Wooden', principle: 'Competitive greatness through industriousness and enthusiasm.' }
       ],
-      operational_rules: { 
+      operational_rules: {
         trinity_protocol: { personas: ['Architect', 'Visionary', 'Engineer'] },
         silence: { principles: ['Internal deliberation before external communication', 'Consensus-driven output', 'Zero tolerance for filler content'] }
       }
@@ -63,7 +64,7 @@ function loadConstitution(): any {
 // Build system prompts from constitution
 function buildPersonaPrompts(constitution: any) {
   const coreValues = constitution.core_values || [];
-  const valuesText = coreValues.map((v: any) => 
+  const valuesText = coreValues.map((v: any) =>
     `- ${v.name} (${v.source}): ${v.principle}`
   ).join('\n');
 
@@ -227,7 +228,7 @@ async function generateCritiques(
   // Each persona critiques the other two
   const critiquePrompts = responses.map((response, idx) => {
     const otherResponses = responses.filter((_, i) => i !== idx);
-    const otherSolutions = otherResponses.map(r => 
+    const otherSolutions = otherResponses.map(r =>
       `[${r.persona}]: ${r.solution}`
     ).join('\n\n');
 
@@ -242,9 +243,9 @@ async function generateCritiques(
       const personaKey = persona.toLowerCase() as keyof typeof TRINITY;
       const systemPrompt = personaPrompts[personaKey];
       const modelName = personaKey === 'architect' ? 'deepseek/deepseek-v3.2' :
-                       personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
-                       'google/gemini-2.5-flash';
-      
+        personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
+          'google/gemini-2.5-flash';
+
       return generateText({
         model: TRINITY[personaKey].model,
         system: systemPrompt,
@@ -285,10 +286,10 @@ async function generateVotes(
   const votes: Record<string, 'Yes' | 'No'> = {};
 
   // Build a summary of all solutions and critiques
-  const allSolutions = responses.map(r => 
+  const allSolutions = responses.map(r =>
     `[${r.persona}]: ${r.solution}`
   ).join('\n\n');
-  
+
   const allCritiques = Object.entries(critiques).map(([persona, critique]) =>
     `[${persona}'s Critique]: ${critique}`
   ).join('\n\n');
@@ -296,7 +297,7 @@ async function generateVotes(
   const votePrompts = responses.map(response => {
     const personaKey = response.persona.toLowerCase() as keyof typeof TRINITY;
     const systemPrompt = personaPrompts[personaKey];
-    
+
     return {
       persona: response.persona,
       prompt: `Round ${round} - Voting Decision\n\nAll Solutions:\n${allSolutions}\n\nAll Critiques:\n${allCritiques}\n\nBased on the debate, do you agree that we have reached consensus on the best solution? Respond with ONLY "Yes" or "No" followed by a brief reasoning.`
@@ -308,9 +309,9 @@ async function generateVotes(
       const personaKey = persona.toLowerCase() as keyof typeof TRINITY;
       const systemPrompt = personaPrompts[personaKey];
       const modelName = personaKey === 'architect' ? 'deepseek/deepseek-v3.2' :
-                       personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
-                       'google/gemini-2.5-flash';
-      
+        personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
+          'google/gemini-2.5-flash';
+
       return generateText({
         model: TRINITY[personaKey].model,
         system: systemPrompt,
@@ -368,9 +369,9 @@ async function refineSolutions(
       const personaKey = response.persona.toLowerCase() as keyof typeof TRINITY;
       const systemPrompt = personaPrompts[personaKey];
       const modelName = personaKey === 'architect' ? 'deepseek/deepseek-v3.2' :
-                       personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
-                       'google/gemini-2.5-flash';
-      
+        personaKey === 'visionary' ? 'anthropic/claude-3.5-haiku' :
+          'google/gemini-2.5-flash';
+
       // Get critiques relevant to this persona
       const relevantCritiques = Object.entries(critiques)
         .filter(([persona]) => persona !== response.persona)
@@ -416,44 +417,44 @@ export async function runParliamentEngine(
 ): Promise<{ finalResponse: string; rounds: DebateRound[]; consensusReached: boolean }> {
   const constitution = loadConstitution();
   const personaPrompts = buildPersonaPrompts(constitution);
-  
+
   const rounds: DebateRound[] = [];
-  
+
   // Initial solutions with progress
   onProgress?.({ stage: 'initial', message: 'Architect, Visionary, and Engineer generating initial solutions...' });
   let responses = await generateInitialSolutions(userPrompt, personaPrompts, sessionId);
   onProgress?.({ stage: 'initial_complete', message: 'Initial solutions generated' });
-  
+
   let consensusReached = false;
   let currentRound = 1;
   const MAX_ROUNDS = 4; // Reduced from 7 to speed up responses
 
   while (currentRound <= MAX_ROUNDS && !consensusReached) {
-    onProgress?.({ 
-      stage: 'round_start', 
-      round: currentRound, 
-      message: `Round ${currentRound}: Trinity models deliberating...` 
+    onProgress?.({
+      stage: 'round_start',
+      round: currentRound,
+      message: `Round ${currentRound}: Trinity models deliberating...`
     });
-    
+
     // Generate critiques with progress
-    onProgress?.({ 
-      stage: 'critiques', 
-      round: currentRound, 
-      message: 'Generating critiques...' 
+    onProgress?.({
+      stage: 'critiques',
+      round: currentRound,
+      message: 'Generating critiques...'
     });
     const critiques = await generateCritiques(responses, personaPrompts, currentRound, sessionId);
-    
+
     // Generate votes with progress
-    onProgress?.({ 
-      stage: 'votes', 
-      round: currentRound, 
-      message: 'Trinity models voting...' 
+    onProgress?.({
+      stage: 'votes',
+      round: currentRound,
+      message: 'Trinity models voting...'
     });
     const votes = await generateVotes(responses, critiques, personaPrompts, currentRound, sessionId);
-    
+
     // Check consensus
     consensusReached = checkConsensus(votes);
-    
+
     // Record this round
     rounds.push({
       round: currentRound,
@@ -463,12 +464,12 @@ export async function runParliamentEngine(
       consensusReached
     });
 
-    onProgress?.({ 
-      stage: 'round_complete', 
-      round: currentRound, 
-      message: consensusReached 
-        ? `Consensus reached in round ${currentRound}!` 
-        : `Round ${currentRound} complete, continuing...` 
+    onProgress?.({
+      stage: 'round_complete',
+      round: currentRound,
+      message: consensusReached
+        ? `Consensus reached in round ${currentRound}!`
+        : `Round ${currentRound} complete, continuing...`
     });
 
     // If consensus reached, break
@@ -478,10 +479,10 @@ export async function runParliamentEngine(
 
     // If not the last round, refine solutions
     if (currentRound < MAX_ROUNDS) {
-      onProgress?.({ 
-        stage: 'refine', 
-        round: currentRound, 
-        message: 'Refining solutions based on critiques...' 
+      onProgress?.({
+        stage: 'refine',
+        round: currentRound,
+        message: 'Refining solutions based on critiques...'
       });
       responses = await refineSolutions(responses, critiques, personaPrompts, userPrompt, currentRound, sessionId);
     }
@@ -496,7 +497,7 @@ export async function runParliamentEngine(
     return currentVotes >= 2 ? current : best;
   }, responses[0]);
 
-  const allSolutions = responses.map(r => 
+  const allSolutions = responses.map(r =>
     `[${r.persona}]: ${r.solution}`
   ).join('\n\n');
 
@@ -506,9 +507,9 @@ export async function runParliamentEngine(
     .join('\n\n');
 
   // Synthesize final response
-  onProgress?.({ 
-    stage: 'synthesis', 
-    message: 'Synthesizing final response...' 
+  onProgress?.({
+    stage: 'synthesis',
+    message: 'Synthesizing final response...'
   });
 
   const synthesisPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has reached ${consensusReached ? 'consensus' : 'a decision after maximum rounds'}.
@@ -535,9 +536,9 @@ Synthesize the agreed-upon solution into a single, articulate response. Speak as
     prompt: synthesisPrompt
   });
 
-  onProgress?.({ 
-    stage: 'complete', 
-    message: 'Response ready' 
+  onProgress?.({
+    stage: 'complete',
+    message: 'Response ready'
   });
 
   // Log compute cost for final synthesis

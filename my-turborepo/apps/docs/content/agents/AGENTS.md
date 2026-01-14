@@ -42,7 +42,7 @@ All generated code and architectural decisions must align with these six pillars
 
 ### B. Documentation & Change Logging
 * **MANDATORY LOGGING:** Every significant file modification must be recorded.
-* **FORMAT:** Update `CHANGELOG.md` (or creating it if missing) with:
+* **FORMAT:** Update `apps/docs/content/general/CHANGELOG.md` (or creating it if missing) with:
     * `[DATE]` `[COMPONENT]` `[CHANGE TYPE]` Description of change.
 * **INLINE DOCS:** Complex logic requires concise comments explaining *why*, not just *what*.
 
@@ -81,7 +81,7 @@ All generated code and architectural decisions must align with these six pillars
   - Radix UI and other frontend libs in web app.
 
 * **Known Technical Debt / Notes:**
-  - No CHANGELOG.md found at repository root (will be created for logging).
+  - CHANGELOG.md is located at `apps/docs/content/general/CHANGELOG.md`.
   - Internal workspace packages use broad "*" versions (my-turborepo pattern) — review for reproducibility.
   - Next and React versions are recent/alpha (Next ^15, React ^19) — ensure compatibility with tooling.
   - Supabase directory exists but remote DB schema not available for scan here — any DB actions must follow ROEs.
