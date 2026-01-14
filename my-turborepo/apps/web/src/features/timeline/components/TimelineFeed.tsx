@@ -134,19 +134,19 @@ export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 
             Filter:
           </div>
           <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2">
-            <ToggleGroupItem value="maintenance" aria-label="Toggle maintenance" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground">
+            <ToggleGroupItem value="maintenance" aria-label="Toggle maintenance" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary/80 dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground dark:data-[state=on]:hover:bg-primary/80">
               <Wrench className="w-4 h-4 mr-2" />
               <span className="text-xs font-medium">Maintenance</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground">
+            <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary/80 dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground dark:data-[state=on]:hover:bg-primary/80">
               <Fuel className="w-4 h-4 mr-2" />
               <span className="text-xs font-medium">Fuel</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="modification" aria-label="Toggle modifications" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground">
+            <ToggleGroupItem value="modification" aria-label="Toggle modifications" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary/80 dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground dark:data-[state=on]:hover:bg-primary/80">
               <Zap className="w-4 h-4 mr-2" />
               <span className="text-xs font-medium">Mods</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="mileage" aria-label="Toggle mileage" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground">
+            <ToggleGroupItem value="mileage" aria-label="Toggle mileage" className="h-9 px-3 border border-transparent transition-all bg-muted text-muted-foreground hover:bg-muted/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary/80 dark:data-[state=on]:bg-primary dark:data-[state=on]:text-primary-foreground dark:data-[state=on]:hover:bg-primary/80">
               <Gauge className="w-4 h-4 mr-2" />
               <span className="text-xs font-medium">Mileage</span>
             </ToggleGroupItem>
