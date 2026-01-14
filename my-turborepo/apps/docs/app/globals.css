@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
 /* Import shared theme definitions from packages/ui - MUST be before tailwind */
-@import '../../../../packages/ui/src/globals.css';
+@import '../../../packages/ui/src/globals.css';
 
 @tailwind base;
 @tailwind components;
