@@ -38,10 +38,6 @@ export default async function VehicleHistoryPage({ params }: VehicleHistoryPageP
   let events: VehicleEvent[] = []
   let errorMessage: string | null = null
 
-  import { getHistoryFilters } from '@/features/preferences/actions'
-
-  // ...
-
   try {
     events = await getVehicleEvents(vehicleId) // Use resolved UUID
   } catch (error) {
@@ -54,21 +50,53 @@ export default async function VehicleHistoryPage({ params }: VehicleHistoryPageP
   return (
     <>
       <section className="relative py-12 bg-background min-h-screen">
-        {/* ... */}
-        {errorMessage ? (
-          <Card className="max-w-md mx-auto border-destructive/50 mt-12">
-            {/* ... */}
-          </Card>
-        ) : (
-          <TimelineFeed events={events} initialFilters={initialFilters} />
-        )}
-      </div>
-    </section >
-    </>
-  )
-}
-        </div >
-      </section >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
+        >
+          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+        </div>
+
+        <div className="relative container px-4 md:px-6 pt-24">
+          <div className="mb-8">
+            <Button
+              variant="outline"
+              className="mb-4 border-border text-muted-foreground hover:bg-muted hover:border-accent"
+              asChild
+            >
+              <Link href={`/vehicle/${vehicleSlug}`}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Vehicle
+              </Link>
+            </Button>
+            <h1 className="text-4xl font-bold text-foreground">Vehicle History</h1>
+            <p className="text-lg text-muted-foreground mt-2">Complete maintenance and ownership history</p>
+          </div>
+
+          {errorMessage ? (
+            <Card className="max-w-md mx-auto border-destructive/50 mt-12">
+              <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-destructive" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load history</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {errorMessage}
+                </p>
+                <Button asChild variant="outline">
+                  <Link href={`/vehicle/${vehicleSlug}/history`}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Try Again
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <TimelineFeed events={events} initialFilters={initialFilters} />
+          )}
+        </div>
+      </section>
     </>
   )
 }

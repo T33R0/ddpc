@@ -1,8 +1,97 @@
+'use client'
+
+import React, { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
+import { VehicleEvent } from '../lib/getVehicleEvents'
+import { HistoryDetailSheet } from './HistoryDetailSheet'
+import { Wrench, Zap, Gauge, History, Fuel, Filter } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group'
 import { updateHistoryFilters } from '@/features/preferences/actions'
-import { Filter } from 'lucide-react'
 
 // ... existing icons ...
+
+interface TimelineFeedProps {
+  events: VehicleEvent[]
+  initialFilters?: string[]
+}
+
+// Icon components for different event types
+function FuelIcon({ className }: { className?: string }) {
+  return (
+    <div className={`w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center ${className}`}>
+      <Fuel className="w-4 h-4 text-red-400" />
+    </div>
+  )
+}
+
+function MaintenanceIcon({ className }: { className?: string }) {
+  return (
+    <div className={`w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center ${className}`}>
+      <Wrench className="w-4 h-4 text-cyan-400" />
+    </div>
+  )
+}
+
+function ModificationIcon({ className }: { className?: string }) {
+  return (
+    <div className={`w-8 h-8 bg-lime-500/20 rounded-full flex items-center justify-center ${className}`}>
+      <Zap className="w-4 h-4 text-lime-400" />
+    </div>
+  )
+}
+
+function MileageIcon({ className }: { className?: string }) {
+  return (
+    <div className={`w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center ${className}`}>
+      <Gauge className="w-4 h-4 text-orange-400" />
+    </div>
+  )
+}
+
+function getEventIcon(type: VehicleEvent['type']) {
+  switch (type) {
+    case 'maintenance':
+      return <MaintenanceIcon />
+    case 'modification':
+      return <ModificationIcon />
+    case 'mileage':
+      return <MileageIcon />
+    case 'fuel':
+      return <FuelIcon />
+    default:
+      return <MaintenanceIcon />
+  }
+}
+
+function getEventTypeLabel(type: VehicleEvent['type']) {
+  switch (type) {
+    case 'maintenance':
+      return 'Maintenance'
+    case 'modification':
+      return 'Modification'
+    case 'mileage':
+      return 'Mileage Update'
+    case 'fuel':
+      return 'Fuel Log'
+    default:
+      return 'Event'
+  }
+}
+
+function getEventTypeColor(type: VehicleEvent['type']) {
+  switch (type) {
+    case 'maintenance':
+      return 'text-cyan-400'
+    case 'modification':
+      return 'text-lime-400'
+    case 'mileage':
+      return 'text-orange-400'
+    case 'fuel':
+      return 'text-red-400'
+    default:
+      return 'text-muted-foreground'
+  }
+}
 
 interface TimelineFeedProps {
   events: VehicleEvent[]
@@ -14,20 +103,14 @@ export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 
   const [activeFilters, setActiveFilters] = useState<string[]>(initialFilters)
 
   const handleFilterChange = (value: string[]) => {
-    // If value is empty, user deselected all. That's allowed.
     setActiveFilters(value)
-    // Fire and forget persistence
     updateHistoryFilters(value).catch(err => console.error('Failed to save filter preference', err))
   }
 
   const filteredEvents = events.filter(event => activeFilters.includes(event.type))
 
-  // Show "No events found" if filters result in empty list (but we have events total)
-  // If total events is 0, show "No History Yet" (handled below)
-
   if (events.length === 0) {
     return (
-      // ... (existing empty state)
       <Card className="bg-card rounded-2xl text-foreground border border-border">
         <CardContent className="flex flex-col items-center justify-center py-16">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -51,20 +134,20 @@ export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 
             Filter:
           </div>
           <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start">
-            <ToggleGroupItem value="maintenance" aria-label="Toggle maintenance" className="data-[state=on]:bg-cyan-500/10 data-[state=on]:text-cyan-500 data-[state=on]:border-cyan-200 border-transparent border">
-              <MaintenanceIcon />
+            <ToggleGroupItem value="maintenance" aria-label="Toggle maintenance" className="data-[state=on]:bg-cyan-500/10 data-[state=on]:text-cyan-500 data-[state=on]:border-cyan-200 border-transparent border h-9 px-3">
+              <MaintenanceIcon className="w-4 h-4 bg-transparent" />
               <span className="ml-2 text-xs font-medium">Maintenance</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="data-[state=on]:bg-red-500/10 data-[state=on]:text-red-500 data-[state=on]:border-red-200 border-transparent border">
-              <FuelIcon />
+            <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="data-[state=on]:bg-red-500/10 data-[state=on]:text-red-500 data-[state=on]:border-red-200 border-transparent border h-9 px-3">
+              <FuelIcon className="w-4 h-4 bg-transparent" />
               <span className="ml-2 text-xs font-medium">Fuel</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="modification" aria-label="Toggle modifications" className="data-[state=on]:bg-lime-500/10 data-[state=on]:text-lime-500 data-[state=on]:border-lime-200 border-transparent border">
-              <ModificationIcon />
+            <ToggleGroupItem value="modification" aria-label="Toggle modifications" className="data-[state=on]:bg-lime-500/10 data-[state=on]:text-lime-500 data-[state=on]:border-lime-200 border-transparent border h-9 px-3">
+              <ModificationIcon className="w-4 h-4 bg-transparent" />
               <span className="ml-2 text-xs font-medium">Mods</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="mileage" aria-label="Toggle mileage" className="data-[state=on]:bg-orange-500/10 data-[state=on]:text-orange-500 data-[state=on]:border-orange-200 border-transparent border">
-              <MileageIcon />
+            <ToggleGroupItem value="mileage" aria-label="Toggle mileage" className="data-[state=on]:bg-orange-500/10 data-[state=on]:text-orange-500 data-[state=on]:border-orange-200 border-transparent border h-9 px-3">
+              <MileageIcon className="w-4 h-4 bg-transparent" />
               <span className="ml-2 text-xs font-medium">Mileage</span>
             </ToggleGroupItem>
           </ToggleGroup>
