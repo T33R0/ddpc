@@ -144,12 +144,8 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
     fuelLogs.forEach((log) => {
       const fuelEntry: FuelEntry = {
         id: log.id,
-        // Parse date manually to avoid timezone shifting (YYYY-MM-DD to local date)
-        date: new Date(
-          parseInt(log.event_date.split('-')[0]),
-          parseInt(log.event_date.split('-')[1]) - 1,
-          parseInt(log.event_date.split('-')[2])
-        ),
+        // Use Noon UTC to ensure date stays stable across timezones when converted to local
+        date: new Date(`${log.event_date}T12:00:00Z`),
         gallons: log.gallons,
         cost: log.total_cost || undefined,
         price_per_gallon: log.price_per_gallon || undefined,

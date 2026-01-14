@@ -170,12 +170,8 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
     fuelLogs.forEach((log: any) => {
       events.push({
         id: `fuel-${log.id}`,
-        // Parse date manually to avoid timezone shifting
-        date: new Date(
-          parseInt(log.event_date.split('-')[0]),
-          parseInt(log.event_date.split('-')[1]) - 1,
-          parseInt(log.event_date.split('-')[2])
-        ),
+        // Use Noon UTC to ensure date stays stable across timezones
+        date: new Date(`${log.event_date}T12:00:00Z`),
         title: `Fuel Up: ${log.gallons} gal`,
         description: log.mpg ? `${log.mpg.toFixed(1)} MPG` : 'Fuel log',
         type: 'fuel',
