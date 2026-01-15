@@ -15,7 +15,12 @@ export default function OgmaAdminPage() {
 
     // Lifted State
     const [sessionId, setSessionId] = useState<string | null>(null);
-    const [selectedModel, setSelectedModel] = useState<string>('synthesizer');
+    const [modelConfig, setModelConfig] = useState({
+        synthesizer: 'anthropic/claude-3.5-haiku',
+        architect: 'deepseek/deepseek-v3.2',
+        visionary: 'anthropic/claude-3.5-haiku',
+        engineer: 'google/gemini-2.5-flash'
+    });
 
     // Auth Protection
     useEffect(() => {
@@ -37,15 +42,15 @@ export default function OgmaAdminPage() {
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] w-full overflow-hidden bg-background">
+        <div className="flex flex-col h-screen w-full overflow-hidden bg-background pt-16">
             {/* Rigid Container */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel - Fixed Width */}
-                <div className="w-64 flex flex-col border-r border-border bg-muted/10 shrink-0">
+                <div className="w-72 flex flex-col border-r border-border bg-muted/10 shrink-0">
                     <div className="flex-none p-3 border-b border-border">
                         <ModelSelectorButton
-                            value={selectedModel}
-                            onChange={setSelectedModel}
+                            config={modelConfig}
+                            onChange={setModelConfig}
                         />
                     </div>
 
@@ -69,7 +74,7 @@ export default function OgmaAdminPage() {
                     <OgmaChatWindow
                         key={sessionId || 'new'}
                         sessionId={sessionId}
-                        modelConfig={selectedModel}
+                        modelConfig={modelConfig}
                     />
                 </div>
             </div>

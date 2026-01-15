@@ -99,8 +99,16 @@ export async function POST(req: Request) {
 
   try {
     console.log('[Ogma] API route called at', new Date().toISOString());
-    const { messages, sessionId } = await req.json();
-    console.log('[Ogma] Received request:', { messageCount: messages?.length, sessionId, hasMessages: !!messages });
+    const { messages, sessionId, modelConfig } = await req.json();
+    console.log('[Ogma] Received request:', { messageCount: messages?.length, sessionId, hasMessages: !!messages, modelConfig });
+
+    // Default configuration if not provided
+    const config = {
+      synthesizer: modelConfig?.synthesizer || 'anthropic/claude-3.5-haiku',
+      architect: modelConfig?.architect || 'deepseek/deepseek-v3.2',
+      visionary: modelConfig?.visionary || 'anthropic/claude-3.5-haiku',
+      engineer: modelConfig?.engineer || 'google/gemini-2.5-flash'
+    };
 
     if (!messages || messages.length === 0) {
       console.error('[Ogma] No messages in request');
@@ -174,16 +182,16 @@ ${ledgerContext}
     const personaPrompts = buildPersonaPrompts(sophiaContext);
 
     // Run parallel thinking streams (not separate agents - these are Ogma's internal modes)
-    console.log('[Ogma] Activating parallel thinking streams...');
+    console.log('[Ogma] Activating parallel thinking streams with config:', config);
     const trinityStartTime = Date.now();
     const [architectResult, visionaryResult, engineerResult] = await Promise.allSettled([
       // Architectural thinking stream
       (async (): Promise<AgentResult> => {
         console.log('[Ogma] Architectural thinking stream active...');
         const start = Date.now();
-        const modelName = 'openai/gpt-4o-mini';
+        const modelName = config.architect;
         const result = await generateText({
-          model: TRINITY.architect.model,
+          model: vercelGateway(modelName),
           system: personaPrompts.architect,
           prompt: `User Request: ${userPrompt}\n\nThink through this architecturally. What are your structural thoughts?`
         });
@@ -200,9 +208,9 @@ ${ledgerContext}
       (async (): Promise<AgentResult> => {
         console.log('[Ogma] Visionary thinking stream active...');
         const start = Date.now();
-        const modelName = 'anthropic/claude-3-haiku';
+        const modelName = config.visionary;
         const result = await generateText({
-          model: TRINITY.visionary.model,
+          model: vercelGateway(modelName),
           system: personaPrompts.visionary,
           prompt: `User Request: ${userPrompt}\n\nThink through this strategically. What are your visionary thoughts?`
         });
@@ -220,9 +228,9 @@ ${ledgerContext}
         try {
           console.log('[Ogma] Engineering thinking stream active...');
           const start = Date.now();
-          const modelName = 'openai/gpt-4o-mini';
+          const modelName = config.engineer;
           const result = await generateText({
-            model: TRINITY.engineer.model,
+            model: vercelGateway(modelName),
             system: personaPrompts.engineer,
             prompt: `User Request: ${userPrompt}\n\nThink through this practically. What are your engineering thoughts?`
           });
@@ -324,11 +332,12 @@ CRITICAL:
 
     let synthesisResult;
     try {
-      console.log('[Ogma] Calling streamText with model:', ogmaVoice);
+      const synthesisModel = config.synthesizer;
+      console.log('[Ogma] Calling streamText with synthesis model:', synthesisModel);
       console.log('[Ogma] Prompt length:', userPrompt.length, 'Solutions length:', allSolutions.length);
 
       synthesisResult = await streamText({
-        model: ogmaVoice,
+        model: vercelGateway(synthesisModel),
         system: synthesisSystemPrompt,
         prompt: `User Request: ${userPrompt}
 
@@ -388,24 +397,24 @@ Speak as one unified consciousness.`,
       textStream: synthesisResult.textStream ? 'exists' : 'missing',
       fullStream: synthesisResult.fullStream ? 'exists' : 'missing'
     });
-    
+
     if (!synthesisResult) {
       console.error('[Ogma] synthesisResult is null/undefined!');
       return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
     }
-    
+
     // Check if we have a text stream before creating response
     if (!synthesisResult.textStream) {
       console.error('[Ogma] No textStream available!');
       return new Response(
-        JSON.stringify({ error: 'Stream generation failed - no text stream available' }), 
-        { 
+        JSON.stringify({ error: 'Stream generation failed - no text stream available' }),
+        {
           status: 500,
           headers: { 'Content-Type': 'application/json' }
         }
       );
     }
-    
+
     // Use toTextStreamResponse() - standard method for useChat
     try {
       const streamResponse = synthesisResult.toTextStreamResponse();
@@ -416,7 +425,7 @@ Speak as one unified consciousness.`,
         headers: Object.fromEntries(streamResponse.headers.entries()),
         contentType: streamResponse.headers.get('content-type')
       });
-      
+
       // Verify the response body exists
       if (!streamResponse.body) {
         console.error('[Ogma] Stream response has no body!');
@@ -425,7 +434,7 @@ Speak as one unified consciousness.`,
           { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
       }
-      
+
       return streamResponse;
     } catch (responseError) {
       console.error('[Ogma] Error creating stream response:', responseError);

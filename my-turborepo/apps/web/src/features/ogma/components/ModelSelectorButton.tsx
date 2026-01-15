@@ -9,99 +9,141 @@ import {
     DialogTitle,
     DialogTrigger
 } from '@repo/ui/dialog';
-import { Bot, Cpu, Lightbulb, PenTool, Sparkles, Check } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@repo/ui/select';
+import { Settings, Bot, Cpu, Lightbulb, PenTool, Sparkles } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
+import { Label } from '@repo/ui/label';
 
-export interface ModelSelectorProps {
-    value: string;
-    onChange: (value: string) => void;
+export interface ModelConfig {
+    synthesizer: string;
+    architect: string;
+    visionary: string;
+    engineer: string;
 }
 
-export function ModelSelectorButton({ value, onChange }: ModelSelectorProps) {
+export interface ModelSelectorProps {
+    config: ModelConfig;
+    onChange: (config: ModelConfig) => void;
+}
+
+const MODEL_OPTIONS = [
+    { value: 'openai/gpt-4o', label: 'GPT-4o' },
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'google/gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+    { value: 'openai/o1-preview', label: 'o1 Preview' },
+    { value: 'deepseek/deepseek-v3.2', label: 'DeepSeek V3.2' },
+    { value: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku' },
+    { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+];
+
+export function ModelSelectorButton({ config, onChange }: ModelSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const model = value;
-    const setModel = onChange;
 
-
-    const models = [
-        {
-            id: 'synthesizer',
-            name: 'Synthesizer (Default)',
-            description: 'The integrated voice of Ogma. Uses the Trinity (Architect, Visionary, Engineer) to synthesize the best response.',
-            icon: Sparkles,
-            color: 'text-primary',
-            borderColor: 'border-primary'
-        },
-        {
-            id: 'architect',
-            name: 'The Architect',
-            description: 'Focuses on structure, patterns, and long-term system integrity.',
-            icon: PenTool,
-            color: 'text-blue-500',
-            borderColor: 'border-blue-500'
-        },
-        {
-            id: 'visionary',
-            name: 'The Visionary',
-            description: 'Focuses on innovation, user experience, and strategic positioning.',
-            icon: Lightbulb,
-            color: 'text-purple-500',
-            borderColor: 'border-purple-500'
-        },
-        {
-            id: 'engineer',
-            name: 'The Engineer',
-            description: 'Focuses on implementation, code correctness, and execution.',
-            icon: Cpu,
-            color: 'text-emerald-500',
-            borderColor: 'border-emerald-500'
-        }
-    ];
+    const updateConfig = (key: keyof ModelConfig, value: string) => {
+        onChange({ ...config, [key]: value });
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <div className="p-4 border-b border-border bg-background/50 backdrop-blur-sm cursor-pointer hover:bg-muted/50 transition-colors">
+                <button className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors group border border-transparent hover:border-border cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <Bot className="w-6 h-6 text-primary" />
+                        <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
+                            <Settings className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col text-left">
-                            <span className="text-sm font-semibold tracking-tight">Ogma Admin Console</span>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Model: {model}</span>
+                            <span className="text-sm font-medium">System Config</span>
+                            <span className="text-[10px] text-muted-foreground">Trinity & Synthesizer</span>
                         </div>
                     </div>
-                </div>
+                </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Select Ogma Model</DialogTitle>
+                    <DialogTitle>Ogma System Configuration</DialogTitle>
                     <DialogDescription>
-                        Choose which aspect of Ogma you want to interact with directly.
+                        Configure the underlying models for the Synthesizer and the Trinity agents.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-1 gap-4">
-                        {models.map((m) => (
-                            <div
-                                key={m.id}
-                                onClick={() => setModel(m.id)}
-                                className={cn(
-                                    "flex flex-col items-start space-y-1 rounded-md border p-4 cursor-pointer transition-all",
-                                    model === m.id ? `bg-muted/50 ${m.borderColor} border-2` : "border-border hover:bg-muted/30"
-                                )}
-                            >
-                                <div className="flex items-center gap-2 w-full">
-                                    <m.icon className={cn("w-4 h-4", m.color)} />
-                                    <span className="font-semibold">{m.name}</span>
-                                    {model === m.id && <Check className="w-4 h-4 text-primary ml-auto" />}
-                                </div>
-                                <span className="text-xs text-muted-foreground pl-6">
-                                    {m.description}
-                                </span>
-                            </div>
-                        ))}
+                <div className="grid gap-6 py-4">
+
+                    {/* Synthesizer */}
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-primary">
+                            <Sparkles className="w-4 h-4" /> Synthesizer (The Voice)
+                        </Label>
+                        <p className="text-[11px] text-muted-foreground mb-2">The final voice that synthesizes all inputs.</p>
+                        <Select value={config.synthesizer} onValueChange={(v) => updateConfig('synthesizer', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MODEL_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
+
+                    <div className="h-px bg-border my-2" />
+
+                    {/* Architect */}
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-blue-500">
+                            <PenTool className="w-4 h-4" /> The Architect
+                        </Label>
+                        <Select value={config.architect} onValueChange={(v) => updateConfig('architect', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MODEL_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Visionary */}
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-purple-500">
+                            <Lightbulb className="w-4 h-4" /> The Visionary
+                        </Label>
+                        <Select value={config.visionary} onValueChange={(v) => updateConfig('visionary', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MODEL_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Engineer */}
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-emerald-500">
+                            <Cpu className="w-4 h-4" /> The Engineer
+                        </Label>
+                        <Select value={config.engineer} onValueChange={(v) => updateConfig('engineer', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {MODEL_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                 </div>
             </DialogContent>
         </Dialog>

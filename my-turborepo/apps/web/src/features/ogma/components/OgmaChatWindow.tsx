@@ -11,7 +11,7 @@ import { getChatMessages } from '../actions';
 
 interface OgmaChatWindowProps {
     sessionId?: string | null;
-    modelConfig?: string; // or any type needed
+    modelConfig?: any; // Using any or specific interface to avoid circular deps for now
 }
 
 export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) {
@@ -67,7 +67,6 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                         <Terminal className="w-12 h-12 text-primary" />
                         <h2 className="text-xl font-medium mt-4">Ogma Online</h2>
                         <p className="text-sm text-muted-foreground mt-2">Select a model or start typing...</p>
-                        {modelConfig && <p className="text-xs text-muted-foreground/70 mt-1 uppercase tracking-wider">Active Model: {modelConfig}</p>}
                     </div>
                 )}
 
