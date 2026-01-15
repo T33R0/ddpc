@@ -71,14 +71,12 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
         try {
             // 3. Create Session if needed
             if (!currentSessionId) {
-                console.log('[OGMA-CORE] No session ID, creating new session...');
                 try {
                     currentSessionId = await createChatSession(content.substring(0, 30));
-                    console.log('[OGMA-CORE] New session created:', currentSessionId);
 
                     // Update URL silently without full reload if possible, or expect navigation
                     router.push(`/admin/ogma?id=${currentSessionId}`);
-                    // Note: router.push might trigger re-mount. 
+                    // Note: router.push might trigger re-mount.
                     // Ideally we continue using currentSessionId even if re-mount happens later.
                 } catch (err) {
                     console.error('Failed to create session:', err);
@@ -126,7 +124,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
             }
 
         } catch (error) {
-            console.error('[OGMA-CORE] Chat error:', error);
+            console.error('Chat error:', error);
             setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: 'Error: Failed to process request.' }]);
         } finally {
             setIsLoading(false);
