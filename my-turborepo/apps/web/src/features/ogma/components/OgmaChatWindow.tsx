@@ -133,9 +133,6 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                             autoFocus
                             disabled={isLoading}
                         />
-                        autoFocus
-                        disabled={isLoading}
-                        />
                         <button
                             type="submit"
                             disabled={isLoading || !input?.trim()}
