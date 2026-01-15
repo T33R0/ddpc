@@ -42,7 +42,7 @@ export default function OgmaAdminPage() {
     }
 
     return (
-        <div className="fixed inset-0 top-16 z-40 flex flex-col bg-background overflow-hidden">
+        <div className="fixed inset-0 top-32 z-40 flex flex-col bg-background overflow-hidden">
             {/* Rigid Container */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel - Fixed Width */}

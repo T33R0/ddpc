@@ -19,7 +19,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
     const chatBody = useMemo(() => ({ sessionId, modelConfig }), [sessionId, modelConfig]);
 
     // Key-based remounting is handled by parent for full reset
-    const { messages, setMessages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    const { messages, setMessages, input, setInput, handleInputChange, handleSubmit, isLoading } = useChat({
         api: '/api/ogma',
         body: chatBody,
         id: sessionId || 'ogma-new-chat',
@@ -128,14 +128,13 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                         <input
                             className="flex-1 bg-muted/50 border border-input rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 transition-all shadow-sm"
                             value={input}
-                            onChange={(e) => {
-                                // Debug logging for user report
-                                // console.log('Input changed:', e.target.value);
-                                handleInputChange(e);
-                            }}
+                            onChange={(e) => setInput(e.target.value)}
                             placeholder={sessionId ? "Message Ogma..." : "Select a chat or start typing..."}
                             autoFocus
                             disabled={isLoading}
+                        />
+                        autoFocus
+                        disabled={isLoading}
                         />
                         <button
                             type="submit"
