@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import { Send, Terminal, Loader2, PenTool, Lightbulb, Cpu } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 // import { Button } from '@/components/ui/button';
@@ -19,12 +19,27 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
     const chatBody = useMemo(() => ({ sessionId, modelConfig }), [sessionId, modelConfig]);
 
     // Key-based remounting is handled by parent for full reset
-    const { messages, setMessages, input, setInput, handleInputChange, handleSubmit, isLoading } = useChat({
+    const { messages, setMessages, append, isLoading } = useChat({
         api: '/api/ogma',
         body: chatBody,
         id: sessionId || 'ogma-new-chat',
         onError: (e: Error) => console.error('Chat Error:', e),
     }) as any;
+
+    const [localInput, setLocalInput] = useState('');
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!localInput.trim()) return;
+
+        const content = localInput;
+        setLocalInput(''); // Clear immediately
+
+        await append({
+            role: 'user',
+            content,
+        });
+    };
 
     // Load History
     useEffect(() => {
@@ -124,18 +139,18 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
             {/* Bottom: Input Area */}
             <div className="p-4 border-t bg-background/95 backdrop-blur-sm z-10 shrink-0">
                 <div className="max-w-4xl mx-auto w-full">
-                    <form onSubmit={handleSubmit} className="flex gap-2 items-center relative">
+                    <form onSubmit={handleSend} className="flex gap-2 items-center relative">
                         <input
                             className="flex-1 bg-muted/50 border border-input rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 transition-all shadow-sm"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
+                            value={localInput}
+                            onChange={(e) => setLocalInput(e.target.value)}
                             placeholder={sessionId ? "Message Ogma..." : "Select a chat or start typing..."}
                             autoFocus
                             disabled={isLoading}
                         />
                         <button
                             type="submit"
-                            disabled={isLoading || !input?.trim()}
+                            disabled={isLoading || !localInput?.trim()}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2 shadow-sm"
                         >
                             <span className="hidden sm:inline">Send</span>
