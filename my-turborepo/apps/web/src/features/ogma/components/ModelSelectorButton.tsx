@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@repo/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -10,13 +9,47 @@ import {
     DialogTitle,
     DialogTrigger
 } from '@repo/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@repo/ui/radio-group';
-import { Label } from '@repo/ui/label';
-import { Bot, Cpu, Lightbulb, PenTool, Sparkles } from 'lucide-react';
+import { Bot, Cpu, Lightbulb, PenTool, Sparkles, Check } from 'lucide-react';
+import { cn } from '@repo/ui/lib/utils';
 
 export function ModelSelectorButton() {
     const [model, setModel] = useState('synthesizer');
     const [isOpen, setIsOpen] = useState(false);
+
+    const models = [
+        {
+            id: 'synthesizer',
+            name: 'Synthesizer (Default)',
+            description: 'The integrated voice of Ogma. Uses the Trinity (Architect, Visionary, Engineer) to synthesize the best response.',
+            icon: Sparkles,
+            color: 'text-primary',
+            borderColor: 'border-primary'
+        },
+        {
+            id: 'architect',
+            name: 'The Architect',
+            description: 'Focuses on structure, patterns, and long-term system integrity.',
+            icon: PenTool,
+            color: 'text-blue-500',
+            borderColor: 'border-blue-500'
+        },
+        {
+            id: 'visionary',
+            name: 'The Visionary',
+            description: 'Focuses on innovation, user experience, and strategic positioning.',
+            icon: Lightbulb,
+            color: 'text-purple-500',
+            borderColor: 'border-purple-500'
+        },
+        {
+            id: 'engineer',
+            name: 'The Engineer',
+            description: 'Focuses on implementation, code correctness, and execution.',
+            icon: Cpu,
+            color: 'text-emerald-500',
+            borderColor: 'border-emerald-500'
+        }
+    ];
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -41,65 +74,27 @@ export function ModelSelectorButton() {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <RadioGroup defaultValue={model} onValueChange={setModel} className="grid grid-cols-1 gap-4">
-
-                        <Label
-                            htmlFor="synthesizer"
-                            className="flex flex-col items-start space-y-1 rounded-md border p-4 hover:bg-muted/50 cursor-pointer [&:has([data-state=checked])]:border-primary"
-                        >
-                            <div className="flex items-center gap-2 w-full">
-                                <RadioGroupItem value="synthesizer" id="synthesizer" />
-                                <Sparkles className="w-4 h-4 text-primary" />
-                                <span className="font-semibold">Synthesizer (Default)</span>
+                    <div className="grid grid-cols-1 gap-4">
+                        {models.map((m) => (
+                            <div
+                                key={m.id}
+                                onClick={() => setModel(m.id)}
+                                className={cn(
+                                    "flex flex-col items-start space-y-1 rounded-md border p-4 cursor-pointer transition-all",
+                                    model === m.id ? `bg-muted/50 ${m.borderColor} border-2` : "border-border hover:bg-muted/30"
+                                )}
+                            >
+                                <div className="flex items-center gap-2 w-full">
+                                    <m.icon className={cn("w-4 h-4", m.color)} />
+                                    <span className="font-semibold">{m.name}</span>
+                                    {model === m.id && <Check className="w-4 h-4 text-primary ml-auto" />}
+                                </div>
+                                <span className="text-xs text-muted-foreground pl-6">
+                                    {m.description}
+                                </span>
                             </div>
-                            <span className="text-xs text-muted-foreground pl-6">
-                                The integrated voice of Ogma. Uses the Trinity (Architect, Visionary, Engineer) to synthesize the best response.
-                            </span>
-                        </Label>
-
-                        <Label
-                            htmlFor="architect"
-                            className="flex flex-col items-start space-y-1 rounded-md border p-4 hover:bg-muted/50 cursor-pointer [&:has([data-state=checked])]:border-blue-500"
-                        >
-                            <div className="flex items-center gap-2 w-full">
-                                <RadioGroupItem value="architect" id="architect" />
-                                <PenTool className="w-4 h-4 text-blue-500" />
-                                <span className="font-semibold">The Architect</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground pl-6">
-                                Focuses on structure, patterns, and long-term system integrity.
-                            </span>
-                        </Label>
-
-                        <Label
-                            htmlFor="visionary"
-                            className="flex flex-col items-start space-y-1 rounded-md border p-4 hover:bg-muted/50 cursor-pointer [&:has([data-state=checked])]:border-purple-500"
-                        >
-                            <div className="flex items-center gap-2 w-full">
-                                <RadioGroupItem value="visionary" id="visionary" />
-                                <Lightbulb className="w-4 h-4 text-purple-500" />
-                                <span className="font-semibold">The Visionary</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground pl-6">
-                                Focuses on innovation, user experience, and strategic positioning.
-                            </span>
-                        </Label>
-
-                        <Label
-                            htmlFor="engineer"
-                            className="flex flex-col items-start space-y-1 rounded-md border p-4 hover:bg-muted/50 cursor-pointer [&:has([data-state=checked])]:border-emerald-500"
-                        >
-                            <div className="flex items-center gap-2 w-full">
-                                <RadioGroupItem value="engineer" id="engineer" />
-                                <Cpu className="w-4 h-4 text-emerald-500" />
-                                <span className="font-semibold">The Engineer</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground pl-6">
-                                Focuses on implementation, code correctness, and execution.
-                            </span>
-                        </Label>
-
-                    </RadioGroup>
+                        ))}
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
