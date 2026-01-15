@@ -12,9 +12,16 @@ import {
 import { Bot, Cpu, Lightbulb, PenTool, Sparkles, Check } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 
-export function ModelSelectorButton() {
-    const [model, setModel] = useState('synthesizer');
+export interface ModelSelectorProps {
+    value: string;
+    onChange: (value: string) => void;
+}
+
+export function ModelSelectorButton({ value, onChange }: ModelSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const model = value;
+    const setModel = onChange;
+
 
     const models = [
         {

@@ -11,11 +11,12 @@ import { getChatMessages } from '../actions';
 
 interface OgmaChatWindowProps {
     sessionId?: string | null;
+    modelConfig?: string; // or any type needed
 }
 
-export function OgmaChatWindow({ sessionId }: OgmaChatWindowProps) {
+export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) {
     // 1. Connection
-    const chatBody = useMemo(() => ({ sessionId }), [sessionId]);
+    const chatBody = useMemo(() => ({ sessionId, modelConfig }), [sessionId, modelConfig]);
 
     // Key-based remounting is handled by parent for full reset
     const { messages, setMessages, input, handleInputChange, handleSubmit, isLoading } = useChat({
@@ -66,6 +67,7 @@ export function OgmaChatWindow({ sessionId }: OgmaChatWindowProps) {
                         <Terminal className="w-12 h-12 text-primary" />
                         <h2 className="text-xl font-medium mt-4">Ogma Online</h2>
                         <p className="text-sm text-muted-foreground mt-2">Select a model or start typing...</p>
+                        {modelConfig && <p className="text-xs text-muted-foreground/70 mt-1 uppercase tracking-wider">Active Model: {modelConfig}</p>}
                     </div>
                 )}
 

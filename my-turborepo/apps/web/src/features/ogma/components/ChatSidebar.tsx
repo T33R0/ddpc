@@ -20,12 +20,26 @@ interface ChatSession {
 interface ChatSidebarProps {
   currentSessionId: string | null;
   onSelectSession: (id: string | null) => void;
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  refreshTrigger: number; // Used to force reload list
+  isOpen?: boolean; // Controlled by parent if needed, or internal
+  setIsOpen?: (open: boolean) => void;
+  refreshTrigger?: number;
+  embedded?: boolean; // New prop for layout mode
 }
 
-export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOpen, refreshTrigger }: ChatSidebarProps) {
+export function ChatSidebar({
+  currentSessionId,
+  onSelectSession,
+  isOpen: controlledIsOpen,
+  setIsOpen: controlledSetIsOpen,
+  refreshTrigger,
+  embedded = false
+}: ChatSidebarProps) {
+  // Internal state if not controlled
+  const [internalIsOpen, setInternalIsOpen] = useState(true);
+
+  const isOpen = controlledIsOpen ?? internalIsOpen;
+  const setIsOpen = controlledSetIsOpen ?? setInternalIsOpen;
+
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [archivedSessions, setArchivedSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,20 +110,25 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
   return (
     <div
       className={cn(
-        "flex flex-col flex-1 min-h-0 bg-background transition-all duration-300 relative z-20 shrink-0",
-        // Width handled by parent now, or we keep it here to ensure internal content adjusts?
-        // The parent `page.tsx` is applying width classes based on `isSidebarOpen`.
-        // So we should make this `w-full` relative to the parent container.
-        "w-full"
+        "flex flex-col bg-background transition-all duration-300 relative z-20 overflow-hidden",
+        embedded ? "h-full w-full border-none" : "h-screen pt-20 border-r border-border shrink-0 fixed",
+        // If not embedded, use old width logic. If embedded, parent handles width/container.
+        !embedded && (isOpen ? "w-56 md:w-64" : "w-12 md:w-16")
       )}
     >
-      {/* Toggle Button - positioned absolutely to be visible even when collapsed */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="absolute -right-3 top-24 z-50 p-1 rounded-full bg-muted border border-border text-muted-foreground hover:text-foreground"
-      >
-        {isOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-      </button>
+      {/* Toggle Button - Only if not embedded (embedded assumes fixed layout or parent control) 
+            Actually, let's keep it if not controlled by parent in embedded mode? 
+            For this specific Admin Layout, we want it always open or controlled by page?
+            User said "Sidebar: A fixed-width column". Implies always open.
+        */}
+      {!embedded && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="absolute -right-3 top-24 z-50 p-1 rounded-full bg-muted border border-border text-muted-foreground hover:text-foreground"
+        >
+          {isOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+        </button>
+      )}
 
       <div className="p-4">
         <Button
