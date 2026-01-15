@@ -76,10 +76,10 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
 
   const handleDelete = async (e: React.MouseEvent, id: string, isArchived: boolean = false) => {
     e.stopPropagation();
-    const confirmMessage = isArchived 
+    const confirmMessage = isArchived
       ? 'Are you sure you want to permanently delete this chat? This action cannot be undone.'
       : 'Are you sure you want to delete this chat?';
-    
+
     if (!confirm(confirmMessage)) return;
 
     try {
@@ -96,17 +96,20 @@ export function ChatSidebar({ currentSessionId, onSelectSession, isOpen, setIsOp
   return (
     <div
       className={cn(
-        "flex flex-col border-r border-border bg-background transition-all duration-300 relative z-20 h-screen pt-20 shrink-0 overflow-hidden",
-        isOpen ? "w-56 md:w-64" : "w-12 md:w-16"
+        "flex flex-col flex-1 min-h-0 bg-background transition-all duration-300 relative z-20 shrink-0",
+        // Width handled by parent now, or we keep it here to ensure internal content adjusts?
+        // The parent `page.tsx` is applying width classes based on `isSidebarOpen`.
+        // So we should make this `w-full` relative to the parent container.
+        "w-full"
       )}
     >
-        {/* Toggle Button - positioned absolutely to be visible even when collapsed */}
-        <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="absolute -right-3 top-24 z-50 p-1 rounded-full bg-muted border border-border text-muted-foreground hover:text-foreground"
-        >
-            {isOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-        </button>
+      {/* Toggle Button - positioned absolutely to be visible even when collapsed */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="absolute -right-3 top-24 z-50 p-1 rounded-full bg-muted border border-border text-muted-foreground hover:text-foreground"
+      >
+        {isOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+      </button>
 
       <div className="p-4">
         <Button
