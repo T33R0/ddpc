@@ -192,7 +192,7 @@ export default function ChatPage() {
                             />
                             <button
                                 type="submit"
-                                disabled={!input.trim() || isLoading}
+                                disabled={!input?.trim() || isLoading}
                                 className="p-3 mr-1.5 rounded-full hover:bg-background/50 hover:text-primary transition-colors disabled:opacity-30"
                             >
                                 <Send className="w-5 h-5" />
