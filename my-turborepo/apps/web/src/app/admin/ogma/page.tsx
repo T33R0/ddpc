@@ -26,7 +26,7 @@ export default function ChatPage() {
         onError: (error: Error) => {
             console.error('[Ogma] useChat error:', error);
         },
-    } as any);
+    }) as any;
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -127,7 +127,7 @@ export default function ChatPage() {
                             </div>
                         )}
 
-                        {messages.map((m) => (
+                        {messages.map((m: any) => (
                             <div
                                 key={m.id}
                                 className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
