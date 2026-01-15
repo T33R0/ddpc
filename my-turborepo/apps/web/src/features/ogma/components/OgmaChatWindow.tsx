@@ -1,83 +1,29 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
-import { useEffect, useRef, useMemo, useState } from 'react';
+// Remove useChat entirely to avoid crashes
+// import { useChat } from '@ai-sdk/react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Send, Terminal, Loader2, PenTool, Lightbulb, Cpu } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 // import { Button } from '@/components/ui/button';
 // import { Input } from '@/components/ui/input';
 
-import { getChatMessages } from '../actions';
+import { getChatMessages, createChatSession } from '../actions';
 
 interface OgmaChatWindowProps {
     sessionId?: string | null;
-    modelConfig?: any; // Using any or specific interface to avoid circular deps for now
+    modelConfig?: any;
 }
 
 export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) {
-    // 1. Connection
-    const chatBody = useMemo(() => ({ sessionId, modelConfig }), [sessionId, modelConfig]);
-
-    // Key-based remounting is handled by parent for full reset
-    const { messages, setMessages, append, isLoading } = useChat({
-        api: '/api/ogma',
-        // body: chatBody,
-        id: sessionId || 'ogma-new-chat',
-        onError: (e: Error) => console.error('Chat Error:', e),
-    }) as any;
-
+    const router = useRouter();
+    const [messages, setMessages] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [localInput, setLocalInput] = useState('');
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-    const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!localInput.trim()) return;
-
-        const content = localInput;
-        setLocalInput(''); // Clear immediately
-
-        console.log('[DEBUG-OGMA] Raw fetch test initiated with:', content);
-        try {
-            // Manual fetch to bypass useChat internal crash
-            const res = await fetch('/api/ogma', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [...messages, { role: 'user', content }],
-                    sessionId: sessionId || undefined,
-                    modelConfig // Re-enable config for text
-                })
-            });
-
-            console.log('[DEBUG-OGMA] Raw fetch status:', res.status);
-
-            if (!res.ok) {
-                const text = await res.text();
-                console.error('[DEBUG-OGMA] Raw fetch error body:', text);
-                return;
-            }
-
-            const reader = res.body?.getReader();
-            if (!reader) {
-                console.log('[DEBUG-OGMA] No body reader');
-                return;
-            }
-
-            console.log('[DEBUG-OGMA] Stream started receiving...');
-            const decoder = new TextDecoder();
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value);
-                console.log('[DEBUG-OGMA] Chunk:', chunk.substring(0, 50) + '...');
-            }
-            console.log('[DEBUG-OGMA] Stream complete.');
-
-        } catch (e) {
-            console.error('[DEBUG-OGMA] Raw fetch failed:', e);
-        }
-    };
-
-    // Load History
+    // 1. Load History
     useEffect(() => {
         if (!sessionId) {
             setMessages([]);
@@ -88,9 +34,9 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
             try {
                 const history = await getChatMessages(sessionId);
                 if (history && history.length > 0) {
-                    setMessages(history as any); // Cast to suit AI SDK types if needed
+                    setMessages(history as any);
                 } else {
-                    setMessages([]); // Clear messages if no history found for the session
+                    setMessages([]);
                 }
             } catch (error) {
                 console.error('Failed to load chat history:', error);
@@ -98,9 +44,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
         };
 
         loadHistory();
-    }, [sessionId, setMessages]);
-
-    const scrollRef = useRef<HTMLDivElement>(null);
+    }, [sessionId]);
 
     // 2. Auto-Scroll
     useEffect(() => {
@@ -108,6 +52,86 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
             scrollRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages, isLoading]);
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!localInput.trim()) return;
+        if (isLoading) return;
+
+        const content = localInput;
+        setLocalInput(''); // Clear immediately
+
+        let currentSessionId = sessionId;
+
+        // Optimistic UI Update
+        const userMsg = { id: Date.now().toString(), role: 'user', content };
+        setMessages(prev => [...prev, userMsg]);
+        setIsLoading(true);
+
+        try {
+            // 3. Create Session if needed
+            if (!currentSessionId) {
+                console.log('[OGMA-CORE] No session ID, creating new session...');
+                try {
+                    currentSessionId = await createChatSession(content.substring(0, 30));
+                    console.log('[OGMA-CORE] New session created:', currentSessionId);
+
+                    // Update URL silently without full reload if possible, or expect navigation
+                    router.push(`/admin/ogma?id=${currentSessionId}`);
+                    // Note: router.push might trigger re-mount. 
+                    // Ideally we continue using currentSessionId even if re-mount happens later.
+                } catch (err) {
+                    console.error('Failed to create session:', err);
+                    setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: 'Error: Could not create chat session.' }]);
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            // 4. Raw Fetch Stream
+            const response = await fetch('/api/ogma', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [...messages, { role: 'user', content }], // Send full history + new msg
+                    sessionId: currentSessionId,
+                    modelConfig
+                })
+            });
+
+            if (!response.ok) throw new Error(response.statusText);
+
+            // 5. Stream Reader
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No reader available');
+
+            const decoder = new TextDecoder();
+            let assistantMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: '' };
+
+            setMessages(prev => [...prev, assistantMessage]);
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                assistantMessage.content += chunk;
+
+                // Real-time update
+                setMessages(prev => {
+                    const newHistory = [...prev];
+                    newHistory[newHistory.length - 1] = { ...assistantMessage };
+                    return newHistory;
+                });
+            }
+
+        } catch (error) {
+            console.error('[OGMA-CORE] Chat error:', error);
+            setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: 'Error: Failed to process request.' }]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="flex flex-col h-full w-full bg-background relative overflow-hidden">
@@ -121,38 +145,16 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                     </div>
                 )}
 
-                {messages.map((m: any) => (
-                    <div key={m.id} className={cn("flex w-full", m.role === 'user' ? "justify-end" : "justify-start")}>
+                {messages.map((m: any, idx: number) => (
+                    <div key={m.id || idx} className={cn("flex w-full", m.role === 'user' ? "justify-end" : "justify-start")}>
                         <div className={cn(
                             "max-w-[85%] sm:max-w-[70%] rounded-lg p-3 text-sm md:text-base shadow-sm",
                             m.role === 'user'
                                 ? "bg-primary text-primary-foreground rounded-br-sm"
                                 : "bg-muted/50 text-foreground border border-border"
                         )}>
-                            {/* Trinity UI Annotations */}
-                            {m.annotations?.map((a: any, i: number) => {
-                                if (a.type !== 'thought' || !a.agent) return null;
-                                const isArchitect = a.agent === 'architect';
-                                const isVisionary = a.agent === 'visionary';
-                                const isEngineer = a.agent === 'engineer';
-
-                                return (
-                                    <div key={i} className={cn(
-                                        "mb-2 text-xs border-l-2 pl-2 py-1 bg-background/50 rounded-r-md font-mono shadow-sm",
-                                        isArchitect && "border-blue-500 text-blue-600 dark:text-blue-400",
-                                        isVisionary && "border-purple-500 text-purple-600 dark:text-purple-400",
-                                        isEngineer && "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                                    )}>
-                                        <div className="flex items-center gap-1 opacity-80 mb-0.5">
-                                            {isArchitect && <PenTool className="w-3 h-3" />}
-                                            {isVisionary && <Lightbulb className="w-3 h-3" />}
-                                            {isEngineer && <Cpu className="w-3 h-3" />}
-                                            <span className="font-bold uppercase tracking-wider opacity-70">{a.agent}</span>
-                                        </div>
-                                        <div className="opacity-90 leading-relaxed">{a.content}</div>
-                                    </div>
-                                );
-                            })}
+                            {/* Trinity UI Annotations (Note: Streamed text doesn't explicitly separate annotations yet, purely text) */}
+                            {/* Future: We can parse annotations from the stream if we adapt the backend to send structured events */}
 
                             {/* Main Message */}
                             <div className="whitespace-pre-wrap leading-relaxed">
