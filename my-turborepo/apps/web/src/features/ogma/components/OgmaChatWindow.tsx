@@ -35,15 +35,45 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
         const content = localInput;
         setLocalInput(''); // Clear immediately
 
-        console.log('[DEBUG-OGMA] Calling append with:', content);
+        console.log('[DEBUG-OGMA] Raw fetch test initiated with:', content);
         try {
-            await append({
-                role: 'user',
-                content,
+            // Manual fetch to bypass useChat internal crash
+            const res = await fetch('/api/ogma', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [...messages, { role: 'user', content }],
+                    sessionId: sessionId || undefined,
+                    modelConfig // Re-enable config for text
+                })
             });
-            console.log('[DEBUG-OGMA] Append complete');
+
+            console.log('[DEBUG-OGMA] Raw fetch status:', res.status);
+
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('[DEBUG-OGMA] Raw fetch error body:', text);
+                return;
+            }
+
+            const reader = res.body?.getReader();
+            if (!reader) {
+                console.log('[DEBUG-OGMA] No body reader');
+                return;
+            }
+
+            console.log('[DEBUG-OGMA] Stream started receiving...');
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                console.log('[DEBUG-OGMA] Chunk:', chunk.substring(0, 50) + '...');
+            }
+            console.log('[DEBUG-OGMA] Stream complete.');
+
         } catch (e) {
-            console.error('[DEBUG-OGMA] Append failed:', e);
+            console.error('[DEBUG-OGMA] Raw fetch failed:', e);
         }
     };
 
