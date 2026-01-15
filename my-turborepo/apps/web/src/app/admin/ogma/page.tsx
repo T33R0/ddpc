@@ -40,7 +40,7 @@ export default function ChatPage() {
     // 1. CRITICAL: Point to '/api/ogma' and bind the Session ID
     // Use a stable body object to prevent hook re-initialization
     const chatBody = useMemo(() => ({ sessionId: currentSessionId }), [currentSessionId]);
-    
+
     const chatHook = useChat({
         api: '/api/ogma',
         body: chatBody,
@@ -54,7 +54,7 @@ export default function ChatPage() {
             setTrinityProgress(null);
         },
     });
-    
+
     // Extract all possible properties from the hook with proper typing
     const messages = chatHook.messages || [];
     const chatHookAny = chatHook as any;
@@ -64,7 +64,7 @@ export default function ChatPage() {
     const setMessages = chatHookAny.setMessages || chatHook.setMessages;
     const status = chatHookAny.status || chatHook.status || 'ready';
     const error = chatHookAny.error;
-    
+
     // Debug: log what's available from useChat
     useEffect(() => {
         console.log('[Ogma] useChat hook properties:', {
@@ -76,7 +76,7 @@ export default function ChatPage() {
             error: error?.message
         });
     }, [append, sendMessage, handleSubmit, messages.length, status, error]);
-    
+
     // Log errors from useChat
     useEffect(() => {
         if (error) {
@@ -84,7 +84,7 @@ export default function ChatPage() {
             setTrinityProgress(null);
         }
     }, [error]);
-    
+
     // Extract annotations from messages as they update
     useEffect(() => {
         messages.forEach((m: any) => {
@@ -94,11 +94,11 @@ export default function ChatPage() {
                 ).map((a: any): Thought => ({
                     type: 'thought',
                     agent: a.agent,
-                    color: a.agent === 'architect' ? 'blue' : 
-                           a.agent === 'visionary' ? 'purple' : 'emerald',
+                    color: a.agent === 'architect' ? 'blue' :
+                        a.agent === 'visionary' ? 'purple' : 'emerald',
                     content: a.content || ''
                 }));
-                
+
                 if (annotationThoughts.length > 0 && m.id) {
                     setPendingThoughts(prev => {
                         const newMap = new Map(prev);
@@ -113,7 +113,7 @@ export default function ChatPage() {
     // Use ONLY local state for input - completely independent from hook
     // This prevents any conflicts with the useChat hook's internal state
     const effectiveInput = localInput;
-    
+
     // Simple input handler that ONLY updates local state
     const handleInputChangeSafe = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -147,20 +147,20 @@ export default function ChatPage() {
     // Smart auto-scroll logic - only scroll if user is at bottom and message count changed
     useEffect(() => {
         if (!chatContainerRef.current || !scrollRef.current) return;
-        
+
         // Only scroll if message count actually changed
         if (messages.length === lastMessageCountRef.current) return;
         lastMessageCountRef.current = messages.length;
-        
+
         const container = chatContainerRef.current;
         const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
-        
+
         // Only auto-scroll if user is near bottom
         // Debounce scroll to prevent multiple rapid scrolls
         if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
         }
-        
+
         if (shouldAutoScrollRef.current && isNearBottom) {
             scrollTimeoutRef.current = setTimeout(() => {
                 if (scrollRef.current && chatContainerRef.current) {
@@ -197,7 +197,7 @@ export default function ChatPage() {
             try {
                 const { getChatMessages } = await import('@/features/ogma/actions');
                 const dbMessages = await getChatMessages(currentSessionId);
-                
+
                 // Convert DB messages to useChat format
                 const chatMessages = dbMessages.map((msg: any) => ({
                     id: msg.id,
@@ -208,10 +208,10 @@ export default function ChatPage() {
                 // Only update if we have new messages or different content
                 const currentMessageIds = new Set(messages.map((m: any) => m.id).filter((id): id is string => !!id));
                 const currentMessageMap = new Map(messages.filter((m: any) => m.id).map((m: any) => [m.id, m.content]));
-                const hasNewMessages = chatMessages.some((msg: any) => 
+                const hasNewMessages = chatMessages.some((msg: any) =>
                     msg.id && (!currentMessageIds.has(msg.id) || currentMessageMap.get(msg.id) !== msg.content)
                 );
-                
+
                 if (hasNewMessages) {
                     setMessages(chatMessages);
                 }
@@ -243,14 +243,14 @@ export default function ChatPage() {
             try {
                 const { getChatMessages } = await import('@/features/ogma/actions');
                 const dbMessages = await getChatMessages(id);
-                
+
                 // Convert DB messages to useChat format
                 const chatMessages = dbMessages.map((msg: any) => ({
                     id: msg.id,
                     role: msg.role,
                     content: msg.content,
                 }));
-                
+
                 setMessages(chatMessages);
             } catch (err) {
                 console.error('Failed to load messages:', err);
@@ -284,7 +284,7 @@ export default function ChatPage() {
 
         // Store the input value
         const messageContent = messageText;
-        
+
         // Clear input immediately (only local state, hook will handle its own)
         setLocalInput('');
 
@@ -294,14 +294,14 @@ export default function ChatPage() {
         setPendingThoughts(new Map());
 
         // Check what's available from useChat
-        console.log('[Ogma] Attempting to send message...', { 
-            hasAppend: !!append, 
+        console.log('[Ogma] Attempting to send message...', {
+            hasAppend: !!append,
             hasSendMessage: !!sendMessage,
             hasHandleSubmit: !!handleSubmit,
             sessionId: activeSessionId,
             chatHookKeys: Object.keys(chatHook)
         });
-        
+
         // Use append first (more reliable than sendMessage)
         // sendMessage has issues with parameter format in some SDK versions
         if (append && typeof append === 'function') {
@@ -311,24 +311,24 @@ export default function ChatPage() {
                 // Intercept fetch to capture annotations
                 const originalFetch = window.fetch;
                 const messageCountBefore = messages.length;
-                
+
                 window.fetch = async (...args) => {
                     const response = await originalFetch(...args);
-                    
+
                     // Only intercept our ogma API calls
                     if (typeof args[0] === 'string' && args[0].includes('/api/ogma')) {
                         const clonedResponse = response.clone();
-                        
+
                         // Read annotations in the background
                         (async () => {
                             try {
                                 const reader = clonedResponse.body?.getReader();
                                 if (!reader) return;
-                                
+
                                 const decoder = new TextDecoder();
                                 let buffer = '';
                                 const thoughts: Thought[] = [];
-                                
+
                                 // Find the assistant message ID (poll until found)
                                 let assistantMsgId: string | null = null;
                                 const findAssistantMessageId = (): string | null => {
@@ -341,27 +341,27 @@ export default function ChatPage() {
                                     }
                                     return null;
                                 };
-                                
+
                                 // Poll for assistant message ID (up to 2 seconds)
                                 for (let i = 0; i < 20; i++) {
                                     assistantMsgId = findAssistantMessageId();
                                     if (assistantMsgId) break;
                                     await new Promise(resolve => setTimeout(resolve, 100));
                                 }
-                                
+
                                 // Fallback if not found
                                 if (!assistantMsgId) {
                                     assistantMsgId = `assistant-${Date.now()}`;
                                 }
-                                
+
                                 while (true) {
                                     const { done, value } = await reader.read();
                                     if (done) break;
-                                    
+
                                     buffer += decoder.decode(value, { stream: true });
                                     const lines = buffer.split('\n');
                                     buffer = lines.pop() || '';
-                                    
+
                                     for (const line of lines) {
                                         if (line.startsWith('a:')) {
                                             try {
@@ -370,11 +370,11 @@ export default function ChatPage() {
                                                     const thought: Thought = {
                                                         type: 'thought',
                                                         agent: annotation.agent,
-                                                        color: annotation.agent === 'architect' ? 'blue' : 
-                                                               annotation.agent === 'visionary' ? 'purple' : 'emerald',
+                                                        color: annotation.agent === 'architect' ? 'blue' :
+                                                            annotation.agent === 'visionary' ? 'purple' : 'emerald',
                                                         content: annotation.content || ''
                                                     };
-                                                    
+
                                                     // Check if we already have this agent's thought
                                                     const existingIndex = thoughts.findIndex(t => t.agent === thought.agent);
                                                     if (existingIndex >= 0) {
@@ -382,7 +382,7 @@ export default function ChatPage() {
                                                     } else {
                                                         thoughts.push(thought);
                                                     }
-                                                    
+
                                                     // Update immediately as each thought arrives
                                                     if (assistantMsgId) {
                                                         setPendingThoughts(prev => {
@@ -403,10 +403,10 @@ export default function ChatPage() {
                             }
                         })();
                     }
-                    
+
                     return response;
                 };
-                
+
                 console.log('[Ogma] Calling append with:', { role: 'user', content: messageContent.substring(0, 50) + '...' });
                 try {
                     await append({
@@ -414,7 +414,7 @@ export default function ChatPage() {
                         content: messageContent,
                     });
                     console.log('[Ogma] Append completed successfully');
-                    
+
                     // Restore fetch after a delay
                     setTimeout(() => {
                         window.fetch = originalFetch;
@@ -424,36 +424,36 @@ export default function ChatPage() {
                     window.fetch = originalFetch;
                     throw appendError; // Re-throw to trigger fallback
                 }
-                
+
                 // Update progress based on time elapsed (simulated progress)
                 let elapsed = 0;
                 progressIntervalRef.current = setInterval(() => {
                     elapsed += 1;
                     if (elapsed < 10) {
-                        setTrinityProgress({ 
-                            stage: 'initial', 
-                            message: 'Trinity models generating initial solutions...' 
+                        setTrinityProgress({
+                            stage: 'initial',
+                            message: 'Trinity models generating initial solutions...'
                         });
                     } else if (elapsed < 20) {
-                        setTrinityProgress({ 
-                            stage: 'critiques', 
+                        setTrinityProgress({
+                            stage: 'critiques',
                             round: 1,
-                            message: 'Round 1: Generating critiques...' 
+                            message: 'Round 1: Generating critiques...'
                         });
                     } else if (elapsed < 30) {
-                        setTrinityProgress({ 
-                            stage: 'votes', 
+                        setTrinityProgress({
+                            stage: 'votes',
                             round: 1,
-                            message: 'Round 1: Voting...' 
+                            message: 'Round 1: Voting...'
                         });
                     } else {
-                        setTrinityProgress({ 
-                            stage: 'synthesis', 
-                            message: 'Synthesizing final response...' 
+                        setTrinityProgress({
+                            stage: 'synthesis',
+                            message: 'Synthesizing final response...'
                         });
                     }
                 }, 1000);
-                
+
                 // Clear progress when loading stops
                 const checkInterval = setInterval(() => {
                     if (!isLoading) {
@@ -465,7 +465,7 @@ export default function ChatPage() {
                         setTrinityProgress(null);
                     }
                 }, 500);
-                
+
                 return; // Success, exit early
             } catch (err) {
                 console.error('append failed, trying handleSubmit:', err);
@@ -483,7 +483,7 @@ export default function ChatPage() {
                 content: messageContent,
             };
             setMessages([...messages, userMessage]);
-            
+
             // Then trigger the API call manually
             try {
                 const response = await fetch('/api/ogma', {
@@ -494,26 +494,26 @@ export default function ChatPage() {
                         sessionId: activeSessionId,
                     }),
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to send message');
                 }
-                
+
                 // Stream the response
                 const reader = response.body?.getReader();
                 const decoder = new TextDecoder();
-                let assistantMessage = { 
-                    id: `assistant-${Date.now()}`, 
-                    role: 'assistant' as const, 
-                    content: '' 
+                let assistantMessage = {
+                    id: `assistant-${Date.now()}`,
+                    role: 'assistant' as const,
+                    content: ''
                 };
                 setMessages([...messages, userMessage, assistantMessage]);
-                
+
                 if (reader) {
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-                        
+
                         const chunk = decoder.decode(value);
                         const lines = chunk.split('\n');
                         for (const line of lines) {
@@ -544,7 +544,7 @@ export default function ChatPage() {
         };
         const initialMessages = [...messages, userMessage];
         setMessages(initialMessages);
-        
+
         try {
             console.log('[Ogma] Calling API manually...');
             const response = await fetch('/api/ogma', {
@@ -555,46 +555,46 @@ export default function ChatPage() {
                     sessionId: activeSessionId,
                 }),
             });
-            
+
             console.log('[Ogma] API response status:', response.status, response.ok);
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('[Ogma] API error response:', errorText);
                 throw new Error(`Failed to send message: ${response.status} ${errorText}`);
             }
-            
+
             // Read the stream and update messages manually
             const reader = response.body?.getReader();
             if (!reader) {
                 throw new Error('No response body reader available');
             }
-            
+
             const decoder = new TextDecoder();
-            let assistantMessage = { 
-                id: `assistant-${Date.now()}`, 
-                role: 'assistant' as const, 
-                content: '' 
+            let assistantMessage = {
+                id: `assistant-${Date.now()}`,
+                role: 'assistant' as const,
+                content: ''
             };
             let currentMessages = [...initialMessages, assistantMessage];
             setMessages(currentMessages);
-            
+
             console.log('[Ogma] Starting to read stream...');
             console.log('[Ogma] Response headers:', Object.fromEntries(response.headers.entries()));
             console.log('[Ogma] Response body locked:', response.bodyUsed);
-            
+
             let buffer = '';
             let hasReceivedData = false;
             let rawChunks: string[] = []; // Debug: collect raw chunks
             let chunkCount = 0;
-            
+
             while (true) {
                 const { done, value } = await reader.read();
                 chunkCount++;
-                
+
                 if (done) {
-                    console.log('[Ogma] Stream finished', { 
-                        hasReceivedData, 
+                    console.log('[Ogma] Stream finished', {
+                        hasReceivedData,
                         finalContentLength: assistantMessage.content.length,
                         bufferLength: buffer.length,
                         rawChunksCount: rawChunks.length,
@@ -604,7 +604,7 @@ export default function ChatPage() {
                     });
                     break;
                 }
-                
+
                 hasReceivedData = true;
                 const chunk = decoder.decode(value, { stream: true });
                 rawChunks.push(chunk); // Debug
@@ -614,30 +614,30 @@ export default function ChatPage() {
                 buffer += chunk;
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || ''; // Keep incomplete line in buffer
-                
+
                 for (const line of lines) {
                     if (line.trim() === '') continue;
-                    
+
                     // Vercel AI SDK stream format: "0:"text" or "0:"text\n" or just "0:"text
                     // Handle both complete and partial lines
                     if (line.startsWith('0:"')) {
-                            try {
-                                // Try to parse as complete JSON string
-                                let text = '';
-                                if (line.endsWith('"')) {
-                                    // Complete line
-                                    const textMatch = line.match(/^0:"(.*)"$/);
-                                    if (textMatch && textMatch[1] !== undefined) {
-                                        text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-                                    }
-                                } else {
-                                    // Partial line - extract what we can
-                                    const textMatch = line.match(/^0:"(.*)$/);
-                                    if (textMatch && textMatch[1] !== undefined) {
-                                        text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-                                    }
+                        try {
+                            // Try to parse as complete JSON string
+                            let text = '';
+                            if (line.endsWith('"')) {
+                                // Complete line
+                                const textMatch = line.match(/^0:"(.*)"$/);
+                                if (textMatch && textMatch[1] !== undefined) {
+                                    text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                                 }
-                            
+                            } else {
+                                // Partial line - extract what we can
+                                const textMatch = line.match(/^0:"(.*)$/);
+                                if (textMatch && textMatch[1] !== undefined) {
+                                    text = textMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                                }
+                            }
+
                             if (text) {
                                 assistantMessage.content += text;
                                 currentMessages = [...initialMessages, { ...assistantMessage }];
@@ -661,11 +661,11 @@ export default function ChatPage() {
                     }
                 }
             }
-            
+
             if (!hasReceivedData) {
                 console.error('[Ogma] No data received from stream');
             }
-            
+
             // Final update with complete message
             setMessages([...initialMessages, assistantMessage]);
             setTrinityProgress(null);
@@ -680,7 +680,7 @@ export default function ChatPage() {
 
     useEffect(() => {
         setMounted(true);
-        
+
         // Cleanup on unmount
         return () => {
             if (progressIntervalRef.current) {
@@ -715,7 +715,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex h-screen w-full bg-background text-foreground font-sans overflow-hidden">
+        <div className="flex h-[calc(100vh-4rem)] w-full bg-background text-foreground font-sans overflow-hidden">
             <ChatSidebar
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
@@ -724,7 +724,7 @@ export default function ChatPage() {
                 refreshTrigger={refreshTrigger}
             />
 
-            <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden" style={{ height: '100vh' }}>
+            <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden h-full">
                 {/* Header */}
                 <header className="flex items-center justify-between px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 border-b border-border bg-background/95 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -783,7 +783,7 @@ export default function ChatPage() {
                 </header>
 
                 {/* Chat Area */}
-                <main 
+                <main
                     ref={chatContainerRef}
                     className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 scroll-smooth min-h-0"
                 >
@@ -814,8 +814,8 @@ export default function ChatPage() {
 
                             // Check if this is the last assistant message and if it's still loading
                             const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-                            const isLastAssistant = m.role === 'assistant' && 
-                                lastMessage && 
+                            const isLastAssistant = m.role === 'assistant' &&
+                                lastMessage &&
                                 lastMessage.id === m.id;
                             const hasNoContent = !m.content || (typeof m.content === 'string' && m.content.trim() === '');
                             const showSynthesizing = isLastAssistant && hasNoContent && isLoading;
@@ -829,8 +829,8 @@ export default function ChatPage() {
                                     {thoughts && thoughts.length > 0 && (
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3 mb-2 w-full max-w-full sm:max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-500">
                                             {thoughts.map((t, i) => (
-                                                <div 
-                                                    key={`${t.agent}-${i}`} 
+                                                <div
+                                                    key={`${t.agent}-${i}`}
                                                     className={`p-3 rounded-lg border text-xs leading-relaxed font-mono relative overflow-hidden group
                                                         ${t.agent === 'architect' ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' : ''}
                                                         ${t.agent === 'visionary' ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400' : ''}
@@ -887,23 +887,21 @@ export default function ChatPage() {
                         })}
 
                         {/* Loading Indicator with Trinity Progress */}
-                        {(isLoading || trinityProgress) && messages[messages.length - 1]?.role === 'user' && (
+                        {(isLoading || trinityProgress) && (messages[messages.length - 1]?.role === 'user' || (messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content)) && (
                             <div className="flex flex-col gap-3 justify-start">
                                 {/* Trinity Models Status */}
                                 {trinityProgress && (
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3 max-w-full sm:max-w-[90%]">
                                         {/* Architect */}
-                                        <div className={`p-3 rounded-lg border text-xs transition-all ${
-                                            trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/20'
-                                                : 'bg-blue-500/5 border-blue-500/20'
-                                        }`}>
+                                        <div className={`p-3 rounded-lg border text-xs transition-all ${trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                            ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/20'
+                                            : 'bg-blue-500/5 border-blue-500/20'
+                                            }`}>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <PenTool className={`w-4 h-4 ${
-                                                    trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                        ? 'text-blue-600 dark:text-blue-400 animate-pulse'
-                                                        : 'text-blue-600/50 dark:text-blue-400/50'
-                                                }`} />
+                                                <PenTool className={`w-4 h-4 ${trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                    ? 'text-blue-600 dark:text-blue-400 animate-pulse'
+                                                    : 'text-blue-600/50 dark:text-blue-400/50'
+                                                    }`} />
                                                 <span className="uppercase tracking-widest font-bold text-[10px] text-blue-600 dark:text-blue-300">
                                                     ARCHITECT
                                                 </span>
@@ -916,17 +914,15 @@ export default function ChatPage() {
                                         </div>
 
                                         {/* Visionary */}
-                                        <div className={`p-3 rounded-lg border text-xs transition-all ${
-                                            trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                ? 'bg-purple-500/10 border-purple-500/50 shadow-lg shadow-purple-500/20'
-                                                : 'bg-purple-500/5 border-purple-500/20'
-                                        }`}>
+                                        <div className={`p-3 rounded-lg border text-xs transition-all ${trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                            ? 'bg-purple-500/10 border-purple-500/50 shadow-lg shadow-purple-500/20'
+                                            : 'bg-purple-500/5 border-purple-500/20'
+                                            }`}>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Lightbulb className={`w-4 h-4 ${
-                                                    trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                        ? 'text-purple-600 dark:text-purple-400 animate-pulse'
-                                                        : 'text-purple-600/50 dark:text-purple-400/50'
-                                                }`} />
+                                                <Lightbulb className={`w-4 h-4 ${trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                    ? 'text-purple-600 dark:text-purple-400 animate-pulse'
+                                                    : 'text-purple-600/50 dark:text-purple-400/50'
+                                                    }`} />
                                                 <span className="uppercase tracking-widest font-bold text-[10px] text-purple-600 dark:text-purple-300">
                                                     VISIONARY
                                                 </span>
@@ -939,17 +935,15 @@ export default function ChatPage() {
                                         </div>
 
                                         {/* Engineer */}
-                                        <div className={`p-3 rounded-lg border text-xs transition-all ${
-                                            trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
-                                                : 'bg-emerald-500/5 border-emerald-500/20'
-                                        }`}>
+                                        <div className={`p-3 rounded-lg border text-xs transition-all ${trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                            ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
+                                            : 'bg-emerald-500/5 border-emerald-500/20'
+                                            }`}>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Cpu className={`w-4 h-4 ${
-                                                    trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
-                                                        ? 'text-emerald-600 dark:text-emerald-400 animate-pulse'
-                                                        : 'text-emerald-600/50 dark:text-emerald-400/50'
-                                                }`} />
+                                                <Cpu className={`w-4 h-4 ${trinityProgress.stage === 'initial' || trinityProgress.stage === 'critiques' || trinityProgress.stage === 'refine'
+                                                    ? 'text-emerald-600 dark:text-emerald-400 animate-pulse'
+                                                    : 'text-emerald-600/50 dark:text-emerald-400/50'
+                                                    }`} />
                                                 <span className="uppercase tracking-widest font-bold text-[10px] text-emerald-600 dark:text-emerald-300">
                                                     ENGINEER
                                                 </span>
@@ -992,7 +986,7 @@ export default function ChatPage() {
                 {/* Input Area - Fixed at bottom */}
                 <div className="w-full p-3 md:p-4 bg-background border-t border-border/50 shrink-0">
                     <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto">
-                        <form 
+                        <form
                             onSubmit={handleFormSubmit}
                             className="relative group"
                         >
