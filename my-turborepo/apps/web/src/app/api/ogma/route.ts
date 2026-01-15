@@ -1,7 +1,7 @@
 import { streamText, generateText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
-import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/lib/ogma/compute-costs';
-import { loadConstitution, formatConstitutionForPrompt } from '@/lib/ogma/context-loader';
+import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/features/ogma/lib/compute-costs';
+import { loadConstitution, formatConstitutionForPrompt } from '@/features/ogma/lib/context-loader';
 import { vercelGateway } from '@/lib/ai-gateway';
 
 // High-quality model for final synthesis (Voice of Ogma)
