@@ -21,7 +21,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
     // Key-based remounting is handled by parent for full reset
     const { messages, setMessages, append, isLoading } = useChat({
         api: '/api/ogma',
-        body: chatBody,
+        // body: chatBody,
         id: sessionId || 'ogma-new-chat',
         onError: (e: Error) => console.error('Chat Error:', e),
     }) as any;
