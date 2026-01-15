@@ -35,10 +35,16 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
         const content = localInput;
         setLocalInput(''); // Clear immediately
 
-        await append({
-            role: 'user',
-            content,
-        });
+        console.log('[DEBUG-OGMA] Calling append with:', content);
+        try {
+            await append({
+                role: 'user',
+                content,
+            });
+            console.log('[DEBUG-OGMA] Append complete');
+        } catch (e) {
+            console.error('[DEBUG-OGMA] Append failed:', e);
+        }
     };
 
     // Load History
