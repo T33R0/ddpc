@@ -128,7 +128,11 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                         <input
                             className="flex-1 bg-muted/50 border border-input rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 transition-all shadow-sm"
                             value={input}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                                // Debug logging for user report
+                                // console.log('Input changed:', e.target.value);
+                                handleInputChange(e);
+                            }}
                             placeholder={sessionId ? "Message Ogma..." : "Select a chat or start typing..."}
                             autoFocus
                             disabled={isLoading}
