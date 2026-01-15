@@ -715,7 +715,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex h-[calc(100vh-4rem)] w-full bg-background text-foreground font-sans overflow-hidden">
+        <div className="flex h-[calc(100vh-7rem)] w-full bg-background text-foreground font-sans overflow-hidden">
             <ChatSidebar
                 currentSessionId={currentSessionId}
                 onSelectSession={handleSelectSession}
@@ -887,7 +887,7 @@ export default function ChatPage() {
                         })}
 
                         {/* Loading Indicator with Trinity Progress */}
-                        {(isLoading || trinityProgress) && (messages[messages.length - 1]?.role === 'user' || (messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content)) && (
+                        {(isLoading || trinityProgress) && (messages[messages.length - 1]?.role === 'user' || (messages[messages.length - 1]?.role === 'assistant' && (!messages[messages.length - 1]?.content || (typeof messages[messages.length - 1]?.content === 'string' && messages[messages.length - 1]?.content.trim() === '')))) && (
                             <div className="flex flex-col gap-3 justify-start">
                                 {/* Trinity Models Status */}
                                 {trinityProgress && (
