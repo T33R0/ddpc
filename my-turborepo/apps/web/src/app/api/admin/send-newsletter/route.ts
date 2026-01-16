@@ -63,12 +63,7 @@ export async function POST(req: NextRequest) {
         // Everyone else is opted-in by default.
         const recipients = users.filter(u => !optOutUserIds.has(u.id) && u.email);
 
-        console.log(`[Email Debug] Found ${users.length} total users.`);
-        console.log(`[Email Debug] Found ${optOutUserIds.size} opt-outs.`);
-        console.log(`[Email Debug] Final recipient count: ${recipients.length}`);
-
         if (recipients.length === 0) {
-            console.log('[Email Debug] No recipients found, aborting.');
             return NextResponse.json({ message: 'No recipients found.' });
         }
 
@@ -85,7 +80,7 @@ export async function POST(req: NextRequest) {
         );
 
         // Inject real URLs if template has placeholders
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ddpc.dev';
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://myddpc.com';
         const unsubscribeUrl = `${appUrl}/account`;
         let finalHtml = emailHtml
             .replace(/{{UnsubscribeURL}}/g, unsubscribeUrl)
@@ -98,7 +93,7 @@ export async function POST(req: NextRequest) {
         // As of latest Resend SD, batch.send is available.
 
         const emailBatches = recipients.map(u => ({
-            from: 'DDPC <updates@ddpc.dev>', // Should match verified domain
+            from: 'DDPC <updates@myddpc.com>', // Should match verified domain
             to: u.email!,
             subject: `DDPC Build Log: ${new Date(emailData.date).toLocaleDateString()}`,
             html: finalHtml,
@@ -109,12 +104,9 @@ export async function POST(req: NextRequest) {
         const chunkSize = 100;
         for (let i = 0; i < emailBatches.length; i += chunkSize) {
             const chunk = emailBatches.slice(i, i + chunkSize);
-            console.log(`[Email Debug] Sending batch ${i / chunkSize + 1}, size: ${chunk.length}`);
-            const { data, error } = await resend.batch.send(chunk);
+            const { error } = await resend.batch.send(chunk);
             if (error) {
                 console.error('Resend batch error:', error);
-            } else {
-                console.log(`[Email Debug] Batch ${i / chunkSize + 1} success:`, JSON.stringify(data, null, 2));
             }
         }
 
