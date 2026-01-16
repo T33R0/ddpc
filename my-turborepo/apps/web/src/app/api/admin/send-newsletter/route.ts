@@ -74,18 +74,17 @@ export async function POST(req: NextRequest) {
                 features: emailData.features.filter((f: string) => f.trim() !== ''),
                 fixes: emailData.fixes.filter((f: string) => f.trim() !== ''),
                 improvements: emailData.improvements ? emailData.improvements.filter((f: string) => f.trim() !== '') : [],
+                message: emailData.message,
                 proTip: emailData.proTip,
             })
         );
 
-        // Inject real Unsubscribe URL if template has placeholder
-        // The React component passed prop is not used for link replacement in render(), 
-        // but we can replace the placeholder string if we put it in the template props or raw string.
-        // In WeeklyBuildLog.tsx, I used <Link href="{{UnsubscribeURL}}">
-        // render() produces the HTML with that string. We can replace it now.
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ddpc.dev'; // Fallback
+        // Inject real URLs if template has placeholders
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ddpc.dev';
         const unsubscribeUrl = `${appUrl}/account`;
-        const finalHtml = emailHtml.replace(/{{UnsubscribeURL}}/g, unsubscribeUrl);
+        let finalHtml = emailHtml
+            .replace(/{{UnsubscribeURL}}/g, unsubscribeUrl)
+            .replace(/{{AppUrl}}/g, appUrl);
 
         // 7. Send Emails via Resend
         // Batching: Resend allows sending to multiple 'to' addresses in one call, 

@@ -30,6 +30,7 @@ type WeeklyBuildLogData = {
     features: string[];
     fixes: string[];
     improvements: string[];
+    message: string;
     proTip: string;
     scheduledAt: string;
 };
@@ -47,6 +48,7 @@ export default function EmailAdminPage() {
         features: [''],
         fixes: [''],
         improvements: [''],
+        message: '',
         proTip: '',
         scheduledAt: '',
     });
@@ -214,6 +216,13 @@ export default function EmailAdminPage() {
             </div>
 
             <div className="space-y-6">
+                {buildLogData.message && (
+                    <div className="mb-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Message from the ddpc team:</h3>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{buildLogData.message}</p>
+                    </div>
+                )}
+
                 {buildLogData.features.some(f => f.trim()) && (
                     <div>
                         <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">New Features</h3>
@@ -272,6 +281,12 @@ export default function EmailAdminPage() {
                         </div>
                     </div>
                 )}
+
+                <div className="text-center my-8">
+                    <a href="/garage" className="inline-block bg-black text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-800 transition-colors">
+                        Go to my Garage
+                    </a>
+                </div>
 
                 <div className="pt-8 border-t border-gray-200 text-center">
                     <p className="text-xs text-gray-400">
@@ -361,6 +376,17 @@ export default function EmailAdminPage() {
                                 <CardDescription>What's new this week?</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
+
+                                {/* Message */}
+                                <div className="space-y-2">
+                                    <Label>Message from the ddpc team</Label>
+                                    <Textarea
+                                        value={buildLogData.message}
+                                        onChange={(e) => setBuildLogData(prev => ({ ...prev, message: e.target.value }))}
+                                        placeholder="We just launched this week..."
+                                        rows={4}
+                                    />
+                                </div>
 
                                 {/* Features */}
                                 <div className="space-y-3">

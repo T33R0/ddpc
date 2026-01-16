@@ -12,6 +12,7 @@ import {
     Row,
     Column,
     Hr,
+    Button,
 } from '@react-email/components';
 
 interface WeeklyBuildLogProps {
@@ -19,6 +20,7 @@ interface WeeklyBuildLogProps {
     features: string[];
     fixes: string[];
     improvements?: string[];
+    message?: string;
     proTip?: string;
 }
 
@@ -27,6 +29,7 @@ export const WeeklyBuildLog = ({
     features = [],
     fixes = [],
     improvements = [],
+    message,
     proTip,
 }: WeeklyBuildLogProps) => {
     const formattedDate = new Date(date).toLocaleDateString('en-US', {
@@ -43,6 +46,13 @@ export const WeeklyBuildLog = ({
                 <Container style={container}>
                     <Heading style={h1}>DDPC // BUILD LOG</Heading>
                     <Text style={intro}>Progress for the week of {formattedDate}.</Text>
+
+                    {message && (
+                        <Section style={messageBox}>
+                            <Text style={messageHeader}>Message from the ddpc team:</Text>
+                            <Text style={messageText}>{message}</Text>
+                        </Section>
+                    )}
 
                     {features.length > 0 && (
                         <Section style={section}>
@@ -98,6 +108,12 @@ export const WeeklyBuildLog = ({
                             <Text style={proTipText}>{proTip}</Text>
                         </Section>
                     )}
+
+                    <Section style={buttonSection}>
+                        <Button style={button} href="{{AppUrl}}/garage">
+                            Go to my Garage
+                        </Button>
+                    </Section>
 
                     <Hr style={divider} />
 
@@ -204,6 +220,24 @@ const improveBadge = {
     color: '#075985', // sky-800
 };
 
+const messageBox = {
+    marginBottom: '24px',
+};
+
+const messageHeader = {
+    fontSize: '18px',
+    fontWeight: '700',
+    marginBottom: '8px',
+    color: '#1a1a1a',
+};
+
+const messageText = {
+    fontSize: '16px',
+    lineHeight: '1.6',
+    color: '#374151',
+    marginTop: '0',
+};
+
 const proTipBox = {
     backgroundColor: '#f9fafb',
     borderRadius: '8px',
@@ -224,6 +258,24 @@ const proTipText = {
     fontSize: '14px',
     lineHeight: '1.5',
     color: '#4b5563',
+};
+
+const buttonSection = {
+    textAlign: 'center' as const,
+    marginTop: '32px',
+    marginBottom: '32px',
+};
+
+const button = {
+    backgroundColor: '#000000',
+    borderRadius: '6px',
+    color: '#ffffff',
+    fontSize: '14px',
+    fontWeight: '600',
+    textDecoration: 'none',
+    textAlign: 'center' as const,
+    display: 'inline-block',
+    padding: '12px 24px',
 };
 
 const divider = {
