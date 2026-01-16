@@ -18,6 +18,7 @@ interface WeeklyBuildLogProps {
     date: string;
     features: string[];
     fixes: string[];
+    improvements?: string[];
     proTip?: string;
 }
 
@@ -25,6 +26,7 @@ export const WeeklyBuildLog = ({
     date,
     features = [],
     fixes = [],
+    improvements = [],
     proTip,
 }: WeeklyBuildLogProps) => {
     const formattedDate = new Date(date).toLocaleDateString('en-US', {
@@ -60,7 +62,7 @@ export const WeeklyBuildLog = ({
 
                     {fixes.length > 0 && (
                         <Section style={section}>
-                            <Text style={subHeader}>FIXES & IMPROVEMENTS</Text>
+                            <Text style={subHeader}>FIXES & REPAIRS</Text>
                             {fixes.map((fix, index) => (
                                 <Row key={index} style={itemRow}>
                                     <Column style={badgeCol}>
@@ -68,6 +70,22 @@ export const WeeklyBuildLog = ({
                                     </Column>
                                     <Column>
                                         <Text style={itemText}>{fix}</Text>
+                                    </Column>
+                                </Row>
+                            ))}
+                        </Section>
+                    )}
+
+                    {improvements.length > 0 && (
+                        <Section style={section}>
+                            <Text style={subHeader}>FUTURE IMPROVEMENTS</Text>
+                            {improvements.map((improvement, index) => (
+                                <Row key={index} style={itemRow}>
+                                    <Column style={badgeCol}>
+                                        <Text style={improveBadge}>SOON</Text>
+                                    </Column>
+                                    <Column>
+                                        <Text style={itemText}>{improvement}</Text>
                                     </Column>
                                 </Row>
                             ))}
@@ -178,6 +196,12 @@ const fixBadge = {
     ...badgeBase,
     backgroundColor: '#fee2e2', // red-100
     color: '#991b1b', // red-800
+};
+
+const improveBadge = {
+    ...badgeBase,
+    backgroundColor: '#e0f2fe', // sky-100
+    color: '#075985', // sky-800
 };
 
 const proTipBox = {

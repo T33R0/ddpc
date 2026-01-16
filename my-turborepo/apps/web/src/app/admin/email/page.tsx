@@ -29,6 +29,7 @@ type WeeklyBuildLogData = {
     date: string;
     features: string[];
     fixes: string[];
+    improvements: string[];
     proTip: string;
     scheduledAt: string;
 };
@@ -45,6 +46,7 @@ export default function EmailAdminPage() {
         date: '',
         features: [''],
         fixes: [''],
+        improvements: [''],
         proTip: '',
         scheduledAt: '',
     });
@@ -127,6 +129,20 @@ export default function EmailAdminPage() {
         setBuildLogData(prev => ({ ...prev, fixes: prev.fixes.filter((_, i) => i !== index) }));
     };
 
+    const handleImprovementChange = (index: number, value: string) => {
+        const newImprovements = [...buildLogData.improvements];
+        newImprovements[index] = value;
+        setBuildLogData(prev => ({ ...prev, improvements: newImprovements }));
+    };
+
+    const addImprovement = () => {
+        setBuildLogData(prev => ({ ...prev, improvements: [...prev.improvements, ''] }));
+    };
+
+    const removeImprovement = (index: number) => {
+        setBuildLogData(prev => ({ ...prev, improvements: prev.improvements.filter((_, i) => i !== index) }));
+    };
+
     const toggleChannelActive = async (id: string, currentState: boolean) => {
         const { error } = await supabase
             .from('email_channels')
@@ -145,8 +161,10 @@ export default function EmailAdminPage() {
         if (!selectedChannelId) return;
 
         // Basic Validation
-        if (!buildLogData.features.some(f => f.trim()) && !buildLogData.fixes.some(f => f.trim())) {
-            if (!confirm('No features or fixes listed. Send anyway?')) return;
+        if (!buildLogData.features.some(f => f.trim()) &&
+            !buildLogData.fixes.some(f => f.trim()) &&
+            !buildLogData.improvements.some(f => f.trim())) {
+            if (!confirm('No features, fixes, or improvements listed. Send anyway?')) return;
         }
 
         setIsSending(true);
@@ -185,7 +203,10 @@ export default function EmailAdminPage() {
         <div className="bg-white text-black font-sans p-8 rounded-lg shadow-lg border border-gray-200 max-w-2xl mx-auto">
             <div className="border-b border-gray-200 pb-4 mb-6">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">DDPC // BUILD LOG</h1>
-                <p className="text-gray-500 text-sm mt-1">Progress for the week of {new Date(buildLogData.date).toLocaleDateString()}</p>
+                <p className="text-gray-500 text-sm mt-1">Progress for the week of {(() => {
+                    const [y, m, d] = buildLogData.date.split('-').map(Number);
+                    return new Date(y, m - 1, d).toLocaleDateString();
+                })()}</p>
             </div>
 
             <div className="space-y-6">
@@ -207,7 +228,7 @@ export default function EmailAdminPage() {
 
                 {buildLogData.fixes.some(f => f.trim()) && (
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Fixes & Improvements</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Fixes & Repairs</h3>
                         <ul className="space-y-3">
                             {buildLogData.fixes.filter(f => f.trim()).map((fix, i) => (
                                 <li key={i} className="flex items-start gap-3">
@@ -215,6 +236,22 @@ export default function EmailAdminPage() {
                                         FIX
                                     </span>
                                     <span className="text-gray-700 leading-relaxed">{fix}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {buildLogData.improvements.some(f => f.trim()) && (
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Future Improvements</h3>
+                        <ul className="space-y-3">
+                            {buildLogData.improvements.filter(f => f.trim()).map((imp, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800 shrink-0 mt-0.5">
+                                        SOON
+                                    </span>
+                                    <span className="text-gray-700 leading-relaxed">{imp}</span>
                                 </li>
                             ))}
                         </ul>
@@ -236,7 +273,7 @@ export default function EmailAdminPage() {
                     <p className="text-xs text-gray-400">
                         You received this email because you are subscribed to the Weekly Build Log.
                         <br />
-                        <a href="#" className="underline hover:text-gray-600">Unsubscribe</a> from updates.
+                        <a href="/account" className="underline hover:text-gray-600">Unsubscribe from updates</a>.
                     </p>
                 </div>
             </div>
@@ -351,7 +388,7 @@ export default function EmailAdminPage() {
                                 {/* Fixes */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <Label className="text-red-500 font-semibold">Fixes & Improvements</Label>
+                                        <Label className="text-red-500 font-semibold">Fixes & Repairs</Label>
                                         <Button variant="outline" size="sm" onClick={addFix} type="button">
                                             <Plus className="h-3 w-3 mr-1" /> Add
                                         </Button>
@@ -368,6 +405,33 @@ export default function EmailAdminPage() {
                                                 size="icon"
                                                 onClick={() => removeFix(idx)}
                                                 disabled={buildLogData.fixes.length === 1}
+                                            >
+                                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Improvements */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sky-500 font-semibold">Future Improvements</Label>
+                                        <Button variant="outline" size="sm" onClick={addImprovement} type="button">
+                                            <Plus className="h-3 w-3 mr-1" /> Add
+                                        </Button>
+                                    </div>
+                                    {buildLogData.improvements.map((imp, idx) => (
+                                        <div key={idx} className="flex gap-2">
+                                            <Input
+                                                value={imp}
+                                                onChange={(e) => handleImprovementChange(idx, e.target.value)}
+                                                placeholder="e.g. Upcoming dashboard refresh..."
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeImprovement(idx)}
+                                                disabled={buildLogData.improvements.length === 1}
                                             >
                                                 <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                             </Button>

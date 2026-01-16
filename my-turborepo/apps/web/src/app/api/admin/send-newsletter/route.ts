@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
                 date: emailData.date,
                 features: emailData.features.filter((f: string) => f.trim() !== ''),
                 fixes: emailData.fixes.filter((f: string) => f.trim() !== ''),
+                improvements: emailData.improvements ? emailData.improvements.filter((f: string) => f.trim() !== '') : [],
                 proTip: emailData.proTip,
             })
         );
