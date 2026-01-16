@@ -10,6 +10,7 @@ type ImageWithFallbackProps = {
   width: number;
   height: number;
   className?: string;
+  unoptimized?: boolean;
 };
 
 export function ImageWithFallback({
@@ -50,7 +51,7 @@ export function ImageWithFallback({
   // Check if URL is already proxied or if it's a local path
   const isAlreadyProxied = currentSrc.startsWith('/api/images/proxy');
   const isLocalPath = currentSrc.startsWith('/');
-  
+
   // Whitelisted domains that Next.js Image can handle directly (from next.config.js)
   const whitelistedDomains = [
     'images.unsplash.com',
@@ -64,17 +65,17 @@ export function ImageWithFallback({
     'i.imgur.com',
     'imgur.com',
   ];
-  
+
   const isExternalUrl = currentSrc.startsWith('http://') || currentSrc.startsWith('https://');
   const isWhitelisted = isExternalUrl && whitelistedDomains.some(domain => currentSrc.includes(domain));
-  
+
   // Use proxy only for external URLs that aren't whitelisted, or if already proxied use as-is
   // For whitelisted domains, Next.js Image can handle them directly
-  const srcToUse = isAlreadyProxied || isLocalPath 
-    ? currentSrc 
-    : isExternalUrl && !isWhitelisted 
-    ? `/api/images/proxy?url=${encodeURIComponent(currentSrc)}` 
-    : currentSrc;
+  const srcToUse = isAlreadyProxied || isLocalPath
+    ? currentSrc
+    : isExternalUrl && !isWhitelisted
+      ? `/api/images/proxy?url=${encodeURIComponent(currentSrc)}`
+      : currentSrc;
 
   return (
     <Image

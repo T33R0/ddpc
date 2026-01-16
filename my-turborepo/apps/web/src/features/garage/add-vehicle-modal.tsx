@@ -539,6 +539,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                         width={600}
                         height={338}
                         className="w-full h-full object-cover"
+                        unoptimized={true}
                       />
                     </div>
 

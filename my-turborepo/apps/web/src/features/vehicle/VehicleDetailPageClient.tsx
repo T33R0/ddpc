@@ -23,6 +23,7 @@ type ImageWithTimeoutFallbackProps = {
   alt: string
   className?: string
   timeout?: number
+  unoptimized?: boolean
 }
 
 function ImageWithTimeoutFallback({
@@ -30,7 +31,8 @@ function ImageWithTimeoutFallback({
   fallbackSrc,
   alt,
   className,
-  timeout = 5000
+  timeout = 5000,
+  unoptimized = false
 }: ImageWithTimeoutFallbackProps) {
   const [imageLoaded, setImageLoaded] = React.useState(false)
   const [showFallback, setShowFallback] = React.useState(false)
@@ -73,6 +75,7 @@ function ImageWithTimeoutFallback({
         fill
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         priority
+        unoptimized={unoptimized}
       />
     )
   }
@@ -85,6 +88,7 @@ function ImageWithTimeoutFallback({
       fill
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       priority
+      unoptimized={unoptimized}
       onLoad={() => {
         console.log('Image loaded successfully:', currentSrc)
         setImageLoaded(true)
@@ -194,6 +198,7 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
         fallbackSrc="/branding/fallback-logo.png"
         alt={`${vehicle.name || 'Vehicle'} vehicle`}
         className="w-full h-full object-cover"
+        unoptimized={true}
       />
       {isOwner && (
         <div
