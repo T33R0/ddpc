@@ -13,19 +13,19 @@ export async function POST(req: NextRequest) {
         const supabase = await createClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        if (authError || !user || user.user_metadata.role !== 'admin') { // Assuming role is in metadata or we check a profile table
-            // If role is not in metadata, we might need a DB lookup. 
-            // Existing code in /account/page.tsx checked user.role. 
-            // Let's assume user.user_metadata.role OR verify against a known admin ID/table.
-            // For safety, let's also check the logic in existing codebase if possible.
-            // But assuming 'admin' role check from metadata is standard for this codebase based on previous context.
-            // Wait, account page uses `user.role` from `useAuth` hook which likely processes metadata.
-            // Let's double check if user object has role property on the top level. It sits usually in app_metadata or user_metadata.
-            // I'll check user_metadata.role and app_metadata.role.
-            const role = user?.user_metadata?.role || user?.app_metadata?.role;
-            if (role !== 'admin') {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Verify Admin Role from Profile
+        const { data: profile } = await supabase
+            .from('user_profile')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+        if (!profile || profile.role !== 'admin') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { channelId, data: emailData, scheduledAt } = await req.json();
