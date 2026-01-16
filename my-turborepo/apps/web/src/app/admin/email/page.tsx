@@ -180,7 +180,7 @@ export default function EmailAdminPage() {
                 body: JSON.stringify({
                     channelId: selectedChannelId,
                     data: buildLogData,
-                    scheduledAt: buildLogData.scheduledAt || null
+                    scheduledAt: buildLogData.scheduledAt ? new Date(buildLogData.scheduledAt).toISOString() : null
                 })
             });
 
