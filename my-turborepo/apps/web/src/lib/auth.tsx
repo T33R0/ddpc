@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { signOut as signOutAction } from '../actions/auth';
+import { getUserTheme } from '@/features/user/actions';
+import { signOut as signOutAction } from '@/features/auth/actions';
 
 interface UserProfile {
   id: string;

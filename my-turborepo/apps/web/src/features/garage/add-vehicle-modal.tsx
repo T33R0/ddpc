@@ -20,7 +20,7 @@ import { Search } from 'lucide-react';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { getVehicleImageSources } from '@/lib/vehicle-images';
 import { VehicleSummary, TrimVariant } from '@/lib/types';
-import { addVehicleToGarage } from '@/actions/garage';
+import { addVehicleToGarage } from '@/features/garage/actions';
 
 interface AddVehicleModalProps {
   open: boolean;

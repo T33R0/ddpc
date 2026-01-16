@@ -68,7 +68,7 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
       }
 
       // Dynamically import the action to avoid build issues if not fully set up
-      const { submitIssueReport } = await import('@/actions/issues');
+      const { submitIssueReport } = await import('@/features/issues/actions');
       const result = await submitIssueReport(null, formData);
 
       if (result.error) {

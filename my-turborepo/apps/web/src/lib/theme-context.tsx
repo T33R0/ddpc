@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './auth';
 import { supabase } from './supabase';
-import { updateUserTheme, getUserTheme } from '../actions/user-profile';
+import { updateUserTheme, getUserTheme } from '@/features/user/actions';
 
 export type Theme = 'light' | 'dark' | 'auto';
 
@@ -66,7 +66,7 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
         };
 
         syncTheme();
-    // Dependency on user.id (primitive) instead of user object to prevent unnecessary re-runs/reverts
+        // Dependency on user.id (primitive) instead of user object to prevent unnecessary re-runs/reverts
     }, [user?.id, loading, mounted]);
 
     // Resolve theme based on current setting and system preference

@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { AuthModal } from '@/features/auth/AuthModal';
 
 import { ImageWithTimeoutFallback } from '@/components/image-with-timeout-fallback';
-import { addVehicleToGarage } from '@/actions/garage';
+import { addVehicleToGarage } from '@/features/garage/actions';
 
 type VehicleDetailsModalProps = {
   summary: VehicleSummary;

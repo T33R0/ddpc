@@ -6,7 +6,7 @@ import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalBo
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
-import { completeOnboarding } from '@/actions/garage'
+import { completeOnboarding } from '@/features/garage/actions'
 import { toast } from 'react-hot-toast'
 
 interface OnboardingModalProps {
@@ -89,124 +89,124 @@ export function OnboardingModal({ vehicleId, open, onClose }: OnboardingModalPro
 
         <ModalBody>
           <div className="space-y-4">
-          {step === 1 && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="acquisitionDate">When did you acquire it?</Label>
-                <Input
-                  id="acquisitionDate"
-                  type="date"
-                  value={acquisitionDate}
-                  onChange={(e) => setAcquisitionDate(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="acquisitionType">How did you acquire it?</Label>
-                <select
-                  id="acquisitionType"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={acquisitionType}
-                  onChange={(e) => setAcquisitionType(e.target.value)}
-                >
-                  <option value="Dealer">Dealer</option>
-                  <option value="Private Party">Private Party</option>
-                  <option value="Auction">Auction</option>
-                  <option value="Trade">Trade</option>
-                  <option value="Gift">Gift</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="acquisitionCost">Acquisition Cost (Optional)</Label>
-                <Input
-                  id="acquisitionCost"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={acquisitionCost}
-                  onChange={(e) => setAcquisitionCost(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <div className="space-y-2">
-                <Label>Do you still own this vehicle?</Label>
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant={stillOwn === true ? 'default' : 'outline'}
-                    onClick={() => {
-                      setStillOwn(true)
-                      setStatus('active')
-                    }}
-                    className="flex-1"
-                  >
-                    Yes
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={stillOwn === false ? 'default' : 'outline'}
-                    onClick={() => {
-                      setStillOwn(false)
-                      setEndStatus('archived')
-                    }}
-                    className="flex-1"
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
-
-              {stillOwn === true && (
+            {step === 1 && (
+              <>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Current Status</Label>
+                  <Label htmlFor="acquisitionDate">When did you acquire it?</Label>
+                  <Input
+                    id="acquisitionDate"
+                    type="date"
+                    value={acquisitionDate}
+                    onChange={(e) => setAcquisitionDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="acquisitionType">How did you acquire it?</Label>
                   <select
-                    id="status"
+                    id="acquisitionType"
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    value={acquisitionType}
+                    onChange={(e) => setAcquisitionType(e.target.value)}
                   >
-                    <option value="active">Daily Driver (Active)</option>
-                    <option value="inactive">Inactive (Stored)</option>
-                    <option value="listed">Listed (For Sale)</option>
+                    <option value="Dealer">Dealer</option>
+                    <option value="Private Party">Private Party</option>
+                    <option value="Auction">Auction</option>
+                    <option value="Trade">Trade</option>
+                    <option value="Gift">Gift</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
-              )}
 
-              {stillOwn === false && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">When did you part with it?</Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endStatus">Final Status</Label>
-                    <select
-                      id="endStatus"
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={endStatus}
-                      onChange={(e) => setEndStatus(e.target.value)}
+                <div className="space-y-2">
+                  <Label htmlFor="acquisitionCost">Acquisition Cost (Optional)</Label>
+                  <Input
+                    id="acquisitionCost"
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={acquisitionCost}
+                    onChange={(e) => setAcquisitionCost(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <div className="space-y-2">
+                  <Label>Do you still own this vehicle?</Label>
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant={stillOwn === true ? 'default' : 'outline'}
+                      onClick={() => {
+                        setStillOwn(true)
+                        setStatus('active')
+                      }}
+                      className="flex-1"
                     >
-                      <option value="archived">Archived</option>
-                      <option value="retired">Retired</option>
+                      Yes
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={stillOwn === false ? 'default' : 'outline'}
+                      onClick={() => {
+                        setStillOwn(false)
+                        setEndStatus('archived')
+                      }}
+                      className="flex-1"
+                    >
+                      No
+                    </Button>
+                  </div>
+                </div>
+
+                {stillOwn === true && (
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Current Status</Label>
+                    <select
+                      id="status"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                    >
+                      <option value="active">Daily Driver (Active)</option>
+                      <option value="inactive">Inactive (Stored)</option>
+                      <option value="listed">Listed (For Sale)</option>
                     </select>
                   </div>
-                </>
-              )}
-            </>
-          )}
+                )}
+
+                {stillOwn === false && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">When did you part with it?</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endStatus">Final Status</Label>
+                      <select
+                        id="endStatus"
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={endStatus}
+                        onChange={(e) => setEndStatus(e.target.value)}
+                      >
+                        <option value="archived">Archived</option>
+                        <option value="retired">Retired</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </ModalBody>
 

@@ -7,7 +7,7 @@ import { AuthModal } from '@/features/auth/AuthModal';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { addVehicleToGarage } from '@/actions/garage';
+import { addVehicleToGarage } from '@/features/garage/actions';
 
 interface AddToGarageButtonProps {
   vehicleId: string; // This is the trim ID from vehicle_data
