@@ -17,8 +17,8 @@ export const LogoutModal = dynamic(
     { ssr: false }
 );
 
-export const DDSRButton = dynamic(
-    () => import('./DDSRButton').then((mod) => mod.DDSRButton),
+export const DDSRWidget = dynamic(
+    () => import('./DDSRWidget').then((mod) => mod.DDSRWidget),
     { ssr: false }
 );
 

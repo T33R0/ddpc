@@ -11,7 +11,7 @@ import {
   HeaderWithAuth,
   FooterWrapper,
   LogoutModal,
-  DDSRButton,
+  DDSRWidget,
   Toaster
 } from '../components/DynamicLayout';
 import { ScrollToTop } from '../components/ScrollToTop';
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // and avoids the "insecure getSession" warning
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   // Only get session if user is validated
   // Note: This getSession() call triggers the Vercel warning but is needed for initialSession
   // The warning is expected and safe here since we've already validated with getUser()
@@ -77,23 +77,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <PaywallProvider>
               <ReportModalProvider>
                 <div className="relative flex flex-col min-h-screen">
-                <div
-                  aria-hidden="true"
-                  className="fixed inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none z-0"
-                >
-                  <div className="blur-[100px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-                  <div className="blur-[100px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-                </div>
-                <HeaderWithAuth />
-                <Toaster />
-                <main className="flex-grow relative z-10">
-                  {children}
-                </main>
+                  <div
+                    aria-hidden="true"
+                    className="fixed inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none z-0"
+                  >
+                    <div className="blur-[100px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
+                    <div className="blur-[100px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+                  </div>
+                  <HeaderWithAuth />
+                  <Toaster />
+                  <main className="flex-grow relative z-10">
+                    {children}
+                  </main>
                   <FooterWrapper />
                   <ScrollToTop />
                 </div>
                 <LogoutModal />
-                <DDSRButton />
+                <DDSRWidget />
               </ReportModalProvider>
             </PaywallProvider>
           </ThemeProvider>

@@ -5,7 +5,7 @@ import { Button } from '@repo/ui/button';
 import { DDSRPopup } from '@repo/ui/ddsr-popup';
 import { MonitorPlay } from 'lucide-react';
 
-export function DDSRButton() {
+export function DDSRWidget() {
   const [isPopupOpen, setPopupOpen] = React.useState(false);
 
   return (

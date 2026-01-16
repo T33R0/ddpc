@@ -45,6 +45,23 @@ const config: Omit<Config, "content"> = {
         md: `calc(var(--radius) - 2px)`,
         sm: "calc(var(--radius) - 4px)",
       },
+      container: {
+        center: true,
+        padding: {
+          DEFAULT: '1rem',
+          sm: '1.5rem',
+          lg: '2rem',
+        },
+        screens: {
+          '2xl': '1400px',
+        },
+      },
+      backgroundImage: {
+        'gradient-orbital': 'linear-gradient(to bottom right, theme("colors.indigo.500"), theme("colors.blue.500"), theme("colors.teal.500"))',
+      },
+      boxShadow: {
+        'orbital': '0 0 15px rgba(255, 255, 255, 0.1)',
+      },
       fontFamily: {
         sans: ["var(--font-geist-sans)"],
         mono: ["var(--font-geist-mono)"],
