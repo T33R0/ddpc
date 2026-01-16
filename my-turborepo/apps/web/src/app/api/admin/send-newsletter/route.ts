@@ -63,7 +63,12 @@ export async function POST(req: NextRequest) {
         // Everyone else is opted-in by default.
         const recipients = users.filter(u => !optOutUserIds.has(u.id) && u.email);
 
+        console.log(`[Email Debug] Found ${users.length} total users.`);
+        console.log(`[Email Debug] Found ${optOutUserIds.size} opt-outs.`);
+        console.log(`[Email Debug] Final recipient count: ${recipients.length}`);
+
         if (recipients.length === 0) {
+            console.log('[Email Debug] No recipients found, aborting.');
             return NextResponse.json({ message: 'No recipients found.' });
         }
 
@@ -104,10 +109,12 @@ export async function POST(req: NextRequest) {
         const chunkSize = 100;
         for (let i = 0; i < emailBatches.length; i += chunkSize) {
             const chunk = emailBatches.slice(i, i + chunkSize);
-            const { error } = await resend.batch.send(chunk);
+            console.log(`[Email Debug] Sending batch ${i / chunkSize + 1}, size: ${chunk.length}`);
+            const { data, error } = await resend.batch.send(chunk);
             if (error) {
                 console.error('Resend batch error:', error);
-                // Continue to next batch but log error
+            } else {
+                console.log(`[Email Debug] Batch ${i / chunkSize + 1} success:`, JSON.stringify(data, null, 2));
             }
         }
 
