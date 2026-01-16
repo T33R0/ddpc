@@ -6,7 +6,7 @@ import { Badge } from '@repo/ui/badge'
 import { Card, CardContent } from '@repo/ui/card'
 import { MapPin, Link as LinkIcon, Calendar, Lock } from 'lucide-react'
 import { DashboardCard } from '@/components/dashboard-card'
-import { VehiclePrivacyToggle } from './_components/vehicle-privacy-toggle'
+import { VehiclePrivacyToggle } from '@/features/vehicle/components/VehiclePrivacyToggle'
 
 interface PageProps {
   params: Promise<{

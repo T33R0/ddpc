@@ -2,7 +2,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Badge } from '@repo/ui/badge'
-import { RefreshStructureButton } from './refresh-button'
+import { RefreshStructureButton } from '@/features/admin/components/StructureRefreshButton'
 
 export default async function AdminStructurePage() {
   const supabase = await createClient()
@@ -45,7 +45,7 @@ export default async function AdminStructurePage() {
             {(items || []).map((item) => (
               <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="whitespace-nowrap px-6 py-4">
-                  <Link 
+                  <Link
                     href={`/admin/structure/${item.id}`}
                     className="font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
@@ -53,19 +53,19 @@ export default async function AdminStructurePage() {
                   </Link>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
-                   <Badge variant={item.type === 'page' ? 'default' : 'secondary'}>
-                     {item.type}
-                   </Badge>
+                  <Badge variant={item.type === 'page' ? 'default' : 'secondary'}>
+                    {item.type}
+                  </Badge>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 font-mono text-xs truncate max-w-[300px]">
                   {item.path}
                 </td>
                 <td className="px-6 py-4 text-sm">
-                   {item.status === 'archived' ? (
-                     <Badge variant="destructive">Archived</Badge>
-                   ) : (
-                     <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Active</Badge>
-                   )}
+                  {item.status === 'archived' ? (
+                    <Badge variant="destructive">Archived</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Active</Badge>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   {new Date(item.last_updated).toLocaleDateString()}
@@ -75,9 +75,9 @@ export default async function AdminStructurePage() {
           </tbody>
         </table>
         {(!items || items.length === 0) && (
-            <div className="p-12 text-center text-muted-foreground">
-                No structure data found. Run the scanner script to populate.
-            </div>
+          <div className="p-12 text-center text-muted-foreground">
+            No structure data found. Run the scanner script to populate.
+          </div>
         )}
       </div>
     </div>

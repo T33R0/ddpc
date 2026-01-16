@@ -3,7 +3,7 @@
 import React from 'react'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from '@repo/ui/modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs'
-import { Vehicle } from '../../../lib/hooks/useVehicles'
+import { Vehicle } from '@/lib/hooks/useVehicles'
 import { VehicleCard } from '@/components/vehicle-card'
 
 interface SelectVehicleDialogProps {
@@ -56,11 +56,11 @@ export function SelectVehicleDialog({
               onClick={() => handleSelect(vehicle)}
               className="cursor-pointer hover:bg-transparent" // Override any specific styles if needed
               footer={
-                  <div className="flex items-center gap-2 mt-2">
-                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                      {vehicle.current_status.replace('_', ' ')}
-                     </span>
-                  </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                    {vehicle.current_status.replace('_', ' ')}
+                  </span>
+                </div>
               }
             />
           </div>
@@ -80,18 +80,18 @@ export function SelectVehicleDialog({
         </ModalHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
-            <Tabs defaultValue="active" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="active">Active</TabsTrigger>
-                    <TabsTrigger value="inactive">inactive</TabsTrigger>
-                </TabsList>
-                <TabsContent value="active">
-                    {renderGrid(activeVehicles, "No active vehicles found.")}
-                </TabsContent>
-                <TabsContent value="inactive">
-                    {renderGrid(inactiveVehicles, "No inactive vehicles found.")}
-                </TabsContent>
-            </Tabs>
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="inactive">inactive</TabsTrigger>
+            </TabsList>
+            <TabsContent value="active">
+              {renderGrid(activeVehicles, "No active vehicles found.")}
+            </TabsContent>
+            <TabsContent value="inactive">
+              {renderGrid(inactiveVehicles, "No inactive vehicles found.")}
+            </TabsContent>
+          </Tabs>
         </div>
       </ModalContent>
     </Modal>
