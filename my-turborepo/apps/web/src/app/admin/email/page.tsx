@@ -204,8 +204,12 @@ export default function EmailAdminPage() {
             <div className="border-b border-gray-200 pb-4 mb-6">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">DDPC // BUILD LOG</h1>
                 <p className="text-gray-500 text-sm mt-1">Progress for the week of {(() => {
-                    const [y, m, d] = buildLogData.date.split('-').map(Number);
-                    return new Date(y, m - 1, d).toLocaleDateString();
+                    const parts = buildLogData.date.split('-').map(Number);
+                    if (parts.length === 3) {
+                        const [y, m, d] = parts as [number, number, number];
+                        return new Date(y, m - 1, d).toLocaleDateString();
+                    }
+                    return new Date().toLocaleDateString(); // Fallback
                 })()}</p>
             </div>
 
