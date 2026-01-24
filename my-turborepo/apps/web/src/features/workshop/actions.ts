@@ -43,7 +43,9 @@ export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataRe
             inventory_id,
             qty_used,
             inventory:inventory(*)
-        )
+        ),
+        tools:job_tools(*),
+        specs:job_specs(*)
       `)
             .eq('vehicle_id', vehicleId)
             .in('status', ['planned', 'in_progress'])
@@ -352,6 +354,134 @@ export async function deleteJob(jobId: string) {
         .eq('id', jobId);
 
     if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+// --- Tools Actions ---
+
+export async function createJobTool(jobId: string, name: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('job_tools')
+        .insert({
+            job_id: jobId,
+            name,
+            is_acquired: false,
+            created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true, tool: data };
+}
+
+export async function updateJobTool(toolId: string, updates: { is_acquired?: boolean; name?: string }) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('job_tools')
+        .update(updates)
+        .eq('id', toolId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function deleteJobTool(toolId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('job_tools')
+        .delete()
+        .eq('id', toolId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+// --- Specs Actions ---
+
+export async function createJobSpec(jobId: string, item: string, value: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('job_specs')
+        .insert({
+            job_id: jobId,
+            item,
+            value,
+            created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true, spec: data };
+}
+
+export async function updateJobSpec(specId: string, updates: { item?: string; value?: string }) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('job_specs')
+        .update(updates)
+        .eq('id', specId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function deleteJobSpec(specId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('job_specs')
+        .delete()
+        .eq('id', specId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+// --- AI Generation Stub ---
+
+export async function generateMissionPlan(jobId: string, vehicleInfo: string) {
+    const supabase = await createClient();
+
+    // Simulate AI delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Mock data
+    const mockTools = [
+        { job_id: jobId, name: '10mm Socket', is_acquired: false, created_at: new Date().toISOString() },
+        { job_id: jobId, name: 'Torque Wrench (20-100Nm)', is_acquired: false, created_at: new Date().toISOString() },
+        { job_id: jobId, name: 'Breaker Bar', is_acquired: false, created_at: new Date().toISOString() },
+    ];
+
+    const mockSpecs = [
+        { job_id: jobId, item: 'Torque Spec', value: '85 Nm', created_at: new Date().toISOString() },
+        { job_id: jobId, item: 'Fluid Capacity', value: '4.5 L', created_at: new Date().toISOString() },
+    ];
+
+    const mockSteps = [
+        { job_id: jobId, order_index: 0, instruction: 'Disconnect negative battery terminal', is_done_tear: false, is_done_build: false },
+        { job_id: jobId, order_index: 1, instruction: 'Lift vehicle and secure on jack stands', is_done_tear: false, is_done_build: false },
+        { job_id: jobId, order_index: 2, instruction: 'Remove front wheels', is_done_tear: false, is_done_build: false },
+    ];
+
+    // Insert data (Fire and forget style for stub, but sequentially for safety)
+    try {
+        await supabase.from('job_tools').insert(mockTools);
+        await supabase.from('job_specs').insert(mockSpecs);
+        await supabase.from('job_tasks').insert(mockSteps);
+    } catch (e) {
+        console.error("Mock generation failed", e);
+        return { error: "Failed to generate plan" };
+    }
+
     revalidatePath('/vehicle');
     return { success: true };
 }

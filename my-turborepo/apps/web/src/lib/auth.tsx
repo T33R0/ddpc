@@ -114,9 +114,32 @@ export function AuthProvider({
 
         if (error) {
           console.error('[AUTH] Error loading user profile:', error);
-          // If we fail to fetch profile, we treat it as no profile data but user is logged in
-          // This might result in restricted access, which is safer than blocking indefinitely
-          setProfile(null);
+
+          // Check for transient errors (timeout or network issues)
+          // We define transient as:
+          // 1. Explicit timeout code we set above
+          // 2. Network errors (often have 'fetch failed' or similar messages)
+          // 3. 5xx statuses if we had access to them (supabase client abstracts some of this)
+          const isTransient =
+            error.code === 'TIMEOUT' ||
+            (error.message && (
+              error.message.toLowerCase().includes('timeout') ||
+              error.message.toLowerCase().includes('network') ||
+              error.message.toLowerCase().includes('fetch failed')
+            ));
+
+          // If we fail to fetch profile, we need to decide whether to clear the current profile
+          // A transient error shouldn't logout a user who was already verified
+          setProfile(prevProfile => {
+            if (isTransient && prevProfile) {
+              console.warn('[AUTH] Transient error fetching profile, keeping existing cached profile to prevent lockout');
+              return prevProfile;
+            }
+
+            // If it's not transient (e.g. 401/403/Row not found) or we have no previous data,
+            // we must clear the profile to be safe (safest default for auth systems)
+            return null;
+          });
           return;
         }
 

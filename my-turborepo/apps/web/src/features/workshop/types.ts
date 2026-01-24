@@ -2,6 +2,24 @@ import { VehicleInstalledComponent } from '@/features/parts/types';
 
 export type JobStatus = 'planned' | 'in_progress' | 'completed' | 'paused';
 
+export interface JobTool {
+    id: string;
+    job_id: string;
+    name: string;
+    is_acquired: boolean;
+    note?: string;
+    created_at: string;
+}
+
+export interface JobSpec {
+    id: string;
+    job_id: string;
+    item: string;
+    value: string;
+    note?: string;
+    created_at: string;
+}
+
 export interface JobTask {
     id: string;
     job_id: string;
@@ -30,6 +48,10 @@ export interface Job {
     tasks?: JobTask[];
     // Parts linked to this job
     parts?: VehicleInstalledComponent[];
+    // Tools linked to this job
+    tools?: JobTool[];
+    // Specs linked to this job
+    specs?: JobSpec[];
 }
 
 export interface WorkshopDataResponse {
