@@ -62,7 +62,7 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                 status,
                 privacy,
                 color,
-                imageUrl,
+                vehicleImage: imageUrl,
                 acquisitionDate,
                 acquisitionCost: acquisitionCost ? parseFloat(acquisitionCost) : undefined,
                 acquisitionType,
@@ -167,7 +167,7 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
 
                                     <div className="space-y-2">
                                         <Label htmlFor="privacy">Privacy</Label>
-                                        <Select value={privacy} onValueChange={setPrivacy}>
+                                        <Select value={privacy} onValueChange={(val) => setPrivacy(val as 'PUBLIC' | 'PRIVATE')}>
                                             <SelectTrigger>
                                                 <SelectValue />
                                             </SelectTrigger>

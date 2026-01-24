@@ -109,7 +109,6 @@ export async function addPartToVehicle(
     purchaseCost?: number;
     customLifespanMiles?: number;
     customLifespanMonths?: number;
-    customLifespanMonths?: number;
     category?: string;
     variant?: string;
 
@@ -208,7 +207,6 @@ export async function updatePartInstallation(
     partName?: string;
     partNumber?: string;
     vendorLink?: string;
-    vendorLink?: string;
     category?: string;
     variant?: string;
     status?: 'installed' | 'planned';
@@ -227,7 +225,6 @@ export async function updatePartInstallation(
       .update({
         ...(updateData.partName && { name: updateData.partName }),
         ...(updateData.partNumber !== undefined && { part_number: updateData.partNumber || null }),
-        ...(updateData.vendorLink !== undefined && { purchase_url: updateData.vendorLink || null }),
         ...(updateData.vendorLink !== undefined && { purchase_url: updateData.vendorLink || null }),
         ...(updateData.category !== undefined && { category: updateData.category || null }),
         ...(updateData.variant !== undefined && { variant: updateData.variant || null }),

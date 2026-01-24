@@ -41,10 +41,7 @@ export async function createWishlistItem(data: any) {
         vehicle_id: data.vehicle_id,
         user_id: user.id, // Add user_id for RLS
         name: data.name,
-        status: 'wishlist',
         category: data.category || null,
-        purchase_url: data.url,
-        purchase_price: data.price,
         purchase_url: data.url,
         purchase_price: data.price,
         priority: data.priority, // 1-5
@@ -96,8 +93,6 @@ export async function updateWishlistItem(id: string, data: any) {
       .update({
         name: data.name,
         category: data.category || null,
-        purchase_url: data.url,
-        purchase_price: data.price,
         purchase_url: data.url,
         purchase_price: data.price,
         priority: data.priority,

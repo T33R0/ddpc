@@ -12,7 +12,7 @@ import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalDescrip
 import { Activity, Wrench, Fuel, Settings, Edit, Upload, Lock, Unlock, ChevronLeft, Puzzle } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { Badge } from '@repo/ui/badge'
-import { DropdownMenu } from '@repo/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@repo/ui/dropdown-menu'
 import { OnboardingModal } from './components/OnboardingModal'
 import { WishlistButton } from '@/features/wishlist/components/WishlistButton'
 import { format } from 'date-fns'
@@ -314,15 +314,19 @@ function StatusBadge({
   const availableOptions = statusOptions.filter(opt => opt !== currentStatus)
 
   return (
-    <DropdownMenu
-      options={availableOptions.map(option => ({
-        label: statusLabels[option] || option,
-        onClick: () => handleStatusChange(option),
-      }))}
-    >
-      <Badge variant="outline" className="text-muted-foreground border-border bg-muted hover:bg-muted/80 cursor-pointer">
-        {statusLabels[currentStatus] || currentStatus}
-      </Badge>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Badge variant="outline" className="text-muted-foreground border-border bg-muted hover:bg-muted/80 cursor-pointer">
+          {statusLabels[currentStatus] || currentStatus}
+        </Badge>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {availableOptions.map(option => (
+          <DropdownMenuItem key={option} onClick={() => handleStatusChange(option)}>
+            {statusLabels[option] || option}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
     </DropdownMenu>
   )
 }
@@ -412,28 +416,30 @@ function PrivacyBadge({
   const otherOption = privacy === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC'
 
   return (
-    <DropdownMenu
-      options={[{
-        label: otherOption === 'PUBLIC' ? 'Public' : 'Private',
-        onClick: () => handlePrivacyChange(otherOption),
-      }]}
-    >
-      <Badge
-        variant="outline"
-        className={`text-muted-foreground border-border bg-muted hover:bg-muted/80 cursor-pointer flex items-center gap-1`}
-      >
-        {privacy === 'PUBLIC' ? (
-          <>
-            <Unlock className="w-3 h-3" />
-            Public
-          </>
-        ) : (
-          <>
-            <Lock className="w-3 h-3" />
-            Private
-          </>
-        )}
-      </Badge>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Badge
+          variant="outline"
+          className={`text-muted-foreground border-border bg-muted hover:bg-muted/80 cursor-pointer flex items-center gap-1`}
+        >
+          {privacy === 'PUBLIC' ? (
+            <>
+              <Unlock className="w-3 h-3" />
+              Public
+            </>
+          ) : (
+            <>
+              <Lock className="w-3 h-3" />
+              Private
+            </>
+          )}
+        </Badge>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handlePrivacyChange(otherOption)}>
+          {otherOption === 'PUBLIC' ? 'Public' : 'Private'}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu>
   )
 }
