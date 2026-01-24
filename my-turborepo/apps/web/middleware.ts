@@ -10,7 +10,7 @@ import {
   toUsernameSlug,
 } from '@/lib/user-routing'
 
-const DASHBOARD_PATH = '/hub'
+const DASHBOARD_PATH = '/garage'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

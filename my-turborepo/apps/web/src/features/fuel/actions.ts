@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { FuelLogSchema, FuelLogInputs } from './schema'
+import { recalculateMpg, updateVehicleAvgMpg } from './lib/fuel-calculations-server'
 
 //
 // ACTION: The "Two-Write" (Log Fuel + Update Vehicle Odometer)
@@ -142,29 +143,8 @@ export async function logFuel(data: FuelLogInputs) {
       await recalculateMpg(supabase, nextLog.id)
     }
 
-    // Update vehicle Average MPG (simple averaging of all valid entries)
-    // We do this after recalculations to ensure latest numbers.
-    const { data: allFuelLogs } = await supabase
-      .from('fuel_log')
-      .select('mpg')
-      .eq('user_vehicle_id', validatedData.user_vehicle_id)
-      .not('mpg', 'is', null)
-
-    if (allFuelLogs && allFuelLogs.length > 0) {
-      const validMpgEntries = allFuelLogs
-        .map(log => log.mpg)
-        .filter((mpg): mpg is number => mpg != null && mpg > 0)
-
-      if (validMpgEntries.length > 0) {
-        const averageMpg = validMpgEntries.reduce((sum, mpg) => sum + mpg, 0) / validMpgEntries.length
-
-        await supabase
-          .from('user_vehicle')
-          .update({ avg_mpg: averageMpg })
-          .eq('id', validatedData.user_vehicle_id)
-          .eq('owner_id', user.id) // RLS check
-      }
-    }
+    // Update vehicle Average MPG
+    await updateVehicleAvgMpg(supabase, validatedData.user_vehicle_id, user.id)
 
     // --- 6. Revalidate paths and return success ---
     try {
@@ -194,44 +174,4 @@ export async function logFuel(data: FuelLogInputs) {
   }
 }
 
-// Helper for Robust MPG Calculation
-// Calculates MPG for a specific log by finding its immediate predecessor.
-async function recalculateMpg(supabase: any, logId: string) {
-  // 1. Get current log details
-  const { data: currentLog } = await supabase
-    .from('fuel_log')
-    .select('id, user_vehicle_id, odometer, gallons')
-    .eq('id', logId)
-    .single()
 
-  if (!currentLog) return
-
-  // 2. Find immediate predecessor
-  const { data: prevLog } = await supabase
-    .from('fuel_log')
-    .select('odometer')
-    .eq('user_vehicle_id', currentLog.user_vehicle_id)
-    .lt('odometer', currentLog.odometer)
-    .order('odometer', { ascending: false })
-    .limit(1)
-    .single()
-
-  let mpg = null
-  let trip_miles = null
-
-  if (prevLog) {
-    trip_miles = currentLog.odometer - prevLog.odometer
-    if (trip_miles > 0 && currentLog.gallons > 0) {
-      mpg = trip_miles / currentLog.gallons
-    }
-  }
-
-  // 3. Update the log
-  await supabase
-    .from('fuel_log')
-    .update({
-      trip_miles: trip_miles,
-      mpg: mpg
-    })
-    .eq('id', logId)
-}

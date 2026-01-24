@@ -5,58 +5,52 @@ import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, ModalDescrip
 import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
-import { Textarea } from '@repo/ui/textarea'
-import { Plus } from 'lucide-react'
-import { createWishlistItem, getModCategories, getServiceCategories } from '../actions'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select'
+import { ListTodo, Loader2 } from 'lucide-react'
+import { createWishlistItem, updateWishlistItem } from '../actions'
 import { useRouter } from 'next/navigation'
+import { toast } from '@repo/ui/use-toast'
 
 interface AddWishlistDialogProps {
   isOpen: boolean
   onClose: () => void
   vehicleId: string
   onSuccess?: () => void
+  initialData?: any // Added for edit mode
 }
 
-export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess }: AddWishlistDialogProps) {
+export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initialData }: AddWishlistDialogProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Form State
   const [name, setName] = useState('')
+  const [category, setCategory] = useState('')
   const [url, setUrl] = useState('')
   const [price, setPrice] = useState('')
-  const [notes, setNotes] = useState('')
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
-  const [type, setType] = useState<'mod' | 'service'>('mod')
-  const [category, setCategory] = useState('')
+  const [priority, setPriority] = useState<string>('3')
+  const [status, setStatus] = useState<string>('wishlist')
 
-  // Categories State
-  const [modCategories, setModCategories] = useState<string[]>([])
-  const [serviceCategories, setServiceCategories] = useState<string[]>([])
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
-
-  // Fetch categories on mount
   useEffect(() => {
-    if (isOpen) {
-      const fetchCats = async () => {
-        setIsLoadingCategories(true)
-        try {
-          const [mods, services] = await Promise.all([
-            getModCategories(),
-            getServiceCategories()
-          ])
-          setModCategories(mods)
-          setServiceCategories(services)
-        } catch (err) {
-          console.error('Failed to fetch categories', err)
-        } finally {
-          setIsLoadingCategories(false)
-        }
-      }
-      fetchCats()
+    if (isOpen && initialData) {
+      setName(initialData.name || '')
+      setCategory(initialData.category || '')
+      setUrl(initialData.purchase_url || '')
+      setPrice(initialData.purchase_price ? String(initialData.purchase_price) : '')
+      setPriority(initialData.priority ? String(initialData.priority) : '3')
+      setStatus(initialData.status)
+    } else if (isOpen && !initialData) {
+      // Reset for creating new
+      setName('')
+      setCategory('')
+      setUrl('')
+      setPrice('')
+      setPriority('3')
+      setStatus('wishlist')
     }
-  }, [isOpen])
+    setError(null)
+  }, [isOpen, initialData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,29 +58,42 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess }: Add
     setError(null)
 
     try {
-      const result = await createWishlistItem({
+      let result;
+
+      const payload = {
         vehicle_id: vehicleId,
         name,
+        category: category || null,
         url: url || null,
         price: price ? parseFloat(price) : null,
-        notes: notes || null,
-        priority,
-        type,
-        category: category || null
-      })
+        priority: parseInt(priority),
+        status: status
+      }
+
+      if (initialData) {
+        result = await updateWishlistItem(initialData.id, payload)
+      } else {
+        result = await createWishlistItem(payload)
+      }
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to create item')
+        throw new Error(result.error || 'Failed to save item')
       }
 
       // Reset and close
-      setName('')
-      setUrl('')
-      setPrice('')
-      setNotes('')
-      setPriority('medium')
-      setType('mod')
-      setCategory('')
+      if (!initialData) {
+        setName('')
+        setCategory('')
+        setUrl('')
+        setPrice('')
+        setPriority('3')
+        setStatus('wishlist')
+      }
+
+      toast({
+        title: initialData ? "Item Updated" : "Item Added",
+        description: initialData ? "Wishlist item updated successfully." : "Added to your wishlist.",
+      })
 
       onSuccess?.()
       onClose()
@@ -98,19 +105,20 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess }: Add
     }
   }
 
-  const currentCategories = type === 'mod' ? modCategories : serviceCategories
-
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-md">
+      <ModalContent className="sm:max-w-lg p-0">
         <ModalHeader>
-          <ModalTitle>Add to Wishlist</ModalTitle>
+          <ModalTitle className="flex items-center gap-2">
+            <ListTodo className="h-5 w-5" />
+            {initialData ? 'Edit Item' : 'Add to Wishlist'}
+          </ModalTitle>
           <ModalDescription>
-            Save a part or service item for later.
+            {initialData ? 'Update item details.' : 'Save a part or service item for later.'}
           </ModalDescription>
         </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 px-1">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           {error && (
             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
               {error}
@@ -129,6 +137,25 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess }: Add
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="engine">Engine</SelectItem>
+                <SelectItem value="suspension">Suspension</SelectItem>
+                <SelectItem value="brakes">Brakes</SelectItem>
+                <SelectItem value="interior">Interior</SelectItem>
+                <SelectItem value="exterior">Exterior</SelectItem>
+                <SelectItem value="wheels & tires">Wheels & Tires</SelectItem>
+                <SelectItem value="drivetrain">Drivetrain</SelectItem>
+                <SelectItem value="consumable">Consumable</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="url">URL</Label>
             <Input
               id="url"
@@ -140,7 +167,7 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess }: Add
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
+              <Label htmlFor="price">Price ($)</Label>
               <Input
                 id="price"
                 type="number"
@@ -153,71 +180,41 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess }: Add
             </div>
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
-              <select
-                id="priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as any)}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <select
-                id="type"
-                value={type}
-                onChange={(e) => {
-                  setType(e.target.value as any)
-                  setCategory('') // Reset category on type change
-                }}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="mod">Mod</option>
-                <option value="service">Service</option>
-              </select>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 - Low</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3 - Medium</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5 - High</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <select
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                disabled={isLoadingCategories}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-              >
-                <option value="">Select Category</option>
-                {currentCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="wishlist">Wishlist</SelectItem>
+                  <SelectItem value="ordered">Ordered</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any details..."
-            />
-          </div>
-
-          <ModalFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <ModalFooter className="gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : (
-                <>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Item
-                </>
-              )}
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {initialData ? 'Update Item' : 'Add Item'}
             </Button>
           </ModalFooter>
         </form>

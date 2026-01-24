@@ -34,63 +34,66 @@ export function VehicleCard({
 }: VehicleCardProps) {
   return (
     <div
-      className={cn("group transition-all duration-300", isDragging && "opacity-50", className)}
+      className={cn("group transition-all duration-300 h-full", isDragging && "opacity-50", className)}
       onClick={onClick}
       draggable={!!onDragStart}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
       <Card className={cn(
-        "h-full overflow-hidden transition-all duration-300 ease-out border-border",
-        !isDragging && "group-hover:scale-105 group-hover:border-accent group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]"
+        "relative h-full min-h-[240px] overflow-hidden transition-all duration-300 ease-out border-border bg-card",
+        !isDragging && "hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)] cursor-pointer"
       )}>
-        {/* Image Section */}
-        <div className="relative w-full aspect-video bg-muted/10 p-4 pb-0">
-           <div className="relative w-full h-full overflow-hidden rounded-lg">
-            {/* Status Badge */}
-            {status && (
-              <div className="absolute top-2 left-2 z-10">
-                <VehicleStatusBadge status={status} />
-              </div>
-            )}
+        {/* Background Image Section */}
+        <div className="absolute inset-0 z-0">
+          <ImageWithTimeoutFallback
+            src={imageUrl || "/branding/fallback-logo.png"}
+            fallbackSrc="/branding/fallback-logo.png"
+            alt={`${title} vehicle`}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-40 group-hover:opacity-30"
+          />
+          {/* Missing Image Placeholder (if fallback fails visually or logic-wise, though component handles fallback) */}
+          {!imageUrl && (
+            <div className="absolute inset-0 bg-muted/20" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent" />
+        </div>
 
-            {/* Drag Handle */}
-            {showDragHandle && (
-              <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded p-1 cursor-grab active:cursor-grabbing text-foreground shadow-sm">
-                <GripVertical size={16} />
-              </div>
-            )}
+        {/* Floating Elements (Status & Drag Handle) */}
+        <div className="absolute top-3 left-3 z-20">
+          {status && <VehicleStatusBadge status={status} />}
+        </div>
 
-            <ImageWithTimeoutFallback
-              src={imageUrl || "/branding/fallback-logo.png"}
-              fallbackSrc="/branding/fallback-logo.png"
-              alt={`${title} vehicle`}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+        {showDragHandle && (
+          <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded p-1 cursor-grab active:cursor-grabbing text-foreground shadow-sm">
+            <GripVertical size={16} />
+          </div>
+        )}
 
-            {/* Missing Image Placeholder */}
-            {!imageUrl && (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted/50 backdrop-blur-sm">
-                <span className="text-muted-foreground text-sm font-semibold tracking-wide">Image Missing</span>
+        {/* Content Section */}
+        <div className="relative z-10 flex flex-col justify-end h-full p-6">
+          <div className="mt-auto space-y-4">
+            <CardHeader className="p-0 space-y-1">
+              <CardTitle className="text-xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors line-clamp-1 drop-shadow-sm">
+                {title}
+              </CardTitle>
+              {subtitle && (
+                <CardDescription className="line-clamp-1 text-muted-foreground font-medium">
+                  {subtitle}
+                </CardDescription>
+              )}
+            </CardHeader>
+
+            {/* Footer Section */}
+            {footer && (
+              <div className="pt-2 border-t border-border/50">
+                <div className="w-full flex justify-between items-center text-sm">
+                  {footer}
+                </div>
               </div>
             )}
           </div>
         </div>
-
-        {/* Content Section */}
-        <CardHeader className="p-4 pt-4">
-          <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
-          {subtitle && <CardDescription className="line-clamp-1">{subtitle}</CardDescription>}
-        </CardHeader>
-
-        {/* Footer Section */}
-        {footer && (
-          <CardFooter className="p-4 pt-0 mt-auto">
-            <div className="w-full flex justify-between items-center">
-              {footer}
-            </div>
-          </CardFooter>
-        )}
       </Card>
     </div>
   )

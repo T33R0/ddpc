@@ -1,178 +1,312 @@
+'use client'
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@repo/ui/dialog';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Label } from '@repo/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
-import { useState } from 'react';
-import { PartSlot } from '../types';
-import { addPartToVehicle } from '../actions';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalFooter } from '@repo/ui/modal'
+import { Button } from '@repo/ui/button'
+import { Input } from '@repo/ui/input'
+import { Label } from '@repo/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select'
+import { Package, Loader2 } from 'lucide-react'
+import { PartSlot } from '../types'
+import { addPartToVehicle } from '../actions'
+import { useRouter } from 'next/navigation'
+import { toast } from '@repo/ui/use-toast'
 
 interface AddPartModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  slot: PartSlot | null;
-  vehicleId: string;
-  onSuccess?: () => void;
+  isOpen: boolean
+  onClose: () => void
+  slot: PartSlot | null
+  vehicleId: string
+  defaultCategory?: string
+  onSuccess?: () => void
 }
 
-export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: AddPartModalProps) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+interface PartFormData {
+  partName: string
+  category: string
+  variant: string
+  partNumber: string
+  vendorLink: string
+  installedDate: string
+  installedMileage: string
+  purchaseCost: string
+  customLifespanMiles: string
+  customLifespanMonths: string
+}
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!slot) return;
+export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, defaultCategory, onSuccess }: AddPartModalProps) => {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-    setLoading(true);
-    setError(null);
+  // Controlled State
+  const [formData, setFormData] = useState<PartFormData>({
+    partName: '',
+    category: defaultCategory || '',
+    variant: '',
+    partNumber: '',
+    vendorLink: '',
+    installedDate: '',
+    installedMileage: '',
+    purchaseCost: '',
+    customLifespanMiles: '',
+    customLifespanMonths: '',
+  })
 
-    const formData = new FormData(e.currentTarget);
+  // Dynamic Specs State
+  const [specs, setSpecs] = useState<Record<string, any>>({})
 
-    // Determine action from the button clicked
-    // CAST: Accessing submitter from native event
-    const submitter = (e.nativeEvent as any).submitter as HTMLButtonElement;
-    const action = submitter?.value || 'install';
-    const status = action === 'plan' ? 'planned' : 'installed';
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        partName: '',
+        category: defaultCategory || '',
+        variant: '',
+        partNumber: '',
+        vendorLink: '',
+        installedDate: '',
+        installedMileage: '',
+        purchaseCost: '',
+        customLifespanMiles: '',
+        customLifespanMonths: '',
+      })
+      setSpecs({})
+      setError(null)
+    }
+  }, [isOpen, defaultCategory])
 
-    const partName = formData.get('partName') as string;
-    const partNumber = formData.get('partNumber') as string;
-    const vendorLink = formData.get('vendorLink') as string;
-    const installedDate = formData.get('installedDate') as string;
-    const installedMileage = formData.get('installedMileage') as string;
-    const purchaseCost = formData.get('purchaseCost') as string;
-    const customLifespanMiles = formData.get('customLifespanMiles') as string;
-    const customLifespanMonths = formData.get('customLifespanMonths') as string;
+  const handleInputChange = (field: keyof PartFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (error) setError(null)
+  }
 
-    // Parse dynamic specs
-    const specs: Record<string, any> = {};
-    if (slot && slot.spec_schema && slot.spec_schema.fields) {
-      slot.spec_schema.fields.forEach((field: any) => {
-        const val = formData.get(`spec-${field.key}`);
-        if (val) {
-          specs[field.key] = field.type === 'number' ? parseFloat(val as string) : val;
-        }
-      });
+  const handleSpecChange = (key: string, value: any) => {
+    setSpecs(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleSubmit = async (actionType: 'plan' | 'install') => {
+
+    // Basic Validation
+    if (!formData.partName) {
+      setError("Part Name is required")
+      return
     }
 
+    setLoading(true)
+    setError(null)
+
+    const status = actionType === 'plan' ? 'planned' : 'installed'
+
     try {
-      const result = await addPartToVehicle(vehicleId, slot.id, {
-        name: partName,
-        partNumber: partNumber || undefined,
-        vendorLink: vendorLink || undefined,
-        installedDate: installedDate || undefined,
-        installedMileage: installedMileage ? parseInt(installedMileage, 10) : undefined,
-        purchaseCost: purchaseCost ? parseFloat(purchaseCost) : undefined,
-        customLifespanMiles: customLifespanMiles ? parseInt(customLifespanMiles, 10) : undefined,
-        customLifespanMonths: customLifespanMonths ? parseInt(customLifespanMonths, 10) : undefined,
+      const result = await addPartToVehicle(vehicleId, slot?.id || null, {
+        name: formData.partName,
+        partNumber: formData.partNumber || undefined,
+        variant: formData.variant || undefined,
+        vendorLink: formData.vendorLink || undefined,
+        installedDate: formData.installedDate || undefined,
+        installedMileage: formData.installedMileage ? parseInt(formData.installedMileage, 10) : undefined,
+        purchaseCost: formData.purchaseCost ? parseFloat(formData.purchaseCost) : undefined,
+        customLifespanMiles: formData.customLifespanMiles ? parseInt(formData.customLifespanMiles, 10) : undefined,
+        customLifespanMonths: formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : undefined,
+        category: formData.category || undefined,
         status,
         specs,
-      });
+      })
 
       if ('error' in result) {
-        setError(result.error);
-        setLoading(false);
+        setError(result.error)
       } else {
-        // Success - refresh the data
-        onClose();
+        toast({
+          title: actionType === 'plan' ? "Part Planned" : "Part Installed",
+          description: `Successfully added ${formData.partName}${slot ? ` to ${slot.name}` : ''}.`,
+        })
+
+        onClose()
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         } else {
-          router.refresh();
+          router.refresh()
         }
       }
     } catch (err) {
-      console.error('Error adding part:', err);
-      setError('Failed to add part. Please try again.');
-      setLoading(false);
+      console.error('Error adding part:', err)
+      setError('Failed to add part. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Part: {slot?.name}</DialogTitle>
-          <DialogDescription>
-            Add a part to track in this component slot. The part will be saved to your vehicle&apos;s parts list.
-          </DialogDescription>
-        </DialogHeader>
+    <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent className="sm:max-w-lg p-0">
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            {slot ? `Add Part: ${slot.name}` : 'Add New Part'}
+          </ModalTitle>
+          <ModalDescription>
+            Add a part to track in this component slot.
+          </ModalDescription>
+        </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <div className="px-6 pb-6 space-y-4">
           {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
-              {error}
+            <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-3">
+              <p className="text-destructive text-sm">{error}</p>
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="partName">Part Name</Label>
-            <Input id="partName" name="partName" placeholder="e.g. Interstate Battery" required />
+            <Label htmlFor="partName">Part Name *</Label>
+            <Input
+              id="partName"
+              value={formData.partName}
+              onChange={(e) => handleInputChange('partName', e.target.value)}
+              placeholder="e.g. Interstate Battery"
+              required
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="partNumber">Part Number</Label>
-            <Input id="partNumber" name="partNumber" placeholder="e.g. MTZ-34" />
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(val) => handleInputChange('category', val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="engine">Engine</SelectItem>
+                <SelectItem value="suspension">Suspension</SelectItem>
+                <SelectItem value="brakes">Braking</SelectItem>
+                <SelectItem value="wheels_tires">Wheels & Tires</SelectItem>
+                <SelectItem value="interior">Interior</SelectItem>
+                <SelectItem value="exterior">Exterior</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="partNumber">Part Number</Label>
+              <Input
+                id="partNumber"
+                value={formData.partNumber}
+                onChange={(e) => handleInputChange('partNumber', e.target.value)}
+                placeholder="e.g. MTZ-34"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="variant">Variant</Label>
+              <Select
+                value={formData.variant}
+                onValueChange={(val) => handleInputChange('variant', val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Variant" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="stock">Stock</SelectItem>
+                  <SelectItem value="upgrade">Upgrade</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="vendorLink">Vendor Link</Label>
-            <Input id="vendorLink" name="vendorLink" type="url" placeholder="https://..." />
+            <Input
+              id="vendorLink"
+              type="url"
+              value={formData.vendorLink}
+              onChange={(e) => handleInputChange('vendorLink', e.target.value)}
+              placeholder="https://..."
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="installedDate">Date Installed</Label>
-              <Input id="installedDate" name="installedDate" type="date" />
+              <Input
+                id="installedDate"
+                type="date"
+                value={formData.installedDate}
+                onChange={(e) => handleInputChange('installedDate', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="installedMileage">Mileage Installed</Label>
-              <Input id="installedMileage" name="installedMileage" type="number" inputMode="numeric" />
+              <Input
+                id="installedMileage"
+                type="number"
+                inputMode="numeric"
+                value={formData.installedMileage}
+                onChange={(e) => handleInputChange('installedMileage', e.target.value)}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="purchaseCost">Purchase Cost ($)</Label>
-            <Input id="purchaseCost" name="purchaseCost" type="number" step="0.01" inputMode="decimal" placeholder="0.00" />
+            <Input
+              id="purchaseCost"
+              type="number"
+              step="0.01"
+              inputMode="decimal"
+              value={formData.purchaseCost}
+              onChange={(e) => handleInputChange('purchaseCost', e.target.value)}
+              placeholder="0.00"
+            />
           </div>
 
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-semibold mb-3">Lifespan Override (Optional)</h3>
-            <p className="text-xs text-muted-foreground mb-3">
-              Override default lifespan for this specific part installation. Leave blank to use defaults.
-            </p>
+          <div className="border-t pt-4 space-y-4">
+            <h3 className="text-sm font-semibold mb-1">Expected Lifespan</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customLifespanMiles">
-                  Custom Lifespan (Miles)
+                  Miles
                   {slot?.default_lifespan_miles && (
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (Default: {slot.default_lifespan_miles.toLocaleString()})
+                    <span className="text-xs text-muted-foreground ml-1">
+                      (Def: {slot.default_lifespan_miles.toLocaleString()})
                     </span>
                   )}
                 </Label>
-                <Input id="customLifespanMiles" name="customLifespanMiles" type="number" inputMode="numeric" />
+                <Input
+                  id="customLifespanMiles"
+                  type="number"
+                  inputMode="numeric"
+                  value={formData.customLifespanMiles}
+                  onChange={(e) => handleInputChange('customLifespanMiles', e.target.value)}
+                  placeholder="e.g. 50000"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customLifespanMonths">
-                  Custom Lifespan (Months)
+                  Months
                   {slot?.default_lifespan_months && (
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (Default: {slot.default_lifespan_months})
+                    <span className="text-xs text-muted-foreground ml-1">
+                      (Def: {slot.default_lifespan_months})
                     </span>
                   )}
                 </Label>
-                <Input id="customLifespanMonths" name="customLifespanMonths" type="number" inputMode="numeric" />
+                <Input
+                  id="customLifespanMonths"
+                  type="number"
+                  inputMode="numeric"
+                  value={formData.customLifespanMonths}
+                  onChange={(e) => handleInputChange('customLifespanMonths', e.target.value)}
+                  placeholder="e.g. 60"
+                />
               </div>
             </div>
           </div>
 
           {/* Dynamic Spec Fields */}
           {slot?.spec_schema?.fields && slot.spec_schema.fields.length > 0 && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold mb-3">Specifications</h3>
+            <div className="border-t pt-4 space-y-4">
+              <h3 className="text-sm font-semibold">Specifications</h3>
               <div className="grid grid-cols-2 gap-4">
                 {slot.spec_schema.fields.map((field: any) => (
                   <div key={field.key} className="space-y-2">
@@ -183,11 +317,15 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
                     </Label>
 
                     {field.type === 'select' && field.options ? (
-                      <Select name={`spec-${field.key}`} required={field.required}>
+                      <Select
+                        value={specs[field.key] || ''}
+                        onValueChange={(val) => handleSpecChange(field.key, val)}
+                        required={field.required}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
-                        <SelectContent position="popper">
+                        <SelectContent>
                           {field.options.map((opt: string) => (
                             <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                           ))}
@@ -196,8 +334,9 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
                     ) : (
                       <Input
                         id={`spec-${field.key}`}
-                        name={`spec-${field.key}`}
                         type={field.type === 'number' ? 'number' : 'text'}
+                        value={specs[field.key] || ''}
+                        onChange={(e) => handleSpecChange(field.key, field.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
                         required={field.required}
                         step={field.type === 'number' ? 'any' : undefined}
                       />
@@ -208,30 +347,30 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, onSuccess }: Ad
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-4">
+          <ModalFooter className="gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
+            {slot && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => handleSubmit('plan')}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add as Plan'}
+              </Button>
+            )}
             <Button
-              type="submit"
-              name="action"
-              value="plan"
-              variant="secondary"
+              type="button"
+              onClick={() => handleSubmit('install')}
               disabled={loading}
             >
-              Add as Plan
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Installed Part'}
             </Button>
-            <Button
-              type="submit"
-              name="action"
-              value="install"
-              disabled={loading}
-            >
-              {loading ? 'Adding...' : 'Add Installed Part'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
+          </ModalFooter>
+        </div>
+      </ModalContent>
+    </Modal>
+  )
+}

@@ -7,12 +7,16 @@ export interface VehicleEvent {
   date: Date
   title: string
   description: string
-  type: 'maintenance' | 'modification' | 'mileage' | 'fuel'
+  type: 'maintenance' | 'modification' | 'mileage' | 'fuel' | 'part' | 'job'
   cost?: number
   odometer?: number
   status?: string
   event_date?: Date // For mods table
   service_provider?: string // Added for detailed view
+  // Part specific fields
+  category?: string
+  part_number?: string
+  variant?: string
 }
 
 export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[]> {
@@ -37,7 +41,7 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
   }
 
   // Fetch all data in parallel to avoid waterfalls
-  const [maintenanceResult, modsResult, odometerResult, fuelResult] = await Promise.all([
+  const [maintenanceResult, modsResult, odometerResult, fuelResult, jobsResult, inventoryResult] = await Promise.all([
     // Fetch maintenance logs
     supabase
       .from('maintenance_log')
@@ -86,13 +90,31 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
       .from('fuel_log')
       .select('id, event_date, odometer, gallons, price_per_gallon, total_cost, mpg')
       .eq('user_vehicle_id', vehicleId)
-      .order('event_date', { ascending: false })
+      .order('event_date', { ascending: false }),
+
+    // Fetch completed jobs
+    supabase
+      .from('jobs')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .eq('status', 'completed')
+      .order('date_completed', { ascending: false }),
+
+    // Fetch installed inventory (Parts)
+    supabase
+      .from('inventory')
+      .select('*')
+      .eq('vehicle_id', vehicleId)
+      .eq('status', 'installed')
+      .order('installed_at', { ascending: false })
   ]);
 
   const { data: maintenanceLogs, error: maintenanceError } = maintenanceResult;
   const { data: mods, error: modsError } = modsResult;
   const { data: odometerLogs, error: odometerError } = odometerResult;
   const { data: fuelLogs, error: fuelError } = fuelResult;
+  const { data: jobs, error: jobsError } = jobsResult;
+  const { data: inventory, error: inventoryError } = inventoryResult;
 
   if (maintenanceError) {
     console.error('Error fetching maintenance logs:', maintenanceError)
@@ -112,6 +134,15 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
   if (fuelError) {
     console.error('Error fetching fuel logs:', fuelError)
     // Don't fail the whole request for fuel logs, just log error
+  }
+
+  if (jobsError) {
+    console.error('Error fetching jobs:', jobsError)
+    // Don't fail entire request
+  }
+
+  if (inventoryError) {
+    console.error('Error fetching inventory log:', inventoryError)
   }
 
   // Transform and merge events
@@ -177,6 +208,29 @@ export async function getVehicleEvents(vehicleId: string): Promise<VehicleEvent[
         type: 'fuel',
         cost: log.total_cost || undefined,
         odometer: log.odometer || undefined,
+      })
+    })
+  }
+
+  // Add job events
+  if (jobs) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    jobs.forEach((job: any) => {
+      // Determine type based on job type
+      let eventType: VehicleEvent['type'] = 'maintenance'
+      if (job.type === 'mod') {
+        eventType = 'modification'
+      }
+
+      events.push({
+        id: `job-${job.id}`,
+        date: new Date(job.date_completed),
+        title: job.title,
+        description: job.notes || '',
+        type: eventType,
+        cost: job.cost_total || undefined,
+        odometer: job.odometer || undefined,
+        service_provider: job.vendor,
       })
     })
   }

@@ -13,6 +13,13 @@ import { VehicleWithOdometer } from '@repo/types'
 import { supabase } from '@/lib/supabase'
 import { getVehicleSlug } from '@/lib/vehicle-utils-client'
 import { VehicleCard } from '@/components/vehicle-card'
+import { User } from '@supabase/supabase-js'
+
+// Extended interface to include stats
+interface VehicleWithStats extends VehicleWithOdometer {
+  avg_mpg?: number | null
+  record_count?: number
+}
 
 function AddVehicleCard({ onClick }: { onClick: () => void }) {
   return (
@@ -47,8 +54,8 @@ function VehicleGallery({
   onManualReorder
 }: {
   title: string
-  vehicles: VehicleWithOdometer[]
-  allVehicles: VehicleWithOdometer[]
+  vehicles: VehicleWithStats[]
+  allVehicles: VehicleWithStats[]
   showAddCard?: boolean
   onAddClick?: () => void
   onLoadMore?: () => void
@@ -59,748 +66,344 @@ function VehicleGallery({
   isCollapsible?: boolean
   onSortChange?: (sort: string) => void
   currentSort?: string
-  onManualReorder?: (draggedId: string, targetId: string) => void
+  onManualReorder?: (vehicles: VehicleWithStats[]) => void
 }) {
-  const [isExpanded, setIsExpanded] = useState(true)
-  const [isDraggingOver, setIsDraggingOver] = useState(false)
-  const [draggingVehicleId, setDraggingVehicleId] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(true)
   const router = useRouter()
+  // Local state for dragging to prevent layout shifts during drag
+  const [localVehicles, setLocalVehicles] = useState(vehicles)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
 
-  // Infinite scroll logic
-  const handleScroll = useCallback(() => {
-    if (!onLoadMore || loadingMore || !hasMore || (isCollapsible && !isExpanded)) return
-
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    const windowHeight = window.innerHeight
-    const documentHeight = document.documentElement.scrollHeight
-
-    // Load more when user is within 300px of the bottom
-    if (scrollTop + windowHeight >= documentHeight - 300) {
-      onLoadMore()
-    }
-  }, [onLoadMore, loadingMore, hasMore, isCollapsible, isExpanded])
-
+  // Sync local vehicles when props change, but NOT while dragging
   useEffect(() => {
-    if (onLoadMore) {
-      window.addEventListener('scroll', handleScroll)
-      return () => window.removeEventListener('scroll', handleScroll)
+    if (!draggingId) {
+      setLocalVehicles(vehicles)
     }
-  }, [handleScroll, onLoadMore])
+  }, [vehicles, draggingId])
 
-  if (vehicles.length === 0 && !showAddCard) {
-    return null
+  const handleDragStart = (e: React.DragEvent, vehicleId: string) => {
+    e.dataTransfer.setData('vehicleId', vehicleId)
+    e.dataTransfer.effectAllowed = 'move'
+    setDraggingId(vehicleId)
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
     e.preventDefault()
-    e.stopPropagation()
-    setIsDraggingOver(true)
-    e.dataTransfer.dropEffect = 'move'
-  }
+    if (!draggingId || draggingId === targetId || !onManualReorder) return
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDraggingOver(false)
-  }
+    // Find indexes
+    const currentIndex = localVehicles.findIndex(v => v.id === draggingId)
+    const targetIndex = localVehicles.findIndex(v => v.id === targetId)
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDraggingOver(false)
+    if (currentIndex === -1 || targetIndex === -1) return
 
-    const vehicleId = e.dataTransfer.getData('vehicleId')
-    const currentStatus = e.dataTransfer.getData('currentStatus')
-
-    if (vehicleId) {
-      if (onDrop) {
-        // Status change logic
-        const newStatus = galleryType === 'active' ? 'active' : 'inactive'
-        // If status is different, it's a move between galleries
-        if (currentStatus !== newStatus) {
-          onDrop(vehicleId, newStatus)
-          setDraggingVehicleId(null)
-          return
-        }
-      }
+    // Reorder locally
+    const newVehicles = [...localVehicles]
+    const [moved] = newVehicles.splice(currentIndex, 1)
+    if (moved) {
+      newVehicles.splice(targetIndex, 0, moved)
     }
-    setDraggingVehicleId(null)
+
+    setLocalVehicles(newVehicles)
+    onManualReorder(newVehicles)
   }
 
-  const handleCardDrop = (e: React.DragEvent, targetVehicleId: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const draggedId = e.dataTransfer.getData('vehicleId')
-    const draggedStatus = e.dataTransfer.getData('currentStatus')
-
-    // If dropping on a card in the SAME gallery (approx by checking if target is in this gallery)
-    const isTargetInGallery = vehicles.find(v => v.id === targetVehicleId)
-    const isDraggedInGallery = vehicles.find(v => v.id === draggedId)
-
-    if (isTargetInGallery && isDraggedInGallery && onManualReorder) {
-      onManualReorder(draggedId, targetVehicleId)
-    } else if (onDrop && galleryType) {
-      // Fallback to status change if moving between galleries
-      const newStatus = galleryType === 'active' ? 'active' : 'inactive'
-      if (draggedStatus !== newStatus) {
-        onDrop(draggedId, newStatus)
-      }
-    }
-    setIsDraggingOver(false)
-    setDraggingVehicleId(null)
+  const handleDragEnd = () => {
+    setDraggingId(null)
   }
 
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Active'
-      case 'inactive':
-        return 'Inactive'
-      case 'archived':
-        return 'Archived'
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1)
-    }
-  }
+  const cardCount = localVehicles.length + (showAddCard ? 1 : 0)
+
+  if (localVehicles.length === 0 && !showAddCard) return null
 
   return (
-    <div className="mb-12">
-      <div className="flex items-center justify-between mb-6">
-        <div
-          className={`flex items-center gap-2 ${isCollapsible ? 'cursor-pointer select-none hover:text-accent transition-colors' : ''}`}
-          onClick={() => isCollapsible && setIsExpanded(!isExpanded)}
+    <div className="mb-8">
+      {isCollapsible ? (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 text-xl font-semibold mb-4 text-foreground/80 hover:text-foreground transition-colors w-full group"
         >
-          <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-          {isCollapsible && (
-            isExpanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />
+          {isOpen ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          <span>{title}</span>
+          <span className="text-sm font-normal text-muted-foreground ml-2">
+            ({localVehicles.length})
+          </span>
+          {/* Visual separator line */}
+          <div className="h-px bg-border flex-1 ml-4 group-hover:bg-accent/50 transition-colors" />
+        </button>
+      ) : (
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">{title}</h2>
+          {/* Sort Dropdown (Basic Implementation) */}
+          {onSortChange && currentSort && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Sort by:</span>
+              <select
+                className="bg-background border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                value={currentSort}
+                onChange={(e) => onSortChange(e.target.value)}
+              >
+                <option value="recent">Recently Added</option>
+                <option value="year_desc">Year (Newest)</option>
+                <option value="year_asc">Year (Oldest)</option>
+                <option value="make">Make</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
           )}
         </div>
+      )}
 
-        {/* Sort Controls - only show when expanded and sortable */}
-        {isExpanded && onSortChange && (
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground hidden sm:inline">Sort by:</label>
-            <select
-              className="bg-card border border-border rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              value={currentSort}
-              onChange={(e) => onSortChange(e.target.value)}
-            >
-              <option value="last_edited">Last Edited</option>
-              <option value="year">Year</option>
-              <option value="status">Status</option>
-              <option value="ownership_period">Ownership Period</option>
-              <option value="custom">Manual</option>
-            </select>
-          </div>
-        )}
-      </div>
-
-      {isExpanded && (
-        <div
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ${isDraggingOver ? 'bg-green-500/10 border-2 border-dashed border-green-500 rounded-lg p-4' : ''
-            }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {vehicles.map((vehicle) => (
+      {isOpen && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+          {localVehicles.map((vehicle) => (
             <div
               key={vehicle.id}
-              onDragOver={(e) => {
-                e.preventDefault() // Allow drop
-                e.stopPropagation()
+              draggable={!!onManualReorder}
+              onDragStart={(e) => handleDragStart(e, vehicle.id)}
+              onDragOver={(e) => handleDragOver(e, vehicle.id)}
+              onDragEnd={handleDragEnd}
+              onDrop={(e) => {
+                // Prevent dropping on itself or other lists handled by standard drop
+                e.preventDefault();
               }}
-              onDrop={(e) => handleCardDrop(e, vehicle.id)}
+              className="h-full"
             >
               <VehicleCard
                 title={vehicle.nickname || vehicle.name}
                 subtitle={vehicle.ymmt}
                 status={vehicle.current_status}
-                imageUrl={vehicle.vehicle_image || vehicle.image_url}
+                imageUrl={vehicle.vehicle_image || vehicle.image_url} // Corrected property access
                 onClick={() => {
                   const urlSlug = getVehicleSlug(vehicle, allVehicles)
                   router.push(`/vehicle/${urlSlug}`)
                 }}
-                footer={
-                  <>
-                    <div className="text-xs text-muted-foreground">
-                      {vehicle.odometer ? `${vehicle.odometer.toLocaleString()} mi` : 'No mileage'}
-                    </div>
-                    <div className="text-xs text-muted-foreground font-semibold">
-                      {formatStatus(vehicle.current_status)}
-                    </div>
-                  </>
-                }
-                isDragging={draggingVehicleId === vehicle.id}
+                isDragging={draggingId === vehicle.id}
                 onDragStart={(e) => {
-                  e.dataTransfer.effectAllowed = 'move'
-                  e.dataTransfer.setData('vehicleId', vehicle.id)
-                  e.dataTransfer.setData('currentStatus', vehicle.current_status)
-                  setDraggingVehicleId(vehicle.id)
+                  // This is for the "drag to status" functionality
+                  // We need to set the vehicleId for the drop zone
+                  if (onDrop) {
+                    e.dataTransfer.setData('vehicleId', vehicle.id)
+                    e.dataTransfer.setData('currentStatus', vehicle.current_status)
+                    e.dataTransfer.effectAllowed = 'move'
+                  }
+                  // Also trigger local reorder start
+                  handleDragStart(e, vehicle.id)
                 }}
-                onDragEnd={() => setDraggingVehicleId(null)}
-                showDragHandle={true}
+                onDragEnd={handleDragEnd}
+                showDragHandle={!!onManualReorder} // Show handle only if reordering is allowed
+                footer={
+                  // Updated Footer: Odometer | Avg MPG | # Records
+                  <div className="flex items-center justify-between w-full text-xs font-medium text-white/90">
+                    <div className="flex items-center gap-1">
+                      <span>{vehicle.odometer ? vehicle.odometer.toLocaleString() : '—'}</span>
+                      <span className="text-white/60 font-normal">mi</span>
+                    </div>
+                    <div className="h-3 w-px bg-white/20 mx-2" />
+                    <div className="flex items-center gap-1">
+                      <span>{vehicle.avg_mpg ? vehicle.avg_mpg.toFixed(1) : '—'}</span>
+                      <span className="text-white/60 font-normal">mpg</span>
+                    </div>
+                    <div className="h-3 w-px bg-white/20 mx-2" />
+                    <div className="flex items-center gap-1">
+                      <span>{vehicle.record_count || 0}</span>
+                      <span className="text-white/60 font-normal">recs</span>
+                    </div>
+                  </div>
+                }
               />
             </div>
           ))}
 
-          {showAddCard && (
-            <AddVehicleCard onClick={onAddClick || (() => { })} />
+          {showAddCard && onAddClick && (
+            <AddVehicleCard onClick={onAddClick} />
           )}
         </div>
       )}
-
-      {isExpanded && loadingMore && (
-        <div className="flex justify-center mt-8">
-          <div className="text-muted-foreground">Loading more vehicles...</div>
+      {/* Infinite Scroll Trigger */}
+      {hasMore && (
+        <div
+          className="h-20 flex justify-center items-center mt-8 cursor-pointer hover:text-accent transition-colors"
+          onClick={onLoadMore}
+        >
+          {loadingMore ? (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          ) : (
+            <span className="text-muted-foreground text-sm">Load More</span>
+          )}
         </div>
       )}
     </div>
   )
 }
 
-type GarageContentProps = {
-  initialVehicles: VehicleWithOdometer[]
+interface GarageContentProps {
+  initialVehicles: VehicleWithStats[]
+  user?: User | null
 }
 
-export function GarageContent({
-  initialVehicles,
-}: GarageContentProps) {
-  const router = useRouter()
-  // Use server-fetched data as initial state, ensuring no duplicates
-  const initialActive = initialVehicles.filter(vehicle => vehicle.current_status === 'active')
-  const uniqueInitialActive = initialActive.filter((v, index, self) =>
-    index === self.findIndex((t) => t.id === v.id)
+export function GarageContent({ initialVehicles, user }: GarageContentProps) {
+  // Active vehicles state (initialized from server data)
+  const [activeVehicles, setActiveVehicles] = useState<VehicleWithStats[]>(
+    initialVehicles.filter(v => v.current_status === 'active' || v.current_status === 'project')
   )
 
-  const [activeVehicles, setActiveVehicles] = useState<VehicleWithOdometer[]>(uniqueInitialActive)
-  const [storedVehiclesLocal, setStoredVehiclesLocal] = useState<VehicleWithOdometer[]>([])
+  // Stored vehicles hook
+  const {
+    vehicles: storedVehiclesHook,
+    isLoading: loading, // mapped to loading
+    refetch: refresh,   // mapped to refresh
+    loadMore,
+    hasMore
+  } = useStoredVehicles({})
+
+  // For stored vehicles, we prefer the hook data (for pagination), but fallback/merge with initial for stats if needed.
+  // Since hook data might miss stats, we could try to merge, but for now we'll just cast.
+  // If hook data is empty and we have initial stored vehicles, show initial.
+  const storedVehiclesRaw = storedVehiclesHook.length > 0
+    ? storedVehiclesHook
+    : initialVehicles.filter(v => v.current_status !== 'active' && v.current_status !== 'project');
+
+  const storedVehicles = storedVehiclesRaw as VehicleWithStats[]
+
+  // Combined list for "All Known Vehicles" (for slugs etc)
+  const vehicles = [...activeVehicles, ...storedVehicles] // This is "allVehicles" for context
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   // Sorting State
-  const [storedSortBy, setStoredSortBy] = useState('last_edited')
+  const [sortOrder, setSortOrder] = useState<string>('recent')
+  const [manuallyOrderedIds, setManuallyOrderedIds] = useState<string[]>([]);
 
-  // For stored vehicles, we still need the hook since they load progressively
-  // We pass sort params to the hook
-  const {
-    vehicles: storedVehicles,
-    isLoading: storedLoading,
-    loadingMore,
-    hasMore,
-    loadMore
-  } = useStoredVehicles({
-    sort_by: storedSortBy,
-    sort_direction: storedSortBy === 'year' || storedSortBy === 'last_edited' ? 'desc' : 'asc'
-  })
-
-  const [addVehicleModalOpen, setAddVehicleModalOpen] = useState(false)
-
-  // Show add vehicle card only if active vehicles < 3
-  const canAddVehicle = activeVehicles.length < 3
-
-  // Combined stored vehicles (local + hook), excluding active vehicles and duplicates
-  // We need to respect the sort order here if possible, but local optimisitic updates make this tricky.
-  // Ideally, useStoredVehicles returns the sorted list.
-  // Local updates should be minimized or re-fetched.
-  // For manual reordering, we need to manage the order in local state overriding the hook.
-
-  const [manualOrderVehicles, setManualOrderVehicles] = useState<VehicleWithOdometer[]>([])
-  const [isManualSort, setIsManualSort] = useState(false)
-  const [isInitialized, setIsInitialized] = useState(false)
-
-  // Load manual order from localStorage on mount
+  // Effect to load saved sort order from localStorage
   useEffect(() => {
-    try {
-      const savedOrder = localStorage.getItem('garage-manual-order')
-      if (savedOrder) {
-        const orderMap = JSON.parse(savedOrder) as string[]
-        if (Array.isArray(orderMap) && orderMap.length > 0) {
-          // If we have a saved order, we might want to default to manual sort?
-          // Or just have the order ready.
-          // The user requirement says "reorder... and that ordering sticks".
-          // If we switch to 'custom', we need the list.
-          // We can't fully reconstruct the list until we have vehicles.
-        }
-      }
-      const savedSortMode = localStorage.getItem('garage-sort-mode')
-      if (savedSortMode === 'custom') {
-        setIsManualSort(true)
-      } else if (savedSortMode) {
-        setStoredSortBy(savedSortMode)
-      }
-    } catch (e) {
-      console.error('Failed to load garage settings', e)
+    const savedSort = localStorage.getItem('garage_sort_order')
+    if (savedSort) {
+      setSortOrder(savedSort)
     }
-    setIsInitialized(true)
+    const savedManualOrder = localStorage.getItem('garage_manual_order');
+    if (savedManualOrder) {
+      try {
+        setManuallyOrderedIds(JSON.parse(savedManualOrder));
+      } catch (e) {
+        console.error("Failed to parse manual order", e);
+      }
+    }
   }, [])
-
-  // Save sort mode to localStorage
-  useEffect(() => {
-    if (!isInitialized) return
-    localStorage.setItem('garage-sort-mode', isManualSort ? 'custom' : storedSortBy)
-  }, [isManualSort, storedSortBy, isInitialized])
-
-  // Save manual order to localStorage
-  useEffect(() => {
-    if (!isInitialized || !isManualSort || manualOrderVehicles.length === 0) return
-    const orderIds = manualOrderVehicles.map(v => v.id)
-    localStorage.setItem('garage-manual-order', JSON.stringify(orderIds))
-  }, [manualOrderVehicles, isManualSort, isInitialized])
-
-  // Update manual order list when hook updates
-  // If we are in manual mode, we need to respect the saved order
-  // And merge in new vehicles
-  useEffect(() => {
-    if (!isManualSort) return
-
-    // Merge current fetched vehicles into manual list
-    // Logic:
-    // 1. Start with existing manualOrderVehicles (if any) or create from saved order
-    // 2. Add any new vehicles from storedVehicles that aren't in the list
-    // 3. Update data for existing vehicles in the list
-
-    setManualOrderVehicles(prev => {
-      let baseList = prev
-
-      // If list is empty, try to load from saved order + storedVehicles
-      if (baseList.length === 0) {
-        try {
-          const savedOrder = JSON.parse(localStorage.getItem('garage-manual-order') || '[]') as string[]
-          if (savedOrder.length > 0) {
-            // Sort storedVehicles according to savedOrder
-            // Vehicles not in savedOrder go to the end
-            const vehicleMap = new Map(storedVehicles.map(v => [v.id, v]))
-            const ordered: VehicleWithOdometer[] = []
-            const usedIds = new Set<string>()
-
-            savedOrder.forEach(id => {
-              const v = vehicleMap.get(id)
-              if (v) {
-                ordered.push(v)
-                usedIds.add(id)
-              }
-            })
-
-            storedVehicles.forEach(v => {
-              if (!usedIds.has(v.id)) {
-                ordered.push(v)
-              }
-            })
-
-            baseList = ordered
-          } else {
-            baseList = storedVehicles
-          }
-        } catch {
-          baseList = storedVehicles
-        }
-      } else {
-        // Update existing items in baseList with new data from storedVehicles
-        // And append new items
-        const currentIds = new Set(baseList.map(v => v.id))
-        const newItems = storedVehicles.filter(v => !currentIds.has(v.id))
-
-        baseList = baseList.map(v => {
-          const updated = storedVehicles.find(sv => sv.id === v.id)
-          return updated ? updated : v
-        })
-
-        if (newItems.length > 0) {
-          baseList = [...baseList, ...newItems]
-        }
-      }
-
-      // Filter out vehicles that moved to active
-      // (This is handled by effectiveStoredVehicles logic usually, but here we manage the source list)
-      return baseList
-    })
-  }, [storedVehicles, isManualSort])
-
-  const effectiveStoredVehicles = React.useMemo(() => {
-    if (isManualSort && manualOrderVehicles.length > 0) {
-      return manualOrderVehicles.filter(v =>
-        v.current_status !== 'active' &&
-        !activeVehicles.find(av => av.id === v.id)
-      );
-    }
-
-    // Standard mode: Merge local optimistic updates + hook data
-    const filteredFromHook = storedVehicles.filter(v =>
-      v.current_status !== 'active' &&
-      !activeVehicles.find(av => av.id === v.id)
-    )
-
-    // Keep vehicles that were optimistically added but aren't in hook yet
-    const optimisticOnly = storedVehiclesLocal.filter(lv =>
-      lv.current_status !== 'active' &&
-      !activeVehicles.find(av => av.id === lv.id) &&
-      !filteredFromHook.find(hv => hv.id === lv.id)
-    )
-
-    // Combine: optimistic-only vehicles + hook vehicles (avoiding duplicates)
-    const combined = [...optimisticOnly]
-    filteredFromHook.forEach(hv => {
-      if (!combined.find(cv => cv.id === hv.id)) {
-        combined.push(hv)
-      }
-    })
-
-    return combined;
-  }, [storedVehicles, storedVehiclesLocal, activeVehicles, isManualSort, manualOrderVehicles])
 
   const handleSortChange = (newSort: string) => {
-    if (newSort === 'custom') {
-      setIsManualSort(true)
-      // Trigger the useEffect to populate manualOrderVehicles
-      setManualOrderVehicles([]) // Reset to trigger reconstruction from current data + storage
-    } else {
-      setIsManualSort(false)
-      setStoredSortBy(newSort)
-    }
+    setSortOrder(newSort)
+    localStorage.setItem('garage_sort_order', newSort)
   }
 
-  const handleManualReorder = (draggedId: string, targetId: string) => {
-    // Switch to manual sort if not already
-    if (!isManualSort) {
-      setIsManualSort(true)
-      setManualOrderVehicles([...effectiveStoredVehicles])
+  // Manual Reorder Handler
+  const handleManualReorder = (reorderedVehicles: VehicleWithStats[]) => {
+    const ids = reorderedVehicles.map(v => v.id);
+    setManuallyOrderedIds(ids);
+    localStorage.setItem('garage_manual_order', JSON.stringify(ids));
+    if (sortOrder !== 'manual') {
+      setSortOrder('manual');
+      localStorage.setItem('garage_sort_order', 'manual')
     }
-
-    setManualOrderVehicles(prev => {
-      // If prev is empty (first drag), initialize it
-      const list = prev.length > 0 ? prev : [...effectiveStoredVehicles]
-
-      const currentIndex = list.findIndex(v => v.id === draggedId)
-      const targetIndex = list.findIndex(v => v.id === targetId)
-
-      if (currentIndex === -1 || targetIndex === -1) return list
-
-      const newList = [...list]
-      const [movedItem] = newList.splice(currentIndex, 1)
-      if (movedItem) {
-        newList.splice(targetIndex, 0, movedItem)
-      }
-      return newList
-    })
-  }
-
-  // All known vehicles for slug generation context
-  const allKnownVehicles = [...activeVehicles, ...effectiveStoredVehicles]
+  };
 
 
-  // Real-time subscription to vehicle status changes
-  useEffect(() => {
-    let subscription: RealtimeChannel | null = null
+  const router = useRouter()
 
-    const setupSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      subscription = supabase
-        .channel('vehicle-status-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'user_vehicle',
-            filter: `owner_id=eq.${user.id}`,
-          },
-          (payload) => {
-            const updatedVehicle = payload.new as VehicleWithOdometer
-            const vehicleId = updatedVehicle.id
-            const newStatus = updatedVehicle.current_status
-
-            // Update active vehicles
-            setActiveVehicles((prev) => {
-              const isActive = newStatus === 'active'
-              const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
-
-              if (isActive && vehicleIndex === -1) {
-                // Vehicle became active, add it
-                const vehicle = initialVehicles.find((v) => v.id === vehicleId)
-                if (vehicle) {
-                  return [...prev, { ...vehicle, current_status: newStatus }]
-                }
-              } else if (!isActive && vehicleIndex !== -1) {
-                // Vehicle became inactive, remove it
-                return prev.filter((v) => v.id !== vehicleId)
-              } else if (vehicleIndex !== -1) {
-                // Update existing vehicle status
-                return prev.map((v) =>
-                  v.id === vehicleId ? { ...v, current_status: newStatus } : v
-                )
-              }
-              return prev
-            })
-
-            // Update stored vehicles
-            setStoredVehiclesLocal((prev) => {
-              const isStored = newStatus !== 'active'
-              const vehicleIndex = prev.findIndex((v) => v.id === vehicleId)
-
-              if (isStored && vehicleIndex === -1) {
-                // Vehicle became stored, add it
-                const vehicle = initialVehicles.find((v) => v.id === vehicleId)
-                if (vehicle) {
-                  return [...prev, { ...vehicle, current_status: newStatus }]
-                }
-              } else if (!isStored && vehicleIndex !== -1) {
-                // Vehicle became active, remove it
-                return prev.filter((v) => v.id !== vehicleId)
-              } else if (vehicleIndex !== -1) {
-                // Update existing vehicle status
-                return prev.map((v) =>
-                  v.id === vehicleId ? { ...v, current_status: newStatus } : v
-                )
-              }
-              return prev
-            })
-          }
-        )
-        .subscribe()
-    }
-
-    setupSubscription()
-
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe()
-      }
-    }
-  }, [initialVehicles])
-
-  // Function to handle vehicle status change via drag and drop
-  const handleVehicleStatusChange = async (vehicleId: string, newStatus: string) => {
-    // Optimistically update the UI immediately
-    const vehicleToMove = activeVehicles.find(v => v.id === vehicleId) ||
-      effectiveStoredVehicles.find(v => v.id === vehicleId) ||
-      storedVehicles.find(v => v.id === vehicleId)
-
-    if (!vehicleToMove) return
-
-    const updatedVehicle = { ...vehicleToMove, current_status: newStatus }
-    const isActive = newStatus === 'active'
-
-    // Update active vehicles immediately
-    setActiveVehicles((prev) => {
-      if (isActive) {
-        // Moving to active - add if not already there
-        const exists = prev.find(v => v.id === vehicleId)
-        if (exists) {
-          return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
-        }
-        return [...prev, updatedVehicle]
-      } else {
-        // Moving away from active - remove
-        return prev.filter(v => v.id !== vehicleId)
-      }
-    })
-
-    // Update stored vehicles immediately
-    setStoredVehiclesLocal((prev) => {
-      if (!isActive) {
-        // Moving to stored - add if not already there
-        const exists = prev.find(v => v.id === vehicleId)
-        if (exists) {
-          return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
-        }
-        return [...prev, updatedVehicle]
-      } else {
-        // Moving away from stored - remove
-        return prev.filter(v => v.id !== vehicleId)
-      }
-    })
-
-    // Update manual list if in manual mode
-    if (isManualSort) {
-      setManualOrderVehicles((prev) => {
-        if (!isActive) {
-          const exists = prev.find(v => v.id === vehicleId)
-          if (exists) return prev.map(v => v.id === vehicleId ? updatedVehicle : v)
-          return [...prev, updatedVehicle]
-        } else {
-          return prev.filter(v => v.id !== vehicleId)
-        }
-      })
-    }
-
-    // Then update via API
+  const handleStatusChange = async (vehicleId: string, newStatus: string) => {
     try {
-      const response = await fetch('/api/garage/update-vehicle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          vehicleId,
-          status: newStatus,
-        }),
-      })
+      const { error } = await supabase
+        .from('user_vehicle')
+        .update({ current_status: newStatus })
+        .eq('id', vehicleId)
 
-      const result = await response.json().catch(() => ({}))
-
-      if (!response.ok) {
-        console.error('Failed to update vehicle status:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: result
-        })
-
-        // Show user-friendly error message
-        const errorMessage = result.error || result.details || 'Unknown error'
-        alert(`Failed to update vehicle status: ${errorMessage}${result.hint ? '\n\n' + result.hint : ''}`)
-
-        // Revert optimistic update on error
-        router.refresh()
-        return
-      }
-
-      // Verify the response indicates success
-      if (!result.success && !result.vehicle) {
-        console.error('Update response missing success indicator:', result)
-        alert('Update may have failed. Please check the console for details.')
-        router.refresh()
-        return
-      }
-
-      console.log('Vehicle status updated successfully:', {
-        vehicleId: result.vehicle?.id,
-        newStatus: result.vehicle?.current_status,
-        response: result
-      })
-
-      // Soft refresh to update server state without page flash
-      router.refresh()
-    } catch (err) {
-      console.error('Error updating vehicle status:', err)
-      // Revert on error - the realtime subscription will handle the correct state
+      if (error) throw error
+      refresh() // Refresh list
+      router.refresh() // Refresh server components
+    } catch (error) {
+      console.error('Error updating status:', error)
     }
   }
 
-  // Function to refresh garage data when vehicles are added or updated
-  const handleVehicleAdded = () => {
-    // Soft refresh to re-run the Server Component without page flash
-    router.refresh()
+  // Sort Logic
+  const getSortedVehicles = (list: VehicleWithStats[]) => {
+    let sorted = [...list];
+
+    if (sortOrder === 'manual' && manuallyOrderedIds.length > 0) {
+      sorted.sort((a, b) => {
+        const indexA = manuallyOrderedIds.indexOf(a.id);
+        const indexB = manuallyOrderedIds.indexOf(b.id);
+        const valA = indexA === -1 ? Number.MAX_SAFE_INTEGER : indexA;
+        const valB = indexB === -1 ? Number.MAX_SAFE_INTEGER : indexB;
+        return valA - valB;
+      });
+      return sorted;
+    }
+
+    switch (sortOrder) {
+      case 'recent':
+        break;
+      case 'year_desc':
+        sorted.sort((a, b) => parseInt(b.year || '0') - parseInt(a.year || '0'));
+        break;
+      case 'year_asc':
+        sorted.sort((a, b) => parseInt(a.year || '0') - parseInt(b.year || '0'));
+        break;
+      case 'make':
+        sorted.sort((a, b) => (a.make || '').localeCompare(b.make || ''));
+        break;
+    }
+    return sorted;
   }
 
-  // Remove duplicates from active vehicles (safety check)
-  const uniqueActiveVehicles = React.useMemo(() => activeVehicles.filter((v, index, self) =>
-    index === self.findIndex((t) => t.id === v.id)
-  ), [activeVehicles])
+  // Apply sorting
+  const sortedActiveVehicles = getSortedVehicles(activeVehicles)
+  const sortedStoredVehicles = getSortedVehicles(storedVehicles)
 
-  // Update state if duplicates found
-  useEffect(() => {
-    if (activeVehicles.length !== uniqueActiveVehicles.length) {
-      setActiveVehicles(uniqueActiveVehicles)
-    }
-  }, [activeVehicles.length, uniqueActiveVehicles])
-
-  // Refresh data when page becomes visible (handles navigation from vehicle page)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Refetch vehicles to ensure we have latest status
-        const refreshData = async () => {
-          try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
-
-            const { data: vehicles } = await supabase
-              .from('user_vehicle')
-              .select('id, current_status, vehicle_image')
-              .eq('owner_id', user.id)
-
-            if (vehicles) {
-              // Update active vehicles - remove any that shouldn't be active
-              setActiveVehicles((prev) => {
-                const activeIds = vehicles.filter(v => v.current_status === 'active').map(v => v.id)
-                return prev
-                  .filter(v => activeIds.includes(v.id))
-                  .map(v => {
-                    const updated = vehicles.find(uv => uv.id === v.id)
-                    return updated ? { ...v, current_status: updated.current_status, vehicle_image: updated.vehicle_image } : v
-                  })
-              })
-
-              // Update stored vehicles - remove any that are now active
-              setStoredVehiclesLocal((prev) => {
-                const storedIds = vehicles.filter(v => v.current_status !== 'active').map(v => v.id)
-                return prev
-                  .filter(v => storedIds.includes(v.id))
-                  .map(v => {
-                    const updated = vehicles.find(uv => uv.id === v.id)
-                    return updated ? { ...v, current_status: updated.current_status, vehicle_image: updated.vehicle_image } : v
-                  })
-              })
-            }
-          } catch (err) {
-            console.error('Error refreshing vehicle data:', err)
-          }
-        }
-
-        refreshData()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
+  const displayName = user?.user_metadata?.full_name?.split(' ')[0]?.toLowerCase() || user?.user_metadata?.first_name?.toLowerCase() || 'driver'
 
   return (
-    <AuthProvider supabase={supabase}>
-      <section className="relative py-12 bg-background min-h-screen">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
-        >
-          <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-          <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
-        </div>
+    <div className="container pb-8 pt-24 md:pt-32 max-w-7xl mx-auto">
+      <div className="mb-10">
+        <h1 className="text-4xl font-light tracking-tight text-foreground mb-2">
+          welcome back, <span className="font-medium">{displayName}</span>
+        </h1>
+        <p className="text-muted-foreground">Manage your fleet and track your builds.</p>
+      </div>
 
-        <div className="relative container px-4 md:px-6 pt-24">
-          <div className="mb-10">
-            <h1 className="text-4xl font-bold text-foreground mb-2">My Garage</h1>
-          </div>
+      <VehicleGallery
+        title="Active Garage"
+        vehicles={sortedActiveVehicles}
+        allVehicles={vehicles}
+        showAddCard={true}
+        onAddClick={() => setIsAddModalOpen(true)}
+        galleryType="active"
+        onDrop={handleStatusChange}
+        onSortChange={handleSortChange}
+        currentSort={sortOrder}
+        onManualReorder={handleManualReorder}
+      />
 
-          {/* Active Vehicles Section - uses server-fetched data */}
-          <VehicleGallery
-            title="Active Vehicles"
-            vehicles={uniqueActiveVehicles}
-            allVehicles={allKnownVehicles}
-            showAddCard={canAddVehicle}
-            onAddClick={() => setAddVehicleModalOpen(true)}
-            onDrop={handleVehicleStatusChange}
-            galleryType="active"
-            isCollapsible={false}
-          />
+      {sortedStoredVehicles.length > 0 && (
+        <VehicleGallery
+          title="Storage & Archive"
+          vehicles={sortedStoredVehicles}
+          allVehicles={vehicles}
+          galleryType="stored"
+          isCollapsible={true}
+          onDrop={handleStatusChange}
+        // No manual reorder/sort for stored? Or maybe yes. Inherits sort.
+        />
+      )}
 
-          {/* Stored Vehicles Section - uses progressive loading */}
-          <VehicleGallery
-            title="Stored Vehicles"
-            vehicles={effectiveStoredVehicles}
-            allVehicles={allKnownVehicles}
-            onLoadMore={loadMore}
-            loadingMore={loadingMore}
-            hasMore={hasMore}
-            onDrop={handleVehicleStatusChange}
-            galleryType="stored"
-            isCollapsible={true}
-            onSortChange={handleSortChange}
-            currentSort={isManualSort ? 'custom' : storedSortBy}
-            onManualReorder={handleManualReorder}
-          />
-
-          {storedLoading && storedVehicles.length === 0 && (
-            <div className="flex justify-center mt-8">
-              <div className="text-muted-foreground">Loading stored vehicles...</div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <AddVehicleModal {...({ open: addVehicleModalOpen, onOpenChange: setAddVehicleModalOpen, onVehicleAdded: handleVehicleAdded } as any)} />
-    </AuthProvider>
+      <AddVehicleModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        onVehicleAdded={() => {
+          refresh()
+          router.refresh()
+        }}
+      />
+    </div>
   )
 }

@@ -19,6 +19,7 @@ export function WishlistDrawer({ isOpen, onClose, vehicleId, isOwner }: Wishlist
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [isAddOpen, setIsAddOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
 
   const fetchItems = async () => {
     setLoading(true)
@@ -39,70 +40,89 @@ export function WishlistDrawer({ isOpen, onClose, vehicleId, isOwner }: Wishlist
   }, [isOpen, vehicleId])
 
   // Split items
-  const activeItems = items.filter(i => i.status !== 'purchased')
+  const activeItems = items.filter(i => i.status === 'wishlist' || i.status === 'ordered')
   const purchasedItems = items.filter(i => i.status === 'purchased')
+
+  const handleEdit = (item: any) => {
+    if (!isOwner) return
+    setSelectedItem(item)
+    setIsAddOpen(true)
+  }
+
+  const handleAddStart = () => {
+    setSelectedItem(null)
+    setIsAddOpen(true)
+  }
 
   return (
     <>
       <Drawer direction="right" open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DrawerContent className="h-full rounded-none w-[85vw] sm:max-w-md bg-background">
-             <DrawerHeader className="md:mx-0 md:max-w-full border-b-0 px-6 pt-6">
-               <DrawerTitle>Wishlist</DrawerTitle>
-               <DrawerDescription>
-                  Things you want to buy for your build.
-               </DrawerDescription>
-             </DrawerHeader>
+          <DrawerHeader className="md:mx-0 md:max-w-full border-b-0 px-6 pt-6">
+            <DrawerTitle>Wishlist</DrawerTitle>
+            <DrawerDescription>
+              Things you want to buy for your build.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-6 pb-2 md:mx-0 md:max-w-full">
+            {isOwner && (
+              <Button className="w-full" onClick={handleAddStart}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            )}
+          </div>
 
-             <div className="px-6 pb-2 md:mx-0 md:max-w-full">
-               {isOwner && (
-                 <Button className="w-full" onClick={() => setIsAddOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Item
-                 </Button>
-               )}
-             </div>
-
-             <DrawerBody className="overflow-y-auto px-6 md:mx-0 md:max-w-full">
-                {loading ? (
-                  <div className="py-8 text-center text-muted-foreground">Loading...</div>
-                ) : items.length === 0 ? (
-                  <div className="py-8 text-center text-muted-foreground flex flex-col items-center gap-2">
-                    <ListTodo className="w-8 h-8 opacity-50" />
-                    <p>Your wishlist is empty.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {activeItems.length > 0 && (
-                      <div className="space-y-2">
-                         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</h4>
-                         {activeItems.map(item => (
-                           <WishlistItemCard key={item.id} item={item} onUpdate={fetchItems} />
-                         ))}
-                      </div>
-                    )}
-
-                    {purchasedItems.length > 0 && (
-                      <div className="space-y-2">
-                         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Purchased History</h4>
-                         {purchasedItems.map(item => (
-                           <WishlistItemCard key={item.id} item={item} onUpdate={fetchItems} />
-                         ))}
-                      </div>
-                    )}
+          <DrawerBody className="overflow-y-auto px-6 md:mx-0 md:max-w-full">
+            {loading ? (
+              <div className="py-8 text-center text-muted-foreground">Loading...</div>
+            ) : items.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground flex flex-col items-center gap-2">
+                <ListTodo className="w-8 h-8 opacity-50" />
+                <p>Your wishlist is empty.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {activeItems.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</h4>
+                    {activeItems.map(item => (
+                      <WishlistItemCard
+                        key={item.id}
+                        item={item}
+                        onUpdate={fetchItems}
+                        onEdit={handleEdit}
+                      />
+                    ))}
                   </div>
                 )}
-             </DrawerBody>
-             <DrawerFooter className="md:mx-0 md:max-w-full px-6 pb-6">
-               <Button variant="outline" onClick={onClose}>Close</Button>
-             </DrawerFooter>
+
+                {purchasedItems.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Purchased History</h4>
+                    {purchasedItems.map(item => (
+                      <WishlistItemCard key={item.id} item={item} onUpdate={fetchItems} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </DrawerBody>
+          <DrawerFooter className="md:mx-0 md:max-w-full px-6 pb-6">
+            <Button variant="outline" onClick={onClose}>Close</Button>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
 
       <AddWishlistDialog
-         isOpen={isAddOpen}
-         onClose={() => setIsAddOpen(false)}
-         vehicleId={vehicleId}
-         onSuccess={fetchItems}
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false)
+          setSelectedItem(null)
+        }}
+        vehicleId={vehicleId}
+        initialData={selectedItem}
+        onSuccess={fetchItems}
       />
     </>
   )

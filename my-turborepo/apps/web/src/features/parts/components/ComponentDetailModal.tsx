@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
 import { useState, useEffect } from 'react';
 import { PartSlot } from '../types';
 import { updatePartInstallation } from '../actions';
@@ -37,27 +38,31 @@ export const ComponentDetailModal = ({
 
   // Form state
   const [formData, setFormData] = useState({
-    partName: masterPart?.name || '',
-    partNumber: masterPart?.part_number || '',
-    vendorLink: masterPart?.vendor_link || '',
-    installedDate: installed?.installed_date ? format(new Date(installed.installed_date), 'yyyy-MM-dd') : '',
-    installedMileage: installed?.installed_mileage?.toString() || '',
-    purchaseCost: installed?.purchase_cost?.toString() || '',
-    customLifespanMiles: installed?.custom_lifespan_miles?.toString() || '',
-    customLifespanMonths: installed?.custom_lifespan_months?.toString() || '',
+    partName: installed?.name || masterPart?.name || '',
+    partNumber: installed?.part_number || masterPart?.part_number || '',
+    variant: installed?.variant || '',
+    vendorLink: installed?.purchase_url || masterPart?.affiliate_url || '',
+    installedDate: installed?.installed_at ? format(new Date(installed.installed_at), 'yyyy-MM-dd') : '',
+    installedMileage: installed?.install_miles?.toString() || '',
+    purchaseCost: installed?.purchase_price?.toString() || '',
+    category: installed?.category || masterPart?.category || '',
+    customLifespanMiles: installed?.lifespan_miles?.toString() || '',
+    customLifespanMonths: installed?.lifespan_months?.toString() || '',
   });
 
   useEffect(() => {
-    if (installed && masterPart) {
+    if (installed) {
       setFormData({
-        partName: masterPart.name || '',
-        partNumber: masterPart.part_number || '',
-        vendorLink: masterPart.vendor_link || '',
-        installedDate: installed.installed_date ? format(new Date(installed.installed_date), 'yyyy-MM-dd') : '',
-        installedMileage: installed.installed_mileage?.toString() || '',
-        purchaseCost: installed.purchase_cost?.toString() || '',
-        customLifespanMiles: installed.custom_lifespan_miles?.toString() || '',
-        customLifespanMonths: installed.custom_lifespan_months?.toString() || '',
+        partName: installed.name || masterPart?.name || '',
+        partNumber: installed.part_number || masterPart?.part_number || '',
+        variant: installed.variant || '',
+        vendorLink: installed.purchase_url || masterPart?.affiliate_url || '',
+        installedDate: installed.installed_at ? format(new Date(installed.installed_at), 'yyyy-MM-dd') : '',
+        installedMileage: installed.install_miles?.toString() || '',
+        purchaseCost: installed.purchase_price?.toString() || '',
+        category: installed.category || masterPart?.category || '',
+        customLifespanMiles: installed.lifespan_miles?.toString() || '',
+        customLifespanMonths: installed.lifespan_months?.toString() || '',
       });
     }
     setIsEditing(false);
@@ -74,10 +79,12 @@ export const ComponentDetailModal = ({
       const result = await updatePartInstallation(installed.id, vehicleId, {
         partName: formData.partName,
         partNumber: formData.partNumber,
+        variant: formData.variant,
         vendorLink: formData.vendorLink,
         installedDate: formData.installedDate || undefined,
         installedMileage: formData.installedMileage ? parseInt(formData.installedMileage, 10) : undefined,
         purchaseCost: formData.purchaseCost ? parseFloat(formData.purchaseCost) : undefined,
+        category: formData.category || undefined,
         customLifespanMiles: formData.customLifespanMiles ? parseInt(formData.customLifespanMiles, 10) : undefined,
         customLifespanMonths: formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : undefined,
         status: (installed.status === 'planned' && formData.installedDate) ? 'installed' : undefined,
@@ -102,14 +109,14 @@ export const ComponentDetailModal = ({
     }
   };
 
-  if (!slot || !installed || !masterPart) {
+  if (!slot || !installed) {
     return null;
   }
 
   const defaultLifespanMiles = slot.default_lifespan_miles;
   const defaultLifespanMonths = slot.default_lifespan_months;
-  const effectiveLifespanMiles = installed.custom_lifespan_miles ?? defaultLifespanMiles;
-  const effectiveLifespanMonths = installed.custom_lifespan_months ?? defaultLifespanMonths;
+  const effectiveLifespanMiles = installed.lifespan_miles ?? defaultLifespanMiles;
+  const effectiveLifespanMonths = installed.lifespan_months ?? defaultLifespanMonths;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -138,6 +145,26 @@ export const ComponentDetailModal = ({
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={formData.category} // Controlled value
+                onValueChange={(val) => setFormData({ ...formData, category: val })}
+                disabled={!isEditing || loading}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="engine">Engine</SelectItem>
+                  <SelectItem value="suspension">Suspension</SelectItem>
+                  <SelectItem value="brakes">Braking</SelectItem>
+                  <SelectItem value="wheels_tires">Wheels & Tires</SelectItem>
+                  <SelectItem value="interior">Interior</SelectItem>
+                  <SelectItem value="exterior">Exterior</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="partNumber">Part Number</Label>
@@ -151,10 +178,26 @@ export const ComponentDetailModal = ({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="variant">Variant (Optional)</Label>
+            <Select
+              value={formData.variant}
+              onValueChange={(val) => setFormData({ ...formData, variant: val })}
+              disabled={!isEditing || loading}
+            >
+              <SelectTrigger id="variant">
+                <SelectValue placeholder="Select Variant" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="stock">Stock</SelectItem>
+                <SelectItem value="upgrade">Upgrade</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="vendorLink">Vendor Link</Label>
             <Input
-              id="vendorLink"
-              type="url"
+              type="text"
               value={formData.vendorLink}
               onChange={(e) => setFormData({ ...formData, vendorLink: e.target.value })}
               disabled={!isEditing || loading}
@@ -316,12 +359,14 @@ export const ComponentDetailModal = ({
                       setFormData({
                         partName: masterPart.name || '',
                         partNumber: masterPart.part_number || '',
-                        vendorLink: masterPart.vendor_link || '',
-                        installedDate: installed.installed_date ? format(new Date(installed.installed_date), 'yyyy-MM-dd') : '',
-                        installedMileage: installed.installed_mileage?.toString() || '',
-                        purchaseCost: installed.purchase_cost?.toString() || '',
-                        customLifespanMiles: installed.custom_lifespan_miles?.toString() || '',
-                        customLifespanMonths: installed.custom_lifespan_months?.toString() || '',
+                        variant: '',
+                        vendorLink: masterPart.affiliate_url || '',
+                        installedDate: installed.installed_at ? format(new Date(installed.installed_at), 'yyyy-MM-dd') : '',
+                        installedMileage: installed.install_miles?.toString() || '',
+                        purchaseCost: installed.purchase_price?.toString() || '',
+                        category: installed.category || '',
+                        customLifespanMiles: installed.lifespan_miles?.toString() || '',
+                        customLifespanMonths: installed.lifespan_months?.toString() || '',
                       });
                     }
                   }}

@@ -1,24 +1,25 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { CoupeWireframe } from '@/components/CoupeWireframe';
 import { PartCard } from './components/PartCard';
 import { AddPartModal } from './components/AddPartModal';
 import { ComponentDetailModal } from './components/ComponentDetailModal';
 import { getPartsData } from './actions';
-import { PartSlot, UserVehicle } from './types';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { PartSlot, UserVehicle, VehicleInstalledComponent } from './types';
+import { Loader2, AlertCircle, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/alert';
+import { STANDARD_COMPONENTS, PartCategory } from '@/lib/constants/standard-components';
+import { Button } from '@repo/ui/button';
 
-// Mapping from Wireframe Zones to DB Categories
-// Keys match CoupeWireframe events: 'Engine', 'Interior', 'Exterior', 'Braking', 'Suspension'
-const ZONE_MAPPING: Record<string, string[]> = {
-  'Engine': ['Engine', 'Drivetrain', 'Exhaust', 'Cooling'],
-  'Interior': ['Interior', 'Electronics', 'Cabin'],
-  'Exterior': ['Body', 'Exterior', 'Glass', 'Lighting'],
-  'Braking': ['Brakes', 'Wheels', 'Tires'],
-  'Suspension': ['Suspension', 'Steering', 'Chassis'],
-};
+// Categories Configuration
+const CATEGORIES: { label: string; id: PartCategory }[] = [
+  { label: 'Engine', id: 'engine' },
+  { label: 'Suspension', id: 'suspension' },
+  { label: 'Braking', id: 'brakes' },
+  { label: 'Wheels & Tires', id: 'wheels_tires' },
+  { label: 'Interior', id: 'interior' },
+  { label: 'Exterior', id: 'exterior' },
+];
 
 interface PartsDiagramContainerProps {
   vehicleId: string;
@@ -26,15 +27,18 @@ interface PartsDiagramContainerProps {
 
 export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContainerProps) {
   // State
-  const [selectedZone, setSelectedZone] = useState<string | null>('Engine'); // Default to Engine
+  const [activeCategory, setActiveCategory] = useState<PartCategory>('engine');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [slots, setSlots] = useState<PartSlot[]>([]);
+  const [inventory, setInventory] = useState<VehicleInstalledComponent[]>([]);
   const [vehicle, setVehicle] = useState<UserVehicle | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isBlueprintExpanded, setIsBlueprintExpanded] = useState(true); // Default open
   const [selectedSlotForAdd, setSelectedSlotForAdd] = useState<PartSlot | null>(null);
   const [selectedSlotForDetail, setSelectedSlotForDetail] = useState<PartSlot | null>(null);
 
@@ -52,6 +56,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
             setError(result.error);
           } else {
             setSlots(result.slots);
+            setInventory(result.inventory);
             setVehicle(result.vehicle);
           }
         }
@@ -67,11 +72,6 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
 
     return () => { mounted = false; };
   }, [vehicleId]);
-
-  // Handler for Zone Click
-  const handleZoneClick = (zone: string) => {
-    setSelectedZone(zone);
-  };
 
   // Handler for Add Part
   const handleAddPart = (slot: PartSlot) => {
@@ -94,6 +94,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
         setError(result.error);
       } else {
         setSlots(result.slots);
+        setInventory(result.inventory);
         setVehicle(result.vehicle);
       }
     } catch (err) {
@@ -104,17 +105,36 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
     }
   };
 
-  // Filter Slots based on Selected Zone
-  const filteredSlots = slots.filter((slot) => {
-    if (!selectedZone) return true; // Show all if no zone (optional behavior)
+  // --- Requirement 2: 3-Zone Logic ---
 
-    // Check if the slot category matches the mapped categories for the zone
-    const allowedCategories = ZONE_MAPPING[selectedZone] || [];
-    // Case-insensitive check or partial matching if categories are loose
-    return allowedCategories.some(c =>
-        slot.category.toLowerCase() === c.toLowerCase()
-    );
+  // Zone 1: Installed
+  const zone1Installed = inventory.filter(item => {
+    if (item.status !== 'installed') return false;
+    // Check category matches active category
+    return item.category === activeCategory || item.master_part?.category === activeCategory;
   });
+
+  // Zone 2: Blueprint (Standard Components)
+  // Logic: Get standard items for category, filtered by NOT matching installed items partially
+  const standardItems = STANDARD_COMPONENTS[activeCategory] || [];
+
+  // Create "Blueprint Slots" from standard items that are NOT installed
+  const zone2Blueprint = standardItems.filter(stdName => {
+    // Check if any installed item fuzzy matches this standard name
+    return !zone1Installed.some(item => {
+      const installedName = item.name || item.master_part?.name || '';
+      return installedName.toLowerCase().includes(stdName.toLowerCase());
+    });
+  }).map(stdName => ({
+    // Create a virtual/placeholder slot for the UI
+    id: `blueprint-${stdName}`,
+    name: stdName,
+    category: activeCategory,
+    default_lifespan_miles: null,
+    default_lifespan_months: null,
+    installedComponent: undefined
+  } as PartSlot));
+
 
   if (loading) {
     return (
@@ -138,46 +158,118 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Top: Wireframe */}
-      <section className="bg-card/50 rounded-xl p-4 border shadow-sm">
-        <h2 className="text-xl font-semibold text-center mb-4">Interactive Diagram</h2>
-        <CoupeWireframe
-          selectedZone={selectedZone}
-          onZoneClick={handleZoneClick}
-        />
-        <p className="text-center text-sm text-muted-foreground mt-2">
-          Select a zone to view components
+      {/* Top: Category Selection Buttons */}
+      <section className="bg-card/50 rounded-xl p-6 border shadow-sm">
+        <h2 className="text-xl font-semibold text-center mb-6">Select Category</h2>
+
+        <div className="flex flex-wrap gap-3 justify-center">
+          {CATEGORIES.map((cat) => (
+            <Button
+              key={cat.id}
+              variant={activeCategory === cat.id ? 'default' : 'secondary'}
+              onClick={() => setActiveCategory(cat.id)}
+              className={activeCategory === cat.id ? 'shadow-md' : ''}
+            >
+              {cat.label}
+            </Button>
+          ))}
+        </div>
+
+        <p className="text-center text-sm text-muted-foreground mt-4">
+          Viewing: <span className="font-semibold">{CATEGORIES.find(c => c.id === activeCategory)?.label}</span>
         </p>
       </section>
 
-      {/* Bottom: Component Grid */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">
-            {selectedZone ? `${selectedZone} Components` : 'All Components'}
-          </h2>
-          <span className="text-muted-foreground text-sm">
-            {filteredSlots.length} items found
-          </span>
+      {/* Bottom: Component Grid (3-Zone) */}
+      <section className="space-y-8">
+
+        {/* Zone 1: Installed */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b pb-2">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <span className="w-2 h-6 bg-green-500 rounded-full" />
+              Installed Components
+            </h3>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">{zone1Installed.length} items</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1"
+                onClick={() => {
+                  setSelectedSlotForAdd(null);
+                  setIsModalOpen(true);
+                }}
+              >
+                <Plus className="h-3 w-3" />
+                Add Part
+              </Button>
+            </div>
+          </div>
+
+          {zone1Installed.length === 0 ? (
+            <div className="p-8 text-center bg-muted/30 rounded-lg border border-dashed text-muted-foreground">
+              No installed components in this category.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {zone1Installed.map((item) => (
+                <PartCard
+                  key={item.id}
+                  slot={{
+                    id: item.category || 'unknown-slot',
+                    name: item.name,
+                    category: activeCategory,
+                    default_lifespan_miles: null,
+                    default_lifespan_months: null,
+                    installedComponent: item,
+                  } as PartSlot}
+                  currentOdometer={vehicle?.odometer || 0}
+                  onAddPart={handleAddPart}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {filteredSlots.length === 0 ? (
-           <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/50">
-             <p className="text-muted-foreground">No component slots defined for this zone.</p>
-           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredSlots.map((slot) => (
-              <PartCard
-                key={slot.id}
-                slot={slot}
-                currentOdometer={vehicle?.odometer || 0}
-                onAddPart={handleAddPart}
-                onViewDetails={handleViewDetails}
-              />
-            ))}
+        {/* Zone 2: Blueprint */}
+        {/* Zone 2: Blueprint (Collapsible) */}
+        <div className="space-y-4">
+          <div
+            className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/10 transition-colors rounded-sm px-1 py-1"
+            onClick={() => setIsBlueprintExpanded(!isBlueprintExpanded)}
+          >
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <span className="w-2 h-6 bg-blue-500 rounded-full" />
+              Blueprint (Recommended)
+              <span className="text-xs font-normal text-muted-foreground ml-2">
+                {isBlueprintExpanded ? 'Hide' : 'Show'}
+              </span>
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">{zone2Blueprint.length} items</span>
+              {isBlueprintExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </div>
           </div>
-        )}
+
+          {isBlueprintExpanded && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in slide-in-from-top-2 duration-300">
+              {zone2Blueprint.map((slot) => (
+                <PartCard
+                  key={slot.id}
+                  slot={slot}
+                  currentOdometer={vehicle?.odometer || 0}
+                  onAddPart={handleAddPart}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+
+
       </section>
 
       {/* Modals */}
@@ -186,6 +278,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
         onClose={() => setIsModalOpen(false)}
         slot={selectedSlotForAdd}
         vehicleId={vehicleId}
+        defaultCategory={activeCategory} // Pass active category
         onSuccess={handlePartAdded}
       />
       <ComponentDetailModal

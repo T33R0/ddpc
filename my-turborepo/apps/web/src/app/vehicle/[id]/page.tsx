@@ -1,351 +1,276 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { notFound } from 'next/navigation'
-import { VehicleDetailPageClient } from '@/features/vehicle/VehicleDetailPageClient'
+import { redirect, notFound } from 'next/navigation'
+import VehicleDashboard from '@/features/vehicle/VehicleDashboard'
 import { Vehicle } from '@repo/types'
 import { isUUID } from '@/lib/vehicle-utils'
 import { getPublicVehicleBySlug } from '@/lib/public-vehicle-utils'
+import { VehicleMod } from '@/features/mods/lib/getVehicleModsData'
 
 type VehiclePageProps = {
   params: Promise<{
-    id: string // This is the vehicle ID (or slug)
+    id: string
   }>
 }
 
-// Force dynamic rendering to prevent caching
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-//
-// This is now an async Server Component
-//
 export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   const supabase = await createClient()
   const resolvedParams = await params
   const vehicleSlug = decodeURIComponent(resolvedParams.id)
-  const isLikelyUUID = isUUID(vehicleSlug)
 
   const {
     data: { user },
-    error: authError,
   } = await supabase.auth.getUser()
-
-  if (authError) {
-    console.error('VehicleDetailPage: Error retrieving auth user', authError)
-  }
 
   const userId = user?.id || null
 
-  // --- 1. Fetch Vehicle Data (with Ownership Check) ---
-  // This is the critical pattern from your audit (log-service route)
-  // We fetch the vehicle AND check ownership in one query.
-
-  console.log('VehicleDetailPage: Looking for vehicle with slug:', vehicleSlug, 'for user:', userId)
-
-  const selectClause = `
-      *,
-      vehicle_data ( * )
-    `
-
+  // --- 1. Fetch Vehicle Data ---
   let isOwner = false
   let vehicle: any = null
   let vehicleError: any = null
+  let canonicalSlug: string | null = null
 
   // Helper to fetch vehicle by ID
   const fetchVehicleById = async (id: string) => {
     return supabase
       .from('user_vehicle')
-      .select(selectClause)
+      .select('*, vehicle_data ( * )')
       .eq('id', id)
       .maybeSingle()
   }
 
-  // 1. Try to resolve as a User Vehicle (if logged in)
-  let canonicalSlug: string | null = null
-
   if (userId) {
-    // Use the robust slug resolution logic (handles Nickname, YMMT, and ID)
     const { resolveVehicleSlug } = await import('@/lib/vehicle-utils')
     const resolved = await resolveVehicleSlug(vehicleSlug, supabase, user)
 
     if (resolved) {
       const { data, error } = await fetchVehicleById(resolved.vehicleId)
-
       if (data) {
-        // Verify ownership (resolveVehicleSlug checks owner_id, but double check doesn't hurt)
         if (data.owner_id === userId) {
           vehicle = data
           isOwner = true
           vehicleError = error
-          canonicalSlug = resolved.canonicalSlug  // Determine the canonical slug
-          console.log('VehicleDetailPage: Resolved via smart slug:', {
-            slug: vehicleSlug,
-            resolvedId: resolved.vehicleId,
-            canonicalSlug,
-            method: resolved.nickname === vehicleSlug ? 'nickname' : 'ymmt/id'
-          })
+          canonicalSlug = resolved.canonicalSlug
         }
       }
     }
   }
 
-  // 2. If not found as owned vehicle, try to find as public vehicle
-  // Note: RLS policy has a case sensitivity issue - it checks for 'public' but DB stores 'PUBLIC'
-  // Use service role client to bypass RLS and fetch public vehicles
-  // Use service role client to bypass RLS and fetch public vehicles
-  // const slugIsUUID = isUUID(vehicleSlug) // Use isLikelyUUID defined at top
-
   if (!vehicle) {
-    // Use service role client to fetch public vehicle (bypasses RLS)
     const publicVehicleData = await getPublicVehicleBySlug(vehicleSlug)
-
     if (publicVehicleData) {
       vehicle = publicVehicleData
       vehicleError = null
-
-      console.log('VehicleDetailPage: Resolved public vehicle via service role lookup', vehicle.id)
       isOwner = userId ? vehicle.owner_id === userId : false
-    } else {
-      console.log('VehicleDetailPage: Public vehicle not found by slug:', vehicleSlug)
     }
   }
 
-  if (vehicleError && vehicleError.code && vehicleError.code !== 'PGRST116') {
-    console.error('VehicleDetailPage: Error fetching vehicle:', vehicleError)
-  }
-
   if (!vehicle) {
-    console.error('VehicleDetailPage: Vehicle not found or not accessible:', {
-      vehicleSlug,
-      userId,
-      vehicleError,
-      hasVehicle: !!vehicle
-    })
     notFound()
   }
 
-  console.log('VehicleDetailPage: Found vehicle:', vehicle.id, vehicle.nickname, vehicle.current_status)
+  // --- 2. Fetch Dashboard Data ---
 
-  // --- 2. Fetch Latest Odometer Reading ---
-  type OdometerRow = { reading_mi: number | null }
+  // We need:
+  // - Latest Odometer
+  // - ALL Maintenance Logs (for Logbook)
+  // - ALL Fuel Logs (for Logbook)
+  // - ALL Mods (for Build & Workshop)
+  // - Next Service Due
 
-  let latestOdometer: OdometerRow | null = null
-  let totalRecords = 0
-  let serviceCount = 0
-  let lastServiceDate: string | null = null
-  let lastFuelDate: string | null = null
-  let nextServiceDate: string | null = null
-  let totalCompletedMods = 0
-  let totalCompletedModCost = 0
+  const vehicleId = vehicle.id
 
-  if (isOwner) {
-    const { data: odometerData } = await supabase
-      .from('odometer_log')
-      .select('reading_mi')
-      .eq('user_vehicle_id', vehicle.id)
-      .order('recorded_at', { ascending: false })
-      .limit(1)
-      .single()
+  const [
+    odometerRes,
+    maintenanceRes,
+    fuelRes,
+    modsRes,
+    serviceIntervalsRes,
+    primaryImageRes,
+    jobsRes,
+    partsRes
+  ] = await Promise.all([
+    // Latest Odometer
+    supabase.from('odometer_log').select('reading_mi').eq('user_vehicle_id', vehicleId).order('recorded_at', { ascending: false }).limit(1).single(),
+    // Maintenance Logs
+    supabase.from('maintenance_log').select('*').eq('user_vehicle_id', vehicleId).order('event_date', { ascending: false }),
+    // Fuel Logs
+    supabase.from('fuel_log').select('*').eq('user_vehicle_id', vehicleId).order('event_date', { ascending: false }),
+    // Mods
+    supabase.from('mods').select('*, mod_item:mod_items(name, description)').eq('user_vehicle_id', vehicleId),
+    // Service Intervals (Next Due)
+    supabase.from('service_intervals').select('due_date').eq('user_vehicle_id', vehicleId).gt('due_date', new Date().toISOString()).order('due_date', { ascending: true }).limit(1).maybeSingle(),
+    // Stock Image
+    vehicle.vehicle_data?.id ? supabase.from('vehicle_primary_image').select('url').eq('vehicle_id', vehicle.vehicle_data.id).maybeSingle() : Promise.resolve({ data: null }),
+    // Jobs (Recent Logic)
+    supabase.from('jobs').select('*').eq('vehicle_id', vehicleId).eq('status', 'completed').order('date_completed', { ascending: false }),
+    // Installed Parts (for Logbook)
+    supabase.from('inventory').select('*, part:master_parts(*)').eq('vehicle_id', vehicleId).eq('status', 'installed').order('installed_at', { ascending: false })
+  ])
 
-    latestOdometer = odometerData || null
+  // --- 3. Process Data ---
+  const maintenanceLogs = maintenanceRes.data || []
+  const fuelLogs = fuelRes.data || []
+  const jobs = jobsRes.data || []
+  const partsLogs = partsRes.data || []
 
-    const [maintenanceCount, modsResult, odometerCount, lastServiceResult, lastFuelResult, nextServiceResult] = await Promise.all([
-      supabase
-        .from('maintenance_log')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_vehicle_id', vehicle.id),
-      // Fetch full mods list to calculate cost and count completed
-      supabase
-        .from('mods')
-        .select('id, status, cost')
-        .eq('user_vehicle_id', vehicle.id),
-      supabase
-        .from('odometer_log')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_vehicle_id', vehicle.id),
-      // Fetch latest maintenance log date
-      supabase
-        .from('maintenance_log')
-        .select('event_date')
-        .eq('user_vehicle_id', vehicle.id)
-        .order('event_date', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      // Fetch latest fuel log date
-      supabase
-        .from('fuel_log')
-        .select('event_date')
-        .eq('user_vehicle_id', vehicle.id)
-        .order('event_date', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      // Fetch next service interval date
-      supabase
-        .from('service_intervals')
-        .select('due_date')
-        .eq('user_vehicle_id', vehicle.id)
-        .gt('due_date', new Date().toISOString())
-        .order('due_date', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-    ])
+  // Stats
+  // User explicitly requested 'odometer' from user_vehicle table
+  const latestOdometer = vehicle.odometer || odometerRes.data?.reading_mi || 0
+  const avgMpg = vehicle.avg_mpg ? Number(vehicle.avg_mpg) : null
+  const lastServiceDate = maintenanceLogs[0]?.event_date || null
+  const lastFuelDate = fuelLogs[0]?.event_date || null
+  const nextServiceDate = serviceIntervalsRes.data?.due_date || null
 
-    // Filter completed mods
-    const completedMods = (modsResult.data || []).filter((m: any) =>
-      ['installed', 'tuned'].includes(m.status)
-    )
+  const mappedMods: VehicleMod[] = (modsRes.data || []).map((m: any) => {
+    const modItem = m.mod_item
+    // Fallback title/desc logic similar to getVehicleModsData
+    let title = 'Modification'
+    let description = undefined
+    if (modItem && modItem.name) {
+      title = modItem.name
+      description = m.notes || modItem.description
+    } else if (m.notes) {
+      const lines = m.notes.split('\n')
+      title = lines[0]
+      description = lines.slice(1).join('\n') || undefined
+    }
 
-    totalCompletedMods = completedMods.length
-    totalCompletedModCost = completedMods.reduce((sum: number, m: any) => sum + (Number(m.cost) || 0), 0)
+    return {
+      id: m.id,
+      title,
+      description,
+      status: m.status,
+      cost: m.cost,
+      odometer: m.odometer,
+      event_date: new Date(m.event_date || m.created_at || Date.now()),
+      parts: [], // Not fetching parts for generic dashboard view
+      outcome: undefined
+    }
+  })
 
-    // Total records still includes all mods regardless of status
-    totalRecords = (maintenanceCount.count || 0) + ((modsResult.data || []).length || 0) + (odometerCount.count || 0)
-    serviceCount = maintenanceCount.count || 0
-    lastServiceDate = lastServiceResult.data?.event_date || null
-    lastFuelDate = lastFuelResult.data?.event_date || null
-    nextServiceDate = nextServiceResult.data?.due_date || null
-  }
+  // Determine completed mods based on logic
+  const completedMods = mappedMods.filter((m) => ['installed', 'tuned'].includes(m.status))
+  const totalCompletedMods = completedMods.length
+  const totalCompletedModCost = completedMods.reduce((sum, m) => sum + (Number(m.cost) || 0), 0)
 
-  // Avg MPG (from user_vehicle table)
-  const avgMpg = vehicle.avg_mpg || null
+  // Total Records
+  const totalRecords = maintenanceLogs.length + fuelLogs.length + mappedMods.length
 
-  // --- 3. Transform Data ---
-  // Store the actual nickname for URL generation
-  const vehicleNickname = vehicle.nickname || null
+  // Construct Logs Unified Feed
+  const rawLogs = [
+    ...maintenanceLogs.map((l: any) => ({
+      type: 'service',
+      date: l.event_date,
+      title: l.description || 'Service Record',
+      description: l.notes,
+      cost: l.cost,
+      id: l.id,
+      odometer: l.odometer
+    })),
+    ...fuelLogs.map((l: any) => ({
+      type: 'fuel',
+      date: l.event_date,
+      title: 'Fuel Up',
+      description: `${l.gallons} gal @ $${l.price_per_gallon}/gal`,
+      cost: l.total_cost,
+      id: l.id,
+      odometer: l.odometer
+    })),
+    ...mappedMods.filter((m) => ['installed', 'tuned', 'active'].includes(m.status)).map((m) => ({
+      type: 'mod',
+      date: m.event_date.toISOString(),
+      title: m.title || `Installed Part`,
+      description: m.description,
+      cost: m.cost,
+      id: m.id,
+      odometer: m.odometer,
+      status: m.status
+    })),
+    ...partsLogs.map((p: any) => ({
+      type: 'part',
+      date: p.installed_at || p.created_at,
+      title: p.part?.name || p.name || 'Installed Part',
+      description: p.part?.description || p.description,
+      cost: p.purchase_price,
+      id: p.id,
+      odometer: p.install_miles,
+      status: 'installed',
+      category: p.part?.category || p.category,
+      part_number: p.part?.part_number,
+      variant: p.variant || p.variant_name
+    })),
+    ...jobs.map((j: any) => ({
+      type: 'job',
+      date: j.date_completed,
+      title: j.title || 'Completed Job',
+      description: j.notes,
+      cost: j.cost_total,
+      id: j.id,
+      odometer: j.odometer,
+      status: 'completed'
+    }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
+  // Recent Activity (Top 3)
+  const recentActivity = rawLogs.slice(0, 3)
+
+  // Vehicle Object Construction
   const vehicleWithData: Vehicle = {
-    id: vehicle.id,
-    name: vehicle.nickname || vehicle.title || vehicleSlug || `${vehicle.vehicle_data?.year || vehicle.year || ''} ${vehicle.vehicle_data?.make || vehicle.make || ''} ${vehicle.vehicle_data?.model || vehicle.model || ''} ${vehicle.vehicle_data?.trim || vehicle.trim || ''}`.trim() || 'Unnamed Vehicle',
-    make: vehicle.vehicle_data?.make || vehicle.make || '',
-    model: vehicle.vehicle_data?.model || vehicle.model || '',
-    year: vehicle.vehicle_data?.year || vehicle.year || '',
-    trim: vehicle.vehicle_data?.trim || vehicle.trim || '',
-    trim_description: vehicle.vehicle_data?.trim_description,
-    base_msrp: vehicle.vehicle_data?.base_msrp,
-    base_invoice: vehicle.vehicle_data?.base_invoice,
-    colors_exterior: vehicle.vehicle_data?.colors_exterior,
-    colors_interior: vehicle.vehicle_data?.colors_interior,
-    body_type: vehicle.vehicle_data?.body_type || vehicle.body_type,
-    doors: vehicle.vehicle_data?.doors,
-    total_seating: vehicle.vehicle_data?.total_seating,
-    length_in: vehicle.vehicle_data?.length_in || vehicle.length_in,
-    width_in: vehicle.vehicle_data?.width_in || vehicle.width_in,
-    height_in: vehicle.vehicle_data?.height_in || vehicle.height_in,
-    wheelbase_in: vehicle.vehicle_data?.wheelbase_in,
-    front_track_in: vehicle.vehicle_data?.front_track_in,
-    rear_track_in: vehicle.vehicle_data?.rear_track_in,
-    ground_clearance_in: vehicle.vehicle_data?.ground_clearance_in,
-    angle_of_approach_deg: vehicle.vehicle_data?.angle_of_approach_deg,
-    angle_of_departure_deg: vehicle.vehicle_data?.angle_of_departure_deg,
-    turning_circle_ft: vehicle.vehicle_data?.turning_circle_ft,
-    drag_coefficient_cd: vehicle.vehicle_data?.drag_coefficient_cd,
-    epa_interior_volume_cuft: vehicle.vehicle_data?.epa_interior_volume_cuft,
-    cargo_capacity_cuft: vehicle.vehicle_data?.cargo_capacity_cuft,
-    max_cargo_capacity_cuft: vehicle.vehicle_data?.max_cargo_capacity_cuft,
-    curb_weight_lbs: vehicle.vehicle_data?.curb_weight_lbs,
-    gross_weight_lbs: vehicle.vehicle_data?.gross_weight_lbs,
-    max_payload_lbs: vehicle.vehicle_data?.max_payload_lbs,
-    max_towing_capacity_lbs: vehicle.vehicle_data?.max_towing_capacity_lbs,
-    cylinders: vehicle.vehicle_data?.cylinders || vehicle.cylinders,
-    engine_size_l: vehicle.vehicle_data?.engine_size_l || vehicle.engine_size_l,
-    horsepower_hp: vehicle.vehicle_data?.horsepower_hp || vehicle.horsepower_hp,
-    horsepower_rpm: vehicle.vehicle_data?.horsepower_rpm,
-    torque_ft_lbs: vehicle.vehicle_data?.torque_ft_lbs || vehicle.torque_ft_lbs,
-    torque_rpm: vehicle.vehicle_data?.torque_rpm,
-    valves: vehicle.vehicle_data?.valves,
-    valve_timing: vehicle.vehicle_data?.valve_timing,
-    cam_type: vehicle.vehicle_data?.cam_type,
-    drive_type: vehicle.vehicle_data?.drive_type || vehicle.drive_type,
-    transmission: vehicle.vehicle_data?.transmission || vehicle.transmission,
-    engine_type: vehicle.vehicle_data?.engine_type,
-    fuel_type: vehicle.vehicle_data?.fuel_type || vehicle.fuel_type,
-    fuel_tank_capacity_gal: vehicle.vehicle_data?.fuel_tank_capacity_gal,
-    epa_combined_mpg: vehicle.vehicle_data?.epa_combined_mpg || vehicle.epa_combined_mpg,
-    epa_city_highway_mpg: vehicle.vehicle_data?.epa_city_highway_mpg,
-    range_miles_city_hwy: vehicle.vehicle_data?.range_miles_city_hwy,
-    epa_combined_mpge: vehicle.vehicle_data?.epa_combined_mpge,
-    epa_city_highway_mpge: vehicle.vehicle_data?.epa_city_highway_mpge,
-    epa_electric_range_mi: vehicle.vehicle_data?.epa_electric_range_mi,
-    epa_kwh_per_100mi: vehicle.vehicle_data?.epa_kwh_per_100mi,
-    epa_charge_time_240v_hr: vehicle.vehicle_data?.epa_charge_time_240v_hr,
-    battery_capacity_kwh: vehicle.vehicle_data?.battery_capacity_kwh,
-    front_head_room_in: vehicle.vehicle_data?.front_head_room_in,
-    front_hip_room_in: vehicle.vehicle_data?.front_hip_room_in,
-    front_leg_room_in: vehicle.vehicle_data?.front_leg_room_in,
-    front_shoulder_room_in: vehicle.vehicle_data?.front_shoulder_room_in,
-    rear_head_room_in: vehicle.vehicle_data?.rear_head_room_in,
-    rear_hip_room_in: vehicle.vehicle_data?.rear_hip_room_in,
-    rear_leg_room_in: vehicle.vehicle_data?.rear_leg_room_in,
-    rear_shoulder_room_in: vehicle.vehicle_data?.rear_shoulder_room_in,
+    ...vehicle,
+    // Ensure all required fields from Vehicle type are present or defaulted
+    name: vehicle.nickname || vehicle.title || vehicleSlug || 'Unnamed Vehicle',
+    stock_image: primaryImageRes.data?.url || null,
+    vehicle_image: vehicle.vehicle_image || null,
+    current_status: vehicle.current_status || 'inactive',
+    privacy: vehicle.privacy || 'PRIVATE',
   }
 
-  // Add the user-specific fields that aren't in vehicle_data
-  vehicleWithData.odometer = latestOdometer?.reading_mi || vehicle.odometer || null
-  vehicleWithData.current_status = vehicle.current_status || 'inactive'
-  vehicleWithData.privacy = vehicle.privacy || 'PRIVATE'
-  vehicleWithData.vehicle_image = vehicle.vehicle_image || null
-
-  // Fetch stock image from vehicle_primary_image
-  // IMPORTANT: vehicle_primary_image is keyed on vehicle_data_id (the generic vehicle), not user_vehicle.id
-  const vehicleDataId = vehicle.vehicle_data?.id;
-  let stockImageUrl: string | null = null;
-
-  if (vehicleDataId) {
-    const { data: primaryImage } = await supabase
-      .from('vehicle_primary_image')
-      .select('url')
-      .eq('vehicle_id', vehicleDataId)
-      .maybeSingle()
-
-    stockImageUrl = primaryImage?.url || null;
+  // Flatten vehicle_data properties if needed (Vehicle type might expect them at top level)
+  // The existing `vehicle` object from `user_vehicle` usually has them.
+  // If `Vehicle` type requires flattened properties, we might need to copy them over. 
+  // Based on previous code, they seemed to be flattened manually. Let's do a quick flattening.
+  if (vehicle.vehicle_data) {
+    const { id: _, ...vehicleDataWithoutId } = vehicle.vehicle_data
+    Object.assign(vehicleWithData, vehicleDataWithoutId)
   }
 
-  vehicleWithData.stock_image = stockImageUrl
-
-  // Add onboarding and ownership fields
-  // @ts-expect-error - Extending vehicle type with new fields
-  vehicleWithData.is_onboarding_completed = vehicle.is_onboarding_completed
-  // @ts-expect-error - Extending vehicle type with new fields
-  vehicleWithData.acquisition_date = vehicle.acquisition_date
-  // @ts-expect-error - Extending vehicle type with new fields
-  vehicleWithData.ownership_end_date = vehicle.ownership_end_date
-  // @ts-expect-error - Extending vehicle type with new fields
-  vehicleWithData.acquisition_type = vehicle.acquisition_type
-  // @ts-expect-error - Extending vehicle type with new fields
-  vehicleWithData.acquisition_cost = vehicle.acquisition_cost
-
-  // --- 4. Redirect to canonical URL if needed ---
-  // Use the canonical slug resolved by resolveVehicleSlug (or public utils)
-  // This handles nickname changes, duplicate nicknames (forcing YMMT), etc.
-
+  // --- 4. Redirects ---
   if (isOwner && canonicalSlug && vehicleSlug !== canonicalSlug) {
-    console.log('VehicleDetailPage: Redirecting to canonical slug:', canonicalSlug)
     redirect(`/vehicle/${encodeURIComponent(canonicalSlug)}`)
-  } else if (!isOwner && !vehicleNickname && !isLikelyUUID && vehicleSlug !== vehicle.id) {
-    // Public view fallback: If no nickname exists and URL is not the UUID, redirect to UUID
+  } else if (!isOwner && !vehicle.nickname && !isUUID(vehicleSlug) && vehicleSlug !== vehicle.id) {
     redirect(`/vehicle/${encodeURIComponent(vehicle.id)}`)
   }
 
-  // REFACTORING STEP 1 to capture canonicalSlug
-  // (See next tool call for the actual refactor of the whole file or block)
-
-  // --- 5. Pass Data to Client Component ---
   return (
-    <VehicleDetailPageClient
+    <VehicleDashboard
       vehicle={vehicleWithData}
-      vehicleNickname={vehicleNickname}
       isOwner={isOwner}
       stats={{
-        totalRecords,
-        serviceCount,
+        odometer: latestOdometer,
+        serviceCount: maintenanceLogs.length,
         avgMpg,
         lastServiceDate,
         lastFuelDate,
         nextServiceDate,
         totalCompletedMods,
         totalCompletedModCost,
+        horsepower: vehicleWithData.horsepower_hp ? Number(vehicleWithData.horsepower_hp) : null,
+        torque: vehicleWithData.torque_ft_lbs ? Number(vehicleWithData.torque_ft_lbs) : null,
+        factoryMpg: vehicleWithData.epa_combined_mpg ? Number(vehicleWithData.epa_combined_mpg) :
+          (vehicleWithData as any).combined_mpg ? Number((vehicleWithData as any).combined_mpg) :
+            ((vehicleWithData as any).city_mpg && (vehicleWithData as any).highway_mpg) ?
+              (Number((vehicleWithData as any).city_mpg) + Number((vehicleWithData as any).highway_mpg)) / 2 : undefined,
+        engine_size_l: vehicleWithData.engine_size_l || null,
+        cylinders: vehicleWithData.cylinders ? Number(vehicleWithData.cylinders) : null,
+        drive_type: vehicleWithData.drive_type || null
       }}
+      recentActivity={recentActivity}
+      mods={mappedMods}
+      logs={rawLogs}
     />
   )
 }

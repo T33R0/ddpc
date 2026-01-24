@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import LandingLayout from './landing-layout';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
-import { AuthModal } from '@/features/auth/AuthModal';
+import { AuthModal } from '@repo/ui/auth-modal';
 import { useAuth } from '../lib/auth';
 import { useRouter } from 'next/navigation';
 
@@ -15,7 +15,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/hub');
+      router.push('/garage');
     }
   }, [user, loading, router]);
 
@@ -62,8 +62,11 @@ export default function Home() {
       </div>
 
       <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        open={isAuthModalOpen}
+        onOpenChange={setIsAuthModalOpen}
+        onGoogleSignIn={signInWithGoogle}
+        onEmailSignIn={signIn}
+        onEmailSignUp={signUp}
       />
     </LandingLayout>
   );

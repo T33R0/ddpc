@@ -298,7 +298,7 @@ export function AuthProvider({
       email,
       password,
       options: {
-        emailRedirectTo: `${baseUrl}/api/auth/callback?next=/hub`,
+        emailRedirectTo: `${baseUrl}/api/auth/callback?next=/garage`,
         data: {
           username: email.split('@')[0],
           display_name: email.split('@')[0],
@@ -343,7 +343,7 @@ export function AuthProvider({
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/hub`,
+        redirectTo: `${window.location.origin}/api/auth/callback?next=/garage`,
       },
     });
     return { error };

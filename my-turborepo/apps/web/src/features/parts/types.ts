@@ -11,23 +11,34 @@ export interface MasterPart {
   id: string;
   name: string;
   part_number: string;
-  vendor_link: string | null;
+  affiliate_url: string | null;
+  category?: string; // e.g. 'brakes', 'engine'
 }
 
+// Mapped to 'inventory' table
 export interface VehicleInstalledComponent {
-  id?: string;
-  user_vehicle_id: string;
-  component_definition_id: string; // Keeping column name for now, points to component_types
-  bom_id?: string; // Link to vehicle_bom
-  current_part_id: string;
-  installed_date: string | null; // ISO Date string
-  installed_mileage: number | null;
-  custom_lifespan_miles: number | null;
-  custom_lifespan_months: number | null;
-  purchase_cost: number | null;
-  status: 'installed' | 'planned';
-  specs?: Record<string, any>; // JSONB for specific values
-  master_part?: MasterPart; // Joined data
+  id: string;
+  vehicle_id: string; // Changed from user_vehicle_id
+  component_definition_id: string | null; // Optional link to defs
+
+  // Inventory columns
+  name: string;
+  part_number: string | null;
+  purchase_url: string | null;
+  category: string | null;
+  variant: string | null;
+
+  // Installation details
+  installed_at: string | null;
+  install_miles: number | null;
+  purchase_price: number | null; // was purchase_cost
+  status: 'installed' | 'planned' | 'wishlist' | 'in_stock' | 'ordered'; // expanded status
+
+  master_part_id?: string; // Foreign Key to master_parts
+  master_part?: MasterPart; // Joined
+  specs?: Record<string, any>;
+  lifespan_miles?: number | null;
+  lifespan_months?: number | null;
 }
 
 export interface UserVehicle {
@@ -43,4 +54,5 @@ export interface PartSlot extends ComponentType {
 export interface PartsDataResponse {
   vehicle: UserVehicle;
   slots: PartSlot[];
+  inventory: VehicleInstalledComponent[];
 }

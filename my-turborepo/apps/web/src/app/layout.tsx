@@ -70,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="en" className={`${inter.variable} font-sans`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} font-sans ${initialTheme === 'light' ? 'light' : 'dark'}`} suppressHydrationWarning>
       <body>
         <AuthProvider initialSession={session}>
           <ThemeProvider initialTheme={initialTheme}>

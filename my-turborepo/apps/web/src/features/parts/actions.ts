@@ -31,55 +31,54 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
 
     const definitions = definitionsData as ComponentType[];
 
-    // 3. Fetch Installed Components for this Vehicle
-    // We also join master_parts_list to get part details
-    const { data: installedData, error: installedError } = await supabase
-      .from('vehicle_installed_components')
+    // 3. Fetch Inventory Items for this Vehicle (Replacting vehicle_installed_components)
+    const { data: inventoryData, error: inventoryError } = await supabase
+      .from('inventory')
       .select(`
         id,
-        user_vehicle_id,
+        vehicle_id,
         component_definition_id,
-        current_part_id,
-        bom_id,
-        specs,
-        installed_date,
-        installed_mileage,
-        custom_lifespan_miles,
-        custom_lifespan_months,
-        purchase_cost,
+        category,
+        name,
+        part_number,
+        variant,
+        purchase_url,
+        category,
+        installed_at,
+        install_miles,
+        purchase_price,
+        lifespan_miles,
+        lifespan_months,
         status,
-        master_part:master_parts_list (
+        master_part:master_parts (
           id,
           name,
           part_number,
-          vendor_link
+          affiliate_url,
+          category
         )
       `)
-      .eq('user_vehicle_id', vehicleId);
+      .eq('vehicle_id', vehicleId); // Filter by vehicle_id directly on inventory
 
-    if (installedError) {
-      console.error('Error fetching installed components:', installedError);
-      return { error: 'Failed to fetch installed components' };
+    if (inventoryError) {
+      console.error('Error fetching inventory:', inventoryError);
+      return { error: `Failed to fetch installed components: ${inventoryError.message}` };
     }
 
     // Cast the joined data correctly
-    // Supabase returns nested objects for joins, type assertion needed usually
-    const installedComponents = installedData as unknown as (VehicleInstalledComponent & { master_part: MasterPart })[];
+    const installedComponents = inventoryData as unknown as VehicleInstalledComponent[];
 
-    // 4. Combine Definitions with Installed Data
+    // 4. Combine Definitions with Inventory Data
     const slots: PartSlot[] = definitions.map((def) => {
+      // Find the inventory item linked to this slot (definition_id)
+      // Note: inventory might not have category populated if not added via this flow
       const installed = installedComponents.find(
-        (ic) => ic.component_definition_id === def.id
+        (item) => item.component_definition_id === def.id
       );
 
-      // Transform the data to match our clean types if necessary
-      // Here we just attach the found installed component
       return {
         ...def,
-        installedComponent: installed ? {
-          ...installed,
-          master_part: installed.master_part // Ensure this is carried over
-        } : undefined,
+        installedComponent: installed,
       };
     });
 
@@ -89,6 +88,7 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
         odometer: vehicleData.odometer,
       },
       slots,
+      inventory: installedComponents,
     };
 
   } catch (err) {
@@ -99,7 +99,7 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
 
 export async function addPartToVehicle(
   vehicleId: string,
-  componentDefinitionId: string,
+  componentDefinitionId: string | null,
   partData: {
     name: string;
     partNumber?: string;
@@ -109,6 +109,9 @@ export async function addPartToVehicle(
     purchaseCost?: number;
     customLifespanMiles?: number;
     customLifespanMonths?: number;
+    customLifespanMonths?: number;
+    category?: string;
+    variant?: string;
 
     status?: 'installed' | 'planned';
     specs?: Record<string, any>;
@@ -118,11 +121,8 @@ export async function addPartToVehicle(
   const supabase = await createClient();
 
   try {
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return { error: 'Unauthorized' };
-    }
+    if (authError || !user) return { error: 'Unauthorized' };
 
     // Verify vehicle ownership
     const { data: vehicle, error: vehicleError } = await supabase
@@ -132,114 +132,61 @@ export async function addPartToVehicle(
       .eq('owner_id', user.id)
       .single();
 
-    if (vehicleError || !vehicle) {
-      return { error: 'Vehicle not found or access denied' };
-    }
+    if (vehicleError || !vehicle) return { error: 'Vehicle not found or access denied' };
 
-    // 1. Create or find master part
-    let masterPartId: string;
+    // 1. Lookup Master Part for Enrichment (Optional)
+    let masterPartId: string | null = null;
+    let categoryToUse = partData.category;
+    let vendorLinkToUse = partData.vendorLink;
 
-    // Check if a master part with the same name and part number already exists
     if (partData.partNumber) {
-      const { data: existingPart } = await supabase
-        .from('master_parts_list')
-        .select('id')
-        .eq('name', partData.name)
+      const { data: masterPart } = await supabase
+        .from('master_parts')
+        .select('id, category, purchase_url')
         .eq('part_number', partData.partNumber)
         .single();
 
-      if (existingPart) {
-        masterPartId = existingPart.id;
-      } else {
-        // Create new master part
-        const { data: newPart, error: createError } = await supabase
-          .from('master_parts_list')
-          .insert({
-            name: partData.name,
-            part_number: partData.partNumber || null,
-            vendor_link: partData.vendorLink || null,
-          })
-          .select('id')
-          .single();
-
-        if (createError || !newPart) {
-          console.error('Error creating master part:', createError);
-          return { error: createError?.message || 'Failed to create part. Please check database permissions.' };
-        }
-        masterPartId = newPart.id;
+      if (masterPart) {
+        masterPartId = masterPart.id;
+        if (!categoryToUse) categoryToUse = masterPart.category;
+        if (!vendorLinkToUse) vendorLinkToUse = masterPart.purchase_url;
       }
-    } else {
-      // No part number, just create a new master part
-      const { data: newPart, error: createError } = await supabase
-        .from('master_parts_list')
-        .insert({
-          name: partData.name,
-          part_number: null,
-          vendor_link: partData.vendorLink || null,
-        })
-        .select('id')
-        .single();
-
-      if (createError || !newPart) {
-        console.error('Error creating master part:', createError);
-        return { error: createError?.message || 'Failed to create part. Please check database permissions.' };
-      }
-      masterPartId = newPart.id;
     }
 
-    // 2. Check if there's already an installed component for this slot
-    const { data: existingInstall } = await supabase
-      .from('vehicle_installed_components')
-      .select('id')
-      .eq('user_vehicle_id', vehicleId)
-      .eq('component_definition_id', componentDefinitionId)
-      .single();
+    // 2. Insert into Inventory (This REPLACES creating vehicle_installed_components)
+    // We are adding a part to the user's inventory AND installing it on the vehicle simultaneously
+    const { error: insertError } = await supabase
+      .from('inventory')
+      .insert({
+        user_id: user.id,
+        vehicle_id: vehicleId, // Link directly to vehicle
+        // Determine proper values for category vs component_definition_id
+        // If componentDefinitionId is a UUID, it's a real slot link. If it's a "blueprint-" string, it's virtual.
+        // category column should hold the broad category (e.g. "engine")
+        component_definition_id: (componentDefinitionId && !componentDefinitionId.startsWith('blueprint-')) ? componentDefinitionId : null,
+        category: partData.category || 'engine', // Ensure we save the string category for filtering
 
-    if (existingInstall) {
-      // Update existing installation
-      const { error: updateError } = await supabase
-        .from('vehicle_installed_components')
-        .update({
-          current_part_id: masterPartId,
-          installed_date: partData.installedDate || null,
-          installed_mileage: partData.installedMileage || null,
-          purchase_cost: partData.purchaseCost || null,
-          custom_lifespan_miles: partData.customLifespanMiles || null,
-          custom_lifespan_months: partData.customLifespanMonths || null,
+        name: partData.name,
+        part_number: partData.partNumber || null,
+        variant: partData.variant || null,
+        purchase_url: vendorLinkToUse || null,
 
-          status: partData.status || 'installed',
-          specs: partData.specs || {},
-          // bom_id: partData.bomId // Should we update BOM ID on existing install? Maybe.
-        })
-        .eq('id', existingInstall.id);
+        master_part_id: masterPartId || null, // Link to master catalog if found
 
-      if (updateError) {
-        console.error('Error updating installed component:', updateError);
-        return { error: 'Failed to update part installation' };
-      }
-    } else {
-      // Create new installation
-      const { error: insertError } = await supabase
-        .from('vehicle_installed_components')
-        .insert({
-          user_vehicle_id: vehicleId,
-          component_definition_id: componentDefinitionId,
-          current_part_id: masterPartId,
-          installed_date: partData.installedDate || null,
-          installed_mileage: partData.installedMileage || null,
-          purchase_cost: partData.purchaseCost || null,
-          custom_lifespan_miles: partData.customLifespanMiles || null,
-          custom_lifespan_months: partData.customLifespanMonths || null,
+        installed_at: partData.installedDate || null,
+        install_miles: partData.installedMileage || null,
+        purchase_price: partData.purchaseCost || null,
+        specs: partData.specs || null,
+        lifespan_miles: partData.customLifespanMiles ?? null,
+        lifespan_months: partData.customLifespanMonths ?? null,
 
-          status: partData.status || 'installed',
-          specs: partData.specs || {},
-          bom_id: partData.bomId || null,
-        });
+        status: partData.status || 'installed',
+        quantity: 1 // Default
+      });
 
-      if (insertError) {
-        console.error('Error creating installed component:', insertError);
-        return { error: insertError?.message || 'Failed to install part. Please check database permissions.' };
-      }
+    if (insertError) {
+      console.error('Error creating inventory item:', insertError);
+      return { error: insertError.message };
     }
 
     return { success: true };
@@ -250,7 +197,7 @@ export async function addPartToVehicle(
 }
 
 export async function updatePartInstallation(
-  installationId: string,
+  installationId: string, // This is now the inventory.id
   vehicleId: string,
   updateData: {
     installedDate?: string;
@@ -261,6 +208,9 @@ export async function updatePartInstallation(
     partName?: string;
     partNumber?: string;
     vendorLink?: string;
+    vendorLink?: string;
+    category?: string;
+    variant?: string;
     status?: 'installed' | 'planned';
     specs?: Record<string, any>;
   }
@@ -268,67 +218,35 @@ export async function updatePartInstallation(
   const supabase = await createClient();
 
   try {
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return { error: 'Unauthorized' };
-    }
+    if (authError || !user) return { error: 'Unauthorized' };
 
-    // Verify vehicle ownership
-    const { data: vehicle, error: vehicleError } = await supabase
-      .from('user_vehicle')
-      .select('id, owner_id')
-      .eq('id', vehicleId)
-      .eq('owner_id', user.id)
-      .single();
-
-    if (vehicleError || !vehicle) {
-      return { error: 'Vehicle not found or access denied' };
-    }
-
-    // Update master part if part details changed
-    if (updateData.partName || updateData.partNumber || updateData.vendorLink) {
-      // Get current installation to find master part
-      const { data: currentInstall, error: fetchError } = await supabase
-        .from('vehicle_installed_components')
-        .select('current_part_id')
-        .eq('id', installationId)
-        .single();
-
-      if (!fetchError && currentInstall) {
-        const { error: updatePartError } = await supabase
-          .from('master_parts_list')
-          .update({
-            ...(updateData.partName && { name: updateData.partName }),
-            ...(updateData.partNumber !== undefined && { part_number: updateData.partNumber || null }),
-            ...(updateData.vendorLink !== undefined && { vendor_link: updateData.vendorLink || null }),
-          })
-          .eq('id', currentInstall.current_part_id);
-
-        if (updatePartError) {
-          console.error('Error updating master part:', updatePartError);
-          return { error: 'Failed to update part details' };
-        }
-      }
-    }
-
-    // Update installation record
+    // Update Inventory Record Directly
     const { error: updateError } = await supabase
-      .from('vehicle_installed_components')
+      .from('inventory')
       .update({
-        ...(updateData.installedDate !== undefined && { installed_date: updateData.installedDate || null }),
-        ...(updateData.installedMileage !== undefined && { installed_mileage: updateData.installedMileage || null }),
-        ...(updateData.purchaseCost !== undefined && { purchase_cost: updateData.purchaseCost || null }),
-        ...(updateData.customLifespanMiles !== undefined && { custom_lifespan_miles: updateData.customLifespanMiles || null }),
-        ...(updateData.customLifespanMonths !== undefined && { custom_lifespan_months: updateData.customLifespanMonths || null }),
-        ...(updateData.status && { status: updateData.status }),
+        ...(updateData.partName && { name: updateData.partName }),
+        ...(updateData.partNumber !== undefined && { part_number: updateData.partNumber || null }),
+        ...(updateData.vendorLink !== undefined && { purchase_url: updateData.vendorLink || null }),
+        ...(updateData.vendorLink !== undefined && { purchase_url: updateData.vendorLink || null }),
+        ...(updateData.category !== undefined && { category: updateData.category || null }),
+        ...(updateData.variant !== undefined && { variant: updateData.variant || null }),
+        // We don't update component_definition_id here as it typically doesn't change after install unless re-assigned
+
+        ...(updateData.installedDate !== undefined && { installed_at: updateData.installedDate || null }),
+        ...(updateData.installedMileage !== undefined && { install_miles: updateData.installedMileage || null }),
+        ...(updateData.purchaseCost !== undefined && { purchase_price: updateData.purchaseCost || null }),
+        ...(updateData.customLifespanMiles !== undefined && { lifespan_miles: updateData.customLifespanMiles ?? null }),
+        ...(updateData.customLifespanMonths !== undefined && { lifespan_months: updateData.customLifespanMonths ?? null }),
         ...(updateData.specs && { specs: updateData.specs }),
+        ...(updateData.status && { status: updateData.status }),
       })
-      .eq('id', installationId);
+      .eq('id', installationId)
+      .eq('user_id', user.id); // Ensure ownership
 
     if (updateError) {
-      console.error('Error updating installation:', updateError);
-      return { error: updateError?.message || 'Failed to update installation' };
+      console.error('Error updating inventory:', updateError);
+      return { error: updateError.message };
     }
 
     return { success: true };

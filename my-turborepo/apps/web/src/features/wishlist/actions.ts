@@ -4,14 +4,17 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { WishlistItemSchema, WishlistItemInput } from './schema'
 
+// Migrated to 'inventory' table
 export async function getWishlistItems(vehicleId: string) {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
-      .from('wishlist_items')
+      .from('inventory')
       .select('*')
       .eq('vehicle_id', vehicleId)
-      .order('created_at', { ascending: false })
+      // Fetch all relevant statuses.
+      .in('status', ['wishlist', 'ordered'])
+      .order('priority', { ascending: false })
 
     if (error) {
       console.error('Error fetching wishlist:', error)
@@ -24,23 +27,28 @@ export async function getWishlistItems(vehicleId: string) {
   }
 }
 
-export async function createWishlistItem(data: WishlistItemInput) {
+export async function createWishlistItem(data: any) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return { success: false, error: 'Unauthorized' }
 
-    const parse = WishlistItemSchema.safeParse(data)
-    if (!parse.success) {
-      return { success: false, error: parse.error.issues[0]?.message || 'Invalid input' }
-    }
-
+    // Map input to inventory table columns
     const { error } = await supabase
-      .from('wishlist_items')
+      .from('inventory')
       .insert({
-        ...data,
-        user_id: user.id
+        vehicle_id: data.vehicle_id,
+        user_id: user.id, // Add user_id for RLS
+        name: data.name,
+        status: 'wishlist',
+        category: data.category || null,
+        purchase_url: data.url,
+        purchase_price: data.price,
+        purchase_url: data.url,
+        purchase_price: data.price,
+        priority: data.priority, // 1-5
+        status: data.status || 'wishlist' // Default to wishlist
       })
 
     if (error) {
@@ -60,7 +68,7 @@ export async function deleteWishlistItem(id: string, vehicleId: string) {
   try {
     const supabase = await createClient()
     const { error } = await supabase
-      .from('wishlist_items')
+      .from('inventory')
       .delete()
       .eq('id', id)
 
@@ -77,59 +85,62 @@ export async function deleteWishlistItem(id: string, vehicleId: string) {
   }
 }
 
+export async function updateWishlistItem(id: string, data: any) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Unauthorized' }
+
+    const { error } = await supabase
+      .from('inventory')
+      .update({
+        name: data.name,
+        category: data.category || null,
+        purchase_url: data.url,
+        purchase_price: data.price,
+        purchase_url: data.url,
+        purchase_price: data.price,
+        priority: data.priority,
+        status: data.status
+      })
+      .eq('id', id)
+      .eq('user_id', user.id) // Ensure ownership
+
+    if (error) {
+      console.error('Error updating wishlist item:', error)
+      return { success: false, error: 'Failed to update item' }
+    }
+
+    revalidatePath(`/vehicle/${data.vehicle_id}`)
+    return { success: true }
+  } catch (err) {
+    console.error('Exception updating wishlist item:', err)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
 export async function purchaseWishlistItem(id: string, vehicleId: string) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-
     if (!user) return { success: false, error: 'Unauthorized' }
 
-    // 1. Fetch item
-    const { data: item, error: fetchError } = await supabase
-      .from('wishlist_items')
-      .select('*')
+    // Check if item exists
+    const { error } = await supabase
+      .from('inventory')
+      .update({ status: 'ordered' }) // Update to 'ordered' as requested
       .eq('id', id)
-      .single()
+      .eq('user_id', user.id) // Ensure ownership
 
-    if (fetchError || !item) {
-      return { success: false, error: 'Item not found' }
-    }
-
-    if (item.status === 'purchased') {
-      return { success: false, error: 'Item already purchased' }
-    }
-
-    // 2. Add to part_inventory
-    const { error: inventoryError } = await supabase
-      .from('part_inventory')
-      .insert({
-        user_id: user.id,
-        name: item.name,
-        vendor_link: item.url || null,
-        cost: item.price || null,
-        quantity: 1,
-        category: item.category || null,
-      })
-
-    if (inventoryError) {
-      console.error('Inventory error:', inventoryError)
-      return { success: false, error: 'Failed to add to inventory' }
-    }
-
-    // 3. Update status
-    const { error: updateError } = await supabase
-      .from('wishlist_items')
-      .update({ status: 'purchased' })
-      .eq('id', id)
-
-    if (updateError) {
+    if (error) {
+      console.error('Error purchasing item:', error)
       return { success: false, error: 'Failed to update status' }
     }
 
     revalidatePath(`/vehicle/${vehicleId}`)
     return { success: true }
   } catch (err) {
-    console.error('Exception purchasing wishlist item:', err)
+    console.error('Exception purchasing item:', err)
     return { success: false, error: 'An unexpected error occurred' }
   }
 }

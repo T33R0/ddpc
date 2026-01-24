@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { VehicleEvent } from '../lib/getVehicleEvents'
 import { HistoryDetailSheet } from './HistoryDetailSheet'
-import { Wrench, Zap, Gauge, History, Fuel, Filter } from 'lucide-react'
+import { Wrench, Zap, Gauge, History, Fuel, Package, Briefcase } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group'
 import { updateHistoryFilters } from '@/features/preferences/actions'
 
@@ -20,6 +20,22 @@ function FuelIcon({ className }: { className?: string }) {
   return (
     <div className={`w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center ${className}`}>
       <Fuel className="w-4 h-4 text-red-400" />
+    </div>
+  )
+}
+
+function JobIcon({ className }: { className?: string }) {
+  return (
+    <div className={`w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center ${className}`}>
+      <Wrench className="w-4 h-4 text-blue-400" />
+    </div>
+  )
+}
+
+function PartIcon({ className }: { className?: string }) {
+  return (
+    <div className={`w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center ${className}`}>
+      <Package className="w-4 h-4 text-purple-400" />
     </div>
   )
 }
@@ -50,6 +66,10 @@ function MileageIcon({ className }: { className?: string }) {
 
 function getEventIcon(type: VehicleEvent['type']) {
   switch (type) {
+    case 'job':
+      return <JobIcon />
+    case 'part':
+      return <PartIcon />
     case 'maintenance':
       return <MaintenanceIcon />
     case 'modification':
@@ -65,8 +85,12 @@ function getEventIcon(type: VehicleEvent['type']) {
 
 function getEventTypeLabel(type: VehicleEvent['type']) {
   switch (type) {
+    case 'job':
+      return 'Job'
+    case 'part':
+      return 'Part'
     case 'maintenance':
-      return 'Maintenance'
+      return 'Service'
     case 'modification':
       return 'Modification'
     case 'mileage':
@@ -80,6 +104,10 @@ function getEventTypeLabel(type: VehicleEvent['type']) {
 
 function getEventTypeColor(type: VehicleEvent['type']) {
   switch (type) {
+    case 'job':
+      return 'text-blue-400'
+    case 'part':
+      return 'text-purple-400'
     case 'maintenance':
       return 'text-cyan-400'
     case 'modification':
@@ -98,7 +126,7 @@ interface TimelineFeedProps {
   initialFilters?: string[]
 }
 
-export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 'modification', 'mileage'] }: TimelineFeedProps) {
+export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] }: TimelineFeedProps) {
   const [selectedEvent, setSelectedEvent] = useState<VehicleEvent | null>(null)
   const [activeFilters, setActiveFilters] = useState<string[]>(initialFilters)
 
@@ -118,7 +146,7 @@ export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 
           </div>
           <h3 className="text-xl font-semibold text-foreground mb-2">No History Yet</h3>
           <p className="text-muted-foreground">
-            Vehicle history will appear here once you add maintenance records, modifications, or mileage updates.
+            Vehicle history will appear here once you add jobs, parts, or fuel logs.
           </p>
         </CardContent>
       </Card>
@@ -127,31 +155,21 @@ export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 
 
   return (
     <>
-      <div className="mb-6 overflow-x-auto pb-2">
-        <div className="flex items-center space-x-2 min-w-max">
-          <div className="mr-2 text-sm text-muted-foreground flex items-center">
-            <Filter className="w-4 h-4 mr-1.5" />
-            Filter:
-          </div>
-          <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2">
-            <ToggleGroupItem value="maintenance" aria-label="Toggle maintenance" className="h-9 px-3 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary">
-              <Wrench className="w-4 h-4 mr-2" />
-              <span className="text-xs font-medium">Maintenance</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-3 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary">
-              <Fuel className="w-4 h-4 mr-2" />
-              <span className="text-xs font-medium">Fuel</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="modification" aria-label="Toggle modifications" className="h-9 px-3 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary">
-              <Zap className="w-4 h-4 mr-2" />
-              <span className="text-xs font-medium">Mods</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="mileage" aria-label="Toggle mileage" className="h-9 px-3 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary">
-              <Gauge className="w-4 h-4 mr-2" />
-              <span className="text-xs font-medium">Mileage</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+      <div className="mb-6">
+        <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2 w-full flex-wrap">
+          <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
+            <Fuel className="w-4 h-4 mr-2" />
+            <span className="text-xs font-medium">Fuel</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="job" aria-label="Toggle jobs" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
+            <Wrench className="w-4 h-4 mr-2" />
+            <span className="text-xs font-medium">Jobs</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="part" aria-label="Toggle parts" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
+            <Package className="w-4 h-4 mr-2" />
+            <span className="text-xs font-medium">Parts</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <div className="space-y-4">
@@ -175,6 +193,11 @@ export function TimelineFeed({ events, initialFilters = ['maintenance', 'fuel', 
                       <span className={`text-sm font-bold ${getEventTypeColor(event.type)}`}>
                         {getEventTypeLabel(event.type)}
                       </span>
+                      {event.status && event.type === 'part' && (
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                          {event.status}
+                        </span>
+                      )}
                       {event.status && event.type === 'modification' && (
                         <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
                           {event.status}

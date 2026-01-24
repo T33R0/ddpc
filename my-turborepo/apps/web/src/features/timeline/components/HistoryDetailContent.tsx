@@ -153,7 +153,9 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
             event.type === 'maintenance' ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" :
               event.type === 'modification' ? "bg-lime-500/10 text-lime-600 dark:text-lime-400" :
                 event.type === 'fuel' ? "bg-red-500/10 text-red-600 dark:text-red-400" :
-                  "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                  event.type === 'part' ? "bg-purple-500/10 text-purple-600 dark:text-purple-400" :
+                    event.type === 'job' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                      "bg-orange-500/10 text-orange-600 dark:text-orange-400"
           )}>
             {event.type}
           </span>
@@ -273,6 +275,30 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
             <div className="text-foreground whitespace-pre-wrap">{formData.description || 'No notes available.'}</div>
           )}
         </div>
+
+        {/* Part Details - Part only */}
+        {event.type === 'part' && (
+          <div className="grid grid-cols-2 gap-4 border-t pt-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Category</Label>
+              <div className="text-sm font-medium">{event.category || '-'}</div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Manufacturer</Label>
+              <div className="text-sm font-medium">{event.title.split(' ').slice(0, 1).join(' ') /* Fallback or extracted? */}</div>
+              {/* The title usually implies manufacturer if formatted "Brand PartName". But better to just show raw fields requested. */}
+              {/* User requested: category, part_number, variant */}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Part Number</Label>
+              <div className="text-sm font-medium font-mono">{event.part_number || '-'}</div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Variant</Label>
+              <div className="text-sm font-medium">{event.variant || '-'}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
