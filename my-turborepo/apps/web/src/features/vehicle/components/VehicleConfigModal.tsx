@@ -198,7 +198,7 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                                                 {colorOptions.map((c, i) => {
                                                     // Extract name from "Name(R,G,B)"
                                                     const nameMatch = c.match(/^(.*?)\(/)
-                                                    const displayName = nameMatch ? nameMatch[1].trim() : c
+                                                    const displayName = nameMatch?.[1]?.trim() ?? c
                                                     return <SelectItem key={i} value={c}>{displayName}</SelectItem>
                                                 })}
                                                 <SelectItem value="custom">Custom / Other</SelectItem>

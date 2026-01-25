@@ -247,7 +247,7 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                                                     style={{ backgroundColor: `rgb(${r},${g},${b})` }}
                                                     title={color}
                                                 />
-                                                <span className="text-xs font-bold truncate max-w-[100px]" title={name.trim()}>{name.trim()}</span>
+                                                <span className="text-xs font-bold truncate max-w-[100px]" title={name?.trim()}>{name?.trim()}</span>
                                             </div>
                                         </div>
                                     )
