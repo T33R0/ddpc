@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WorkshopDataResponse, Job, JobTask } from './types';
 import { VehicleInstalledComponent } from '@/features/parts/types';
+import { vercelGateway } from '@/lib/ai-gateway';
+import { generateText } from 'ai';
 
 export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataResponse | { error: string }> {
     const supabase = await createClient();
@@ -39,6 +41,7 @@ export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataRe
             .select(`
         *,
         tasks:job_tasks(*),
+        job_tasks(*),
         job_parts:job_parts(
             inventory_id,
             qty_used,
@@ -56,11 +59,28 @@ export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataRe
             return { error: 'Failed to fetch jobs' };
         }
 
-        const formattedJobs: Job[] = jobsData.map((job: any) => ({
-            ...job,
-            tasks: job.tasks?.sort((a: any, b: any) => a.order_index - b.order_index),
-            parts: job.job_parts?.map((jp: any) => jp.inventory) || []
-        }));
+        const formattedJobs: Job[] = jobsData.map((job: any) => {
+            // Fallback to un-aliased job_tasks if alias is empty/missing
+            const rawTasks = (job.tasks && job.tasks.length > 0) ? job.tasks : (job.job_tasks || []);
+
+            return {
+                ...job,
+                tasks: rawTasks.sort((a: any, b: any) => a.order_index - b.order_index),
+                parts: job.job_parts?.map((jp: any) => jp.inventory) || []
+            };
+        });
+
+        // Debug logging
+        if (formattedJobs.length > 0) {
+            const jobWithTasks = formattedJobs.find((j: any) => j.tasks && j.tasks.length > 0);
+            if (jobWithTasks) {
+                console.log(`[getWorkshopData] Found job ${jobWithTasks.id} with ${jobWithTasks.tasks?.length} tasks.`);
+            } else {
+                console.log(`[getWorkshopData] Jobs found but NONE have tasks. Sample job raw tasks:`, jobsData[0]?.tasks, (jobsData[0] as any)?.job_tasks);
+            }
+        } else {
+            console.log(`[getWorkshopData] No jobs found for vehicle ${vehicleId}`);
+        }
 
         return {
             inventory: inventoryData as unknown as VehicleInstalledComponent[],
@@ -446,40 +466,102 @@ export async function deleteJobSpec(specId: string) {
     return { success: true };
 }
 
-// --- AI Generation Stub ---
+// --- AI Generation ---
 
-export async function generateMissionPlan(jobId: string, vehicleInfo: string) {
+export async function generateMissionPlan(jobId: string, _vehicleInfoPlaceholder: string) {
     const supabase = await createClient();
 
-    // Simulate AI delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // 1. Fetch Job
+    const { data: job, error: jobError } = await supabase
+        .from('jobs')
+        .select('title, vehicle_id')
+        .eq('id', jobId)
+        .single();
 
-    // Mock data
-    const mockTools = [
-        { job_id: jobId, name: '10mm Socket', is_acquired: false, created_at: new Date().toISOString() },
-        { job_id: jobId, name: 'Torque Wrench (20-100Nm)', is_acquired: false, created_at: new Date().toISOString() },
-        { job_id: jobId, name: 'Breaker Bar', is_acquired: false, created_at: new Date().toISOString() },
-    ];
+    if (jobError || !job) {
+        console.error("AI Generation Failed: Could not fetch job details", jobError);
+        return { error: "Failed to fetch job details" };
+    }
 
-    const mockSpecs = [
-        { job_id: jobId, item: 'Torque Spec', value: '85 Nm', created_at: new Date().toISOString() },
-        { job_id: jobId, item: 'Fluid Capacity', value: '4.5 L', created_at: new Date().toISOString() },
-    ];
+    // 2. Fetch Vehicle
+    const { data: vehicleData, error: vehicleError } = await supabase
+        .from('user_vehicle')
+        .select('year, make, model, trim')
+        .eq('id', job.vehicle_id)
+        .single();
 
-    const mockSteps = [
-        { job_id: jobId, order_index: 0, instruction: 'Disconnect negative battery terminal', is_done_tear: false, is_done_build: false },
-        { job_id: jobId, order_index: 1, instruction: 'Lift vehicle and secure on jack stands', is_done_tear: false, is_done_build: false },
-        { job_id: jobId, order_index: 2, instruction: 'Remove front wheels', is_done_tear: false, is_done_build: false },
-    ];
+    if (vehicleError || !vehicleData) {
+        console.error("AI Generation Failed: Could not fetch vehicle details", vehicleError);
+        // Fallback to unknown if vehicle fetch fails but job exists
+    }
 
-    // Insert data (Fire and forget style for stub, but sequentially for safety)
+    const vehicleString = vehicleData ? `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} ${vehicleData.trim || ''}`.trim() : "Unknown Vehicle";
+    const jobTitle = job.title;
+
+    // 2. Generate Plan with AI
     try {
-        await supabase.from('job_tools').insert(mockTools);
-        await supabase.from('job_specs').insert(mockSpecs);
-        await supabase.from('job_tasks').insert(mockSteps);
+        const { text } = await generateText({
+            model: vercelGateway.languageModel('openai/gpt-4o-mini'),
+            system: `You are an expert automotive master mechanic. 
+            Generate a detailed execution plan for a vehicle repair job.
+            
+            Output strictly valid JSON with this schema:
+            {
+                "tools": { "name": string }[],
+                "specs": { "item": string, "value": string }[],
+                "steps": { "instruction": string }[]
+            }
+            
+            - Tools: Specific sockets, wrenches, specialty tools needed.
+            - Specs: Torque values, fluid capacities, pressures.
+            - Steps: Logical, step-by-step teardown and repair instructions (10-15 steps max).`,
+            prompt: `Vehicle: ${vehicleString}\nJob: ${jobTitle}\n\nGenerate the mission plan.`
+        });
+
+        // 3. Parse Response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("Invalid AI response");
+        const plan = JSON.parse(jsonMatch[0]);
+
+        // 4. Insert Data (Sequential for safety)
+
+        // Tools
+        if (plan.tools && Array.isArray(plan.tools)) {
+            const toolsData = plan.tools.map((t: any) => ({
+                job_id: jobId,
+                name: t.name,
+                is_acquired: false,
+                created_at: new Date().toISOString()
+            }));
+            if (toolsData.length > 0) await supabase.from('job_tools').insert(toolsData);
+        }
+
+        // Specs
+        if (plan.specs && Array.isArray(plan.specs)) {
+            const specsData = plan.specs.map((s: any) => ({
+                job_id: jobId,
+                item: s.item,
+                value: s.value,
+                created_at: new Date().toISOString()
+            }));
+            if (specsData.length > 0) await supabase.from('job_specs').insert(specsData);
+        }
+
+        // Steps (Tasks)
+        if (plan.steps && Array.isArray(plan.steps)) {
+            const tasksData = plan.steps.map((s: any, index: number) => ({
+                job_id: jobId,
+                instruction: s.instruction,
+                order_index: index,
+                is_done_tear: false,
+                is_done_build: false
+            }));
+            if (tasksData.length > 0) await supabase.from('job_tasks').insert(tasksData);
+        }
+
     } catch (e) {
-        console.error("Mock generation failed", e);
-        return { error: "Failed to generate plan" };
+        console.error("AI Generation Error:", e);
+        return { error: "Failed to generate plan. Please try again." };
     }
 
     revalidatePath('/vehicle');

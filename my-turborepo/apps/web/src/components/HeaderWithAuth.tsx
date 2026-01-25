@@ -55,7 +55,15 @@ export function HeaderWithAuth() {
       <Header
         user={user}
         activeVehiclesCount={activeVehiclesCount}
-        onSignOut={signOut}
+        onSignOut={() => {
+          // Clear vehicle dashboard tab persistence
+          Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith('vehicle-dashboard-tab-')) {
+              localStorage.removeItem(key);
+            }
+          });
+          signOut();
+        }}
         onGoogleSignIn={handleGoogleSignIn}
         onEmailSignUp={handleEmailSignUp}
         onEmailSignIn={handleEmailSignIn}

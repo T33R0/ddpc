@@ -6,6 +6,8 @@ import { Vehicle } from '@repo/types'
 import { isUUID } from '@/lib/vehicle-utils'
 import { getPublicVehicleBySlug } from '@/lib/public-vehicle-utils'
 import { VehicleMod } from '@/features/mods/lib/getVehicleModsData'
+import { calculateHealth, HealthResult } from '@/features/parts/lib/health'
+import { VehicleInstalledComponent } from '@/features/parts/types'
 
 type VehiclePageProps = {
   params: Promise<{
@@ -215,6 +217,49 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
+  // --- 4. Calculate Inventory Health Stats ---
+  const installedParts = partsLogs.map((p: any) => ({
+    ...p,
+    // Ensure shape matches VehicleInstalledComponent as expected by calculateHealth
+    // calculateHealth expects: { install_miles, installed_at, lifespan_miles, lifespan_months, ... }
+    // p includes joined 'part' data.
+    lifespan_miles: p.lifespan_miles || p.part?.default_lifespan_miles,
+    lifespan_months: p.lifespan_months || p.part?.default_lifespan_months,
+  }))
+
+  let totalHealthScore = 0
+  let scorablePartsCount = 0
+  let partsNeedingAttention = 0
+
+  installedParts.forEach((part: any) => {
+    // Construct a minimal definition object for the 2nd arg
+    const definition = {
+      default_lifespan_miles: part.part?.default_lifespan_miles,
+      default_lifespan_months: part.part?.default_lifespan_months
+    } as any
+
+    const health: HealthResult = calculateHealth(part as VehicleInstalledComponent, definition, latestOdometer)
+
+    if (health.status !== 'Unknown') {
+      // health.percentageUsed is "Used %". We want "Health %" (100 - Used).
+      const currentHealth = Math.max(0, 100 - health.percentageUsed)
+      totalHealthScore += currentHealth
+      scorablePartsCount++
+
+      if (health.status === 'Warning' || health.status === 'Critical') {
+        partsNeedingAttention++
+      }
+    }
+  })
+
+  const averageHealthScore = scorablePartsCount > 0 ? Math.round(totalHealthScore / scorablePartsCount) : null
+
+  const inventoryHealth = {
+    totalParts: installedParts.length,
+    healthScore: averageHealthScore,
+    partsNeedingAttention
+  }
+
   // Recent Activity (Top 3)
   const recentActivity = rawLogs.slice(0, 3)
 
@@ -268,6 +313,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         cylinders: vehicleWithData.cylinders ? Number(vehicleWithData.cylinders) : null,
         drive_type: vehicleWithData.drive_type || null
       }}
+      inventoryStats={inventoryHealth}
       recentActivity={recentActivity}
       mods={mappedMods}
       logs={rawLogs}

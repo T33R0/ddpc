@@ -28,7 +28,7 @@ import PartsDiagramContainer from '@/features/parts/PartsDiagramContainer'
 import VehicleWorkshop from '@/features/workshop/VehicleWorkshop'
 
 import { AddFuelDialog } from '@/features/fuel/components/AddFuelDialog'
-import { FuelEfficiencyGauge } from '@/features/fuel/components/FuelEfficiencyGauge'
+import { VehicleHealthSummary } from '@/features/vehicle/components/VehicleHealthSummary'
 
 import { WishlistDrawer } from '@/features/wishlist/components/WishlistDrawer'
 import { LogJobModal } from '@/features/vehicle/components/LogJobModal'
@@ -89,25 +89,42 @@ interface VehicleDashboardProps {
         cylinders?: number | null
         drive_type?: string | null
     }
+    inventoryStats?: {
+        totalParts: number
+        healthScore: number | null
+        partsNeedingAttention: number
+    }
     recentActivity: DashboardLog[]
     mods: VehicleMod[]
     logs: DashboardLog[]
 }
 
-function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, onConfig }: {
+function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, onConfig, inventoryStats }: {
     stats: VehicleDashboardProps['stats'],
+    inventoryStats?: VehicleDashboardProps['inventoryStats'],
     recentActivity: DashboardLog[],
     onAction: (type: string) => void,
     vehicleImage: string | null,
     isOwner: boolean,
     onConfig: () => void
 }) {
+    // Helper for drive type abbreviation
+    const formatDriveType = (type: string | null | undefined) => {
+        if (!type) return '---'
+        const t = type.toLowerCase()
+        if (t.includes('all') && t.includes('wheel')) return 'AWD'
+        if (t.includes('rear') && t.includes('wheel')) return 'RWD'
+        if (t.includes('front') && t.includes('wheel')) return 'FWD'
+        if (t.includes('four') && t.includes('wheel')) return '4WD'
+        return type
+    }
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Image Section (Desktop Left, Mobile 2nd) */}
-                <div className="order-2 md:order-1 relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
+                {/* Image Section (Desktop Left, Mobile 1st) */}
+                <div className="relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
                     {vehicleImage ? (
                         <Image
                             src={vehicleImage}
@@ -124,8 +141,8 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
                 </div>
 
-                {/* Right Column: Actions & Stats (Desktop Right, Mobile 1st & 3rd) */}
-                <div className="order-1 md:order-2 grid grid-cols-6 gap-4 content-start">
+                {/* Right Column: Actions & Stats (Desktop Right, Mobile 2nd) */}
+                <div className="grid grid-cols-6 gap-4 content-start">
 
                     {/* Row 1: Actions (Equal Width) */}
 
@@ -157,11 +174,12 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                         )}
                     </div>
 
-                    {/* Row 2: MPG Gauge (3 cols) */}
+                    {/* Row 2: Vehicle Health (3 cols) */}
                     <div className="col-span-3 h-full min-h-[160px]">
-                        <FuelEfficiencyGauge
-                            averageMpg={stats.avgMpg || undefined}
-                            factoryMpg={stats.factoryMpg || 25}
+                        <VehicleHealthSummary
+                            averageMpg={stats.avgMpg}
+                            factoryMpg={stats.factoryMpg}
+                            inventoryStats={inventoryStats}
                         />
                     </div>
 
@@ -211,7 +229,7 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                             {/* Drive Type */}
                             <div className="flex flex-col">
                                 <span className="text-lg font-bold font-mono tracking-tighter text-foreground uppercase">
-                                    {stats.drive_type || '---'}
+                                    {formatDriveType(stats.drive_type)}
                                 </span>
                             </div>
 
@@ -339,7 +357,7 @@ function TabWorkshop({ mods, onModClick }: { mods: VehicleMod[], onModClick: (mo
 
 // --- Main Layout ---
 
-export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivity, mods, logs }: VehicleDashboardProps) {
+export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivity, mods, logs, inventoryStats }: VehicleDashboardProps) {
     const searchParams = useSearchParams()
     const router = useRouter()
     const pathname = usePathname()
@@ -481,12 +499,15 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                               relative px-4 py-3 flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap
-                               ${activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}
-                           `}
+                            relative px-4 py-3 flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap
+                            ${activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}
+                        `}
                             >
                                 <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-red-500' : ''}`} />
-                                <span>{tab.label}</span>
+
+                                {/* MODIFIED LINE BELOW: Text hidden on mobile, inline on small screens and up */}
+                                <span className="max-sm:hidden">{tab.label}</span>
+
                                 {tab.pro && <Badge className="hidden sm:inline-flex ml-1 h-3.5 text-[9px] px-1 py-0 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-bold">PRO</Badge>}
 
                                 {/* Active Indicator */}
@@ -495,6 +516,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                                 )}
                             </button>
                         ))}
+
                     </div>
                 </div>
             </header>
@@ -509,6 +531,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                         vehicleImage={vehicleImage}
                         isOwner={isOwner}
                         onConfig={() => setIsConfigModalOpen(true)}
+                        inventoryStats={inventoryStats}
                     />
                 )}
                 {activeTab === 'build' && <TabBuild vehicleId={vehicle.id} />}

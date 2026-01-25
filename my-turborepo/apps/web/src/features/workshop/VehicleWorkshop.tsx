@@ -265,16 +265,18 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
             {/* Logic Modals */}
 
             {/* Unified Job Modal */}
-            <JobModal
-                job={selectedJob}
-                isOpen={!!selectedJob}
-                onClose={() => { setSelectedJob(null); refreshData(); }}
-                currentOdometer={odometer}
-                vehicleId={vehicleId}
-                wishlist={wishlist}
-                inventory={inStock} // Pass inStock items
-                onSuccess={refreshData}
-            />
+            {selectedJob && (
+                <JobModal
+                    job={selectedJob}
+                    isOpen={!!selectedJob}
+                    onClose={() => { setSelectedJob(null); refreshData(); }}
+                    currentOdometer={odometer}
+                    vehicleId={vehicleId}
+                    wishlist={wishlist}
+                    inventory={inStock} // Pass inStock items
+                    onSuccess={refreshData}
+                />
+            )}
 
             {/* Select Job Modal (for linking parts) */}
             <SelectJobModal

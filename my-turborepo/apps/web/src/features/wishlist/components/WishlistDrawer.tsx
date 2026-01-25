@@ -57,7 +57,7 @@ export function WishlistDrawer({ isOpen, onClose, vehicleId, isOwner }: Wishlist
   return (
     <>
       <Drawer direction="right" open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DrawerContent className="h-full rounded-none w-[85vw] sm:max-w-md bg-background">
+        <DrawerContent className="h-full rounded-none w-5/6 sm:max-w-md bg-background">
           <DrawerHeader className="md:mx-0 md:max-w-full border-b-0 px-6 pt-6">
             <DrawerTitle>Wishlist</DrawerTitle>
             <DrawerDescription>

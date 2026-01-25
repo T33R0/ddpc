@@ -47,7 +47,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'setup' | 'plan' | 'execution'>('setup');
+    const [activeTab, setActiveTab] = useState<'setup' | 'plan'>('setup');
     const [planView, setPlanView] = useState<'teardown' | 'assembly'>('teardown');
 
     // Local Data State (to avoid jitter while revalidating)
@@ -81,6 +81,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
 
     useEffect(() => {
         if (job) {
+            console.log('[JobModal] Updated job:', job.id, 'Tasks:', job.tasks?.length);
             setLocalTools(job.tools || []);
             setLocalSpecs(job.specs || []);
             setLocalTasks(job.tasks || []);
@@ -108,6 +109,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
             else {
                 toast.success("Mission Plan Generated!");
                 onSuccess();
+                setActiveTab('plan');
             }
         } catch (e) {
             toast.error("Failed to generate plan");
@@ -207,7 +209,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
             if (res.error) toast.error(res.error);
             else {
                 toast.success('Mission Started');
-                setActiveTab('execution');
+                setActiveTab('plan');
                 onSuccess();
             }
         });
@@ -273,26 +275,28 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         <ScrollArea className="flex-1">
             <div className="p-6 space-y-8">
                 {/* 1. Generate Section */}
-                <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                        <h4 className="font-semibold flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-primary" />
-                            Mission Plan AI
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Auto-generate tools, specs, and execution steps.
-                        </p>
+                {(!job.tools?.length && !job.specs?.length && !job.tasks?.length) && (
+                    <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                            <h4 className="font-semibold flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-primary" />
+                                AI Mission Planner
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Auto-generate tools, specs, and execution steps.
+                            </p>
+                        </div>
+                        <Button
+                            onClick={handleGeneratePlan}
+                            disabled={isGenerating || isPending}
+                            className="gap-2"
+                            size="sm"
+                        >
+                            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bolt className="w-4 h-4" />}
+                            Generate Plan
+                        </Button>
                     </div>
-                    <Button
-                        onClick={handleGeneratePlan}
-                        disabled={isGenerating || isPending}
-                        className="gap-2"
-                        size="sm"
-                    >
-                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bolt className="w-4 h-4" />}
-                        Generate Plan
-                    </Button>
-                </div>
+                )}
 
                 {/* 2. Parts & Loadout Grid */}
                 <div className="grid md:grid-cols-2 gap-8">
@@ -311,7 +315,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                 <div key={part.id} className="flex items-center justify-between p-2.5 rounded-lg border bg-card/50 text-sm group">
                                     <div className="flex-1 truncate mr-2">
                                         <div className="font-medium truncate">{part.name || part.master_part?.name}</div>
-                                        <div className="text-[10px] text-muted-foreground">{part.part_number || part.master_part?.part_number}</div>
+                                        <div className="text-[0.625rem] text-muted-foreground">{part.part_number || part.master_part?.part_number}</div>
                                     </div>
                                     <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleRemovePart(part.id)}>
                                         <Trash2 className="w-3 h-3" />
@@ -339,14 +343,18 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             </Button>
                         </form>
                         <div className="space-y-1">
-                            {localTools.map(tool => (
-                                <div key={tool.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 group text-sm">
+                            {[...localTools].sort((a, b) => {
+                                // Checked items go to bottom
+                                if (a.is_acquired !== b.is_acquired) return a.is_acquired ? 1 : -1;
+                                return (a.name || '').localeCompare(b.name || '');
+                            }).map(tool => (
+                                <div key={tool.id} className={cn("flex items-center gap-3 p-2 rounded-md transition-all duration-300", tool.is_acquired ? "bg-muted/30" : "hover:bg-muted/50 group")}>
                                     <Checkbox
                                         checked={tool.is_acquired}
-                                        onCheckedChange={(c) => handleToggleTool(tool.id, !!c)}
+                                        onCheckedChange={(c) => handleToggleTool(tool.id, !!tool.is_acquired)}
                                         className="rounded-sm w-4 h-4"
                                     />
-                                    <span className={cn("flex-1", tool.is_acquired && "text-muted-foreground line-through")}>{tool.name}</span>
+                                    <span className={cn("flex-1 text-sm transition-all", tool.is_acquired && "text-muted-foreground line-through opacity-60")}>{tool.name}</span>
                                     <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 p-0 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTool(tool.id)}>
                                         <Trash2 className="w-3 h-3" />
                                     </Button>
@@ -365,7 +373,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
 
                     <div className="flex gap-2 items-end">
                         <div className="flex-1 space-y-1">
-                            <Label className="text-[10px] text-muted-foreground">Item</Label>
+                            <Label className="text-[0.625rem] text-muted-foreground">Item</Label>
                             <Input
                                 placeholder="e.g. Axle Nut Torque"
                                 value={specItemInput}
@@ -374,7 +382,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             />
                         </div>
                         <div className="w-1/3 space-y-1">
-                            <Label className="text-[10px] text-muted-foreground">Value</Label>
+                            <Label className="text-[0.625rem] text-muted-foreground">Value</Label>
                             <Input
                                 placeholder="e.g. 210 Nm"
                                 value={specValueInput}
@@ -390,7 +398,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {localSpecs.map(spec => (
                             <div key={spec.id} className="bg-muted/30 border p-2.5 rounded-lg flex flex-col relative group">
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{spec.item}</span>
+                                <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">{spec.item}</span>
                                 <span className="font-mono font-medium text-lg">{spec.value}</span>
                                 <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteSpec(spec.id)}>
                                     <Trash2 className="w-3 h-3" />
@@ -425,7 +433,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             >
                                 <div className="flex-1 truncate mr-2">
                                     <span className="font-medium block">{p.name || p.master_part?.name}</span>
-                                    {p.status === 'in_stock' && <Badge variant="outline" className="text-[10px]">In Stock</Badge>}
+                                    {p.status === 'in_stock' && <Badge variant="outline" className="text-[0.625rem]">In Stock</Badge>}
                                 </div>
                                 <Plus className="w-4 h-4 text-muted-foreground" />
                             </button>
@@ -451,7 +459,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     >Assembly</button>
                 </div>
             </div>
-            <ScrollArea className="flex-1">
+            <div className="flex-1 w-full overflow-y-auto min-h-0">
                 <div className="p-6 space-y-4">
                     {/* Step Editor */}
                     <div className="space-y-2">
@@ -467,106 +475,34 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             </div>
                         ))}
                     </div>
-
-                    <form onSubmit={handleAddStep} className="flex gap-2 pt-2">
-                        <div className="w-8 flex justify-center shrink-0">
-                            <div className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center border-muted-foreground/40">
-                                <Plus className="w-3 h-3 text-muted-foreground" />
-                            </div>
-                        </div>
-                        <Input
-                            placeholder="Add next step..."
-                            value={taskInput}
-                            onChange={(e) => setTaskInput(e.target.value)}
-                            className="flex-1 h-9 text-sm"
-                            disabled={isPending}
-                        />
-                    </form>
                 </div>
-            </ScrollArea>
-        </React.Fragment>
-    );
-
-    const renderExecutionTab = () => (
-        <div className="flex flex-col h-full">
-            {/* Sticky HUD Header */}
-            <div className="bg-primary text-primary-foreground p-3 shadow-md z-10 flex gap-4 overflow-x-auto whitespace-nowrap no-scrollbar items-center">
-                <div className="font-bold flex items-center gap-2 text-sm uppercase tracking-wider pr-4 border-r border-primary-foreground/20">
-                    <Gauge className="w-4 h-4" /> Specs
-                </div>
-                {localSpecs.length > 0 ? localSpecs.map(spec => (
-                    <div key={spec.id} className="flex flex-col leading-none">
-                        <span className="text-[9px] opacity-70 uppercase">{spec.item}</span>
-                        <span className="font-mono font-bold text-sm">{spec.value}</span>
-                    </div>
-                )) : <span className="text-xs opacity-50 italic">No specs pinned.</span>}
             </div>
-
-            {/* Execution List */}
-            <ScrollArea className="flex-1 bg-muted/10">
-                <div className="p-4 md:p-8 space-y-4 max-w-3xl mx-auto">
-                    {/* View Toggle In-Context */}
-                    <div className="flex justify-center mb-6">
-                        <div className="flex bg-card border shadow-sm p-1 rounded-full">
-                            <button
-                                onClick={() => setPlanView('teardown')}
-                                className={cn("px-4 py-1.5 text-xs font-bold rounded-full transition-all uppercase tracking-wide", planView === 'teardown' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-                            >Teardown</button>
-                            <button
-                                onClick={() => setPlanView('assembly')}
-                                className={cn("px-4 py-1.5 text-xs font-bold rounded-full transition-all uppercase tracking-wide", planView === 'assembly' ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-                            >Assembly</button>
+            <div className="p-4 border-t bg-background mt-auto">
+                <form onSubmit={handleAddStep} className="flex gap-2">
+                    <div className="w-8 flex justify-center shrink-0">
+                        <div className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center border-muted-foreground/40">
+                            <Plus className="w-3 h-3 text-muted-foreground" />
                         </div>
                     </div>
-
-                    {(planView === 'teardown' ? localTasks : [...localTasks].reverse()).map((task) => {
-                        const isDone = planView === 'teardown' ? task.is_done_tear : task.is_done_build;
-                        return (
-                            <div
-                                key={task.id}
-                                onClick={() => handleTaskToggle(task.id, isDone)}
-                                className={cn(
-                                    "cursor-pointer flex items-start gap-4 p-5 rounded-2xl border-2 transition-all duration-200 group select-none shadow-sm",
-                                    isDone
-                                        ? "bg-muted/20 border-border/50 opacity-60 scale-[0.99]"
-                                        : "bg-card border-border hover:border-primary/50 hover:shadow-md hover:scale-[1.01]"
-                                )}
-                            >
-                                <div className={cn(
-                                    "w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors mt-0.5",
-                                    isDone ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 group-hover:border-primary"
-                                )}>
-                                    {isDone && <CheckCircle2 className="w-5 h-5" />}
-                                </div>
-                                <div className="flex-1">
-                                    <p className={cn("text-lg font-medium leading-normal", isDone && "line-through text-muted-foreground")}>
-                                        {task.instruction}
-                                    </p>
-                                </div>
-                                <span className={cn("text-xs font-mono font-bold pt-2", isDone ? "text-muted-foreground/40" : "text-muted-foreground/60")}>
-                                    #{task.order_index}
-                                </span>
-                            </div>
-                        );
-                    })}
-
-                    {localTasks.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground">
-                            <ListTodo className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p>No steps in plan.</p>
-                            <Button variant="link" onClick={() => setActiveTab('plan')}>Add steps</Button>
-                        </div>
-                    )}
-                </div>
-            </ScrollArea>
-        </div>
+                    <Input
+                        placeholder="Add next step..."
+                        value={taskInput}
+                        onChange={(e) => setTaskInput(e.target.value)}
+                        className="flex-1 h-9 text-sm"
+                        disabled={isPending}
+                    />
+                </form>
+            </div>
+        </React.Fragment >
     );
+
+
 
     return (
         <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <ModalContent className={cn(
                 "p-0 gap-0 overflow-hidden flex flex-col transition-all duration-300",
-                isFullscreen ? "w-[100vw] h-[100dvh] max-w-none rounded-none m-0" : "w-full sm:max-w-2xl h-[85vh] rounded-xl"
+                isFullscreen ? "w-screen h-dvh max-w-none rounded-none m-0" : "w-full sm:max-w-2xl h-[85vh] rounded-xl"
             )}>
                 {/* Header */}
                 <ModalHeader className="p-4 px-6 border-b bg-muted/5 flex-shrink-0">
@@ -582,7 +518,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="ghost" size="icon" className="h-8 w-8 hidden md:flex" onClick={() => setIsFullscreen(!isFullscreen)}>
-                                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                                {isFullscreen ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
                             </Button>
                             <Badge variant={isActive ? 'default' : 'secondary'} className="capitalize">
                                 {job.status.replace('_', ' ')}
@@ -602,31 +538,25 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                 </ModalHeader>
 
                 {/* Tabs & Content */}
+                {/* Tabs & Content */}
                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
                     <div className="px-6 border-b bg-muted/5 flex-shrink-0">
                         <TabsList className="bg-transparent p-0 gap-6 w-full justify-start h-auto">
                             <TabsTrigger value="setup" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 bg-transparent text-muted-foreground data-[state=active]:text-foreground">
-                                1. Setup
+                                Setup
                             </TabsTrigger>
                             <TabsTrigger value="plan" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 bg-transparent text-muted-foreground data-[state=active]:text-foreground">
-                                2. Plan
-                            </TabsTrigger>
-                            <TabsTrigger value="execution" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 bg-transparent text-muted-foreground data-[state=active]:text-foreground font-bold">
-                                3. Execution
+                                Plan
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
-                    <TabsContent value="setup" className="flex-1 overflow-hidden p-0 m-0 data-[state=active]:flex flex-col">
+                    <TabsContent value="setup" className="flex-1 min-h-0 data-[state=active]:flex flex-col">
                         {renderSetupTab()}
                     </TabsContent>
 
-                    <TabsContent value="plan" className="flex-1 overflow-hidden p-0 m-0 data-[state=active]:flex flex-col">
+                    <TabsContent value="plan" className="flex-1 min-h-0 data-[state=active]:flex flex-col">
                         {renderPlanTab()}
-                    </TabsContent>
-
-                    <TabsContent value="execution" className="flex-1 overflow-hidden p-0 m-0 data-[state=active]:flex flex-col">
-                        {renderExecutionTab()}
                     </TabsContent>
                 </Tabs>
 
@@ -634,21 +564,20 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                 <ModalFooter className="p-4 border-t bg-background flex-shrink-0">
                     <Button variant="outline" onClick={onClose} className="mr-auto hidden sm:flex">Close</Button>
 
-                    {activeTab !== 'execution' && (
+                    {activeTab !== 'plan' && (
                         <div className="flex gap-2 w-full sm:w-auto">
                             {/* Nav Helpers */}
                             {activeTab === 'setup' && <Button className="w-full sm:w-auto" onClick={() => setActiveTab('plan')}>Next: Plan <ArrowRight className="ml-2 w-4 h-4" /></Button>}
-                            {activeTab === 'plan' && <Button className="w-full sm:w-auto" onClick={() => setActiveTab('execution')}>Next: Execution <ArrowRight className="ml-2 w-4 h-4" /></Button>}
                         </div>
                     )}
 
-                    {isPlanned && activeTab === 'execution' && (
+                    {isPlanned && activeTab === 'plan' && (
                         <Button onClick={handleStartJob} disabled={isPending} className="w-full sm:w-auto gap-2 text-lg h-10 px-6">
                             <Play className="w-4 h-4" /> Start Job
                         </Button>
                     )}
 
-                    {isActive && activeTab === 'execution' && (
+                    {isActive && activeTab === 'plan' && (
                         <Button onClick={() => setShowFinishConfirm(true)} disabled={isPending} className="w-full sm:w-auto gap-2 bg-green-600 hover:bg-green-700 text-white">
                             Complete Mission <CheckCircle2 className="w-4 h-4" />
                         </Button>

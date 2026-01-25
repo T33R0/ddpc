@@ -9,4 +9,4 @@ export { AddFuelDialog } from './AddFuelDialog'
 export { FuelHistoryChart } from './FuelHistoryChart'
 export { FuelLogEntries } from './FuelLogEntries'
 export { FuelStatsCard } from './FuelStatsCard'
-export { FuelEfficiencyGauge } from './FuelEfficiencyGauge'
+

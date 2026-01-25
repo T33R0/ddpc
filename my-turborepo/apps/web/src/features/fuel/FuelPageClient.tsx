@@ -14,9 +14,9 @@ import Link from 'next/link'
 import {
   AddFuelDialog,
   FuelHistoryChart,
-  FuelLogEntries,
-  FuelEfficiencyGauge
+  FuelLogEntries
 } from './components'
+import { VehicleHealthSummary } from '@/features/vehicle/components/VehicleHealthSummary'
 import { VehicleFuelData } from './lib/getVehicleFuelData'
 
 interface FuelPageClientProps {
@@ -61,9 +61,12 @@ export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
           fuelEntries={fuelData.fuelEntries}
           factoryMpg={fuelData.vehicle.factoryMpg}
         />
-        <FuelEfficiencyGauge
+        <VehicleHealthSummary
           averageMpg={fuelData.stats.averageMpg}
           factoryMpg={fuelData.vehicle.factoryMpg}
+        // inventoryStats not available in fuelData currently, passing clear props.
+        // Or we could opt to not show the build health part if data is missing,
+        // but VehicleHealthSummary handles nulls gracefully.
         />
       </div>
 

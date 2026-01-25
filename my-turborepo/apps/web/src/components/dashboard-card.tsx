@@ -32,7 +32,7 @@ export function DashboardCard({
     <Card
       className={cn(
         "group relative overflow-hidden cursor-pointer transition-all duration-300 ease-out bg-card border-border",
-        "hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)]",
+        "hover:scale-105 hover:border-accent hover:shadow-lg",
         className
       )}
       onClick={onClick}
@@ -56,20 +56,20 @@ export function DashboardCard({
       {/* Structured Content (if props provided) */}
       {(title || description) && (
         <div className="relative z-10 p-6 flex flex-col justify-end h-full">
-           <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="text-2xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors">
               {title}
             </h2>
             {badges && badges.length > 0 && (
-                <div className="flex gap-2">
-                    {badges.map(badge => (
-                        <Badge key={badge} variant="secondary" className="text-xs">
-                            {badge}
-                        </Badge>
-                    ))}
-                </div>
+              <div className="flex gap-2">
+                {badges.map(badge => (
+                  <Badge key={badge} variant="secondary" className="text-xs">
+                    {badge}
+                  </Badge>
+                ))}
+              </div>
             )}
-           </div>
+          </div>
           {description && (
             <p className="text-sm text-muted-foreground font-medium line-clamp-2">
               {description}
@@ -87,9 +87,9 @@ export function DashboardCard({
 
   if (href) {
     return (
-        <Link href={href} className="h-full block">
-            {CardContent}
-        </Link>
+      <Link href={href} className="h-full block">
+        {CardContent}
+      </Link>
     )
   }
 

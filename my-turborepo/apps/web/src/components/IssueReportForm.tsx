@@ -126,7 +126,7 @@ export function IssueReportForm({ defaultUrl = '', onSuccess, onCancel, isModal 
           onChange={(e) => setDescription(e.target.value.slice(0, 500))}
           placeholder="Describe the issue..."
           maxLength={500}
-          className="min-h-[100px]"
+          className="min-h-24"
           required
         />
         <div className="text-xs text-right text-muted-foreground">

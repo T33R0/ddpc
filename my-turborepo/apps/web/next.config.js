@@ -41,7 +41,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  transpilePackages: ["@repo/assets"],
+  transpilePackages: ["@repo/assets", "@repo/ui"],
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',

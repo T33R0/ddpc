@@ -5,6 +5,7 @@ import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription, ModalBo
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { Textarea } from '@repo/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
 import { Label } from '@repo/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/avatar';
 import { toast } from 'react-hot-toast';
@@ -91,16 +92,21 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
 
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <select
-                id="role"
+              <Select
                 value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                onValueChange={setRole}
               >
-                {ROLES.map((r) => (
-                  <option key={r} value={r} className="bg-popover text-popover-foreground">{r}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -110,7 +116,7 @@ export function TestimonialModal({ isOpen, onOpenChange, user }: TestimonialModa
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Tell us what you think..."
-                className="min-h-[100px]"
+                className="min-h-24"
                 maxLength={500}
                 required
               />

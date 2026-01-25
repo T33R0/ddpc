@@ -65,11 +65,13 @@ export function ReportProblem() {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className="w-8 h-8 rounded-full p-0 bg-red-600 hover:bg-red-700 text-white border border-white/20 flex items-center justify-center shadow-sm cursor-pointer pointer-events-auto"
+        variant="destructive"
+        size="icon"
+        className="rounded-full shadow-sm border border-white/20 pointer-events-auto"
         aria-label="Report a Problem"
         title="Report a Problem"
       >
-        <AlertCircle className="w-5 h-5" strokeWidth={2.5} />
+        <AlertCircle className="size-5" strokeWidth={2.5} />
       </Button>
 
       <ReportProblemModal isOpen={isOpen} onOpenChange={setIsOpen} />

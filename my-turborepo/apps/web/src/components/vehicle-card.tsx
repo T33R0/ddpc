@@ -41,8 +41,8 @@ export function VehicleCard({
       onDragEnd={onDragEnd}
     >
       <Card className={cn(
-        "relative h-full min-h-[240px] overflow-hidden transition-all duration-300 ease-out border-border bg-card",
-        !isDragging && "hover:scale-105 hover:border-accent hover:shadow-[0_0_30px_hsl(var(--accent)/0.6)] cursor-pointer"
+        "relative h-full min-h-60 overflow-hidden transition-all duration-300 ease-out border-border bg-card",
+        !isDragging && "hover:scale-105 hover:border-accent hover:shadow-lg cursor-pointer"
       )}>
         {/* Background Image Section */}
         <div className="absolute inset-0 z-0">

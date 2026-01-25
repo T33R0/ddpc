@@ -6,10 +6,12 @@ import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleto
 import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@repo/ui/auth-context';
 import { supabase } from '../../lib/supabase';
-import { Search, X } from 'lucide-react';
+import { Search, X, Wrench } from 'lucide-react';
 import { Input } from '@repo/ui/input';
 import { useSearch } from '../../lib/hooks/useSearch';
 import { searchVehicleSummary } from '../../lib/search';
+import { useAuth } from '@/lib/auth';
+import { cn } from '@repo/ui/lib/utils';
 
 function CommunityContent() {
   const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
@@ -26,7 +28,11 @@ function CommunityContent() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [hasMore, setHasMore] = useState(true);
+
   const isInitialLoadRef = useRef(true);
+
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   const loadVehicles = useCallback(async (page: number, append: boolean = false) => {
     try {
@@ -92,67 +98,90 @@ function CommunityContent() {
 
 
   return (
-    <section className="relative py-12 min-h-screen bg-background text-foreground">
-      <div className="relative container px-4 md:px-6 pt-24">
-        {/* Page Header */}
-        <h1 className="text-4xl font-bold mb-8 text-foreground">Community Hub</h1>
-
-        {/* Search Bar */}
-        <div className="mb-8 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Search community vehicles..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-10 bg-card border-input text-foreground placeholder-muted-foreground focus:border-ring focus:ring-ring"
-            />
-            {searchQuery && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
+    <div className="relative min-h-screen bg-background">
+      {!isAdmin && (
+        <div className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center mt-14">
+          <div className="text-center space-y-4 max-w-md p-6 bg-card border border-border rounded-xl shadow-2xl mx-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Wrench className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Community Coming Soon
+            </h2>
+            <p className="text-muted-foreground">
+              We're building a space for you to showcase your builds, share guides, and connect with other enthusiasts.
+            </p>
+            <p className="text-xs text-muted-foreground/60 italic pt-2">
+              (It's going to be worth the wait.)
+            </p>
           </div>
         </div>
+      )}
 
-        {/* Active Search Display */}
-        {searchQuery && (
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-2 bg-accent/20 backdrop-blur-sm border border-accent/30 rounded-lg px-4 py-2">
-              <span className="text-accent-foreground text-sm">
-                Showing {vehicles.length} result{vehicles.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
-              </span>
-              <button
-                onClick={handleClearSearch}
-                className="text-muted-foreground hover:text-foreground transition-colors ml-2"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <div className={cn("transition-all duration-200", !isAdmin && "filter blur-sm pointer-events-none select-none opacity-50 h-[calc(100vh-60px)] overflow-hidden")}>
+        <section className="relative py-12 min-h-screen bg-background text-foreground">
+          <div className="relative container px-4 md:px-6 pt-24">
+            {/* Page Header */}
+            <h1 className="text-4xl font-bold mb-8 text-foreground">Community Hub</h1>
+
+            {/* Search Bar */}
+            <div className="mb-8 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Search community vehicles..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 pr-10 bg-card border-input text-foreground placeholder-muted-foreground focus:border-ring focus:ring-ring"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Gallery or Loading State */}
-        {error ? (
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="text-red-400 text-lg">Error: {error}</div>
+            {/* Active Search Display */}
+            {searchQuery && (
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-2 bg-accent/20 backdrop-blur-sm border border-accent/30 rounded-lg px-4 py-2">
+                  <span className="text-accent-foreground text-sm">
+                    Showing {vehicles.length} result{vehicles.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
+                  </span>
+                  <button
+                    onClick={handleClearSearch}
+                    className="text-muted-foreground hover:text-foreground transition-colors ml-2"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Gallery or Loading State */}
+            {error ? (
+              <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="text-red-400 text-lg">Error: {error}</div>
+              </div>
+            ) : loading ? (
+              <GalleryLoadingSkeleton />
+            ) : (
+              <CommunityGallery
+                vehicles={vehicles}
+                onLoadMore={loadMore}
+                loadingMore={loadingMore}
+                hasMore={hasMore && !searchQuery}
+              />
+            )}
           </div>
-        ) : loading ? (
-          <GalleryLoadingSkeleton />
-        ) : (
-          <CommunityGallery
-            vehicles={vehicles}
-            onLoadMore={loadMore}
-            loadingMore={loadingMore}
-            hasMore={hasMore && !searchQuery}
-          />
-        )}
+        </section>
       </div>
-    </section>
+    </div>
   );
 }
 
