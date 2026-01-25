@@ -50,7 +50,7 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
 
     // Parse color options
     const colorOptions = vehicle.colors_exterior
-        ? vehicle.colors_exterior.split(',').map(c => c.trim()).filter(Boolean)
+        ? vehicle.colors_exterior.split(';').map(c => c.trim()).filter(Boolean)
         : []
 
     const handleSave = async () => {
@@ -195,9 +195,12 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                                                 <SelectValue placeholder="Select color" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {colorOptions.map((c, i) => (
-                                                    <SelectItem key={i} value={c}>{c}</SelectItem>
-                                                ))}
+                                                {colorOptions.map((c, i) => {
+                                                    // Extract name from "Name(R,G,B)"
+                                                    const nameMatch = c.match(/^(.*?)\(/)
+                                                    const displayName = nameMatch ? nameMatch[1].trim() : c
+                                                    return <SelectItem key={i} value={c}>{displayName}</SelectItem>
+                                                })}
                                                 <SelectItem value="custom">Custom / Other</SelectItem>
                                             </SelectContent>
                                         </Select>

@@ -315,7 +315,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         fuel_type: vehicleWithData.fuel_type || null,
         vehicle_color: (vehicleWithData as any).vehicle_color || (vehicleWithData as any).color || null,
         acquisition_date: (vehicleWithData as any).acquisition_date || null,
-        ownership_end_date: (vehicleWithData as any).ownership_end_date || null
+        ownership_end_date: (vehicleWithData as any).ownership_end_date || null,
+        vin: (vehicleWithData as any).vin || null
       }}
       inventoryStats={inventoryHealth}
       recentActivity={recentActivity}

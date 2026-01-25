@@ -92,6 +92,7 @@ interface VehicleDashboardProps {
         vehicle_color?: string | null
         acquisition_date?: string | null
         ownership_end_date?: string | null
+        vin?: string | null
     }
     inventoryStats?: {
         totalParts: number
@@ -231,14 +232,37 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                                 label="Drivetrain"
                                 value={formatDriveType(stats.drive_type) || '---'}
                             />
-                            {stats.vehicle_color ? (
-                                <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto]">
-                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Color</span>
-                                    <div className="w-6 h-6 rounded-full border border-border shadow-sm" style={{ backgroundColor: stats.vehicle_color }} title={stats.vehicle_color} />
-                                </div>
-                            ) : (
-                                <StatItem label="Color" value="---" />
-                            )}
+                            {((color) => {
+                                if (!color) return <StatItem label="Color" value="---" />
+
+                                const match = color.match(/^(.*?)\s*\((\d+),(\d+),(\d+)\)$/)
+                                if (match) {
+                                    const [, name, r, g, b] = match
+                                    return (
+                                        <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
+                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 truncate w-full">Color</span>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div
+                                                    className="w-6 h-6 rounded-full border border-border shadow-sm"
+                                                    style={{ backgroundColor: `rgb(${r},${g},${b})` }}
+                                                    title={color}
+                                                />
+                                                <span className="text-xs font-bold truncate max-w-[100px]" title={name.trim()}>{name.trim()}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                }
+
+                                return (
+                                    <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Color</span>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="w-6 h-6 rounded-full border border-border shadow-sm" style={{ backgroundColor: color }} title={color} />
+                                            <span className="text-xs font-bold truncate max-w-[100px]">{color}</span>
+                                        </div>
+                                    </div>
+                                )
+                            })(stats.vehicle_color)}
 
                             {/* Row 4: Odometer & Dates */}
                             <StatItem
@@ -262,6 +286,16 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                                     label="Acquired"
                                     value="---"
                                 />
+                            )}
+
+                            {/* Row 5: VIN (Spans 2 cols) */}
+                            {stats.vin && (
+                                <div className="col-span-2 w-full mt-2 pt-2 border-t border-border/50">
+                                    <StatItem
+                                        label="VIN"
+                                        value={<span className="font-mono text-sm tracking-widest">{stats.vin}</span>}
+                                    />
+                                </div>
                             )}
 
                         </CardContent>
