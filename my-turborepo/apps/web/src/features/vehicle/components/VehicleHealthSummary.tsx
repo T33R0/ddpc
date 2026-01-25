@@ -12,9 +12,10 @@ interface VehicleHealthSummaryProps {
         healthScore: number | null
         partsNeedingAttention: number
     }
+    fuelType?: string | null
 }
 
-export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats }: VehicleHealthSummaryProps) {
+export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, fuelType }: VehicleHealthSummaryProps) {
     // MPG Calculations
     const mpgDiff = (averageMpg && factoryMpg) ? averageMpg - factoryMpg : null
     const diffColor = mpgDiff && mpgDiff > 0 ? 'text-green-500' : 'text-red-500'
@@ -62,6 +63,19 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats }:
                 {/* Divider */}
                 <div className="h-px bg-border/50 w-full" />
 
+                {/* Fuel Type Section */}
+                {fuelType && (
+                    <>
+                        <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fuel Type</p>
+                            <p className="text-sm font-bold capitalize truncate" title={fuelType}>
+                                {fuelType}
+                            </p>
+                        </div>
+                        <div className="h-px bg-border/50 w-full" />
+                    </>
+                )}
+
                 {/* Build Health Section */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -83,17 +97,17 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats }:
                     )}
 
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                        <div className="bg-muted/30 p-2 rounded-lg border border-border/50 flex flex-col items-center justify-center text-center">
-                            <Layers className="h-4 w-4 text-muted-foreground mb-1" />
-                            <span className="text-lg font-bold leading-none">{inventoryStats?.totalParts || 0}</span>
-                            <span className="text-[10px] text-muted-foreground mt-1">Parts Logged</span>
+                        <div className="bg-muted/30 p-2 rounded-lg border border-border/50 flex flex-col items-center justify-start text-center h-full">
+                            <Layers className="h-4 w-4 text-muted-foreground mb-1 mt-1" />
+                            <span className="text-lg font-bold leading-none my-auto">{inventoryStats?.totalParts || 0}</span>
+                            <span className="text-[10px] text-muted-foreground mt-1 mb-1">Parts Logged</span>
                         </div>
-                        <div className={`p-2 rounded-lg border border-border/50 flex flex-col items-center justify-center text-center ${inventoryStats?.partsNeedingAttention ? 'bg-red-500/10 border-red-500/20' : 'bg-muted/30'}`}>
-                            <AlertTriangle className={`h-4 w-4 mb-1 ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-muted-foreground'}`} />
-                            <span className={`text-lg font-bold leading-none ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-foreground'}`}>
+                        <div className={`p-2 rounded-lg border border-border/50 flex flex-col items-center justify-start text-center h-full ${inventoryStats?.partsNeedingAttention ? 'bg-red-500/10 border-red-500/20' : 'bg-muted/30'}`}>
+                            <AlertTriangle className={`h-4 w-4 mb-1 mt-1 ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-muted-foreground'}`} />
+                            <span className={`text-lg font-bold leading-none my-auto ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-foreground'}`}>
                                 {inventoryStats?.partsNeedingAttention || 0}
                             </span>
-                            <span className="text-[10px] text-muted-foreground mt-1">Needs Attention</span>
+                            <span className="text-[10px] text-muted-foreground mt-1 mb-1 px-1 leading-tight">Needs Attention</span>
                         </div>
                     </div>
                 </div>

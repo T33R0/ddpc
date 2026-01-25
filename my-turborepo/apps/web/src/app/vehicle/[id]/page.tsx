@@ -310,8 +310,12 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
             ((vehicleWithData as any).city_mpg && (vehicleWithData as any).highway_mpg) ?
               (Number((vehicleWithData as any).city_mpg) + Number((vehicleWithData as any).highway_mpg)) / 2 : undefined,
         engine_size_l: vehicleWithData.engine_size_l || null,
-        cylinders: vehicleWithData.cylinders ? Number(vehicleWithData.cylinders) : null,
-        drive_type: vehicleWithData.drive_type || null
+        cylinders: vehicleWithData.cylinders || null,
+        drive_type: vehicleWithData.drive_type || null,
+        fuel_type: vehicleWithData.fuel_type || null,
+        vehicle_color: (vehicleWithData as any).vehicle_color || (vehicleWithData as any).color || null,
+        acquisition_date: (vehicleWithData as any).acquisition_date || null,
+        ownership_end_date: (vehicleWithData as any).ownership_end_date || null
       }}
       inventoryStats={inventoryHealth}
       recentActivity={recentActivity}

@@ -86,8 +86,12 @@ interface VehicleDashboardProps {
         horsepower: number | null
         torque: number | null
         engine_size_l?: string | null
-        cylinders?: number | null
+        cylinders?: string | null
         drive_type?: string | null
+        fuel_type?: string | null
+        vehicle_color?: string | null
+        acquisition_date?: string | null
+        ownership_end_date?: string | null
     }
     inventoryStats?: {
         totalParts: number
@@ -118,13 +122,25 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
         if (t.includes('four') && t.includes('wheel')) return '4WD'
         return type
     }
+
+    const StatItem = ({ label, value, unit, icon: Icon, subValue }: { label: string, value: React.ReactNode, unit?: string, icon?: React.ElementType, subValue?: string }) => (
+        <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 truncate w-full">{label}</span>
+            <div className={`flex items-baseline justify-center gap-0.5 ${typeof value === 'string' && value.length > 8 ? 'text-base' : 'text-lg'} font-bold text-foreground`}>
+                {Icon && <Icon className="w-4 h-4 mr-1 self-center text-muted-foreground" />}
+                <span className="truncate max-w-full">{value}</span>
+                {unit && <span className="text-xs font-normal text-muted-foreground">{unit}</span>}
+            </div>
+            {subValue && <span className="text-[10px] text-muted-foreground truncate max-w-full">{subValue}</span>}
+        </div>
+    )
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Image Section (Desktop Left, Mobile 2nd) */}
                 {/* Image Section (Desktop Left, Mobile 1st) */}
-                <div className="relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm">
+                <div className="relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm order-1 md:order-1">
                     {vehicleImage ? (
                         <Image
                             src={vehicleImage}
@@ -142,7 +158,7 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                 </div>
 
                 {/* Right Column: Actions & Stats (Desktop Right, Mobile 2nd) */}
-                <div className="grid grid-cols-6 gap-4 content-start">
+                <div className="grid grid-cols-6 gap-4 content-start order-2 md:order-2">
 
                     {/* Row 1: Actions (Equal Width) */}
 
@@ -175,67 +191,83 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                     </div>
 
                     {/* Row 2: Vehicle Health (3 cols) */}
-                    <div className="col-span-3 h-full min-h-[160px]">
+                    <div className="col-span-6 md:col-span-3 h-full min-h-[160px]">
                         <VehicleHealthSummary
                             averageMpg={stats.avgMpg}
                             factoryMpg={stats.factoryMpg}
                             inventoryStats={inventoryStats}
+                            fuelType={stats.fuel_type}
                         />
                     </div>
 
                     {/* Row 2: Consolidated Stats (3 cols) */}
-                    <Card className="col-span-3 bg-card/50 border-border shadow-sm flex flex-col justify-center h-full min-h-[160px]">
-                        <CardContent className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2 text-center items-center h-full">
+                    <Card className="col-span-6 md:col-span-3 bg-card/50 border-border shadow-sm flex flex-col h-full min-h-[160px]">
+                        <CardContent className="p-4 grid grid-cols-2 gap-y-6 gap-x-2 items-center justify-items-center h-full">
 
-                            {/* Odometer */}
-                            <div className="flex flex-col">
-                                <span className="text-xl font-bold font-mono tracking-tighter text-foreground">
-                                    {stats.odometer ? stats.odometer.toLocaleString() : '---'}
-                                    <span className="text-xs font-sans text-muted-foreground font-normal ml-1">mi</span>
-                                </span>
-                            </div>
+                            {/* Row 1: Power & Torque */}
+                            <StatItem
+                                label="Power"
+                                value={stats.horsepower || '---'}
+                                unit="hp"
+                            />
+                            <StatItem
+                                label="Torque"
+                                value={stats.torque || '---'}
+                                unit="lb-ft"
+                            />
 
-                            {/* Horsepower */}
-                            <div className="flex flex-col">
-                                <span className="text-xl font-bold font-mono tracking-tighter text-foreground">
-                                    {stats.horsepower || '---'}
-                                    <span className="text-xs font-sans text-muted-foreground font-normal ml-1">hp</span>
-                                </span>
-                            </div>
+                            {/* Row 2: Engine & Cylinders */}
+                            <StatItem
+                                label="Engine"
+                                value={stats.engine_size_l ? `${stats.engine_size_l}L` : '---'}
+                            />
+                            <StatItem
+                                label="Cylinders"
+                                value={stats.cylinders || '---'}
+                            />
 
-                            {/* Torque */}
-                            <div className="flex flex-col">
-                                <span className="text-xl font-bold font-mono tracking-tighter text-foreground">
-                                    {stats.torque || '---'}
-                                    <span className="text-xs font-sans text-muted-foreground font-normal ml-1">lb-ft</span>
-                                </span>
-                            </div>
+                            {/* Row 3: Drivetrain & Color */}
+                            <StatItem
+                                label="Drivetrain"
+                                value={formatDriveType(stats.drive_type) || '---'}
+                            />
+                            {stats.vehicle_color ? (
+                                <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto]">
+                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Color</span>
+                                    <div className="w-6 h-6 rounded-full border border-border shadow-sm" style={{ backgroundColor: stats.vehicle_color }} title={stats.vehicle_color} />
+                                </div>
+                            ) : (
+                                <StatItem label="Color" value="---" />
+                            )}
 
-                            {/* Engine Size */}
-                            <div className="flex flex-col">
-                                <span className="text-lg font-bold font-mono tracking-tighter text-foreground">
-                                    {stats.engine_size_l ? `${stats.engine_size_l}` : '---'}
-                                    <span className="text-xs font-sans text-muted-foreground font-normal ml-1">L</span>
-                                </span>
-                            </div>
+                            {/* Row 4: Odometer & Dates */}
+                            <StatItem
+                                label="Odometer"
+                                value={stats.odometer ? stats.odometer.toLocaleString() : '---'}
+                                unit="mi"
+                            />
 
-                            {/* Cylinders */}
-                            <div className="flex flex-col">
-                                <span className="text-lg font-bold font-mono tracking-tighter text-foreground">
-                                    {stats.cylinders ? `V${stats.cylinders}` : '---'}
-                                </span>
-                            </div>
-
-                            {/* Drive Type */}
-                            <div className="flex flex-col">
-                                <span className="text-lg font-bold font-mono tracking-tighter text-foreground uppercase">
-                                    {formatDriveType(stats.drive_type)}
-                                </span>
-                            </div>
+                            {stats.ownership_end_date ? (
+                                <StatItem
+                                    label="Ownership Ended"
+                                    value={format(new Date(stats.ownership_end_date), 'MMM yyyy')}
+                                />
+                            ) : stats.acquisition_date ? (
+                                <StatItem
+                                    label="Acquired"
+                                    value={format(new Date(stats.acquisition_date), 'MMM yyyy')}
+                                />
+                            ) : (
+                                <StatItem
+                                    label="Acquired"
+                                    value="---"
+                                />
+                            )}
 
                         </CardContent>
                     </Card>
                 </div>
+
 
                 {/* Recent Activity (Mobile 4th - Order 3 in Grid main container) */}
                 <div className="order-3 col-span-1 md:col-span-2 mt-2">
