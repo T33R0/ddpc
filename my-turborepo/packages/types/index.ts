@@ -11,7 +11,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   role: 'user' | 'helper' | 'admin';
-  plan: 'free' | 'pro';
+  plan: 'free' | 'pro' | 'vanguard';
   banned: boolean;
   notifyOnNewUser?: boolean;
   notifyOnIssueReport?: boolean;

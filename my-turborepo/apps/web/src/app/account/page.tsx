@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth';
 import { useTheme } from '../../lib/theme-context';
 import { Button } from '@repo/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
+import { Pricing, PRICING_PLANS } from '@repo/ui/landing';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
@@ -25,7 +26,8 @@ import {
   Crown,
   Eye,
   EyeOff,
-  Palette
+  Palette,
+  Check
 } from 'lucide-react';
 import { User as UserType } from '@repo/types';
 import { supabase } from '../../lib/supabase';
@@ -260,6 +262,8 @@ export default function AccountPage() {
     }
   }, [searchParams]);
 
+
+
   const handleManageBilling = async () => {
     setIsRedirecting(true);
     try {
@@ -311,6 +315,37 @@ export default function AccountPage() {
       setIsRedirecting(false);
     }
   };
+
+  // Handle Upgrade from URL
+  useEffect(() => {
+    const upgradePlan = searchParams?.get('upgrade');
+    const period = searchParams?.get('period');
+
+    if (upgradePlan && !isRedirecting && session?.access_token) {
+      let priceId = '';
+      if (upgradePlan === 'vanguard') {
+        priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_VANGUARD || '';
+      } else if (upgradePlan === 'pro') {
+        if (period === 'annual') {
+          priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_ANNUAL || '';
+        } else {
+          priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_MONTHLY || '';
+        }
+      }
+
+      if (priceId) {
+        // Clean URL params to prevent loop/re-trigger
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('upgrade');
+        newUrl.searchParams.delete('period');
+        window.history.replaceState({}, '', newUrl.toString());
+
+        handleUpgrade(priceId);
+      }
+    }
+  }, [searchParams, session?.access_token, isRedirecting, handleUpgrade]);
+
+
 
 
   const syncAuthMetadata = useCallback(
@@ -1026,114 +1061,164 @@ export default function AccountPage() {
             )}
 
             {/* Billing Tab */}
+            {/* Billing Tab */}
             {activeTab === 'billing' && (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CreditCard className="h-5 w-5" />
-                      Current Plan
-                    </CardTitle>
-                    <CardDescription>
-                      Your current subscription and billing information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{getPlanIcon(user.plan)}</div>
-                        <div>
-                          <h3 className={`text-lg font-semibold ${getPlanColor(user.plan)}`}>
-                            {user.plan === 'pro' ? 'Pro' : 'Maintainer'} Plan
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {user.plan === 'free' && 'Essential tools for maintaining your daily drivers and weekend toys.'}
-                            {user.plan === 'pro' && 'Advanced tools for serious builds, detailed planning, and total cost tracking.'}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={handleManageBilling}
-                        disabled={isRedirecting}
-                        className="border-border hover:bg-muted"
-                      >
-                        {isRedirecting ? 'Loading...' : 'Manage Billing'}
-                      </Button>
-                    </div>
+              <div className="space-y-8">
+                {/* Current Plan Section */}
+                {(() => {
+                  const currentPlanId = user.plan === 'free' ? 'driver' : user.plan;
+                  const currentPlan = PRICING_PLANS.find(p => p.id === currentPlanId) || PRICING_PLANS[0]!;
+                  // Resolve dynamic values with default 'annual' false or maybe true? Just use base values.
+                  // For "Current Plan" display, maybe show what they are actually on? 
+                  // But we don't track annual/monthly in user object here cleanly yet (stripe logic hidden).
+                  // Just use default string or function(false).
+                  const price = typeof currentPlan.price === 'function' ? currentPlan.price(false) : currentPlan.price;
+                  const period = typeof currentPlan.period === 'function' ? currentPlan.period(false) : currentPlan.period;
 
-                    <div className="mt-4 p-4 bg-card border border-border rounded-lg">
-                      <h4 className="font-medium mb-2 text-foreground">Plan Features</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {user.plan === 'free' && (
-                          <>
-                            <li>• Vehicle Cap: 3 Active Vehicles</li>
-                            <li>• Fuel Logging: MPG tracking and cost analysis</li>
-                            <li>• Service Logging: Maintenance records</li>
-                            <li>• The Garage: Basic vehicle profile and specs</li>
-                            <li>• Community Access</li>
-                          </>
-                        )}
-                        {user.plan === 'pro' && (
-                          <>
-                            <li>• Vehicle Cap: Unlimited</li>
-                            <li>• Mod Registry: Detailed modification tracking</li>
-                            <li>• The Plans: Build planning and Jobs management</li>
-                            <li>• The Console: Advanced analytics & TCO</li>
-                            <li>• Priority Support</li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upgrade Options</CardTitle>
-                    <CardDescription>
-                      Unlock more features with a premium plan
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Pro Plan Option */}
-                      {user.plan !== 'pro' && (
-                        <div className="p-6 border border-border rounded-xl bg-card hover:border-accent transition-colors">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">⚡</span>
-                            <h3 className="text-xl font-bold text-red-500">Pro</h3>
+                  return (
+                    <Card className="overflow-hidden border-2 border-primary/20 bg-card/50 backdrop-blur-sm">
+                      <CardHeader className="bg-muted/30 border-b border-border/50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <CardTitle className="flex items-center gap-2 text-2xl">
+                              <span className="text-3xl">{getPlanIcon(user.plan)}</span>
+                              Your Plan: {currentPlan.name}
+                            </CardTitle>
+                            {user.plan !== 'free' && (
+                              <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-bold uppercase tracking-wider border border-green-500/20">
+                                Active
+                              </span>
+                            )}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            The ultimate toolkit for automotive enthusiasts.
-                          </p>
-                          <ul className="text-sm text-muted-foreground space-y-2 mb-6">
-                            <li>• Unlimited Vehicles</li>
-                            <li>• Advanced Analytics</li>
-                            <li>• Detailed Build Planning</li>
-                            <li>• Priority Support</li>
-                          </ul>
-                          <Button
-                            className="w-full"
-                            onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || '')}
-                            disabled={isRedirecting}
-                          >
-                            Upgrade to Pro
-                          </Button>
+                          <div className="text-right">
+                            <div className="text-xl font-bold">{price}</div>
+                            <div className="text-xs text-muted-foreground">/ {period}</div>
+                          </div>
                         </div>
-                      )}
+                        <CardDescription className="text-base mt-2">
+                          {currentPlan.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-semibold mb-4 flex items-center gap-2">
+                              <span className="p-1 rounded bg-primary/10 text-primary">✓</span> Included Features
+                            </h4>
+                            <ul className="space-y-3">
+                              {currentPlan.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="flex flex-col justify-center items-center p-6 bg-muted/20 rounded-xl border border-border/50">
+                            {user.plan === 'free' ? (
+                              <p className="text-center text-muted-foreground mb-4">
+                                You are on the free plan. Upgrade to unlock more power.
+                              </p>
+                            ) : (
+                              <>
+                                <p className="text-center text-muted-foreground mb-4">
+                                  Your subscription is active. You can manage your billing details, payment methods, and invoices in the Stripe Portal.
+                                </p>
+                                <Button
+                                  onClick={handleManageBilling}
+                                  variant="outline"
+                                  className="w-full sm:w-auto"
+                                  disabled={isRedirecting}
+                                >
+                                  {isRedirecting ? 'Redirecting...' : 'Manage Billing & Invoices'}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
 
-                      {user.plan === 'pro' && (
-                        <div className="col-span-2 text-center py-8">
-                          <p className="text-muted-foreground">You are on the highest plan!</p>
-                          <Button variant="outline" onClick={handleManageBilling} className="mt-4">
-                            Manage Subscription
-                          </Button>
+                {/* Upgrade Options Section */}
+                <div>
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span className="text-primary">⚡</span> Upgrade Options
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {PRICING_PLANS.filter(plan => {
+                      const currentPlanId = user.plan === 'free' ? 'driver' : user.plan;
+                      // Simple hierarchy check: driver < pro < vanguard
+                      const levels = ['driver', 'pro', 'vanguard'];
+                      const currentIdx = levels.indexOf(currentPlanId);
+                      const planIdx = levels.indexOf(plan.id);
+                      return planIdx > currentIdx;
+                    }).map(plan => {
+                      const price = typeof plan.price === 'function' ? plan.price(false) : plan.price;
+                      const period = typeof plan.period === 'function' ? plan.period(false) : plan.period;
+
+                      return (
+                        <Card key={plan.id} className={`relative overflow-hidden transition-all hover:border-primary/50 ${plan.premium ? 'border-yellow-500/30 bg-yellow-500/5' : ''}`}>
+                          {plan.premium && (
+                            <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-xl">
+                              LIMITED
+                            </div>
+                          )}
+                          <CardHeader>
+                            <CardTitle className={`flex justify-between items-start ${plan.premium ? 'text-yellow-500' : ''}`}>
+                              <span>{plan.name}</span>
+                              <div className="text-right">
+                                <span className="text-lg">{price}</span>
+                                <span className="text-xs font-normal text-muted-foreground block">/ {period}</span>
+                              </div>
+                            </CardTitle>
+                            <CardDescription>{plan.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-6">
+                            <ul className="space-y-2">
+                              {plan.features.slice(0, 4).map((f, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                  <Check className={`w-3 h-3 mt-0.5 ${plan.premium ? 'text-yellow-500' : 'text-primary'}`} />
+                                  <span className="line-clamp-1">{f}</span>
+                                </li>
+                              ))}
+                              {plan.features.length > 4 && (
+                                <li className="text-xs text-muted-foreground pl-5 italic">
+                                  + {plan.features.length - 4} more features
+                                </li>
+                              )}
+                            </ul>
+
+                            <Button
+                              className={`w-full ${plan.premium ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : ''}`}
+                              disabled={plan.disabled || isRedirecting}
+                              onClick={() => {
+                                if (plan.id === 'vanguard') {
+                                  // Assume env var is available or we need to find it
+                                  handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_VANGUARD || '');
+                                } else if (plan.id === 'pro') {
+                                  handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_MONTHLY || '');
+                                }
+                              }}
+                            >
+                              {plan.disabled ? plan.cta : `Upgrade to ${plan.name}`}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                    {PRICING_PLANS.filter(plan => {
+                      const currentPlanId = user.plan === 'free' ? 'driver' : user.plan;
+                      const levels = ['driver', 'pro', 'vanguard'];
+                      return levels.indexOf(plan.id) > levels.indexOf(currentPlanId);
+                    }).length === 0 && (
+                        <div className="col-span-2 text-center py-12 bg-muted/10 rounded-xl border border-dashed border-border">
+                          <p className="text-muted-foreground">You have access to all available plans!</p>
                         </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             )}
 

@@ -16,13 +16,16 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   },
 });
 
-function getPlanFromPriceId(priceId: string): 'free' | 'pro' {
+function getPlanFromPriceId(priceId: string): 'free' | 'pro' | 'vanguard' {
   // Use NEXT_PUBLIC_ vars to match client-side and ensure availability if defined in .env.local
-  const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO;
+  const proMonthlyPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_MONTHLY;
+  const proAnnualPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_ANNUAL;
+  const vanguardPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_VANGUARD;
 
-  if (priceId === proPriceId) return 'pro';
+  if (priceId === proMonthlyPriceId || priceId === proAnnualPriceId) return 'pro';
+  if (priceId === vanguardPriceId) return 'vanguard';
 
-  // Default to free for any other price ID (including deprecated builder)
+  // Default to free for any other price ID
   return 'free';
 }
 
@@ -93,8 +96,9 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        // Logic to link user if not already linked
+
         if (session.client_reference_id && session.customer) {
+          // Link customer ID logic
           const { error } = await supabase
             .from('user_profile')
             .update({ stripe_customer_id: session.customer as string })
@@ -102,6 +106,19 @@ export async function POST(req: NextRequest) {
 
           if (error) {
             console.error('Error linking stripe customer:', error);
+          }
+
+          // Handle One-Time Payments (Vanguard)
+          if (session.mode === 'payment' && session.payment_status === 'paid') {
+            const expandedSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] });
+            const priceId = expandedSession.line_items?.data[0]?.price?.id;
+
+            if (priceId && getPlanFromPriceId(priceId) === 'vanguard') {
+              await supabase
+                .from('user_profile')
+                .update({ plan: 'vanguard' })
+                .eq('user_id', session.client_reference_id);
+            }
           }
         }
         break;
@@ -125,21 +142,21 @@ export async function POST(req: NextRequest) {
 
         // Check status
         if (['active', 'trialing'].includes(subscription.status)) {
-           // Ensure items exist
-           const firstItem = subscription.items.data[0];
-           if (firstItem) {
-             const priceId = firstItem.price.id;
-             const plan = getPlanFromPriceId(priceId);
+          // Ensure items exist
+          const firstItem = subscription.items.data[0];
+          if (firstItem) {
+            const priceId = firstItem.price.id;
+            const plan = getPlanFromPriceId(priceId);
 
-             // Update user plan
-             await supabase
-               .from('user_profile')
-               .update({ plan })
-               .eq('user_id', user.user_id);
-           }
+            // Update user plan
+            await supabase
+              .from('user_profile')
+              .update({ plan })
+              .eq('user_id', user.user_id);
+          }
         } else if (['past_due', 'unpaid', 'canceled'].includes(subscription.status)) {
-           // Handle failed payment states immediately as requested
-           await downgradeUserAndNotify(user.user_id, `Subscription status: ${subscription.status}`);
+          // Handle failed payment states immediately as requested
+          await downgradeUserAndNotify(user.user_id, `Subscription status: ${subscription.status}`);
         }
         break;
       }
@@ -148,13 +165,13 @@ export async function POST(req: NextRequest) {
         const customerId = subscription.customer as string;
 
         const { data: user } = await supabase
-             .from('user_profile')
-             .select('user_id')
-             .eq('stripe_customer_id', customerId)
-             .single();
+          .from('user_profile')
+          .select('user_id')
+          .eq('stripe_customer_id', customerId)
+          .single();
 
         if (user) {
-           await downgradeUserAndNotify(user.user_id, 'Subscription canceled');
+          await downgradeUserAndNotify(user.user_id, 'Subscription canceled');
         }
         break;
       }

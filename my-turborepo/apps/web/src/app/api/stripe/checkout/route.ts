@@ -4,6 +4,11 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('Missing STRIPE_SECRET_KEY');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -50,21 +55,71 @@ export async function POST(req: NextRequest) {
         .eq('user_id', user.id);
     }
 
+    // Determine mode
+    const isVanguard = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_VANGUARD;
+    const mode = isVanguard ? 'payment' : 'subscription';
+
+    console.log(`Creating session for user ${user.id} with price ${priceId} in mode ${mode}`);
+
     // Create Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/account?billing_status=success`,
-      cancel_url: `${req.headers.get('origin')}/account?billing_status=canceled`,
-      client_reference_id: user.id,
-      allow_promotion_codes: true,
-    });
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: mode,
+        success_url: `${req.headers.get('origin')}/account?billing_status=success`,
+        cancel_url: `${req.headers.get('origin')}/account?billing_status=canceled`,
+        client_reference_id: user.id,
+        allow_promotion_codes: true,
+      });
+    } catch (err: any) {
+      // Handle "Customer not found" error (e.g. from environment mismatch)
+      if (err.code === 'resource_missing' && err.param === 'customer') {
+        console.warn(`Stripe customer ${customerId} missing, creating new one...`);
+
+        const newCustomer = await stripe.customers.create({
+          email: user.email,
+          metadata: {
+            userId: user.id,
+          },
+        });
+        customerId = newCustomer.id;
+
+        // Update DB with valid customer ID
+        const { error: updateError } = await supabase
+          .from('user_profile')
+          .update({ stripe_customer_id: customerId })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Failed to update user profile with new customer ID:', updateError);
+        }
+
+        // Retry session creation
+        session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+          mode: mode,
+          success_url: `${req.headers.get('origin')}/account?billing_status=success`,
+          cancel_url: `${req.headers.get('origin')}/account?billing_status=canceled`,
+          client_reference_id: user.id,
+          allow_promotion_codes: true,
+        });
+      } else {
+        throw err;
+      }
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {

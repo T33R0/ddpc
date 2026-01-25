@@ -3,48 +3,27 @@
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import Link from 'next/link';
+import { PRICING_PLANS } from './pricing-data';
 
 interface PricingProps {
   /**
    * Return true to prevent the default CTA navigation and handle the action yourself.
    */
-  onPlanCtaClick?: (planId: string) => boolean | void;
+  onPlanCtaClick?: (planId: string, isAnnual: boolean) => boolean | void;
 }
 
 // Compact version for dropdown menus - keeping simplified content
 export function PricingDropdown() {
-  const plans = [
-    {
-      id: 'driver',
-      name: 'Maintainer',
-      subtitle: 'The Casual & Lurker',
-      price: '$0',
-      period: 'Forever',
-      description: 'The foundation for every build. Document your journey.',
-      features: [
-        '3 Active Vehicles (Daily, Spouse, Weekender)',
-        'Fuel Logging & MPG Tracking',
-        'Service & Maintenance History',
-        'Basic Garage & Specs',
-        'Community Access',
-      ],
-    },
-    {
-      id: 'pro',
-      name: 'Builder',
-      subtitle: 'The Tuner & Planner',
-      price: '$9',
-      period: 'month',
-      description: 'For those who treat their project with operational precision.',
-      features: [
-        'Unlimited Vehicles',
-        'Detailed Mod & Part Registry',
-        'Build Planning & "Jobs" Management',
-        'Advanced Console Analytics',
-        'Priority Feedback Line',
-      ],
-    },
-  ];
+  // Using shared plans but simplified for dropdown
+  const plans = PRICING_PLANS.filter(p => !p.premium).map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    subtitle: typeof plan.subtitle === 'function' ? plan.subtitle(false) : plan.subtitle,
+    price: typeof plan.price === 'function' ? plan.price(false) : plan.price,
+    period: typeof plan.period === 'function' ? plan.period(false) : plan.period,
+    description: plan.description,
+    features: plan.features
+  }));
 
   return (
     <div className="p-6">
@@ -97,55 +76,14 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
 
   const handlePlanCtaClick = React.useCallback(
     (planId: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
-      if (onPlanCtaClick?.(planId)) {
+      if (onPlanCtaClick?.(planId, isAnnual)) {
         event.preventDefault();
       }
     },
-    [onPlanCtaClick]
+    [onPlanCtaClick, isAnnual]
   );
 
-  const plans = [
-    {
-      id: 'driver',
-      name: 'Maintainer',
-      subtitle: 'Free',
-      target: 'The Casual Maintainer & The Lurker',
-      price: '$0.00',
-      period: 'Forever',
-      description: 'Essential tools for maintaining your daily drivers and weekend toys.',
-      features: [
-        'Vehicle Cap: 3 Active Vehicles (Daily, Spouse, Weekender)',
-        'Fuel Logging: MPG tracking and cost analysis',
-        'Service Logging: Maintenance records and history review',
-        'The Garage: Basic vehicle profile and specs',
-        'Community Access: Explore other builds, view public profiles',
-      ],
-      cta: 'Get Started Free',
-      href: '?auth=signup',
-      highlight: false,
-    },
-    {
-      id: 'pro',
-      name: 'Builder',
-      subtitle: 'Pro',
-      target: 'The Builder, The Tuner, The Planner',
-      price: isAnnual ? '$7.50' : '$9.00',
-      billingNote: isAnnual ? 'Billed $90/yr (2 months free)' : 'Billed monthly',
-      period: 'month',
-      description: 'Advanced tools for serious builds, detailed planning, and total cost tracking.',
-      features: [
-        'Vehicle Cap: Unlimited',
-        'Mod Registry: Detailed modification tracking (parts, part numbers, costs)',
-        'The Plans: Build planning, "Jobs" management, and part wishlists',
-        'The Console: Advanced analytics, total cost of ownership dashboards',
-        'Priority Support: Direct feedback line',
-      ],
-      cta: 'Coming Soon', // Keeping as coming soon for now as user didn't specify enablement
-      href: '#',
-      highlight: true,
-      disabled: true,
-    },
-  ];
+  const plans = PRICING_PLANS;
 
   return (
     <section className="py-20 bg-background text-foreground relative overflow-hidden">
@@ -169,8 +107,8 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
+          <div className="flex items-center justify-center gap-4 mb-8 h-10">
+            <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'} transition-colors`}>Monthly</span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-secondary`}
@@ -180,86 +118,123 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
                   } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
               />
             </button>
-            <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Annual <span className="text-green-500 text-xs font-bold ml-1">(2 Months Free)</span>
-            </span>
+            <div className="relative flex flex-col items-center">
+              {isAnnual && (
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-green-500 text-[10px] font-bold whitespace-nowrap animate-in fade-in slide-in-from-bottom-1">
+                  Save 17%
+                </span>
+              )}
+              <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'} transition-colors`}>
+                Annual
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative bg-card rounded-3xl p-8 border-2 transition-all duration-300 ${plan.highlight ? 'border-red-500/50 shadow-lg shadow-red-900/10' : 'border-border'
-                }`}
-            >
-              {plan.highlight && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                  Most Popular
-                </div>
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto items-start">
+          {plans.map((plan) => {
+            // Resolve dynamic values based on toggle
+            const price = typeof plan.price === 'function' ? plan.price(isAnnual) : plan.price;
+            const period = typeof plan.period === 'function' ? plan.period(isAnnual) : plan.period;
+            const subtitle = typeof plan.subtitle === 'function' ? plan.subtitle(isAnnual) : plan.subtitle;
+            const billingNote = typeof plan.billingNote === 'function' ? plan.billingNote(isAnnual) : plan.billingNote;
 
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-1 text-foreground">{plan.name}</h3>
-                <div className="text-sm font-medium text-muted-foreground mb-4">{plan.target}</div>
-
-                <div className="flex flex-col items-center justify-center mb-2">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                    <span className="text-muted-foreground">/ {plan.period === 'Forever' ? 'forever' : 'mo'}</span>
+            return (
+              <div
+                key={plan.id}
+                className={`relative bg-card rounded-3xl p-6 border-2 transition-all duration-300 flex flex-col h-full ${plan.popular
+                  ? 'border-red-500/50 shadow-lg shadow-red-900/10 z-10 md:-mt-4 md:mb-4'
+                  : plan.premium
+                    ? 'border-yellow-500/30 bg-gradient-to-b from-yellow-950/10 to-transparent shadow-lg shadow-yellow-900/5'
+                    : 'border-border'
+                  }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Most Popular
                   </div>
-                  {plan.billingNote && (
-                    <span className="text-xs text-green-500 font-medium mt-1">{plan.billingNote}</span>
+                )}
+
+                {plan.premium && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Limited Release
+                  </div>
+                )}
+
+                <div className="text-center mb-6">
+                  <h3 className={`text-2xl font-bold mb-1 ${plan.premium ? 'text-yellow-500' : 'text-foreground'}`}>{plan.name}</h3>
+                  <div className="text-sm font-medium text-muted-foreground mb-4">{plan.header}</div>
+
+                  <div className="flex flex-col items-center justify-center mb-2">
+                    <div className="flex items-baseline gap-1">
+                      <span className={`text-4xl font-bold ${plan.premium ? 'text-yellow-500' : 'text-foreground'}`}>{price}</span>
+                      <span className="text-muted-foreground text-sm">/ {period}</span>
+                    </div>
+                    {billingNote && (
+                      <span className="text-xs text-green-500 font-medium mt-1">{billingNote}</span>
+                    )}
+                  </div>
+
+                  {/* Spots Remaining for Vanguard */}
+                  {plan.premium && typeof plan.spotsRemaining === 'number' && (
+                    <div className="mt-2 text-xs font-semibold text-yellow-500 bg-yellow-500/10 py-1 px-3 rounded-full inline-block">
+                      {plan.spotsRemaining} / {plan.totalSpots} Spots Remaining
+                      <div className="w-full bg-yellow-900/30 h-1 mt-1 rounded-full overflow-hidden">
+                        <div
+                          className="bg-yellow-500 h-full rounded-full"
+                          style={{ width: `${(plan.spotsRemaining / (plan.totalSpots || 100)) * 100}%` }}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                <p className="text-muted-foreground text-sm leading-relaxed mt-4">{plan.description}</p>
+                <ul className="space-y-3 mb-8 flex-grow">
+                  {plan.features.map((feature, featureIndex) => {
+                    const [title, description] = feature.includes(':') ? feature.split(':') : [feature, ''];
+                    return (
+                      <li key={featureIndex} className="flex items-start gap-3 text-left">
+                        <Check className={`w-4 h-4 flex-shrink-0 mt-1 ${plan.premium ? 'text-yellow-500' : 'text-green-500'}`} />
+                        <div className="text-sm leading-snug text-muted-foreground">
+                          {description ? (
+                            <>
+                              <span className={`font-semibold ${plan.premium ? 'text-yellow-500/90' : 'text-foreground'}`}>{title}:</span>{description}
+                            </>
+                          ) : (
+                            feature
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="mt-auto">
+                  {plan.disabled ? (
+                    <button
+                      disabled
+                      className={`block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-center cursor-not-allowed bg-secondary/50 text-secondary-foreground/50`}
+                    >
+                      {plan.cta}
+                    </button>
+                  ) : (
+                    <Link
+                      href={plan.href}
+                      onClick={onPlanCtaClick ? handlePlanCtaClick(plan.id) : undefined}
+                      className={`block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-center ${plan.popular
+                        ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-red-600/25'
+                        : plan.premium
+                          ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 shadow-lg hover:shadow-yellow-600/25'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                    >
+                      {plan.cta}
+                    </Link>
+                  )}
+                </div>
               </div>
-
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, featureIndex) => {
-                  const [title, description] = feature.includes(':') ? feature.split(':') : [feature, ''];
-                  return (
-                    <li key={featureIndex} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm leading-relaxed text-muted-foreground text-left">
-                        {description ? (
-                          <>
-                            <span className="font-semibold text-foreground">{title}:</span>{description}
-                          </>
-                        ) : (
-                          feature
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {plan.disabled ? (
-                <button
-                  disabled
-                  className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${plan.highlight
-                    ? 'bg-red-600/50 text-white cursor-not-allowed'
-                    : 'bg-secondary text-secondary-foreground opacity-50 cursor-not-allowed'
-                    }`}
-                >
-                  {plan.cta}
-                </button>
-              ) : (
-                <Link
-                  href={plan.href}
-                  onClick={onPlanCtaClick ? handlePlanCtaClick(plan.id) : undefined}
-                  className={`block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-center ${plan.highlight
-                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-red-600/25'
-                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                    }`}
-                >
-                  {plan.cta}
-                </Link>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>
