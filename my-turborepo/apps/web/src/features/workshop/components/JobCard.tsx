@@ -21,7 +21,7 @@ export function JobCard({ job, onStart, onOpen, className }: JobCardProps) {
     const isInProgress = job.status === 'in_progress';
 
     return (
-        <Card className={cn("bg-card border-border shadow-sm hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]", className)} onClick={() => onOpen?.(job)}>
+        <Card className={cn("bg-card border-border shadow-sm hover:shadow-md transition-all cursor-pointer group active:scale-[0.98] h-22 flex flex-col justify-center", className)} onClick={() => onOpen?.(job)}>
             <CardContent className="p-3 space-y-2">
                 <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0">
@@ -32,12 +32,14 @@ export function JobCard({ job, onStart, onOpen, className }: JobCardProps) {
                                 : `Created ${format(new Date(job.created_at), 'MMM d')}`}
                         </p>
                     </div>
-                    <Badge variant={isInProgress ? 'default' : 'secondary'} className={cn(
-                        "font-mono text-[10px] px-1 h-5 capitalize",
-                        isInProgress ? "bg-amber-500 hover:bg-amber-600" : ""
-                    )}>
-                        {job.status.replace('_', ' ')}
-                    </Badge>
+                    {!isPlanned && (
+                        <Badge variant={isInProgress ? 'default' : 'secondary'} className={cn(
+                            "font-mono text-[10px] px-1 h-5 capitalize",
+                            isInProgress ? "bg-amber-500 hover:bg-amber-600" : ""
+                        )}>
+                            {job.status.replace('_', ' ')}
+                        </Badge>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">

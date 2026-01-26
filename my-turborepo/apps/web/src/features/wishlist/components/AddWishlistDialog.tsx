@@ -6,8 +6,8 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select'
-import { ListTodo, Loader2 } from 'lucide-react'
-import { createWishlistItem, updateWishlistItem } from '../actions'
+import { ListTodo, Loader2, Trash2 } from 'lucide-react'
+import { createWishlistItem, updateWishlistItem, deleteWishlistItem } from '../actions'
 import { useRouter } from 'next/navigation'
 import { toast } from '@repo/ui/use-toast'
 
@@ -22,6 +22,7 @@ interface AddWishlistDialogProps {
 export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initialData }: AddWishlistDialogProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Form State
@@ -105,17 +106,50 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
     }
   }
 
+  const handleDelete = async () => {
+    if (!initialData) return
+    if (!confirm('Are you sure you want to delete this item?')) return
+
+    setIsDeleting(true)
+    try {
+      await deleteWishlistItem(initialData.id, vehicleId)
+      toast({
+        title: "Item Deleted",
+        description: "Item removed from wishlist.",
+      })
+      onSuccess?.()
+      onClose()
+      router.refresh()
+    } catch (err) {
+      setError("Failed to delete item")
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalContent className="sm:max-w-lg p-0">
-        <ModalHeader>
-          <ModalTitle className="flex items-center gap-2">
-            <ListTodo className="h-5 w-5" />
-            {initialData ? 'Edit Item' : 'Add to Wishlist'}
-          </ModalTitle>
-          <ModalDescription>
-            {initialData ? 'Update item details.' : 'Save a part or service item for later.'}
-          </ModalDescription>
+        <ModalHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="flex flex-col gap-1">
+            <ModalTitle className="flex items-center gap-2">
+              <ListTodo className="h-5 w-5" />
+              {initialData ? 'Edit Item' : 'Add to Wishlist'}
+            </ModalTitle>
+            <ModalDescription>
+              {initialData ? 'Update item details.' : 'Save a part or service item for later.'}
+            </ModalDescription>
+          </div>
+          {initialData && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={handleDelete}
+              disabled={isDeleting || isSubmitting}
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            </Button>
+          )}
         </ModalHeader>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">

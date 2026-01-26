@@ -43,12 +43,37 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+    // Parse NHTSA results first as we might need them for enrichment
     const getValue = (variable: string) => results.find((r: NHTSAResult) => r.Variable === variable)?.Value || null;
 
     const make = getValue('Make');
     const model = getValue('Model');
     const year = parseInt(getValue('Model Year'), 10);
     const trim = getValue('Trim');
+
+    // Build the spec object from NHTSA regardless of match status
+    const nhtsaSpecs = {
+      engine_size_l: getValue('Displacement (L)'),
+      cylinders: getValue('Engine Number of Cylinders'),
+      horsepower_hp: getValue('Engine Brake (hp) From'),
+      torque_ft_lbs: getValue('Engine Torque (ft-lbs) From'),
+      fuel_type: getValue('Fuel Type - Primary'),
+      drive_type: getValue('Drive Type'),
+      transmission: getValue('Transmission Style'),
+      body_type: getValue('Body Class'),
+      epa_combined_mpg: getValue('EPA Combined City/Hwy MPG'),
+      epa_city_highway_mpg: getValue('City/Hwy MPG'),
+      curb_weight_lbs: getValue('Curb Weight (lbs)'),
+    };
+
+    // Also build the full snapshot
+    const specSnapshot = results.reduce((acc: Record<string, string | null>, curr: NHTSAResult) => {
+      if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
+        const key = curr.Variable.replace(/ /g, '_').toLowerCase();
+        acc[key] = curr.Value;
+      }
+      return acc;
+    }, {});
 
     // Try to find a match in our curated vehicle_data table
     const { data: matchedVehicle } = await supabase
@@ -77,6 +102,35 @@ export async function POST(request: NextRequest) {
           vehicleData.trims = [];
         }
 
+        // ENRICHMENT: If we found a vehicle, let's fill in any missing blanks with NHTSA data
+        // We act on the specific selected trim if possible, but since we don't know which trim corresponds
+        // to the VIN's specific trim without more logic, we will apply these enrichments to the PRIMARY trim found
+        // if it matches, or arguably we could just return them as "overrides" for the frontend to handle.
+        // However, the cleanest way is to iterate over the trims and if we find one that looks like a base match, enrich it.
+        // For simplicity in this "preview" phase, we will enrich ALL trims that have missing data with the high-level specs
+        // from the VIN decode (e.g. if the DB doesn't know the Body Type, but VIN does, apply it).
+
+        vehicleData.trims = vehicleData.trims.map((t: any) => {
+          // Create a new enriched trim object
+          const enriched = { ...t };
+
+          // List of fields we want to backfill if missing in DB
+          const fieldsToEnrich = [
+            'engine_size_l', 'cylinders', 'horsepower_hp', 'torque_ft_lbs',
+            'fuel_type', 'drive_type', 'transmission', 'body_type',
+            'epa_combined_mpg', 'epa_city_highway_mpg', 'curb_weight_lbs'
+          ];
+
+          fieldsToEnrich.forEach(field => {
+            // If local data is null/undefined, and we have NHTSA data, use it
+            if ((enriched[field] === null || enriched[field] === undefined || enriched[field] === '') && (nhtsaSpecs as any)[field]) {
+              enriched[field] = (nhtsaSpecs as any)[field];
+            }
+          });
+
+          return enriched;
+        });
+
         return NextResponse.json({
           success: true,
           vehicleData: vehicleData,
@@ -86,14 +140,6 @@ export async function POST(request: NextRequest) {
     }
 
     // No match found in curated data, build from NHTSA data
-    const specSnapshot = results.reduce((acc: Record<string, string | null>, curr: NHTSAResult) => {
-      if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
-        const key = curr.Variable.replace(/ /g, '_').toLowerCase();
-        acc[key] = curr.Value;
-      }
-      return acc;
-    }, {});
-
     // Create a minimal vehicle summary from NHTSA data
     const vehicleData = {
       id: `vin-${vin}`,
@@ -108,17 +154,7 @@ export async function POST(request: NextRequest) {
         year: year.toString(),
         trim: trim || 'Base',
         trim_description: trim || 'Base Trim',
-        engine_size_l: getValue('Displacement (L)'),
-        cylinders: getValue('Engine Number of Cylinders'),
-        horsepower_hp: getValue('Engine Brake (hp) From'),
-        torque_ft_lbs: getValue('Engine Torque (ft-lbs) From'),
-        fuel_type: getValue('Fuel Type - Primary'),
-        drive_type: getValue('Drive Type'),
-        transmission: getValue('Transmission Style'),
-        body_type: getValue('Body Class'),
-        epa_combined_mpg: getValue('EPA Combined City/Hwy MPG'),
-        epa_city_highway_mpg: getValue('City/Hwy MPG'),
-        curb_weight_lbs: getValue('Curb Weight (lbs)'),
+        ...nhtsaSpecs,
         ...specSnapshot
       }]
     };

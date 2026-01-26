@@ -185,6 +185,7 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                     icon={ShoppingBag}
                     badge={wishlist.length}
                     className="border-dashed border-border/60 bg-muted/20"
+                    action={<Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditItem(null); setIsEditOpen(true); }}><Plus className="w-4 h-4" /></Button>}
                 >
                     <div className="space-y-3">
                         {wishlist.map(part => (

@@ -42,7 +42,7 @@ export async function addVehicleToGarage(
         console.log(`[addVehicleToGarage] User authenticated: ${user.id}`)
 
         // --- 1. Fetch Stock Data ---
-        let stockData = null;
+        let stockData: any = null;
         let primaryImage = null;
         let stockDataIdToUse: string | null = vehicleDataId;
 
@@ -67,6 +67,26 @@ export async function addVehicleToGarage(
             } else {
                 stockData = data;
                 console.log('[addVehicleToGarage] Stock data found')
+
+                // PATCHING LOGIC: If manualData is provided (e.g. from enriched VIN decode),
+                // use it to fill in missing fields in stockData before we create the user_vehicle.
+                if (manualData) {
+                    const fieldsToPatch = [
+                        'engine_size_l', 'cylinders', 'horsepower_hp', 'torque_ft_lbs',
+                        'fuel_type', 'drive_type', 'transmission', 'body_type',
+                        'epa_combined_mpg', 'epa_city_highway_mpg', 'curb_weight_lbs',
+                        'length_in', 'width_in', 'height_in'
+                    ];
+
+                    fieldsToPatch.forEach(field => {
+                        // If stockData is missing the field, but manualData has it
+                        if ((stockData[field] === null || stockData[field] === undefined || stockData[field] === '') &&
+                            (manualData[field] !== null && manualData[field] !== undefined && manualData[field] !== '')) {
+                            console.log(`[addVehicleToGarage] Patching missing field ${field} with value: ${manualData[field]}`);
+                            stockData[field] = manualData[field];
+                        }
+                    });
+                }
 
                 // Also fetch the primary image for the vehicle
                 const { data: img } = await supabase

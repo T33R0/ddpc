@@ -6,6 +6,7 @@ import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
 import { ExternalLink, Trash2, ShoppingBag, Loader2, Plus } from 'lucide-react'
 import { deleteWishlistItem } from '../actions'
+import { cn } from '@repo/ui/lib/utils'
 import { useRouter } from 'next/navigation'
 
 // Migrated to 'inventory' schema
@@ -28,19 +29,8 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this item?')) return
-    setIsDeleting(true)
-    try {
-      await deleteWishlistItem(item.id, item.vehicle_id)
-      onUpdate?.()
-      router.refresh()
-    } catch (err) {
-      alert('Failed to delete item')
-      setIsDeleting(false)
-    }
-  }
+  // Delete is now handled in the edit dialog
+  // const handleDelete = async (e: React.MouseEvent) => { ... }
 
   // "Purchased" in the context of history means fully closed/archived.
   // "Ordered" means it's active but bought.
@@ -71,24 +61,31 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
 
   return (
     <Card
-      className={`mb-3 transition-colors ${!isHistory ? 'cursor-pointer hover:border-primary/50' : ''} ${isHistory ? 'opacity-60 bg-muted/50' : ''}`}
+      className={cn(
+        "mb-2 transition-colors h-22 flex flex-col justify-center relative", // Reduced height to h-22 (88px)
+        !isHistory ? 'cursor-pointer hover:border-primary/50' : '',
+        isHistory ? 'opacity-60 bg-muted/50' : ''
+      )}
       onClick={() => !isHistory && onEdit?.(item)}
     >
 
-      <CardContent className="p-4">
+      <CardContent className="p-3"> {/* Reduced padding */}
         <div className="flex justify-between items-start gap-3">
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`font-medium ${isHistory ? 'line-through text-muted-foreground' : ''}`}>
+          <div className="flex-1 space-y-1 overflow-hidden">
+            <div className="flex items-center gap-2 flex-wrap pr-2">
+              <span className={`font-medium truncate max-w-[200px] ${isHistory ? 'line-through text-muted-foreground' : ''}`} title={item.name}>
                 {item.name}
               </span>
 
-              {!isHistory && renderPriorityBadge(item.priority)}
+              {/* Inline Categories */}
               {item.category && (
-                <Badge variant="secondary" className="text-xs py-0 h-5 capitalize">
+                <Badge variant="secondary" className="text-[10px] px-1.5 h-4 capitalize opacity-70">
                   {item.category.replace('_', ' ')}
                 </Badge>
               )}
+
+              {!isHistory && renderPriorityBadge(item.priority)}
+
               {isOrdered && (
                 <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs py-0 h-5">
                   Ordered
@@ -116,7 +113,7 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-end justify-center self-center">
             {onAddToJob && (
               <Button
                 size="icon"
@@ -132,18 +129,8 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
               </Button>
             )}
 
-            {!isHistory && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                title="Delete"
-              >
-                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              </Button>
-            )}
+            {/* Delete button removed from here */}
+
             {isHistory && (
               <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
                 Purchased
@@ -152,6 +139,6 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
           </div>
         </div>
       </CardContent>
-    </Card>
+    </Card >
   )
 }

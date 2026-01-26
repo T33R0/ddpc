@@ -502,7 +502,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <ModalContent className={cn(
                 "p-0 gap-0 overflow-hidden flex flex-col transition-all duration-300",
-                isFullscreen ? "w-screen h-dvh max-w-none rounded-none m-0" : "w-full sm:max-w-2xl h-[85vh] rounded-xl"
+                isFullscreen ? "w-screen h-dvh max-w-none rounded-none m-0" : "w-full sm:max-w-5xl h-[85vh] rounded-xl" // Increased max-w to 5xl for desktop full-width feel
             )}>
                 {/* Header */}
                 <ModalHeader className="p-4 px-6 border-b bg-muted/5 flex-shrink-0">
@@ -561,7 +561,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                 </Tabs>
 
                 {/* Footer */}
-                <ModalFooter className="p-4 border-t bg-background flex-shrink-0">
+                <ModalFooter className="p-4 border-t bg-background flex-shrink-0 sm:justify-end">
                     <Button variant="outline" onClick={onClose} className="mr-auto hidden sm:flex">Close</Button>
 
                     {activeTab !== 'plan' && (
