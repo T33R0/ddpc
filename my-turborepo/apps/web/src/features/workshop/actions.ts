@@ -5,7 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { WorkshopDataResponse, Job, JobTask } from './types';
 import { VehicleInstalledComponent } from '@/features/parts/types';
 import { vercelGateway } from '@/lib/ai-gateway';
-import { generateText } from 'ai';
+import { generateObject, generateText } from 'ai';
+import { z } from 'zod';
 
 export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataResponse | { error: string }> {
     const supabase = await createClient();
@@ -468,7 +469,7 @@ export async function deleteJobSpec(specId: string) {
 
 // --- AI Generation ---
 
-export async function generateMissionPlan(jobId: string, _vehicleInfoPlaceholder: string) {
+export async function generateMissionPlan(jobId: string, partsList: string[]) {
     const supabase = await createClient();
 
     // 1. Fetch Job
@@ -490,44 +491,47 @@ export async function generateMissionPlan(jobId: string, _vehicleInfoPlaceholder
         .eq('id', job.vehicle_id)
         .single();
 
-    if (vehicleError || !vehicleData) {
-        console.error("AI Generation Failed: Could not fetch vehicle details", vehicleError);
-        // Fallback to unknown if vehicle fetch fails but job exists
-    }
-
-    const vehicleString = vehicleData ? `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} ${vehicleData.trim || ''}`.trim() : "Unknown Vehicle";
+    const vehicleString = vehicleData
+        ? `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} ${vehicleData.trim || ''}`.trim()
+        : "Unknown Vehicle";
     const jobTitle = job.title;
 
-    // 2. Generate Plan with AI
+    // 3. Generate Plan with AI
     try {
         const { text } = await generateText({
             model: vercelGateway.languageModel('openai/gpt-4o-mini'),
-            system: `You are an expert automotive master mechanic. 
-            Generate a detailed execution plan for a vehicle repair job.
+            system: `Role: You are a Senior Master Technician (ASE Certified) with a focus on efficiency and precision.
+        
+            Objective: Create a tactical execution plan for the specific job and parts listed.
+            
+            Constitution (Rules of Engagement):
+            1. NO FLUFF. Use imperative commands (e.g., "Remove 10mm bolt", not "You should remove...").
+            2. Context Aware: If the user is replacing a Water Pump, ensure steps include draining coolant and removing obstructions (belts, fans).
+            3. Safety First: Always flag high-risk steps (e.g., "Fuel system under pressure").
+            4. Reassembly Precision: 'Assembly' is NOT just reverse of removal. Include specific instructions for torque sequences, fluid filling, and bleeding air.
+            5. Intel: Identify "Concurrent Parts" (items that are easily accessible during this job that should be replaced now to save labor later).
             
             Output strictly valid JSON with this schema:
             {
-                "tools": { "name": string }[],
-                "specs": { "item": string, "value": string }[],
-                "steps": { "instruction": string }[]
-            }
-            
-            - Tools: Specific sockets, wrenches, specialty tools needed.
-            - Specs: Torque values, fluid capacities, pressures.
-            - Steps: Logical, step-by-step teardown and repair instructions (10-15 steps max).`,
-            prompt: `Vehicle: ${vehicleString}\nJob: ${jobTitle}\n\nGenerate the mission plan.`
+                "tools": { "name": "string", "note": "string (optional)" }[],
+                "specs": { "item": "string", "value": "string", "note": "string (optional)" }[],
+                "teardown_steps": "string"[],
+                "assembly_steps": "string"[],
+                "concurrent_parts": "string"[]
+            }`,
+            prompt: `Vehicle: ${vehicleString}\nJob Title: ${jobTitle}\nParts to be Installed: ${partsList.length > 0 ? partsList.join(", ") : "None listed (Infer based on title)"}\n\nMission: Generate the full execution plan.`
         });
 
-        // 3. Parse Response
+        // 4. Parse Response
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) throw new Error("Invalid AI response");
-        const plan = JSON.parse(jsonMatch[0]);
+        const object = JSON.parse(jsonMatch[0]);
 
-        // 4. Insert Data (Sequential for safety)
+        // 5. Insert Data
 
         // Tools
-        if (plan.tools && Array.isArray(plan.tools)) {
-            const toolsData = plan.tools.map((t: any) => ({
+        if (object.tools && Array.isArray(object.tools)) {
+            const toolsData = object.tools.map((t: any) => ({
                 job_id: jobId,
                 name: t.name,
                 is_acquired: false,
@@ -537,8 +541,8 @@ export async function generateMissionPlan(jobId: string, _vehicleInfoPlaceholder
         }
 
         // Specs
-        if (plan.specs && Array.isArray(plan.specs)) {
-            const specsData = plan.specs.map((s: any) => ({
+        if (object.specs && Array.isArray(object.specs)) {
+            const specsData = object.specs.map((s: any) => ({
                 job_id: jobId,
                 item: s.item,
                 value: s.value,
@@ -548,16 +552,34 @@ export async function generateMissionPlan(jobId: string, _vehicleInfoPlaceholder
         }
 
         // Steps (Tasks)
-        if (plan.steps && Array.isArray(plan.steps)) {
-            const tasksData = plan.steps.map((s: any, index: number) => ({
-                job_id: jobId,
-                instruction: s.instruction,
-                order_index: index,
-                is_done_tear: false,
-                is_done_build: false
-            }));
-            if (tasksData.length > 0) await supabase.from('job_tasks').insert(tasksData);
+        const tasksData: any[] = [];
+        let taskIndex = 0;
+
+        if (object.teardown_steps && Array.isArray(object.teardown_steps)) {
+            object.teardown_steps.forEach((step: string) => {
+                tasksData.push({
+                    job_id: jobId,
+                    instruction: `[TEARDOWN] ${step}`,
+                    order_index: taskIndex++,
+                    is_done_tear: false,
+                    is_done_build: false
+                });
+            });
         }
+
+        if (object.assembly_steps && Array.isArray(object.assembly_steps)) {
+            object.assembly_steps.forEach((step: string) => {
+                tasksData.push({
+                    job_id: jobId,
+                    instruction: `[ASSEMBLY] ${step}`,
+                    order_index: taskIndex++,
+                    is_done_tear: false,
+                    is_done_build: false
+                });
+            });
+        }
+
+        if (tasksData.length > 0) await supabase.from('job_tasks').insert(tasksData);
 
     } catch (e) {
         console.error("AI Generation Error:", e);

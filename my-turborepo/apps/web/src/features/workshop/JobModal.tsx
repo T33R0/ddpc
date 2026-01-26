@@ -67,6 +67,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
 
     // AI Generation
     const [isGenerating, setIsGenerating] = useState(false);
+    const [showGenConfirm, setShowGenConfirm] = useState(false);
 
     // Custom Part Form
     const [isCustomPart, setIsCustomPart] = useState(false);
@@ -102,9 +103,13 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     // --- Actions ---
 
     const handleGeneratePlan = async () => {
+        setShowGenConfirm(false);
         setIsGenerating(true);
         try {
-            const res = await generateMissionPlan(job.id, "Generic Vehicle"); // In real app pass vehicle string
+            // Extract parts list
+            const partsList = job.parts?.map(p => p.name || p.master_part?.name || "Unknown Part") || [];
+
+            const res = await generateMissionPlan(job.id, partsList);
             if (res.error) toast.error(res.error);
             else {
                 toast.success("Mission Plan Generated!");
@@ -186,7 +191,8 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     };
 
     const handleTaskToggle = (taskId: string, currentVal: boolean) => {
-        const field = planView === 'teardown' ? 'is_done_tear' : 'is_done_build';
+        // Default to is_done_tear for single list flow
+        const field = 'is_done_tear';
         setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, [field]: !currentVal } : t));
         startTransition(async () => {
             await updateJobTask(taskId, field, !currentVal);
@@ -287,7 +293,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             </p>
                         </div>
                         <Button
-                            onClick={handleGeneratePlan}
+                            onClick={() => setShowGenConfirm(true)}
                             disabled={isGenerating || isPending}
                             className="gap-2"
                             size="sm"
@@ -448,32 +454,28 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         <React.Fragment>
             <div className="bg-muted/10 border-b flex items-center justify-between px-6 py-2">
                 <div className="text-xs font-medium text-muted-foreground">Execution Flow</div>
-                <div className="flex bg-muted p-0.5 rounded-lg">
-                    <button
-                        onClick={() => setPlanView('teardown')}
-                        className={cn("px-3 py-1 text-xs font-medium rounded-md transition-all", planView === 'teardown' ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground")}
-                    >Teardown</button>
-                    <button
-                        onClick={() => setPlanView('assembly')}
-                        className={cn("px-3 py-1 text-xs font-medium rounded-md transition-all", planView === 'assembly' ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground")}
-                    >Assembly</button>
-                </div>
+                {/* Visual toggle removed in favor of single sequence */}
             </div>
             <div className="flex-1 w-full overflow-y-auto min-h-0">
                 <div className="p-6 space-y-4">
                     {/* Step Editor */}
                     <div className="space-y-2">
-                        {(planView === 'teardown' ? localTasks : [...localTasks].reverse()).map((task) => (
+                        {localTasks.sort((a, b) => a.order_index - b.order_index).map((task) => (
                             <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative">
-                                <span className="text-xs font-mono text-muted-foreground mt-0.5 select-none opacity-50">
-                                    {(task.order_index).toString().padStart(2, '0')}
-                                </span>
-                                <p className="leading-snug flex-1">{task.instruction}</p>
-                                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100" onClick={() => handleRemoveStep(task.id)}>
+                                <Checkbox
+                                    checked={task.is_done_tear}
+                                    onCheckedChange={(c) => handleTaskToggle(task.id, task.is_done_tear)}
+                                    className="mt-0.5"
+                                />
+                                <div className={cn("flex-1 leading-snug", task.is_done_tear && "line-through text-muted-foreground opacity-60")}>
+                                    {task.instruction}
+                                </div>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 absolute right-2 top-2" onClick={() => handleRemoveStep(task.id)}>
                                     <Trash2 className="w-3 h-3" />
                                 </Button>
                             </div>
                         ))}
+                        {localTasks.length === 0 && <p className="text-muted-foreground italic text-sm">No steps generated yet.</p>}
                     </div>
                 </div>
             </div>
@@ -616,6 +618,27 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             <div className="flex gap-2 pt-2">
                                 <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
                                 <Button variant="destructive" className="flex-1" onClick={() => { deleteJob(job.id); onClose(); }}>Delete</Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showGenConfirm && (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                        <div className="bg-card border shadow-lg rounded-xl p-6 max-w-sm w-full space-y-4 animate-in fade-in zoom-in-95">
+                            <div className="text-center space-y-2">
+                                <div className="mx-auto w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+                                    <ListTodo className="w-6 h-6" />
+                                </div>
+                                <h3 className="font-semibold text-lg">Ready to Plan?</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    The AI plan is accurate if specific parts are linked.
+                                    <br />
+                                    <strong>{(job.parts || []).length} parts linked.</strong>
+                                </p>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <Button variant="outline" className="flex-1" onClick={() => setShowGenConfirm(false)}>Back to Job</Button>
+                                <Button className="flex-1" onClick={handleGeneratePlan}>Generate</Button>
                             </div>
                         </div>
                     </div>
