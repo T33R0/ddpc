@@ -140,11 +140,8 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
             </div>
 
             <div className="space-y-1 min-h-[2rem]">
-              <div className="flex justify-between text-xs">
-                <span>
-                  Health
-                  {slot.installedComponent.lifespan_miles ? ' (Miles)' : slot.installedComponent.lifespan_months ? ' (Time)' : ''}
-                </span>
+              <div className="flex justify-between text-xs items-end">
+                <span className="font-semibold text-muted-foreground">Health</span>
                 <span className={
                   slot.installedComponent.status === 'planned' ? 'text-blue-500 font-bold' :
                     health?.status === 'Critical' ? 'text-red-500 font-bold' :
@@ -155,14 +152,57 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                 </span>
               </div>
 
-              <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                {slot.installedComponent.status !== 'planned' && health?.status !== 'Unknown' && (
-                  <div
-                    className={`h-full ${statusColor} transition-all duration-500`}
-                    style={{ width: `${healthValue}%` }}
-                  />
-                )}
-              </div>
+              {slot.installedComponent.status !== 'planned' && health?.status !== 'Unknown' && (
+                health?.mileage && health?.time ? (
+                  // Dual Bars
+                  <div className="space-y-2 mt-1">
+                    {/* Mileage Bar */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Mileage</span>
+                        <span>{Math.round(health.mileage.remaining).toLocaleString()} mi left</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-500 ${getHealthColor(health.mileage.percentage > 90 ? 'Critical' : health.mileage.percentage > 70 ? 'Warning' : 'Good')}`}
+                          style={{ width: `${Math.max(0, 100 - health.mileage.percentage)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Time Bar */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Time</span>
+                        <span>{Math.round(health.time.remaining)} mo left</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-500 ${getHealthColor(health.time.percentage > 90 ? 'Critical' : health.time.percentage > 70 ? 'Warning' : 'Good')}`}
+                          style={{ width: `${Math.max(0, 100 - health.time.percentage)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Single Bar (Legacy/Fallback)
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>{health?.mileage ? 'Mileage' : health?.time ? 'Time' : 'Usage'}</span>
+                      <span>
+                        {health?.mileage ? `${Math.round(health.mileage.remaining).toLocaleString()} mi left` :
+                          health?.time ? `${Math.round(health.time.remaining)} mo left` : ''}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${statusColor} transition-all duration-500`}
+                        style={{ width: `${healthValue}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              )}
             </div>
 
             <div className="flex gap-2 mt-auto">

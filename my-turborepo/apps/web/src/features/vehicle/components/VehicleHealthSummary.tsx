@@ -3,6 +3,7 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
 import { Activity, AlertTriangle, Layers } from 'lucide-react'
+import { VehicleHealthHelpModal } from './VehicleHealthHelpModal'
 
 interface VehicleHealthSummaryProps {
     averageMpg: number | null | undefined
@@ -16,6 +17,8 @@ interface VehicleHealthSummaryProps {
 }
 
 export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, fuelType }: VehicleHealthSummaryProps) {
+    const [isHelpOpen, setIsHelpOpen] = React.useState(false)
+
     // MPG Calculations
     const mpgDiff = (averageMpg && factoryMpg) ? averageMpg - factoryMpg : null
     const diffColor = mpgDiff && mpgDiff > 0 ? 'text-green-500' : 'text-red-500'
@@ -35,18 +38,27 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
     }
 
     return (
-        <Card className="bg-card border-border h-full flex flex-col">
+        <Card className="bg-card border-border h-full flex flex-col relative group">
+            <VehicleHealthHelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold flex items-center justify-between">
                     <span>Vehicle Health</span>
-                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <button
+                        onClick={() => setIsHelpOpen(true)}
+                        className="p-1.5 rounded-full hover:bg-muted transition-all duration-300 cursor-pointer shadow-[0_0_8px_rgba(239,68,68,0.4)] hover:shadow-[0_0_12px_rgba(239,68,68,0.6)] animate-pulse hover:animate-none"
+                        title="How is this calculated?"
+                    >
+                        <Activity className="h-4 w-4 text-red-500" />
+                    </button>
                 </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-6 flex-1 content-start pt-2">
 
                 {/* MPG Section */}
                 <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fuel Efficiency</p>
+                    <div className="flex items-center gap-1.5">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fuel Efficiency</p>
+                    </div>
                     <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-bold tracking-tighter">
                             {averageMpg ? averageMpg.toFixed(1) : '---'}
