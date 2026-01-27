@@ -44,6 +44,8 @@ export async function createWishlistItem(data: any) {
         category: data.category || null,
         purchase_url: data.url,
         purchase_price: data.price,
+        quantity: data.quantity || 1, // Default to 1
+        purchased_at: data.purchased_at || null,
         priority: data.priority, // 1-5
         status: data.status || 'wishlist' // Default to wishlist
       })
@@ -71,6 +73,9 @@ export async function deleteWishlistItem(id: string, vehicleId: string) {
 
     if (error) {
       console.error('Error deleting wishlist item:', error)
+      if (error.code === '23503') {
+        return { success: false, error: 'Cannot delete this part because it is attached to a job. Please remove it from the job first.' }
+      }
       return { success: false, error: 'Failed to delete item' }
     }
 
@@ -95,6 +100,8 @@ export async function updateWishlistItem(id: string, data: any) {
         category: data.category || null,
         purchase_url: data.url,
         purchase_price: data.price,
+        quantity: data.quantity,
+        purchased_at: data.purchased_at,
         priority: data.priority,
         status: data.status
       })

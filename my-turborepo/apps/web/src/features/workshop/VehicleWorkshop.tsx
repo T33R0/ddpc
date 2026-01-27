@@ -34,7 +34,7 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
 
     // Modals
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-    const [partToLink, setPartToLink] = useState<string | null>(null); // For "Add to Job"
+    const [partToLink, setPartToLink] = useState<VehicleInstalledComponent | null>(null); // For "Add to Job"
     const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
 
     // Edit Modal State
@@ -89,13 +89,13 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
         });
     };
 
-    const handleLinkPart = (jobId: string) => {
+    const handleLinkPart = (jobId: string, qty: number = 1) => {
         if (!partToLink) return;
         startTransition(async () => {
-            const res = await addPartToJob(jobId, partToLink);
+            const res = await addPartToJob(jobId, partToLink.id, qty);
             if (res.error) toast.error(res.error);
             else {
-                toast.success("Part added to job!");
+                toast.success(qty < (partToLink.quantity || 1) ? `Added ${qty} items to job` : "Part added to job!");
                 setPartToLink(null);
                 refreshData();
             }
@@ -224,7 +224,7 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                                     vehicle_id: vehicleId
                                 }}
                                 onUpdate={refreshData}
-                                onAddToJob={() => setPartToLink(part.id)}
+                                onAddToJob={() => setPartToLink(part)}
                                 onEdit={handleEditItem}
                             />
                         ))}
@@ -287,6 +287,7 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                 plannedJobs={plannedJobs}
                 onSelectJob={handleLinkPart}
                 isPending={isPending}
+                part={partToLink}
             />
 
             {/* Create Job Modal */}

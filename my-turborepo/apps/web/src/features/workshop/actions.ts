@@ -132,22 +132,67 @@ export async function createJob(vehicleId: string, title: string) {
     return { success: true, job: data };
 }
 
-export async function addPartToJob(jobId: string, inventoryId: string) {
+export async function addPartToJob(jobId: string, inventoryId: string, qty: number = 1) {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Link in job_parts table
+    // 1. Fetch current item details
+    const { data: item, error: fetchError } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', inventoryId)
+        .single();
+
+    if (fetchError || !item) return { error: 'Part not found' };
+
+    const currentQty = item.quantity || 1;
+    let finalInventoryId = inventoryId;
+
+    // 2. Handle Split if needed
+    if (qty < currentQty && qty > 0) {
+        // Decrement original
+        const { error: updateError } = await supabase
+            .from('inventory')
+            .update({ quantity: currentQty - qty })
+            .eq('id', inventoryId);
+
+        if (updateError) return { error: 'Failed to update inventory quantity' };
+
+        // Create new item (clone)
+        // We exclude 'id', 'created_at' and 'updated_at' usually, but here we just copy fields manually or carefully
+        const { data: newItem, error: createError } = await supabase
+            .from('inventory')
+            .insert({
+                user_id: item.user_id,
+                vehicle_id: item.vehicle_id,
+                name: item.name,
+                category: item.category,
+                part_number: item.part_number,
+                purchase_url: item.purchase_url,
+                purchase_price: item.purchase_price,
+                status: item.status, // Keep same status (e.g. in_stock)
+                lifespan_miles: item.lifespan_miles,
+                lifespan_months: item.lifespan_months,
+                purchased_at: item.purchased_at,
+                quantity: qty
+            })
+            .select()
+            .single();
+
+        if (createError) return { error: 'Failed to split inventory item' };
+        finalInventoryId = newItem.id;
+    }
+
+    // 3. Link to Job
     const { error } = await supabase
         .from('job_parts')
         .insert({
             job_id: jobId,
-            inventory_id: inventoryId
+            inventory_id: finalInventoryId,
+            qty_used: qty
         });
 
     if (error) return { error: error.message };
-
-    // Also verify part is reserved? For now just link it.
-    // Ideally we might want to flag the inventory item as "allocated" but schema provided only had specific statuses.
-    // The prompt implies "Add to Job" links it.
 
     revalidatePath('/vehicle');
     return { success: true };

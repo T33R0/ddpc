@@ -30,6 +30,8 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
   const [category, setCategory] = useState('')
   const [url, setUrl] = useState('')
   const [price, setPrice] = useState('')
+  const [quantity, setQuantity] = useState('1')
+  const [purchasedAt, setPurchasedAt] = useState('')
   const [priority, setPriority] = useState<string>('3')
   const [status, setStatus] = useState<string>('wishlist')
 
@@ -39,6 +41,10 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
       setCategory(initialData.category || '')
       setUrl(initialData.purchase_url || '')
       setPrice(initialData.purchase_price ? String(initialData.purchase_price) : '')
+      setQuantity(initialData.quantity ? String(initialData.quantity) : '1')
+      const dateVal = initialData.purchased_at ? new Date(initialData.purchased_at) : null;
+      const dateStr: string = (dateVal && !isNaN(dateVal.getTime())) ? dateVal.toISOString().substring(0, 10) : '';
+      setPurchasedAt(dateStr)
       setPriority(initialData.priority ? String(initialData.priority) : '3')
       setStatus(initialData.status)
     } else if (isOpen && !initialData) {
@@ -47,10 +53,13 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
       setCategory('')
       setUrl('')
       setPrice('')
+      setQuantity('1')
+      setPurchasedAt('')
       setPriority('3')
       setStatus('wishlist')
     }
     setError(null)
+    setIsDeleting(false) // Reset deleting state
   }, [isOpen, initialData])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,6 +76,8 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
         category: category || null,
         url: url || null,
         price: price ? parseFloat(price) : null,
+        quantity: parseInt(quantity) || 1,
+        purchased_at: (status === 'ordered' || status === 'in_stock') && purchasedAt ? new Date(purchasedAt).toISOString() : null,
         priority: parseInt(priority),
         status: status
       }
@@ -87,6 +98,8 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
         setCategory('')
         setUrl('')
         setPrice('')
+        setQuantity('1')
+        setPurchasedAt('')
         setPriority('3')
         setStatus('wishlist')
       }
@@ -112,7 +125,12 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
 
     setIsDeleting(true)
     try {
-      await deleteWishlistItem(initialData.id, vehicleId)
+      const result = await deleteWishlistItem(initialData.id, vehicleId)
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete item')
+      }
+
       toast({
         title: "Item Deleted",
         description: "Item removed from wishlist.",
@@ -121,7 +139,7 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
       onClose()
       router.refresh()
     } catch (err) {
-      setError("Failed to delete item")
+      setError(err instanceof Error ? err.message : "Failed to delete item")
       setIsDeleting(false)
     }
   }
@@ -201,7 +219,7 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price (Each)</Label>
               <Input
                 id="price"
                 type="number"
@@ -212,6 +230,28 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
                 placeholder="0.00"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input
+                id="quantity"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="1"
+              />
+            </div>
+          </div>
+
+          {price && quantity && (
+            <div className="flex justify-between items-center bg-muted/50 p-2 rounded text-sm px-3">
+              <span className="text-muted-foreground">Total:</span>
+              <span className="font-mono font-medium">${(parseFloat(price) * (parseInt(quantity) || 1)).toFixed(2)}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
               <Select value={priority} onValueChange={setPriority}>
@@ -241,6 +281,18 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
               </Select>
             </div>
           </div>
+
+          {(status === 'ordered' || status === 'in_stock') && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+              <Label htmlFor="purchasedAt">Purchased Date</Label>
+              <Input
+                id="purchasedAt"
+                type="date"
+                value={purchasedAt}
+                onChange={(e) => setPurchasedAt(e.target.value)}
+              />
+            </div>
+          )}
 
           <ModalFooter className="gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
