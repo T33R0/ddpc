@@ -18,7 +18,7 @@ import {
     removePartFromJob, removeJobTask, deleteJob, moveJobToPlanned,
     createJobTool, updateJobTool, deleteJobTool,
     createJobSpec, updateJobSpec, deleteJobSpec,
-    generateMissionPlan
+    generateMissionPlan, addToolToUserInventory
 } from './actions';
 import { VehicleInstalledComponent } from '@/features/parts/types';
 import { toast } from 'react-hot-toast';
@@ -137,11 +137,15 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         });
     };
 
-    const handleToggleTool = (toolId: string, current: boolean) => {
-        // Optimistic
+    const handleToggleTool = (toolId: string, current: boolean, toolName: string) => {
+        // Optimistic UI update
         setLocalTools(prev => prev.map(t => t.id === toolId ? { ...t, is_acquired: !current } : t));
         startTransition(async () => {
             await updateJobTool(toolId, { is_acquired: !current });
+            // If marking as acquired, sync to user's personal inventory
+            if (!current) {
+                await addToolToUserInventory(toolName);
+            }
             onSuccess();
         });
     };
@@ -181,7 +185,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         e?.preventDefault();
         if (!taskInput.trim()) return;
         startTransition(async () => {
-            const res = await createJobTask(job.id, taskInput);
+            const res = await createJobTask(job.id, taskInput, planView);
             if (res.error) toast.error(res.error);
             else {
                 setTaskInput('');
@@ -190,9 +194,8 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         });
     };
 
-    const handleTaskToggle = (taskId: string, currentVal: boolean) => {
-        // Default to is_done_tear for single list flow
-        const field = 'is_done_tear';
+    const handleTaskToggle = (taskId: string, currentVal: boolean, phase: 'teardown' | 'assembly') => {
+        const field = phase === 'teardown' ? 'is_done_tear' : 'is_done_build';
         setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, [field]: !currentVal } : t));
         startTransition(async () => {
             await updateJobTask(taskId, field, !currentVal);
@@ -357,7 +360,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                 <div key={tool.id} className={cn("flex items-center gap-3 p-2 rounded-md transition-all duration-300", tool.is_acquired ? "bg-muted/30" : "hover:bg-muted/50 group")}>
                                     <Checkbox
                                         checked={tool.is_acquired}
-                                        onCheckedChange={(c) => handleToggleTool(tool.id, !!tool.is_acquired)}
+                                        onCheckedChange={() => handleToggleTool(tool.id, !!tool.is_acquired, tool.name)}
                                         className="rounded-sm w-4 h-4"
                                     />
                                     <span className={cn("flex-1 text-sm transition-all", tool.is_acquired && "text-muted-foreground line-through opacity-60")}>{tool.name}</span>
@@ -450,53 +453,79 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
         </ScrollArea>
     );
 
-    const renderPlanTab = () => (
-        <React.Fragment>
-            <div className="bg-muted/10 border-b flex items-center justify-between px-6 py-2">
-                <div className="text-xs font-medium text-muted-foreground">Execution Flow</div>
-                {/* Visual toggle removed in favor of single sequence */}
-            </div>
-            <div className="flex-1 w-full overflow-y-auto min-h-0">
-                <div className="p-6 space-y-4">
-                    {/* Step Editor */}
-                    <div className="space-y-2">
-                        {localTasks.sort((a, b) => a.order_index - b.order_index).map((task) => (
-                            <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative">
-                                <Checkbox
-                                    checked={task.is_done_tear}
-                                    onCheckedChange={(c) => handleTaskToggle(task.id, task.is_done_tear)}
-                                    className="mt-0.5"
-                                />
-                                <div className={cn("flex-1 leading-snug", task.is_done_tear && "line-through text-muted-foreground opacity-60")}>
-                                    {task.instruction}
-                                </div>
-                                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 absolute right-2 top-2" onClick={() => handleRemoveStep(task.id)}>
-                                    <Trash2 className="w-3 h-3" />
-                                </Button>
-                            </div>
-                        ))}
-                        {localTasks.length === 0 && <p className="text-muted-foreground italic text-sm">No steps generated yet.</p>}
+    const renderPlanTab = () => {
+        const teardownTasks = localTasks.filter(t => t.phase === 'teardown').sort((a, b) => a.order_index - b.order_index);
+        const assemblyTasks = localTasks.filter(t => t.phase === 'assembly').sort((a, b) => a.order_index - b.order_index);
+        const currentTasks = planView === 'teardown' ? teardownTasks : assemblyTasks;
+        const isDoneField = planView === 'teardown' ? 'is_done_tear' : 'is_done_build';
+
+        return (
+            <React.Fragment>
+                <div className="bg-muted/10 border-b flex items-center justify-between px-6 py-2">
+                    <div className="text-xs font-medium text-muted-foreground">Execution Flow</div>
+                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1">
+                        <button
+                            onClick={() => setPlanView('teardown')}
+                            className={cn(
+                                'px-3 py-1 text-xs font-medium rounded-md transition-all',
+                                planView === 'teardown' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            Teardown ({teardownTasks.length})
+                        </button>
+                        <button
+                            onClick={() => setPlanView('assembly')}
+                            className={cn(
+                                'px-3 py-1 text-xs font-medium rounded-md transition-all',
+                                planView === 'assembly' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            Assembly ({assemblyTasks.length})
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div className="p-4 border-t bg-background mt-auto">
-                <form onSubmit={handleAddStep} className="flex gap-2">
-                    <div className="w-8 flex justify-center shrink-0">
-                        <div className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center border-muted-foreground/40">
-                            <Plus className="w-3 h-3 text-muted-foreground" />
+                <div className="flex-1 w-full overflow-y-auto min-h-0">
+                    <div className="p-6 space-y-4">
+                        {/* Step Editor */}
+                        <div className="space-y-2">
+                            {currentTasks.map((task) => (
+                                <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative">
+                                    <Checkbox
+                                        checked={planView === 'teardown' ? task.is_done_tear : task.is_done_build}
+                                        onCheckedChange={() => handleTaskToggle(task.id, planView === 'teardown' ? task.is_done_tear : task.is_done_build, planView)}
+                                        className="mt-0.5"
+                                    />
+                                    <div className={cn("flex-1 leading-snug", (planView === 'teardown' ? task.is_done_tear : task.is_done_build) && "line-through text-muted-foreground opacity-60")}>
+                                        {task.instruction}
+                                    </div>
+                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 absolute right-2 top-2" onClick={() => handleRemoveStep(task.id)}>
+                                        <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                            {currentTasks.length === 0 && <p className="text-muted-foreground italic text-sm">No {planView} steps generated yet.</p>}
                         </div>
                     </div>
-                    <Input
-                        placeholder="Add next step..."
-                        value={taskInput}
-                        onChange={(e) => setTaskInput(e.target.value)}
-                        className="flex-1 h-9 text-sm"
-                        disabled={isPending}
-                    />
-                </form>
-            </div>
-        </React.Fragment >
-    );
+                </div>
+                <div className="p-4 border-t bg-background mt-auto">
+                    <form onSubmit={handleAddStep} className="flex gap-2">
+                        <div className="w-8 flex justify-center shrink-0">
+                            <div className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center border-muted-foreground/40">
+                                <Plus className="w-3 h-3 text-muted-foreground" />
+                            </div>
+                        </div>
+                        <Input
+                            placeholder={`Add ${planView} step...`}
+                            value={taskInput}
+                            onChange={(e) => setTaskInput(e.target.value)}
+                            className="flex-1 h-9 text-sm"
+                            disabled={isPending}
+                        />
+                    </form>
+                </div>
+            </React.Fragment>
+        );
+    };
 
 
 

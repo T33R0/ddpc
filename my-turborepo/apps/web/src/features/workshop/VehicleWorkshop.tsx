@@ -6,7 +6,7 @@ import { ScrollArea } from '@repo/ui/scroll-area';
 import { Plus, Loader2, ArrowRightLeft, ShoppingBag, ClipboardList, Package, Wrench } from 'lucide-react';
 import { Job, WorkshopDataResponse } from './types';
 import { VehicleInstalledComponent } from '@/features/parts/types';
-import { getWorkshopData, startJob, addPartToJob, createJob } from './actions';
+import { getWorkshopData, startJob, addPartToJob, createJob, markPartArrived } from './actions';
 
 import { PartCard } from './components/PartCard';
 import { JobCard } from './components/JobCard';
@@ -102,8 +102,19 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
         });
     };
 
+    const handleMarkArrived = (inventoryId: string) => {
+        startTransition(async () => {
+            const res = await markPartArrived(inventoryId);
+            if (res.error) toast.error(res.error);
+            else {
+                toast.success("Marked as arrived!");
+                refreshData();
+            }
+        });
+    };
+
     const { profile } = useAuth();
-    const isAdmin = profile?.role === 'admin';
+    const hasAccess = ['pro', 'vanguard'].includes(profile?.plan || '') || profile?.role === 'admin';
 
     // Derived State
     const wishlist = data?.inventory.filter(i => i.status === 'wishlist' || i.status === 'ordered') || [];
@@ -119,7 +130,7 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
         );
     }
 
-    if (!isAdmin) {
+    if (!hasAccess) {
         return (
             <div className="relative h-[calc(100vh-140px)] min-h-[600px] overflow-hidden">
                 {/* Blurred Content Overlay */}
@@ -129,14 +140,14 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                             <Wrench className="w-8 h-8 text-primary" />
                         </div>
                         <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                            Pro Workshop Coming Soon
+                            Workshop Access Required
                         </h2>
                         <p className="text-muted-foreground">
-                            We're crafting the ultimate tool for serious builders. The Workshop will let you manage jobs, track installed parts, and organize your build like a pro.
+                            The Workshop is a professional-grade tool for managing builds, parts, and jobs. Upgrade to Pro or Vanguard to unlock this feature.
                         </p>
-                        <p className="text-xs text-muted-foreground/60 italic pt-2">
-                            (Seriously, we're coding as fast as we can. It's gonna be awesome.)
-                        </p>
+                        <Button className="w-full" asChild>
+                            <a href="/pricing">View Plans</a>
+                        </Button>
                     </div>
                 </div>
 
@@ -196,10 +207,13 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                                     priority: 1, // Default priority as it might be missing in VehicleInstalledComponent type overlap
                                     purchase_price: part.purchase_price,
                                     purchase_url: part.purchase_url,
-                                    vehicle_id: vehicleId
+                                    vehicle_id: vehicleId,
+                                    tracking_number: part.tracking_number, // Pass tracking info
+                                    carrier: part.carrier
                                 }}
                                 onUpdate={refreshData}
                                 onEdit={handleEditItem}
+                                onMarkArrived={handleMarkArrived}
                             />
                         ))}
                         {wishlist.length === 0 && <EmptyState text="No items in wishlist" />}

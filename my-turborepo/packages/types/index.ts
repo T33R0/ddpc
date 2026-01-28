@@ -17,6 +17,26 @@ export interface User {
   notifyOnIssueReport?: boolean;
 }
 
+// Workshop Preferences Types
+export type SkillLevel = 'beginner' | 'intermediate' | 'experienced' | 'professional';
+
+export interface UserTool {
+  name: string;
+  category?: string;
+  owned: boolean;
+  suggested?: boolean;  // AI-suggested based on active vehicles
+}
+
+export interface UserPreferences {
+  user_id: string;
+  history_filters?: string[];
+  skill_level?: SkillLevel;
+  tool_inventory?: UserTool[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+
 export interface Vehicle {
   id: string;
   name?: string; // User-defined name/nickname

@@ -26,6 +26,7 @@ export interface JobTask {
     order_index: number;
     instruction: string;
     notes?: string | null;
+    phase: 'teardown' | 'assembly';
     is_done_tear: boolean;
     is_done_build: boolean;
 }

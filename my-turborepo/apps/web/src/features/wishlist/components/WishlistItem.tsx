@@ -8,6 +8,7 @@ import { ExternalLink, Trash2, ShoppingBag, Loader2, Plus } from 'lucide-react'
 import { deleteWishlistItem } from '../actions'
 import { cn } from '@repo/ui/lib/utils'
 import { useRouter } from 'next/navigation'
+import { getTrackingLink } from '@/features/workshop/utils';
 
 // Migrated to 'inventory' schema
 interface WishlistItemProps {
@@ -20,12 +21,15 @@ interface WishlistItemProps {
     status: 'wishlist' | 'purchased' | string
     vehicle_id: string
     category?: string | null
+    tracking_number?: string | null
+    carrier?: string | null
   }
   onUpdate?: () => void
   onAddToJob?: (id: string) => void
+  onMarkArrived?: (id: string) => void
 }
 
-export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: WishlistItemProps & { onEdit?: (item: any) => void }) {
+export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArrived }: WishlistItemProps & { onEdit?: (item: any) => void }) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -87,9 +91,23 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
               {!isHistory && renderPriorityBadge(item.priority)}
 
               {isOrdered && (
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs py-0 h-5">
-                  Ordered
-                </Badge>
+                <div className="flex gap-1">
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs py-0 h-5">
+                    Ordered
+                  </Badge>
+                  {item.tracking_number && (
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-muted text-xs py-0 h-5 border-dashed gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(getTrackingLink(item.tracking_number!, item.carrier), '_blank');
+                      }}
+                    >
+                      <span className="opacity-70">🚚</span> {item.tracking_number}
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
 
@@ -126,6 +144,21 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob }: Wishlis
                 title="Add to Job"
               >
                 <Plus className="w-4 h-4" />
+              </Button>
+            )}
+
+            {isOrdered && onMarkArrived && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-[10px] px-2 gap-1 border-dashed text-green-600 hover:text-green-700 hover:bg-green-500/10 hover:border-green-500/20"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMarkArrived(item.id)
+                }}
+                title="Mark Arrived"
+              >
+                📦 Arrived
               </Button>
             )}
 

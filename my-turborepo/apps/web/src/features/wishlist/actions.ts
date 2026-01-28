@@ -47,7 +47,9 @@ export async function createWishlistItem(data: any) {
         quantity: data.quantity || 1, // Default to 1
         purchased_at: data.purchased_at || null,
         priority: data.priority, // 1-5
-        status: data.status || 'wishlist' // Default to wishlist
+        status: data.status || 'wishlist', // Default to wishlist
+        tracking_number: data.tracking_number || null,
+        carrier: data.carrier || null
       })
 
     if (error) {
@@ -103,7 +105,9 @@ export async function updateWishlistItem(id: string, data: any) {
         quantity: data.quantity,
         purchased_at: data.purchased_at,
         priority: data.priority,
-        status: data.status
+        status: data.status,
+        tracking_number: data.tracking_number,
+        carrier: data.carrier
       })
       .eq('id', id)
       .eq('user_id', user.id) // Ensure ownership

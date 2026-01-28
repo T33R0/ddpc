@@ -12,7 +12,7 @@ interface UserProfile {
   displayName: string | null;
   avatarUrl: string | null;
   role: string | null;
-  plan: 'free' | 'pro' | null;
+  plan: 'free' | 'pro' | 'vanguard' | null;
 }
 
 interface UserProfileRow {
@@ -62,7 +62,9 @@ export function AuthProvider({
   const profileFetchedForInitialSession = useRef(false);
 
   const mapProfileRow = (row: UserProfileRow): UserProfile => {
-    const plan: 'free' | 'pro' = (row.role === 'admin' || row.plan?.toLowerCase() === 'pro') ? 'pro' : 'free';
+    const plan: 'free' | 'pro' | 'vanguard' = (row.role === 'admin' || row.plan?.toLowerCase() === 'vanguard') ? 'vanguard' 
+      : (row.plan?.toLowerCase() === 'pro') ? 'pro' 
+      : 'free';
     const mapped: UserProfile = {
       id: row.user_id,
       username: row.username,

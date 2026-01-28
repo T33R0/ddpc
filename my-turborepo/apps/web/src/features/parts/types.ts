@@ -34,6 +34,8 @@ export interface VehicleInstalledComponent {
   purchase_price: number | null; // was purchase_cost
   quantity: number; // default 1
   purchased_at: string | null;
+  tracking_number?: string | null;
+  carrier?: string | null;
   status: 'installed' | 'planned' | 'wishlist' | 'in_stock' | 'ordered'; // expanded status
 
   master_part_id?: string; // Foreign Key to master_parts

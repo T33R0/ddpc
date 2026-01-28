@@ -34,6 +34,8 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
   const [purchasedAt, setPurchasedAt] = useState('')
   const [priority, setPriority] = useState<string>('3')
   const [status, setStatus] = useState<string>('wishlist')
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [carrier, setCarrier] = useState('')
 
   useEffect(() => {
     if (isOpen && initialData) {
@@ -46,7 +48,10 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
       const dateStr: string = (dateVal && !isNaN(dateVal.getTime())) ? dateVal.toISOString().substring(0, 10) : '';
       setPurchasedAt(dateStr)
       setPriority(initialData.priority ? String(initialData.priority) : '3')
+      setPriority(initialData.priority ? String(initialData.priority) : '3')
       setStatus(initialData.status)
+      setTrackingNumber(initialData.tracking_number || '')
+      setCarrier(initialData.carrier || '')
     } else if (isOpen && !initialData) {
       // Reset for creating new
       setName('')
@@ -56,7 +61,10 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
       setQuantity('1')
       setPurchasedAt('')
       setPriority('3')
+      setPriority('3')
       setStatus('wishlist')
+      setTrackingNumber('')
+      setCarrier('')
     }
     setError(null)
     setIsDeleting(false) // Reset deleting state
@@ -79,7 +87,9 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
         quantity: parseInt(quantity) || 1,
         purchased_at: (status === 'ordered' || status === 'in_stock') && purchasedAt ? new Date(purchasedAt).toISOString() : null,
         priority: parseInt(priority),
-        status: status
+        status: status,
+        tracking_number: status === 'ordered' ? trackingNumber : null,
+        carrier: status === 'ordered' ? carrier : null
       }
 
       if (initialData) {
@@ -101,7 +111,10 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
         setQuantity('1')
         setPurchasedAt('')
         setPriority('3')
+        setPriority('3')
         setStatus('wishlist')
+        setTrackingNumber('')
+        setCarrier('')
       }
 
       toast({
@@ -281,6 +294,37 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
               </Select>
             </div>
           </div>
+
+
+
+          {status === 'ordered' && (
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+              <div className="space-y-2">
+                <Label htmlFor="trackingNumber">Tracking Number</Label>
+                <Input
+                  id="trackingNumber"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="1Z99..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="carrier">Carrier (Optional)</Label>
+                <Select value={carrier} onValueChange={setCarrier}>
+                  <SelectTrigger id="carrier">
+                    <SelectValue placeholder="Select carrier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="usps">USPS</SelectItem>
+                    <SelectItem value="ups">UPS</SelectItem>
+                    <SelectItem value="fedex">FedEx</SelectItem>
+                    <SelectItem value="dhl">DHL</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           {(status === 'ordered' || status === 'in_stock') && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-1">

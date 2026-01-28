@@ -27,13 +27,18 @@ import {
   Eye,
   EyeOff,
   Palette,
-  Check
+  Check,
+  Wrench,
+  Plus,
+  Loader2,
+  Sparkles,
+  X
 } from 'lucide-react';
-import { User as UserType } from '@repo/types';
+import { User as UserType, SkillLevel, UserTool } from '@repo/types';
 import { supabase } from '../../lib/supabase';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../../lib/user-routing';
 
-type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme';
+type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme' | 'workshop';
 
 export default function AccountPage() {
   const { user: authUser, signOut, loading, session, signUp, signIn, signInWithGoogle, refreshProfile } = useAuth();
@@ -72,6 +77,13 @@ export default function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Workshop Preferences State
+  const [skillLevel, setSkillLevel] = useState<SkillLevel>('beginner');
+  const [toolInventory, setToolInventory] = useState<UserTool[]>([]);
+  const [newToolName, setNewToolName] = useState('');
+  const [isLoadingWorkshop, setIsLoadingWorkshop] = useState(false);
+  const [isSuggestingTools, setIsSuggestingTools] = useState(false);
 
   const fetchEmailPreferences = useCallback(async () => {
     if (!session?.access_token) return;
@@ -196,6 +208,18 @@ export default function AccountPage() {
     }
     if (authUser && session?.access_token) {
       fetchUserProfile();
+      // Fetch workshop preferences
+      supabase
+        .from('user_preferences')
+        .select('skill_level, tool_inventory')
+        .eq('user_id', authUser.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data) {
+            if (data.skill_level) setSkillLevel(data.skill_level as SkillLevel);
+            if (data.tool_inventory) setToolInventory(data.tool_inventory);
+          }
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser, loading, session?.access_token]);
@@ -257,7 +281,7 @@ export default function AccountPage() {
   // Handle tab from URL
   useEffect(() => {
     const tab = searchParams?.get('tab');
-    if (tab && ['profile', 'security', 'billing', 'account', 'theme'].includes(tab)) {
+    if (tab && ['profile', 'security', 'billing', 'account', 'theme', 'workshop'].includes(tab)) {
       setActiveTab(tab as TabType);
     }
   }, [searchParams]);
@@ -743,6 +767,10 @@ export default function AccountPage() {
               <ToggleGroupItem value="theme" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
                 <Palette className="h-4 w-4 mr-2" />
                 Theme
+              </ToggleGroupItem>
+              <ToggleGroupItem value="workshop" className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground hover:bg-muted">
+                <Wrench className="h-4 w-4 mr-2" />
+                Workshop
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -1395,6 +1423,221 @@ export default function AccountPage() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Workshop Tab */}
+            {activeTab === 'workshop' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Skill Level Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      Skill Level
+                    </CardTitle>
+                    <CardDescription>
+                      Adjusts AI guidance detail level in Workshop mission plans
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'beginner', label: 'Beginner', desc: 'Detailed explanations, step-by-step' },
+                        { value: 'intermediate', label: 'Intermediate', desc: 'Standard detail, focus on gotchas' },
+                        { value: 'experienced', label: 'Experienced', desc: 'Abbreviated, specs-focused' },
+                        { value: 'professional', label: 'Professional', desc: 'Spec sheet mode only' }
+                      ].map((level) => (
+                        <label
+                          key={level.value}
+                          className={`flex flex-col p-4 rounded-lg cursor-pointer transition-all border ${
+                            skillLevel === level.value
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-muted-foreground'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="skillLevel"
+                              value={level.value}
+                              checked={skillLevel === level.value}
+                              onChange={(e) => setSkillLevel(e.target.value as SkillLevel)}
+                              className="w-4 h-4 text-primary bg-background border-border"
+                            />
+                            <span className="font-medium text-foreground">{level.label}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1 ml-6">{level.desc}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tool Inventory Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Wrench className="h-5 w-5" />
+                      Tool Inventory
+                    </CardTitle>
+                    <CardDescription>
+                      Track your tools—AI will suggest alternatives for missing ones
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Add Tool Input */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add a tool (e.g., 10mm socket)"
+                        value={newToolName}
+                        onChange={(e) => setNewToolName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newToolName.trim()) {
+                            setToolInventory(prev => [
+                              ...prev,
+                              { name: newToolName.trim(), owned: true }
+                            ]);
+                            setNewToolName('');
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          if (newToolName.trim()) {
+                            setToolInventory(prev => [
+                              ...prev,
+                              { name: newToolName.trim(), owned: true }
+                            ]);
+                            setNewToolName('');
+                          }
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Tool List */}
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {toolInventory.length === 0 ? (
+                        <div className="text-sm text-muted-foreground text-center py-4">
+                          No tools added yet. Add your tools above or use AI suggestions.
+                        </div>
+                      ) : (
+                        toolInventory.map((tool, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-2 rounded-lg border border-border"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Switch
+                                checked={tool.owned}
+                                onCheckedChange={(checked) => {
+                                  setToolInventory(prev => prev.map((t, i) =>
+                                    i === idx ? { ...t, owned: checked } : t
+                                  ));
+                                }}
+                              />
+                              <span className={tool.owned ? 'text-foreground' : 'text-muted-foreground'}>
+                                {tool.name}
+                              </span>
+                              {tool.suggested && (
+                                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                  AI Suggested
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => {
+                                setToolInventory(prev => prev.filter((_, i) => i !== idx));
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* AI Suggest Button */}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={isSuggestingTools}
+                      onClick={async () => {
+                        if (!session?.access_token) return;
+                        setIsSuggestingTools(true);
+                        try {
+                          const response = await fetch('/api/workshop/suggest-tools', {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${session.access_token}`,
+                              'Content-Type': 'application/json'
+                            }
+                          });
+                          const data = await response.json();
+                          if (data.tools && Array.isArray(data.tools)) {
+                            // Merge with existing, avoiding duplicates
+                            const existingNames = new Set(toolInventory.map(t => t.name.toLowerCase()));
+                            const newTools = data.tools
+                              .filter((name: string) => !existingNames.has(name.toLowerCase()))
+                              .map((name: string) => ({ name, owned: false, suggested: true }));
+                            setToolInventory(prev => [...prev, ...newTools]);
+                            toast.success(`Added ${newTools.length} suggested tools`);
+                          }
+                        } catch (error) {
+                          console.error('Error suggesting tools:', error);
+                          toast.error('Failed to get tool suggestions');
+                        } finally {
+                          setIsSuggestingTools(false);
+                        }
+                      }}
+                    >
+                      {isSuggestingTools ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Analyzing Vehicles...</>
+                      ) : (
+                        <><Sparkles className="h-4 w-4 mr-2" /> Suggest Tools for My Vehicles</>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Save Button - Full Width */}
+                <div className="md:col-span-2">
+                  <Button
+                    onClick={async () => {
+                      if (!session?.access_token || !authUser) return;
+                      setIsLoadingWorkshop(true);
+                      try {
+                        const { error } = await supabase
+                          .from('user_preferences')
+                          .upsert({
+                            user_id: authUser.id,
+                            skill_level: skillLevel,
+                            tool_inventory: toolInventory,
+                            updated_at: new Date().toISOString()
+                          });
+                        if (error) throw error;
+                        toast.success('Workshop preferences saved!');
+                      } catch (error) {
+                        console.error('Error saving workshop preferences:', error);
+                        toast.error('Failed to save preferences');
+                      } finally {
+                        setIsLoadingWorkshop(false);
+                      }
+                    }}
+                    disabled={isLoadingWorkshop}
+                    className="w-full"
+                  >
+                    {isLoadingWorkshop ? 'Saving...' : 'Save Workshop Preferences'}
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>
