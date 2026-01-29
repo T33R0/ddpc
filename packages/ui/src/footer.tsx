@@ -6,11 +6,8 @@ import { Linkedin } from 'lucide-react';
 
 const navLinks = [
   { name: 'About', href: '/about' },
-  { name: 'Join', href: '/join' },
-  { name: 'Features', href: '/features' },
   { name: 'Pricing', href: '/pricing' },
   { name: 'Contact Us', href: '/contact' },
-  { name: 'Help Center', href: '/help' },
 ];
 
 const RedditIcon = (props: React.SVGProps<SVGSVGElement>) => (
