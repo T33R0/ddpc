@@ -23,7 +23,6 @@ function loadConstitution(): any {
     const possiblePaths = [
       join(process.cwd(), '..', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From apps/web to apps/docs
       join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From workspace root
-      join(process.cwd(), 'my-turborepo', 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From outer root
     ];
 
     let fileContents: string | null = null;
