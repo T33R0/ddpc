@@ -53,7 +53,7 @@ export function JobCard({ job, onStart, onOpen, className }: JobCardProps) {
 
                 <div className="flex justify-end pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {isPlanned && onStart && (
-                        <Button size="sm" className="h-7 text-xs px-2 gap-1 bg-blue-600 hover:bg-blue-700 text-white" onClick={(e) => { e.stopPropagation(); onStart(job.id); }}>
+                        <Button size="sm" className="h-7 text-xs px-2 gap-1 bg-info hover:bg-info/90 text-info-foreground" onClick={(e) => { e.stopPropagation(); onStart(job.id); }}>
                             <Play className="w-3 h-3" /> Start
                         </Button>
                     )}

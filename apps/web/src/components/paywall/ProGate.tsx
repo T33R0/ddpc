@@ -43,7 +43,7 @@ export function ProGate({ children, fallback, blur = true }: ProGateProps) {
       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm p-6 text-center">
         <div className="bg-card border border-border rounded-xl p-8 shadow-2xl max-w-md w-full flex flex-col items-center">
           <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mb-6 shadow-lg">
-            <Lock className="w-8 h-8 text-white" />
+            <Lock className="w-8 h-8 text-primary-foreground" />
           </div>
           <h2 className="text-2xl font-bold mb-2">Pro Feature Locked</h2>
           <p className="text-muted-foreground mb-8">
@@ -51,7 +51,7 @@ export function ProGate({ children, fallback, blur = true }: ProGateProps) {
           </p>
           <Button
             onClick={triggerPaywall}
-            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold"
+            className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground font-semibold"
           >
             Unlock Access
           </Button>

@@ -92,7 +92,7 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArr
 
               {isOrdered && (
                 <div className="flex gap-1">
-                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs py-0 h-5">
+                  <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs py-0 h-5">
                     Ordered
                   </Badge>
                   {item.tracking_number && (
@@ -136,7 +136,7 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArr
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                className="h-8 w-8 text-info hover:text-info/90 hover:bg-info/10"
                 onClick={(e) => {
                   e.stopPropagation()
                   onAddToJob(item.id)
@@ -151,7 +151,7 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArr
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-[10px] px-2 gap-1 border-dashed text-green-600 hover:text-green-700 hover:bg-green-500/10 hover:border-green-500/20"
+                className="h-8 text-[10px] px-2 gap-1 border-dashed text-success hover:text-success/90 hover:bg-success/10 hover:border-success/20"
                 onClick={(e) => {
                   e.stopPropagation()
                   onMarkArrived(item.id)

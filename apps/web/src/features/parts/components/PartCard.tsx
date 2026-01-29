@@ -26,10 +26,10 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
   // Color mapping for health bar
   const getHealthColor = (status: HealthStatus) => {
     switch (status) {
-      case 'Good': return 'bg-green-500';
-      case 'Warning': return 'bg-yellow-500';
-      case 'Critical': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'Good': return 'bg-success';
+      case 'Warning': return 'bg-warning';
+      case 'Critical': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
 
@@ -43,7 +43,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
     <Card
       className={`h-full flex flex-col
         ${isInstalled && onViewDetails ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
-        ${slot.installedComponent?.status === 'planned' ? 'border-dashed border-blue-200 bg-blue-50/10' : ''}
+        ${slot.installedComponent?.status === 'planned' ? 'border-dashed border-info/30 bg-info/5' : ''}
       `}
       onClick={isInstalled && onViewDetails ? () => onViewDetails(slot) : undefined}
     >
@@ -143,10 +143,10 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
               <div className="flex justify-between text-xs items-end">
                 <span className="font-semibold text-muted-foreground">Health</span>
                 <span className={
-                  slot.installedComponent.status === 'planned' ? 'text-blue-500 font-bold' :
-                    health?.status === 'Critical' ? 'text-red-500 font-bold' :
-                      health?.status === 'Warning' ? 'text-yellow-500 font-bold' :
-                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-green-500' // Handle Unknown color
+                  slot.installedComponent.status === 'planned' ? 'text-info font-bold' :
+                    health?.status === 'Critical' ? 'text-destructive font-bold' :
+                      health?.status === 'Warning' ? 'text-warning font-bold' :
+                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-success' // Handle Unknown color
                 }>
                   {slot.installedComponent.status === 'planned' ? 'Planned' : health?.status}
                 </span>

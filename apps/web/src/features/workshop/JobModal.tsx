@@ -609,7 +609,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     )}
 
                     {isActive && activeTab === 'plan' && (
-                        <Button onClick={() => setShowFinishConfirm(true)} disabled={isPending} className="w-full sm:w-auto gap-2 bg-green-600 hover:bg-green-700 text-white">
+                        <Button onClick={() => setShowFinishConfirm(true)} disabled={isPending} className="w-full sm:w-auto gap-2 bg-success hover:bg-success/90 text-success-foreground">
                             Complete Mission <CheckCircle2 className="w-4 h-4" />
                         </Button>
                     )}
@@ -620,7 +620,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                         <div className="bg-card border shadow-lg rounded-xl p-6 max-w-sm w-full space-y-4 animate-in fade-in zoom-in-95">
                             <div className="text-center space-y-2">
-                                <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                                <div className="mx-auto w-12 h-12 bg-success/10 text-success rounded-full flex items-center justify-center">
                                     <CheckCircle2 className="w-6 h-6" />
                                 </div>
                                 <h3 className="font-semibold text-lg">Mission Accomplished?</h3>

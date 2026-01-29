@@ -14,15 +14,15 @@ export function VehicleStatusBadge({ status, className }: VehicleStatusBadgeProp
   const getStatusStyles = (s: string) => {
     switch (s) {
       case 'active':
-        return 'bg-green-500/25 text-green-400 border-green-500/50 hover:bg-green-500/35'
+        return 'bg-success/25 text-success border-success/50 hover:bg-success/35'
       case 'inactive':
-        return 'bg-blue-500/25 text-blue-400 border-blue-500/50 hover:bg-blue-500/35'
+        return 'bg-info/25 text-info border-info/50 hover:bg-info/35'
       case 'archived':
-        return 'bg-gray-500/25 text-gray-400 border-gray-500/50 hover:bg-gray-500/35'
+        return 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
       default:
         // Fallback to active style or specific unknown style?
-        // Using grey as safe fallback for unknown statuses
-        return 'bg-gray-500/25 text-gray-400 border-gray-500/50 hover:bg-gray-500/35'
+        // Using muted as safe fallback for unknown statuses
+        return 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
     }
   }
 

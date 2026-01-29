@@ -38,7 +38,7 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
       return (
         <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
           <p className="text-popover-foreground font-semibold">{label ? `Date: ${label}` : 'Date: N/A'}</p>
-          <p className="text-green-500">{`MPG: ${typeof mpgValue === 'number' ? mpgValue.toFixed(1) : 'N/A'}`}</p>
+          <p className="text-success">{`MPG: ${typeof mpgValue === 'number' ? mpgValue.toFixed(1) : 'N/A'}`}</p>
           <p className="text-muted-foreground text-sm">{`Gallons: ${typeof data.gallons === 'number' ? data.gallons.toFixed(1) : 'N/A'}`}</p>
           <p className="text-muted-foreground text-sm">{`Odometer: ${typeof data.odometer === 'number' ? data.odometer.toLocaleString() : 'N/A'} mi`}</p>
           {data.cost && typeof data.cost === 'number' && (
@@ -101,17 +101,17 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
               <Line
                 type="monotone"
                 dataKey="mpg"
-                stroke="#10B981"
+                stroke="hsl(var(--chart-1))"
                 strokeWidth={2}
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2, fill: '#065F46' }}
+                dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: 'hsl(var(--chart-1))', strokeWidth: 2, fill: 'hsl(var(--success))' }}
               />
               {/* Factory MPG reference line */}
               {factoryMpg && (
                 <Line
                   type="monotone"
                   dataKey={() => factoryMpg}
-                  stroke="#3B82F6"
+                  stroke="hsl(var(--chart-2))"
                   strokeDasharray="5 5"
                   strokeWidth={1}
                   dot={false}
@@ -125,9 +125,9 @@ export function FuelHistoryChart({ fuelEntries, factoryMpg }: FuelHistoryChartPr
         {factoryMpg && (
           <div className="flex items-center justify-center mt-2 text-xs text-muted-foreground">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-0.5 bg-green-400"></div>
+              <div className="w-3 h-0.5 bg-chart-1"></div>
               <span>Your MPG</span>
-              <div className="w-3 h-0.5 bg-blue-400 border-dashed border-t"></div>
+              <div className="w-3 h-0.5 bg-chart-2 border-dashed border-t"></div>
               <span>Factory EPA ({factoryMpg} MPG)</span>
             </div>
           </div>
