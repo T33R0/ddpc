@@ -11,8 +11,9 @@ import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
 import { Switch } from '@repo/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
-import { Plus, Trash2, Send, Calendar, Clock, Save, Eye, Users } from 'lucide-react';
+import { Plus, Trash2, Send, Calendar, Clock, Save, Eye, Users, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { parseSimpleMarkdown } from '../../../lib/text-formatting';
 
 type TabType = 'compose' | 'settings' | 'recipients';
 
@@ -203,9 +204,9 @@ export default function EmailAdminPage() {
     // Live Preview Component
     const Preview = () => (
         <div className="bg-white text-black font-sans p-8 rounded-lg shadow-lg border border-gray-200 max-w-2xl mx-auto">
-            <div className="border-b border-gray-200 pb-4 mb-6">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">DDPC // BUILD LOG</h1>
-                <p className="text-gray-500 text-sm mt-1">Progress for the week of {(() => {
+            <div className="text-center border-b border-gray-100 pb-8 mb-8">
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">DDPC // BUILD LOG</h1>
+                <p className="text-gray-500 text-sm">Progress for the week of {(() => {
                     const parts = buildLogData.date.split('-').map(Number);
                     if (parts.length === 3) {
                         const [y, m, d] = parts as [number, number, number];
@@ -215,24 +216,30 @@ export default function EmailAdminPage() {
                 })()}</p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
                 {buildLogData.message && (
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">Message from the ddpc team:</h3>
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{buildLogData.message}</p>
+                    <div className="mb-8">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">FROM THE SHOP</h3>
+                        <div 
+                            className="text-gray-700 leading-relaxed text-base"
+                            dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(buildLogData.message) }}
+                        />
                     </div>
                 )}
 
+                <div className="border-b border-gray-100 mb-8" />
+
                 {buildLogData.features.some(f => f.trim()) && (
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">New Features</h3>
-                        <ul className="space-y-3">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">FRESH OFF THE LIFT</h3>
+                        <ul className="space-y-2">
                             {buildLogData.features.filter(f => f.trim()).map((feature, i) => (
                                 <li key={i} className="flex items-start gap-3">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 shrink-0 mt-0.5">
-                                        NEW
-                                    </span>
-                                    <span className="text-gray-700 leading-relaxed">{feature}</span>
+                                    <span className="text-black font-bold mt-0.5">•</span>
+                                    <span 
+                                        className="text-gray-900 leading-relaxed text-sm"
+                                        dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(feature) }}
+                                    />
                                 </li>
                             ))}
                         </ul>
@@ -241,14 +248,15 @@ export default function EmailAdminPage() {
 
                 {buildLogData.fixes.some(f => f.trim()) && (
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Fixes & Repairs</h3>
-                        <ul className="space-y-3">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">UNDER THE HOOD FIXES</h3>
+                        <ul className="space-y-2">
                             {buildLogData.fixes.filter(f => f.trim()).map((fix, i) => (
                                 <li key={i} className="flex items-start gap-3">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 shrink-0 mt-0.5">
-                                        FIX
-                                    </span>
-                                    <span className="text-gray-700 leading-relaxed">{fix}</span>
+                                    <span className="text-black font-bold mt-0.5">•</span>
+                                    <span 
+                                        className="text-gray-900 leading-relaxed text-sm"
+                                        dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(fix) }}
+                                    />
                                 </li>
                             ))}
                         </ul>
@@ -257,33 +265,39 @@ export default function EmailAdminPage() {
 
                 {buildLogData.improvements.some(f => f.trim()) && (
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Future Improvements</h3>
-                        <ul className="space-y-3">
+                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">ON THE ROADMAP</h3>
+                        <ul className="space-y-2">
                             {buildLogData.improvements.filter(f => f.trim()).map((imp, i) => (
                                 <li key={i} className="flex items-start gap-3">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800 shrink-0 mt-0.5">
-                                        SOON
-                                    </span>
-                                    <span className="text-gray-700 leading-relaxed">{imp}</span>
+                                    <span className="text-black font-bold mt-0.5">•</span>
+                                    <span 
+                                        className="text-gray-900 leading-relaxed text-sm"
+                                        dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(imp) }}
+                                    />
                                 </li>
                             ))}
                         </ul>
                     </div>
                 )}
 
+                <div className="border-b border-gray-100 my-8" />
+
                 {buildLogData.proTip && (
-                    <div className="bg-gray-50 p-4 rounded-md border border-gray-100 my-6">
-                        <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            💡 Pro Tip
+                    <div className="mb-8">
+                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            💡 PIT CREW TIP
                         </h4>
-                        <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
-                            {buildLogData.proTip}
-                        </div>
+                        <div 
+                            className="text-gray-600 text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(buildLogData.proTip) }}
+                        />
                     </div>
                 )}
 
+                <div className="border-b border-gray-100 my-8" />
+
                 <div className="text-center my-8">
-                    <a href="/garage" className="inline-block bg-black text-white font-semibold py-3 px-6 rounded-md hover:bg-gray-800 transition-colors">
+                    <a href="#" className="inline-block bg-black text-white font-semibold py-3 px-6 rounded-md">
                         Go to my Garage
                     </a>
                 </div>
@@ -292,7 +306,7 @@ export default function EmailAdminPage() {
                     <p className="text-xs text-gray-400">
                         You received this email because you are subscribed to the Weekly Build Log.
                         <br />
-                        <a href="/account" className="underline hover:text-gray-600">Unsubscribe from updates</a>.
+                        <span className="underline">Unsubscribe from updates</span>.
                     </p>
                 </div>
             </div>
@@ -379,7 +393,13 @@ export default function EmailAdminPage() {
 
                                 {/* Message */}
                                 <div className="space-y-2">
-                                    <Label>Message from the ddpc team</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label>From The Shop (Message)</Label>
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                            <Info className="h-3 w-3" />
+                                            <span>Use **bold**, *italic*, __underline__</span>
+                                        </div>
+                                    </div>
                                     <Textarea
                                         value={buildLogData.message}
                                         onChange={(e) => setBuildLogData(prev => ({ ...prev, message: e.target.value }))}
@@ -391,7 +411,7 @@ export default function EmailAdminPage() {
                                 {/* Features */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <Label className="text-green-500 font-semibold">New Features</Label>
+                                        <Label className="text-green-600 font-semibold">Fresh Off The Lift (New Features)</Label>
                                         <Button variant="outline" size="sm" onClick={addFeature} type="button">
                                             <Plus className="h-3 w-3 mr-1" /> Add
                                         </Button>
@@ -418,7 +438,7 @@ export default function EmailAdminPage() {
                                 {/* Fixes */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <Label className="text-red-500 font-semibold">Fixes & Repairs</Label>
+                                        <Label className="text-red-600 font-semibold">Under The Hood (Fixes)</Label>
                                         <Button variant="outline" size="sm" onClick={addFix} type="button">
                                             <Plus className="h-3 w-3 mr-1" /> Add
                                         </Button>
@@ -445,7 +465,7 @@ export default function EmailAdminPage() {
                                 {/* Improvements */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <Label className="text-sky-500 font-semibold">Future Improvements</Label>
+                                        <Label className="text-sky-600 font-semibold">On The Roadmap (Improvements)</Label>
                                         <Button variant="outline" size="sm" onClick={addImprovement} type="button">
                                             <Plus className="h-3 w-3 mr-1" /> Add
                                         </Button>
@@ -471,7 +491,7 @@ export default function EmailAdminPage() {
 
                                 {/* Pro Tip */}
                                 <div className="space-y-2">
-                                    <Label>Pro Tip</Label>
+                                    <Label>Pit Crew Tip</Label>
                                     <Textarea
                                         value={buildLogData.proTip}
                                         onChange={(e) => setBuildLogData(prev => ({ ...prev, proTip: e.target.value }))}

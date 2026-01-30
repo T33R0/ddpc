@@ -14,6 +14,7 @@ import {
     Hr,
     Button,
 } from '@react-email/components';
+import { parseSimpleMarkdown } from '../../lib/text-formatting';
 
 interface WeeklyBuildLogProps {
     date: string;
@@ -45,25 +46,35 @@ export const WeeklyBuildLog = ({
             <Body style={main}>
                 <Container style={container}>
                     <Heading style={h1}>DDPC // BUILD LOG</Heading>
-                    <Text style={intro}>Progress for the week of {formattedDate}.</Text>
+                    <Text style={intro}>Progress for the week of {formattedDate}</Text>
+
+                    <Hr style={divider} />
 
                     {message && (
-                        <Section style={messageBox}>
-                            <Text style={messageHeader}>Message from the ddpc team:</Text>
-                            <Text style={messageText}>{message}</Text>
+                        <Section style={section}>
+                            <Text style={subHeader}>FROM THE SHOP</Text>
+                            <Text 
+                                style={messageText}
+                                dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(message) }}
+                            />
                         </Section>
                     )}
 
+                    <Hr style={divider} />
+
                     {features.length > 0 && (
                         <Section style={section}>
-                            <Text style={subHeader}>NEW FEATURES</Text>
+                            <Text style={subHeader}>FRESH OFF THE LIFT</Text>
                             {features.map((feature, index) => (
                                 <Row key={index} style={itemRow}>
-                                    <Column style={badgeCol}>
-                                        <Text style={newBadge}>NEW</Text>
+                                    <Column style={bulletCol}>
+                                        <Text style={bullet}>•</Text>
                                     </Column>
                                     <Column>
-                                        <Text style={itemText}>{feature}</Text>
+                                        <Text 
+                                            style={itemText}
+                                            dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(feature) }}
+                                        />
                                     </Column>
                                 </Row>
                             ))}
@@ -72,14 +83,17 @@ export const WeeklyBuildLog = ({
 
                     {fixes.length > 0 && (
                         <Section style={section}>
-                            <Text style={subHeader}>FIXES & REPAIRS</Text>
+                            <Text style={subHeader}>UNDER THE HOOD FIXES</Text>
                             {fixes.map((fix, index) => (
                                 <Row key={index} style={itemRow}>
-                                    <Column style={badgeCol}>
-                                        <Text style={fixBadge}>FIX</Text>
+                                    <Column style={bulletCol}>
+                                        <Text style={bullet}>•</Text>
                                     </Column>
                                     <Column>
-                                        <Text style={itemText}>{fix}</Text>
+                                        <Text 
+                                            style={itemText}
+                                            dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(fix) }}
+                                        />
                                     </Column>
                                 </Row>
                             ))}
@@ -88,26 +102,36 @@ export const WeeklyBuildLog = ({
 
                     {improvements.length > 0 && (
                         <Section style={section}>
-                            <Text style={subHeader}>FUTURE IMPROVEMENTS</Text>
+                            <Text style={subHeader}>ON THE ROADMAP</Text>
                             {improvements.map((improvement, index) => (
                                 <Row key={index} style={itemRow}>
-                                    <Column style={badgeCol}>
-                                        <Text style={improveBadge}>SOON</Text>
+                                    <Column style={bulletCol}>
+                                        <Text style={bullet}>•</Text>
                                     </Column>
                                     <Column>
-                                        <Text style={itemText}>{improvement}</Text>
+                                        <Text 
+                                            style={itemText}
+                                            dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(improvement) }}
+                                        />
                                     </Column>
                                 </Row>
                             ))}
                         </Section>
                     )}
 
+                    <Hr style={divider} />
+
                     {proTip && (
-                        <Section style={proTipBox}>
-                            <Text style={proTipHeader}>💡 PRO TIP</Text>
-                            <Text style={proTipText}>{proTip}</Text>
+                        <Section style={section}>
+                            <Text style={subHeader}>💡 PIT CREW TIP</Text>
+                            <Text 
+                                style={messageText}
+                                dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(proTip) }}
+                            />
                         </Section>
                     )}
+
+                    <Hr style={divider} />
 
                     <Section style={buttonSection}>
                         <Button style={button} href="{{AppUrl}}/garage">
@@ -154,6 +178,7 @@ const h1 = {
     lineHeight: '1.3',
     margin: '16px 0',
     padding: '0',
+    textAlign: 'center' as const,
 };
 
 const intro = {
@@ -161,28 +186,36 @@ const intro = {
     fontSize: '15px',
     lineHeight: '1.4',
     margin: '0 0 24px',
+    textAlign: 'center' as const,
 };
 
 const section = {
-    margin: '0 0 24px',
+    margin: '0 0 32px',
 };
 
 const subHeader = {
-    color: '#888',
+    color: '#666',
     fontSize: '12px',
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: '1px',
     textTransform: 'uppercase' as const,
-    marginBottom: '12px',
+    marginBottom: '16px',
 };
 
 const itemRow = {
     marginBottom: '8px',
 };
 
-const badgeCol = {
-    width: '50px',
+const bulletCol = {
+    width: '24px',
     verticalAlign: 'top',
+};
+
+const bullet = {
+    color: '#1a1a1a',
+    fontSize: '14px',
+    lineHeight: '1.5',
+    margin: '0',
 };
 
 const itemText = {
@@ -192,72 +225,11 @@ const itemText = {
     margin: '0',
 };
 
-const badgeBase = {
-    fontSize: '10px',
-    fontWeight: '700',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    display: 'inline-block',
-    marginRight: '8px',
-    margin: '0',
-};
-
-const newBadge = {
-    ...badgeBase,
-    backgroundColor: '#dcfce7', // green-100
-    color: '#166534', // green-800
-};
-
-const fixBadge = {
-    ...badgeBase,
-    backgroundColor: '#fee2e2', // red-100
-    color: '#991b1b', // red-800
-};
-
-const improveBadge = {
-    ...badgeBase,
-    backgroundColor: '#e0f2fe', // sky-100
-    color: '#075985', // sky-800
-};
-
-const messageBox = {
-    marginBottom: '24px',
-};
-
-const messageHeader = {
-    fontSize: '18px',
-    fontWeight: '700',
-    marginBottom: '8px',
-    color: '#1a1a1a',
-};
-
 const messageText = {
     fontSize: '16px',
     lineHeight: '1.6',
     color: '#374151',
     marginTop: '0',
-};
-
-const proTipBox = {
-    backgroundColor: '#f9fafb',
-    borderRadius: '8px',
-    padding: '16px',
-    border: '1px solid #e5e7eb',
-    marginTop: '32px',
-};
-
-const proTipHeader = {
-    margin: '0 0 8px',
-    fontSize: '13px',
-    fontWeight: '700',
-    color: '#1a1a1a',
-};
-
-const proTipText = {
-    margin: '0',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    color: '#4b5563',
 };
 
 const buttonSection = {
@@ -280,7 +252,7 @@ const button = {
 
 const divider = {
     borderColor: '#e5e7eb',
-    margin: '32px 0 24px',
+    margin: '32px 0',
 };
 
 const footer = {
