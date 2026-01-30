@@ -1,0 +1,154 @@
+# ddpc Features Registry
+# This file provides Ogma with awareness of what features exist in the application
+# Status: shipped | in_progress | planned | deprecated
+
+version: 1.0.0
+last_updated: "2026-01-29"
+
+core_features:
+  authentication:
+    status: shipped
+    path: /login, /auth/callback
+    tables: [profiles]
+    description: Google OAuth and email authentication via Supabase Auth
+    
+  subscription:
+    status: shipped
+    path: /pro, /account
+    tables: [profiles (plan, stripe_customer_id)]
+    description: Stripe-powered Pro subscription with feature gating
+
+navigation:
+  garage:
+    status: shipped
+    path: /garage
+    tables: [vehicles, vehicle_specs]
+    description: Digital fleet management - shows all user vehicles
+    components:
+      - VehicleCard
+      - AddVehicleDialog
+      
+  vehicle_detail:
+    status: shipped
+    path: /vehicle/[id]
+    tabs:
+      overview:
+        status: shipped
+        description: Vehicle hero image, specs display, and status badge
+      workshop:
+        status: shipped
+        tables: [parts, jobs, job_steps]
+        description: Inventory management and job tracking with AI-generated plans
+      timeline:
+        status: shipped
+        tables: [maintenance_logs, service_intervals]
+        description: Maintenance history and upcoming service reminders
+      mods:
+        status: in_progress
+        tables: [mods, mod_steps]
+        description: Modifications tracking with component relationships
+        
+  explore:
+    status: shipped
+    path: /explore
+    tables: [vehicles (public)]
+    description: Public vehicle discovery with search and filtering
+    
+  account:
+    status: shipped
+    path: /account
+    tabs:
+      profile:
+        status: shipped
+        description: User profile management
+      preferences:
+        status: shipped
+        tables: [user_preferences]
+        description: Theme, notifications, email preferences
+      workshop:
+        status: shipped
+        tables: [profiles (skill_level, tool_inventory)]
+        description: Skill level and tool inventory for AI plan generation
+      subscription:
+        status: shipped
+        description: Plan status and Stripe portal access
+        
+  more:
+    status: shipped
+    path: /more
+    description: Navigation hub for secondary features
+
+admin_features:
+  ogma:
+    status: in_progress
+    path: /admin/ogma
+    tables: [ogma_chat_sessions, ogma_chat_messages, ogma_improvements, compute_ledger]
+    description: Internal AI assistant for app management (you are here!)
+    capabilities:
+      current:
+        - Chat with constitution context
+        - Trinity thinking protocol
+        - Compute cost tracking
+      planned:
+        - Database introspection
+        - Feature awareness (this file)
+        - Code change proposals via PRs
+        
+  issue_reports:
+    status: shipped
+    path: /admin/issues
+    tables: [issue_reports]
+    description: User-submitted bug reports with screenshots
+
+ai_features:
+  workshop_ai:
+    status: shipped
+    path: /api/workshop/ai-plan
+    description: Generates maintenance/modification plans with tool requirements
+    integration: Considers user skill level and tool inventory
+    
+  vehicle_vanguard:
+    status: shipped
+    path: /api/ai/vanguard
+    description: AI-powered vehicle maintenance advisor
+    
+planned_features:
+  proficiency:
+    status: planned
+    description: Driver skill tracking and certification system
+    priority: high
+    target_q: Q2 2026
+    
+  ssi_vc:
+    status: planned
+    description: Self-Sovereign Identity and Verifiable Credentials for vehicle provenance
+    priority: medium
+    target_q: Q3 2026
+    
+  bot_fleet:
+    status: planned
+    description: Specialized AI agents for parts sourcing, valuation, logistics
+    priority: medium
+    target_q: Q4 2026
+
+database_overview:
+  primary_tables:
+    - profiles: User accounts and subscription data
+    - vehicles: User vehicle fleet
+    - vehicle_specs: Detailed vehicle specifications
+    - parts: Inventory and wishlist items
+    - jobs: Workshop tasks with AI-generated plans
+    - job_steps: Individual steps within jobs
+    - maintenance_logs: Service history records
+    - service_intervals: Scheduled maintenance definitions
+    
+  support_tables:
+    - component_definitions: BOM reference data
+    - user_preferences: Theme and notification settings
+    - issue_reports: Bug reports with admin notes
+    
+  ogma_tables:
+    - ogma_chat_sessions: Conversation threads
+    - ogma_chat_messages: Individual messages
+    - ogma_improvements: Learned insights
+    - compute_ledger: AI cost tracking

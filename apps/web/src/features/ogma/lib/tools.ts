@@ -1,8 +1,11 @@
-import { z } from 'zod';
-import { tool } from 'ai';
+import { tool, jsonSchema } from 'ai';
 import { Octokit } from '@octokit/rest';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
+
+// Helper to create tools with type erasure for TypeScript
+// This avoids strict type inference issues between Zod schemas and execute arguments
+const createUntypedTool = (config: any): any => tool(config);
 
 // Initialize Octokit with GitHub token
 const octokit = new Octokit({
@@ -68,17 +71,17 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
  * Tries GitHub API first, falls back to local filesystem
  * Allows Ogma to 'orient' himself
  */
-const getRepoStructureSchema = z.object({
-  path: z.string().describe('Subdirectory path to scan. Use "." or "/" to scan from the repository root.'),
-  use_github: z.boolean().describe('Force use of GitHub API. Set to false to use local filesystem (preferred for speed).'),
-});
-
-export const get_repo_structure = tool({
-  description: 'Returns a tree view of the repository structure. path is required (use "." for root). use_github is required (pass false for local files).',
-  parameters: getRepoStructureSchema,
-  // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
-  execute: async (args: any) => {
-    const { path, use_github } = args as z.infer<typeof getRepoStructureSchema>;
+export const get_repo_structure = createUntypedTool({
+  description: 'Returns a tree view of the repository structure.',
+  parameters: jsonSchema({
+    type: 'object',
+    properties: {
+      path: { type: 'string', description: 'Subdirectory path to scan. Use "." or "/" to scan from the repository root.' },
+      use_github: { type: 'string', description: 'Set to "true" to use GitHub API or "false" for local filesystem (faster).' },
+    },
+  }),
+  execute: async ({ path = '.', use_github: useGithubStr }: { path?: string; use_github?: string }) => {
+    const use_github = useGithubStr === 'true';
 
     // Server-side debug logging
     if (typeof window === 'undefined') {
@@ -213,18 +216,20 @@ export const get_repo_structure = tool({
  * Tries GitHub API first, falls back to local filesystem
  * Allows Ogma to 'read' code
  */
-const readFileContentSchema = z.object({
-  path: z.string().describe('Relative path to the file from repository root, or absolute path.'),
-  use_github: z.boolean().describe('Force use of GitHub API. Set to false to use local filesystem (preferred for speed).'),
-  branch: z.string().describe('GitHub branch to read from. Use "main" as default.'),
-});
-
-export const read_file_content = tool({
-  description: 'Takes a file path and returns the raw text content. path, use_github (false for local), and branch ("main") are required.',
-  parameters: readFileContentSchema,
-  // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
-  execute: async (args: any) => {
-    const { path, use_github, branch } = args as z.infer<typeof readFileContentSchema>;
+export const read_file_content = createUntypedTool({
+  description: 'Takes a file path and returns the raw text content.',
+  parameters: jsonSchema({
+    type: 'object',
+    properties: {
+      path: { type: 'string', description: 'Relative path to the file from repository root, or absolute path.' },
+      use_github: { type: 'string', description: 'Set to "true" for GitHub API or "false" for local filesystem (faster).' },
+      branch: { type: 'string', description: 'GitHub branch to read from. Defaults to main.' },
+    },
+    required: ['path'],
+  }),
+  execute: async ({ path, use_github: useGithubStr, branch: branchArg }: { path: string; use_github?: string; branch?: string }) => {
+    const use_github = useGithubStr === 'true';
+    const branch = branchArg || 'main';
 
     // Server-side debug logging
     if (typeof window === 'undefined') {
@@ -332,19 +337,19 @@ export const read_file_content = tool({
  * Takes a title and body, creates a GitHub Issue
  * For feature tracking
  */
-const createIssueSchema = z.object({
-  title: z.string().describe('The title of the GitHub issue.'),
-  body: z.string().describe('The body/description of the GitHub issue.'),
-  owner: z.string().describe('GitHub repository owner. Pass empty string to use GITHUB_OWNER env var.'),
-  repo: z.string().describe('GitHub repository name. Pass empty string to use GITHUB_REPO env var.'),
-});
-
-export const create_issue = tool({
-  description: 'Creates a GitHub Issue with the provided title and body. All parameters are required.',
-  parameters: createIssueSchema,
-  // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
-  execute: async (args: any) => {
-    const { title, body, owner, repo } = args as z.infer<typeof createIssueSchema>;
+export const create_issue = createUntypedTool({
+  description: 'Creates a GitHub Issue with the provided title and body.',
+  parameters: jsonSchema({
+    type: 'object',
+    properties: {
+      title: { type: 'string', description: 'The title of the GitHub issue.' },
+      body: { type: 'string', description: 'The body/description of the GitHub issue.' },
+      owner: { type: 'string', description: 'GitHub repository owner. Leave empty to use GITHUB_OWNER env var.' },
+      repo: { type: 'string', description: 'GitHub repository name. Leave empty to use GITHUB_REPO env var.' },
+    },
+    required: ['title', 'body'],
+  }),
+  execute: async ({ title, body, owner, repo }: { title: string; body: string; owner?: string; repo?: string }) => {
     try {
       const { owner: defaultOwner, repo: defaultRepo } = getRepoInfo();
       const finalOwner = owner || defaultOwner;
@@ -387,25 +392,45 @@ export const create_issue = tool({
  * Tool: create_pull_request
  * Creates a new branch, commits file changes, and opens a PR against main
  */
-const createPullRequestSchema = z.object({
-  title: z.string().describe('The title of the pull request.'),
-  body: z.string().describe('The body/description of the pull request.'),
-  branch_name: z.string().describe('The name of the new branch to create.'),
-  file_changes: z.array(z.object({
-    path: z.string().describe('Relative path to the file from repository root.'),
-    content: z.string().describe('The full content of the file to create or update.'),
-  })).describe('Array of file changes to commit. Each change includes a path and content.'),
-  owner: z.string().describe('GitHub repository owner. Pass empty string to use GITHUB_OWNER env var.'),
-  repo: z.string().describe('GitHub repository name. Pass empty string to use GITHUB_REPO env var.'),
-  base_branch: z.string().describe('The base branch to create the PR against. Use "main" as default.'),
-});
+type FileChange = { path: string; content: string };
+type CreatePullRequestArgs = {
+  title: string;
+  body: string;
+  branch_name: string;
+  file_changes: FileChange[];
+  owner?: string;
+  repo?: string;
+  base_branch?: string;
+};
 
-export const create_pull_request = tool({
-  description: 'Creates a new branch, commits the provided file changes, and opens a pull request against the main branch. All parameters are required.',
-  parameters: createPullRequestSchema,
-  // @ts-ignore - Vercel AI SDK tool types are incorrect, execute is valid at runtime
-  execute: async (args: any) => {
-    const { title, body, branch_name, file_changes, owner, repo, base_branch } = args as z.infer<typeof createPullRequestSchema>;
+export const create_pull_request = createUntypedTool({
+  description: 'Creates a new branch, commits file changes, and opens a pull request.',
+  parameters: jsonSchema({
+    type: 'object',
+    properties: {
+      title: { type: 'string', description: 'The title of the pull request.' },
+      body: { type: 'string', description: 'The body/description of the pull request.' },
+      branch_name: { type: 'string', description: 'The name of the new branch to create.' },
+      file_changes: {
+        type: 'array',
+        description: 'Array of file changes to commit.',
+        items: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'Relative path to the file from repository root.' },
+            content: { type: 'string', description: 'The full content of the file to create or update.' },
+          },
+          required: ['path', 'content'],
+        },
+      },
+      owner: { type: 'string', description: 'GitHub repository owner. Leave empty to use GITHUB_OWNER env var.' },
+      repo: { type: 'string', description: 'GitHub repository name. Leave empty to use GITHUB_REPO env var.' },
+      base_branch: { type: 'string', description: 'The base branch to create the PR against. Defaults to main.' },
+    },
+    required: ['title', 'body', 'branch_name', 'file_changes'],
+  }),
+  execute: async ({ title, body, branch_name, file_changes, owner, repo, base_branch: base_branch_arg }: CreatePullRequestArgs) => {
+    const base_branch = base_branch_arg || 'main';
     try {
       const { owner: defaultOwner, repo: defaultRepo } = getRepoInfo();
       const finalOwner = owner || defaultOwner;
@@ -509,6 +534,117 @@ export const create_pull_request = tool({
 });
 
 /**
+ * Tool: get_database_schema
+ * Returns an overview of all tables in the database
+ * Uses Supabase RPC function for introspection
+ */
+export const get_database_schema = createUntypedTool({
+  description: 'Returns an overview of all database tables including columns, types, and row counts.',
+  parameters: jsonSchema({
+    type: 'object',
+    properties: {
+      schema_name: { type: 'string', description: 'The database schema to inspect. Defaults to "public".' },
+    },
+  }),
+  execute: async ({ schema_name: schemaArg }: { schema_name?: string }) => {
+    const schema_name = schemaArg || 'public';
+
+    if (typeof window === 'undefined') {
+      console.log(`[get_database_schema] Tool called with schema: ${schema_name}`);
+    }
+
+    try {
+      // Dynamic import to avoid client-side issues
+      const { createClient } = await import('@/lib/supabase/server');
+      const supabase = await createClient();
+
+      const { data, error } = await supabase.rpc('get_schema_overview', {
+        schema_name: schema_name || 'public'
+      });
+
+      if (error) {
+        console.error('[get_database_schema] RPC error:', error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+
+      if (typeof window === 'undefined') {
+        console.log(`[get_database_schema] Successfully retrieved schema with ${data?.length || 0} tables`);
+      }
+
+      return {
+        success: true,
+        schema: schema_name,
+        tables: data,
+        table_count: data?.length || 0,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('[get_database_schema] Error:', errorMessage);
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  },
+});
+
+/**
+ * Tool: get_table_details
+ * Returns detailed info about a specific table
+ */
+export const get_table_details = createUntypedTool({
+  description: 'Returns detailed info about a specific table including columns, indexes, and RLS policies.',
+  parameters: jsonSchema({
+    type: 'object',
+    properties: {
+      table_name: { type: 'string', description: 'The name of the table to get details for.' },
+      schema_name: { type: 'string', description: 'The database schema. Defaults to "public".' },
+    },
+    required: ['table_name'],
+  }),
+  execute: async ({ table_name, schema_name: schemaArg }: { table_name: string; schema_name?: string }) => {
+    const schema_name = schemaArg || 'public';
+
+    if (typeof window === 'undefined') {
+      console.log(`[get_table_details] Tool called for table: ${schema_name}.${table_name}`);
+    }
+
+    try {
+      const { createClient } = await import('@/lib/supabase/server');
+      const supabase = await createClient();
+
+      const { data, error } = await supabase.rpc('get_table_details', {
+        p_table_name: table_name,
+        schema_name: schema_name || 'public'
+      });
+
+      if (error) {
+        console.error('[get_table_details] RPC error:', error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+
+      return {
+        success: true,
+        table: data,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('[get_table_details] Error:', errorMessage);
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  },
+});
+
+/**
  * Export all tools as a single object for easy import
  */
 export const ogmaTools = {
@@ -516,5 +652,7 @@ export const ogmaTools = {
   read_file_content,
   create_issue,
   create_pull_request,
+  get_database_schema,
+  get_table_details,
 };
 

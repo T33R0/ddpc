@@ -13,6 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.31",
     "@ai-sdk/openai-compatible": "^2.0.4",
     "@ai-sdk/react": "latest",
     "@ducanh2912/next-pwa": "^10.2.9",

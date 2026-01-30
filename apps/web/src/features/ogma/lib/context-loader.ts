@@ -230,3 +230,117 @@ export function formatConstitutionForPrompt(identity: OgmaConstitution, isVerifi
 
     return output.trim();
 }
+
+/**
+ * Loads the Features Registry to give Ogma awareness of app structure.
+ * Similar loading strategy to constitution.
+ */
+export async function loadFeaturesRegistry(): Promise<string> {
+    try {
+        // Try multiple paths similar to constitution loading
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+
+        let currentDir = __dirname;
+        for (let i = 0; i < 8; i++) {
+            const checkPath = path.join(currentDir, 'apps', 'docs', 'content', 'ogma', 'features_registry.yaml');
+            try {
+                const content = await readFile(checkPath, 'utf-8');
+                console.log(`[Ogma] Loaded Features Registry from: ${checkPath}`);
+                const parsed = yaml.load(content) as any;
+                return formatFeaturesForPrompt(parsed);
+            } catch {
+                // Not found here
+            }
+
+            const parent = path.dirname(currentDir);
+            if (parent === currentDir) break;
+            currentDir = parent;
+        }
+
+        // Check process.cwd
+        try {
+            const cwdPath = path.join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'features_registry.yaml');
+            const content = await readFile(cwdPath, 'utf-8');
+            console.log(`[Ogma] Loaded Features Registry from cwd: ${cwdPath}`);
+            const parsed = yaml.load(content) as any;
+            return formatFeaturesForPrompt(parsed);
+        } catch {
+            // ignore
+        }
+
+        console.warn('[Ogma] Features Registry not found');
+        return '';
+    } catch (error) {
+        console.error('[Ogma] Failed to load features registry:', error);
+        return '';
+    }
+}
+
+/**
+ * Formats the features registry into a concise context block.
+ */
+function formatFeaturesForPrompt(registry: any): string {
+    if (!registry) return '';
+
+    let output = '## APPLICATION FEATURES REGISTRY\n';
+    output += `Version: ${registry.version || 'unknown'} | Updated: ${registry.last_updated || 'unknown'}\n\n`;
+
+    // Core features summary
+    if (registry.core_features) {
+        output += '### Core Features\n';
+        for (const [key, feature] of Object.entries(registry.core_features) as [string, any][]) {
+            output += `- **${key}**: ${feature.description} [${feature.status}]\n`;
+        }
+        output += '\n';
+    }
+
+    // Navigation features
+    if (registry.navigation) {
+        output += '### Main Navigation\n';
+        for (const [key, feature] of Object.entries(registry.navigation) as [string, any][]) {
+            output += `- **${key}** (${feature.path}): ${feature.description} [${feature.status}]\n`;
+            if (feature.tabs) {
+                for (const [tabKey, tab] of Object.entries(feature.tabs) as [string, any][]) {
+                    output += `  - ${tabKey}: ${tab.description} [${tab.status}]\n`;
+                }
+            }
+        }
+        output += '\n';
+    }
+
+    // Admin features
+    if (registry.admin_features) {
+        output += '### Admin Features\n';
+        for (const [key, feature] of Object.entries(registry.admin_features) as [string, any][]) {
+            output += `- **${key}** (${feature.path}): ${feature.description} [${feature.status}]\n`;
+        }
+        output += '\n';
+    }
+
+    // Planned features
+    if (registry.planned_features) {
+        output += '### Planned Features\n';
+        for (const [key, feature] of Object.entries(registry.planned_features) as [string, any][]) {
+            output += `- **${key}**: ${feature.description} [Priority: ${feature.priority}, Target: ${feature.target_q}]\n`;
+        }
+        output += '\n';
+    }
+
+    // Database overview
+    if (registry.database_overview) {
+        output += '### Database Tables\n';
+        if (registry.database_overview.primary_tables) {
+            output += 'Primary: ' + registry.database_overview.primary_tables.join(', ') + '\n';
+        }
+        if (registry.database_overview.support_tables) {
+            output += 'Support: ' + registry.database_overview.support_tables.join(', ') + '\n';
+        }
+        if (registry.database_overview.ogma_tables) {
+            output += 'Ogma: ' + registry.database_overview.ogma_tables.join(', ') + '\n';
+        }
+    }
+
+    return output;
+}
+

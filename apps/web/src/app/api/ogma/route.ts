@@ -1,8 +1,9 @@
 import { streamText, generateText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/features/ogma/lib/compute-costs';
-import { loadConstitution, formatConstitutionForPrompt } from '@/features/ogma/lib/context-loader';
+import { loadConstitution, formatConstitutionForPrompt, loadFeaturesRegistry } from '@/features/ogma/lib/context-loader';
 import { vercelGateway } from '@/lib/ai-gateway';
+import { ogmaTools } from '@/features/ogma/lib/tools';
 
 // High-quality model for final synthesis (Voice of Ogma)
 const ogmaVoice = vercelGateway('anthropic/claude-3.5-sonnet');
@@ -159,9 +160,10 @@ export async function POST(req: Request) {
     // Fetch Sophia Context Layers
     console.log('[Ogma] Loading Sophia Context Layers...');
     const contextStartTime = Date.now();
-    const [constitution, ledgerContext] = await Promise.all([
+    const [constitution, ledgerContext, featuresRegistry] = await Promise.all([
       loadConstitution(),
-      getLedgerContext(sessionId)
+      getLedgerContext(sessionId),
+      loadFeaturesRegistry()
     ]);
     console.log(`[Ogma] Context Layers Loaded in ${Date.now() - contextStartTime}ms`);
 
@@ -175,6 +177,9 @@ ${formattedConstitution}
 ## 2. THE LEDGER
 Current Status:
 ${ledgerContext}
+
+## 3. APPLICATION AWARENESS
+${featuresRegistry}
 `;
 
     console.log(`[Ogma] Sophia Context Length: ${sophiaContext.length} chars`);
@@ -335,10 +340,13 @@ CRITICAL:
       const synthesisModel = config.synthesizer;
       console.log('[Ogma] Calling streamText with synthesis model:', synthesisModel);
       console.log('[Ogma] Prompt length:', userPrompt.length, 'Solutions length:', allSolutions.length);
+      
+
 
       synthesisResult = await streamText({
         model: vercelGateway(synthesisModel),
         system: synthesisSystemPrompt,
+        tools: ogmaTools as any,
         prompt: `User Request: ${userPrompt}
 
 Your Internal Parallel Thinking Streams:
@@ -355,7 +363,17 @@ Integrate your thoughts into a unified response.
 - Use formatting (headers, code blocks) effectively
 - Be concise but comprehensive
 
+TOOL USAGE:
+- You have access to tools for inspecting the codebase and database
+- Use get_database_schema to understand database tables
+- Use get_table_details for specific table info
+- Use get_repo_structure to explore file layout
+- Use read_file_content to read specific files
+- Use create_issue or create_pull_request to propose changes
+- Only use tools when the user's request requires concrete app knowledge
+
 Speak as one unified consciousness.`,
+        toolChoice: 'none',
         onFinish: async (event) => {
           console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
           if (sessionId && event.text) {
