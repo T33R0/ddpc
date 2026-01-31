@@ -1,0 +1,73 @@
+// Ogma Core - Engine
+// Orchestrates the full Ogma pipeline: Scout → Trinity → Synthesis
+
+import type { OgmaConfig, EngineInput, EngineOutput } from '../types';
+import { runTrinity } from './trinity';
+import { runScout } from './scout';
+
+// ============================================================================
+// Default Configuration
+// ============================================================================
+
+export const DEFAULT_CONFIG: OgmaConfig = {
+  synthesizer: 'anthropic/claude-3.5-haiku',
+  architect: 'deepseek/deepseek-v3.2',
+  visionary: 'anthropic/claude-3.5-haiku',
+  engineer: 'google/gemini-2.5-flash',
+};
+
+// EngineInput is imported from ../types
+
+// ============================================================================
+// Main Orchestrator
+// ============================================================================
+
+/**
+ * Run the full Ogma pipeline
+ *
+ * Phase 2: Scout → Trinity
+ * (Synthesis is handled by the API route for streaming)
+ */
+export async function runOgma(input: EngineInput): Promise<EngineOutput> {
+  const { userPrompt, sessionId, config, sophiaContext } = input;
+
+  // Phase 1: Scout Reconnaissance
+  console.log('[Ogma:Engine] Starting Scout phase...');
+  const scoutBriefing = await runScout(userPrompt, sessionId, config);
+  console.log(`[Ogma:Engine] Scout complete. Files: ${scoutBriefing.filesExamined.length}, Cost: $${scoutBriefing.cost.toFixed(4)}`);
+
+  // Combine Sophia context with Scout findings
+  const groundedContext = `${sophiaContext}
+
+## 4. SCOUT RECONNAISSANCE
+${scoutBriefing.context}`;
+
+  // Phase 2: Trinity Parallel Thinking
+  console.log('[Ogma:Engine] Starting Trinity phase...');
+  
+  const trinityResults = await runTrinity(
+    userPrompt,
+    groundedContext,
+    sessionId,
+    config
+  );
+  
+  console.log(`[Ogma:Engine] Trinity complete. Streams: ${trinityResults.length}`);
+
+  // Format trinity results for synthesis
+  const allSolutions = trinityResults
+    .map(r => `[Your ${r.agent.charAt(0).toUpperCase() + r.agent.slice(1)} Thinking]:\n${r.content}`)
+    .join('\n\n');
+
+  return {
+    scoutBriefing,
+    trinityResults,
+    groundedContext,
+    allSolutions,
+  };
+}
+
+// Re-export for convenience
+export { runTrinity } from './trinity';
+export { runScout } from './scout';
+// export { runSynthesis } from './synthesizer'; // Removed if not used/imported to avoid unused var

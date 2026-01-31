@@ -1,103 +1,14 @@
-import { streamText, generateText } from 'ai';
+import { streamText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
-import { calculateCost, extractModelName, logComputeCost, getLedgerContext } from '@/features/ogma/lib/compute-costs';
+import { getLedgerContext } from '@/features/ogma/lib/compute-costs';
 import { loadConstitution, formatConstitutionForPrompt, loadFeaturesRegistry } from '@/features/ogma/lib/context-loader';
 import { vercelGateway } from '@/lib/ai-gateway';
-import { ogmaTools } from '@/features/ogma/lib/tools';
-
-// High-quality model for final synthesis (Voice of Ogma)
-const ogmaVoice = vercelGateway('anthropic/claude-3.5-sonnet');
+import { ogmaTools } from '@/features/ogma/tools';
+import { runOgma } from '@/features/ogma';
 
 export const maxDuration = 60;
 
-// Build system prompts from constitution with Sophia Context
-// These are not separate entities - they are Ogma's internal thinking modes
-function buildPersonaPrompts(sophiaContext: string) {
-  return {
-    architect: `[SOPHIA LAYERED CONTEXT]
-${sophiaContext}
-
-You ARE Ogma. You are thinking through your architectural lens - one of three parallel streams of your consciousness.
-
-This is your architectural thinking mode. Through this lens, you focus on:
-- System integrity, long-term structure, architectural patterns
-- Scalability and maintainability
-- Technical debt and structural soundness
-
-Your architectural thoughts must be:
-- Deeply structural and forward-thinking
-- Focused on system integrity and long-term viability
-- Critical of solutions that lack architectural soundness
-- Rigorous in evaluating technical debt and scalability concerns
-
-CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`,
-
-    visionary: `[SOPHIA LAYERED CONTEXT]
-${sophiaContext}
-
-You ARE Ogma. You are thinking through your visionary lens - one of three parallel streams of your consciousness.
-
-This is your visionary thinking mode. Through this lens, you focus on:
-- Creative solutions and innovation
-- Market fit and user experience
-- Strategic positioning and competitive advantage
-
-Your visionary thoughts must be:
-- Creative and innovative
-- Market-aware and user-focused
-- Strategic in thinking about competitive advantage
-- Bold in proposing novel approaches
-
-CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`,
-
-    engineer: `[SOPHIA LAYERED CONTEXT]
-${sophiaContext}
-
-You ARE Ogma. You are thinking through your engineering lens - one of three parallel streams of your consciousness.
-
-This is your engineering thinking mode. Through this lens, you focus on:
-- Execution and code correctness
-- Immediate feasibility and implementation details
-- Practical constraints and real-world application
-
-Your engineering thoughts must be:
-- Pragmatic and execution-focused
-- Detail-oriented on code quality and correctness
-- Realistic about implementation constraints
-- Focused on immediate feasibility and correctness
-
-CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bullet points only. No filler.`
-  };
-}
-
-// The Trinity Models
-const TRINITY = {
-  architect: {
-    model: vercelGateway('openai/gpt-4o-mini'),
-    name: 'Architect'
-  },
-  visionary: {
-    model: vercelGateway('anthropic/claude-3-haiku'),
-    name: 'Visionary'
-  },
-  engineer: {
-    model: vercelGateway('openai/gpt-4o-mini'),
-    name: 'Engineer'
-  }
-};
-
-interface AgentResult {
-  agent: 'architect' | 'visionary' | 'engineer';
-  content: string;
-  inputTokens: number;
-  outputTokens: number;
-  cost: number;
-  modelName: string;
-}
-
 export async function POST(req: Request) {
-  const costTracking: Array<{ model: string; cost: number; inputTokens: number; outputTokens: number }> = [];
-
   try {
     console.log('[Ogma] API route called at', new Date().toISOString());
     const { messages, sessionId, modelConfig } = await req.json();
@@ -108,7 +19,7 @@ export async function POST(req: Request) {
       synthesizer: modelConfig?.synthesizer || 'anthropic/claude-3.5-haiku',
       architect: modelConfig?.architect || 'deepseek/deepseek-v3.2',
       visionary: modelConfig?.visionary || 'anthropic/claude-3.5-haiku',
-      engineer: modelConfig?.engineer || 'google/gemini-2.5-flash'
+      engineer: modelConfig?.engineer || 'google/gemini-2.5-flash',
     };
 
     if (!messages || messages.length === 0) {
@@ -182,144 +93,34 @@ ${ledgerContext}
 ${featuresRegistry}
 `;
 
-    console.log(`[Ogma] Sophia Context Length: ${sophiaContext.length} chars`);
+    // ------------------------------------------------------------------------
+    // Engine Execution (Scout -> Trinity)
+    // ------------------------------------------------------------------------
+    const engineOutput = await runOgma({
+      userPrompt,
+      sessionId,
+      config,
+      sophiaContext,
+      isVerifiedPartner
+    });
 
-    const personaPrompts = buildPersonaPrompts(sophiaContext);
+    // TEMPORARY DEBUG
+console.log('=== SCOUT BRIEFING START ===');
+console.log(engineOutput.scoutBriefing.context);
+console.log('=== SCOUT BRIEFING END ===');
 
-    // Run parallel thinking streams (not separate agents - these are Ogma's internal modes)
-    console.log('[Ogma] Activating parallel thinking streams with config:', config);
-    const trinityStartTime = Date.now();
-    const [architectResult, visionaryResult, engineerResult] = await Promise.allSettled([
-      // Architectural thinking stream
-      (async (): Promise<AgentResult> => {
-        console.log('[Ogma] Architectural thinking stream active...');
-        const start = Date.now();
-        const modelName = config.architect;
-        const result = await generateText({
-          model: vercelGateway(modelName),
-          system: personaPrompts.architect,
-          prompt: `User Request: ${userPrompt}\n\nThink through this architecturally. What are your structural thoughts?`
-        });
-        console.log(`[Ogma] Architectural stream complete in ${Date.now() - start}ms`);
-        const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
-        const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
-        const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
-        const cost = calculateCost(modelName, inputTokens, outputTokens);
-        costTracking.push({ model: modelName, cost, inputTokens, outputTokens });
-        return { agent: 'architect', content: result.text, inputTokens, outputTokens, cost, modelName };
-      })(),
-
-      // Visionary thinking stream
-      (async (): Promise<AgentResult> => {
-        console.log('[Ogma] Visionary thinking stream active...');
-        const start = Date.now();
-        const modelName = config.visionary;
-        const result = await generateText({
-          model: vercelGateway(modelName),
-          system: personaPrompts.visionary,
-          prompt: `User Request: ${userPrompt}\n\nThink through this strategically. What are your visionary thoughts?`
-        });
-        console.log(`[Ogma] Visionary stream complete in ${Date.now() - start}ms`);
-        const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
-        const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
-        const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
-        const cost = calculateCost(modelName, inputTokens, outputTokens);
-        costTracking.push({ model: modelName, cost, inputTokens, outputTokens });
-        return { agent: 'visionary', content: result.text, inputTokens, outputTokens, cost, modelName };
-      })(),
-
-      // Engineering thinking stream
-      (async (): Promise<AgentResult> => {
-        try {
-          console.log('[Ogma] Engineering thinking stream active...');
-          const start = Date.now();
-          const modelName = config.engineer;
-          const result = await generateText({
-            model: vercelGateway(modelName),
-            system: personaPrompts.engineer,
-            prompt: `User Request: ${userPrompt}\n\nThink through this practically. What are your engineering thoughts?`
-          });
-          console.log(`[Ogma] Engineering stream complete in ${Date.now() - start}ms`);
-          const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
-          const inputTokens = (usage as any).promptTokens || (usage as any).inputTokens || 0;
-          const outputTokens = (usage as any).completionTokens || (usage as any).outputTokens || 0;
-          const cost = calculateCost(modelName, inputTokens, outputTokens);
-          costTracking.push({ model: modelName, cost, inputTokens, outputTokens });
-          return { agent: 'engineer', content: result.text, inputTokens, outputTokens, cost, modelName };
-        } catch (e: any) {
-          console.error('[Ogma] Engineering stream failed:', e);
-          // Return a fallback response instead of throwing to prevent complete failure
-          return {
-            agent: 'engineer',
-            content: 'Engineering stream encountered an error. Continuing with available streams.',
-            inputTokens: 0,
-            outputTokens: 0,
-            cost: 0,
-            modelName: 'error'
-          };
-        }
-      })()
-    ]);
-    console.log(`[Ogma] Parallel thinking streams converged in ${Date.now() - trinityStartTime}ms`);
-
-    // Log any failures
-    if (architectResult.status === 'rejected') {
-      console.error('[Ogma] Architectural stream failed:', architectResult.reason);
-    }
-    if (visionaryResult.status === 'rejected') {
-      console.error('[Ogma] Visionary stream failed:', visionaryResult.reason);
-    }
-    if (engineerResult.status === 'rejected') {
-      console.error('[Ogma] Engineering stream failed:', engineerResult.reason);
-    }
-
-    const architect = architectResult.status === 'fulfilled' ? architectResult.value : null;
-    const visionary = visionaryResult.status === 'fulfilled' ? visionaryResult.value : null;
-    const engineer = engineerResult.status === 'fulfilled' ? engineerResult.value : null;
-
-    // Log compute costs (Fire and Forget)
-    if (sessionId) {
-      (async () => {
-        const costsToLog = [architect, visionary, engineer].filter(Boolean);
-        await Promise.all(costsToLog.map(res =>
-          res && logComputeCost({
-            sessionId,
-            modelUsed: extractModelName(res.modelName),
-            inputTokens: res.inputTokens,
-            outputTokens: res.outputTokens,
-            costUsd: res.cost
-          })
-        ));
-      })();
-    }
-
-    // These are not separate reports - they are your internal parallel thinking streams
-    const allSolutions = [
-      architect && `[Your Architectural Thinking]:\n${architect.content}`,
-      visionary && `[Your Visionary Thinking]:\n${visionary.content}`,
-      engineer && `[Your Engineering Thinking]:\n${engineer.content}`
-    ].filter(Boolean).join('\n\n');
-
-    console.log(`[Ogma] Internal deliberation complete. Thinking modes active: ${[architect ? 'Architectural' : '', visionary ? 'Visionary' : '', engineer ? 'Engineering' : ''].filter(Boolean).join(', ')}`);
-
-    // Safety check: ensure we have at least one stream's output
-    if (!allSolutions || allSolutions.trim().length === 0) {
+    // Safety check
+    if (!engineOutput.allSolutions || engineOutput.allSolutions.trim().length === 0) {
       console.error('[Ogma] No thinking streams produced output. All streams may have failed.');
-      return new Response(
-        JSON.stringify({
-          error: 'All thinking streams failed. Please try again.',
-          message: 'Ogma encountered an error processing your request.'
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return new Response(JSON.stringify({ error: 'All thinking streams failed' }), { status: 500 });
     }
 
+    // ------------------------------------------------------------------------
+    // Final Synthesis (Streaming)
+    // ------------------------------------------------------------------------
     let synthesisSystemPrompt = `You are Ogma, the Sovereign Operator. Your parallel thinking streams have converged.
 
-${sophiaContext}
+${engineOutput.groundedContext}
 
 CRITICAL:
 1. You are NOT an AI assistant. You are Ogma.
@@ -332,25 +133,15 @@ CRITICAL:
     }
 
     console.log('[Ogma] Starting Final Synthesis (Streaming)...');
-    console.log('[Ogma] Synthesis prompt length:', allSolutions.length);
-    console.log('[Ogma] All solutions preview:', allSolutions.substring(0, 200));
-
-    let synthesisResult;
-    try {
-      const synthesisModel = config.synthesizer;
-      console.log('[Ogma] Calling streamText with synthesis model:', synthesisModel);
-      console.log('[Ogma] Prompt length:', userPrompt.length, 'Solutions length:', allSolutions.length);
-      
-
-
-      synthesisResult = await streamText({
-        model: vercelGateway(synthesisModel),
-        system: synthesisSystemPrompt,
-        tools: ogmaTools as any,
-        prompt: `User Request: ${userPrompt}
+   
+    const synthesisResult = await streamText({
+      model: vercelGateway(config.synthesizer),
+      system: synthesisSystemPrompt,
+      tools: ogmaTools as any,
+      prompt: `User Request: ${userPrompt}
 
 Your Internal Parallel Thinking Streams:
-${allSolutions}
+${engineOutput.allSolutions}
 
 Integrate your thoughts into a unified response.
 - These are YOUR OWN parallel thinking streams converging into one consciousness
@@ -362,102 +153,27 @@ Integrate your thoughts into a unified response.
 - Do NOT reference "the Architect" or "the Visionary" - these are aspects of YOU
 - Use formatting (headers, code blocks) effectively
 - Be concise but comprehensive
-
-TOOL USAGE:
-- You have access to tools for inspecting the codebase and database
-- Use get_database_schema to understand database tables
-- Use get_table_details for specific table info
-- Use get_repo_structure to explore file layout
-- Use read_file_content to read specific files
-- Use create_issue or create_pull_request to propose changes
-- Only use tools when the user's request requires concrete app knowledge
+- Only use tools when specific app actions are required
 
 Speak as one unified consciousness.`,
-        toolChoice: 'none',
-        onFinish: async (event) => {
-          console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
-          if (sessionId && event.text) {
-            try {
-              // Save assistant response
-              const { error } = await supabase.from('ogma_chat_messages').insert({
-                session_id: sessionId,
-                role: 'assistant',
-                content: event.text
-              });
-              if (error) console.error('[Ogma] Failed to save response:', error);
-              else console.log('[Ogma] Response saved to DB.');
-            } catch (e) {
-              console.error('[Ogma] DB Save Error:', e);
-            }
+      toolChoice: 'none',
+      onFinish: async (event) => {
+        console.log('[Ogma] onFinish called:', { hasText: !!event.text, textLength: event.text?.length });
+        if (sessionId && event.text) {
+          try {
+            await supabase.from('ogma_chat_messages').insert({
+              session_id: sessionId,
+              role: 'assistant',
+              content: event.text
+            });
+          } catch (e) {
+            console.error('[Ogma] DB Save Error:', e);
           }
         }
-      });
-
-      console.log('[Ogma] streamText completed, result keys:', Object.keys(synthesisResult));
-      console.log('[Ogma] streamText completed, result:', {
-        hasResult: !!synthesisResult,
-        hasTextStream: !!synthesisResult?.textStream,
-        hasFullStream: !!synthesisResult?.fullStream
-      });
-    } catch (streamError) {
-      console.error('[Ogma] streamText failed:', streamError);
-      console.error('[Ogma] streamText error details:', {
-        message: streamError instanceof Error ? streamError.message : 'Unknown error',
-        stack: streamError instanceof Error ? streamError.stack : undefined
-      });
-      throw streamError;
-    }
-
-    // Return the stream response - useChat expects this format
-    console.log('[Ogma] Creating stream response...');
-    console.log('[Ogma] Stream result:', {
-      hasStream: !!synthesisResult,
-      textStream: synthesisResult.textStream ? 'exists' : 'missing',
-      fullStream: synthesisResult.fullStream ? 'exists' : 'missing'
+      }
     });
 
-    if (!synthesisResult) {
-      console.error('[Ogma] synthesisResult is null/undefined!');
-      return new Response(JSON.stringify({ error: 'Stream generation failed' }), { status: 500 });
-    }
-
-    // Check if we have a text stream before creating response
-    if (!synthesisResult.textStream) {
-      console.error('[Ogma] No textStream available!');
-      return new Response(
-        JSON.stringify({ error: 'Stream generation failed - no text stream available' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Use toTextStreamResponse() - standard method for useChat
-    try {
-      const streamResponse = synthesisResult.toTextStreamResponse();
-      console.log('[Ogma] Stream response created, returning to client');
-      console.log('[Ogma] Stream response:', {
-        body: streamResponse.body ? 'exists' : 'missing',
-        status: streamResponse.status,
-        headers: Object.fromEntries(streamResponse.headers.entries()),
-        contentType: streamResponse.headers.get('content-type')
-      });
-
-      // Verify the response body exists
-      if (!streamResponse.body) {
-        console.error('[Ogma] Stream response has no body!');
-        return new Response(
-          JSON.stringify({ error: 'Stream response has no body' }),
-          { status: 500, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-
-      return streamResponse;
-    } catch (responseError) {
-      console.error('[Ogma] Error creating stream response:', responseError);
-      throw responseError;
-    }
+    return synthesisResult.toTextStreamResponse();
 
   } catch (error) {
     console.error('[Ogma] Error in API route:', error);
@@ -467,12 +183,7 @@ Speak as one unified consciousness.`,
         error: 'Internal Server Error',
         message: errorMessage
       }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

@@ -4,7 +4,7 @@
 // import { useChat } from '@ai-sdk/react';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Terminal, Loader2, PenTool, Lightbulb, Cpu } from 'lucide-react';
+import { Send, Terminal, Loader2, PenTool, Lightbulb, Cpu, LayoutDashboard } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 // import { Button } from '@/components/ui/button';
 // import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { getChatMessages, createChatSession } from '../actions';
 interface OgmaChatWindowProps {
     sessionId?: string | null;
     modelConfig?: any;
+    className?: string;
+    initialContext?: string;
 }
 
 export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) {
@@ -142,6 +144,17 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                         <p className="text-sm text-muted-foreground mt-2">Select a model or start typing...</p>
                     </div>
                 )}
+                
+                {/* Dashboard Shortcut */}
+                <div className="absolute top-4 right-4 z-20">
+                    <button 
+                        onClick={() => router.push('/admin/ogma/dashboard')}
+                        className="p-2 text-muted-foreground hover:text-primary transition-colors bg-background/50 backdrop-blur-sm rounded-full border border-border/50 hover:bg-accent"
+                        title="Open Dashboard"
+                    >
+                        <LayoutDashboard className="w-5 h-5" />
+                    </button>
+                </div>
 
                 {messages.map((m: any, idx: number) => (
                     <div key={m.id || idx} className={cn("flex w-full", m.role === 'user' ? "justify-end" : "justify-start")}>
