@@ -342,6 +342,18 @@ export async function createJobTask(jobId: string, instruction: string, phase: '
     return { success: true, task: data };
 }
 
+export async function updateJobTaskContent(taskId: string, instruction: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('job_tasks')
+        .update({ instruction })
+        .eq('id', taskId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
 export async function addCustomPartToJob(jobId: string, vehicleId: string, partData: {
     name: string;
     category?: string;

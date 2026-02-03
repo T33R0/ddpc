@@ -11,15 +11,16 @@ import { Separator } from '@repo/ui/separator';
 import { Checkbox } from '@repo/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
-import { ClipboardList, Plus, Trash2, Package, Search, Play, Wrench, CheckCircle2, ArrowRight, ArrowLeft, MoreHorizontal, Bolt, Hammer, Gauge, Zap, Maximize2, Minimize2, Loader2, ListTodo } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Package, Search, Play, Wrench, CheckCircle2, ArrowRight, ArrowLeft, MoreHorizontal, Bolt, Hammer, Gauge, Zap, Maximize2, Minimize2, Loader2, ListTodo, Pencil } from 'lucide-react';
 import { Job, JobTask, JobTool, JobSpec } from './types';
 import {
-    createJobTask, addPartToJob, startJob, updateJobTask, completeJob, addCustomPartToJob,
+    createJobTask, addPartToJob, startJob, updateJobTask, updateJobTaskContent, completeJob, addCustomPartToJob,
     removePartFromJob, removeJobTask, deleteJob, moveJobToPlanned,
     createJobTool, updateJobTool, deleteJobTool,
     createJobSpec, updateJobSpec, deleteJobSpec,
     generateMissionPlan, addToolToUserInventory
 } from './actions';
+import { EditJobItemModal, EditItemType, EditItemData } from './EditJobItemModal';
 import { VehicleInstalledComponent } from '@/features/parts/types';
 import { toast } from 'react-hot-toast';
 import { cn } from '@repo/ui/lib/utils';
@@ -79,6 +80,40 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     const [showFinishConfirm, setShowFinishConfirm] = useState(false);
     const [newOdometer, setNewOdometer] = useState<string>(currentOdometer?.toString() || '');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Edit Item State
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editType, setEditType] = useState<EditItemType>('tool');
+    const [editData, setEditData] = useState<EditItemData | null>(null);
+
+    const openEditModal = (type: EditItemType, item: any) => {
+        setEditType(type);
+        setEditData(item);
+        setEditModalOpen(true);
+    };
+
+    const handleSaveEdit = async (id: string, updates: Partial<EditItemData>) => {
+        if (editType === 'tool') {
+            if (updates.name) {
+                // Optimistic
+                setLocalTools(prev => prev.map(t => t.id === id ? { ...t, name: updates.name! } : t));
+                await updateJobTool(id, { name: updates.name });
+            }
+        } else if (editType === 'spec') {
+            if (updates.item || updates.value) {
+                // Optimistic
+                setLocalSpecs(prev => prev.map(s => s.id === id ? { ...s, item: updates.item || s.item, value: updates.value || s.value } : s));
+                await updateJobSpec(id, { item: updates.item, value: updates.value });
+            }
+        } else if (editType === 'step') {
+            if (updates.instruction) {
+                // Optimistic
+                setLocalTasks(prev => prev.map(t => t.id === id ? { ...t, instruction: updates.instruction! } : t));
+                await updateJobTaskContent(id, updates.instruction);
+            }
+        }
+        onSuccess();
+    };
 
     useEffect(() => {
         if (job) {
@@ -364,9 +399,14 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                         className="rounded-sm w-4 h-4"
                                     />
                                     <span className={cn("flex-1 text-sm transition-all", tool.is_acquired && "text-muted-foreground line-through opacity-60")}>{tool.name}</span>
-                                    <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 p-0 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTool(tool.id)}>
-                                        <Trash2 className="w-3 h-3" />
-                                    </Button>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button size="icon" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-primary" onClick={() => openEditModal('tool', tool)}>
+                                            <Pencil className="w-3 h-3" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTool(tool.id)}>
+                                            <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                             {localTools.length === 0 && <p className="text-xs text-muted-foreground italic">No tools specified.</p>}
@@ -409,9 +449,14 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                             <div key={spec.id} className="bg-muted/30 border p-2.5 rounded-lg flex flex-col relative group">
                                 <span className="text-[0.625rem] text-muted-foreground uppercase tracking-wider">{spec.item}</span>
                                 <span className="font-mono font-medium text-lg">{spec.value}</span>
-                                <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteSpec(spec.id)}>
-                                    <Trash2 className="w-3 h-3" />
-                                </button>
+                                <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button className="p-1 text-muted-foreground hover:text-primary" onClick={() => openEditModal('spec', spec)}>
+                                        <Pencil className="w-3 h-3" />
+                                    </button>
+                                    <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteSpec(spec.id)}>
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                         {localSpecs.length === 0 && <p className="text-xs text-muted-foreground italic col-span-full">No specs added.</p>}
@@ -498,9 +543,14 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                     <div className={cn("flex-1 leading-snug", (planView === 'teardown' ? task.is_done_tear : task.is_done_build) && "line-through text-muted-foreground opacity-60")}>
                                         {task.instruction}
                                     </div>
-                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 absolute right-2 top-2" onClick={() => handleRemoveStep(task.id)}>
-                                        <Trash2 className="w-3 h-3" />
-                                    </Button>
+                                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => openEditModal('step', task)}>
+                                            <Pencil className="w-3 h-3" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveStep(task.id)}>
+                                            <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                             {currentTasks.length === 0 && <p className="text-muted-foreground italic text-sm">No {planView} steps generated yet.</p>}
@@ -672,6 +722,14 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                         </div>
                     </div>
                 )}
+
+                <EditJobItemModal
+                    isOpen={editModalOpen}
+                    onClose={() => setEditModalOpen(false)}
+                    type={editType}
+                    initialData={editData}
+                    onSave={handleSaveEdit}
+                />
             </ModalContent>
         </Modal>
     );
