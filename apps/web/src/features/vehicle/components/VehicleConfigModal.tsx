@@ -214,15 +214,57 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                                     )}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="image">Image URL</Label>
-                                    <Input
-                                        id="image"
-                                        value={imageUrl}
-                                        onChange={(e) => setImageUrl(e.target.value)}
-                                        placeholder="https://example.com/my-car.jpg"
-                                    />
-                                </div>
+                                    <Label htmlFor="image">Vehicle Image</Label>
+                                    <div className="flex items-center gap-4">
+                                        {imageUrl && (
+                                            <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
+                                                <img src={imageUrl} alt="Vehicle" className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                        <div className="flex-1">
+                                            <Input
+                                                id="image-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (!file) return
+
+                                                    // Optimistic preview (optional/skipped for simplicity, rely on upload)
+                                                    const formData = new FormData()
+                                                    formData.append('file', file)
+                                                    formData.append('vehicleId', vehicle.id)
+
+                                                    setIsSubmitting(true)
+                                                    const toastId = toast.loading('Uploading image...')
+
+                                                    try {
+                                                        const res = await fetch('/api/garage/upload-vehicle-image', {
+                                                            method: 'POST',
+                                                            body: formData
+                                                        })
+                                                        
+                                                        const data = await res.json()
+                                                        
+                                                        if (!res.ok) throw new Error(data.error || 'Upload failed')
+                                                        
+                                                        if (data.success && data.imageUrl) {
+                                                            setImageUrl(data.imageUrl)
+                                                            toast.success('Image uploaded', { id: toastId })
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Upload error:', error)
+                                                        toast.error('Failed to upload image', { id: toastId })
+                                                    } finally {
+                                                        setIsSubmitting(false)
+                                                    }
+                                                }}
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Upload a new photo to replace the current one.
+                                            </p>
+                                        </div>
+                                    </div>
                             </TabsContent>
 
                             <TabsContent value="ownership" className="space-y-4 mt-0">

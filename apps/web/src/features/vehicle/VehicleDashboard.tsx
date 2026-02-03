@@ -66,6 +66,7 @@ export interface DashboardLog {
 interface VehicleDashboardProps {
     vehicle: Vehicle & {
         vehicle_image?: string | null
+        photo_url?: string | null
         image_url?: string | null
         stock_image?: string | null
         current_status?: string
@@ -499,7 +500,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
     ]
 
     // ... existing vehicleImage logic ...
-    const vehicleImage = vehicle.vehicle_image || vehicle.image_url || vehicle.stock_image || null
+    const vehicleImage = vehicle.vehicle_image || vehicle.photo_url || vehicle.image_url || vehicle.stock_image || null
     const isPrivate = privacy === 'PRIVATE'
 
     return (
