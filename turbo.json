@@ -12,7 +12,8 @@
     "STRIPE_MCP_KEY",
     "STRIPE_MCP_KEY",
     "RESEND_API_KEY",
-    "AI_GATEWAY_API_KEY"
+    "AI_GATEWAY_API_KEY",
+    "MCP_SERVER_ACCESS"
   ],
   "tasks": {
     "build": {
