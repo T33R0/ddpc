@@ -40,6 +40,8 @@ import { VehicleEvent } from '@/features/timeline/lib/getVehicleEvents'
 import { VehicleMod } from '@/features/mods/lib/getVehicleModsData'
 import { EditModDialog } from '@/features/mods/components/EditModDialog'
 import { VehicleConfigModal } from '@/features/vehicle/components/VehicleConfigModal'
+import { ActivityDetailModal } from '@/features/vehicle/components/ActivityDetailModal'
+import { NeedsAttentionModal } from '@/features/vehicle/components/NeedsAttentionModal'
 
 // ... imports
 
@@ -99,20 +101,29 @@ interface VehicleDashboardProps {
         totalParts: number
         healthScore: number | null
         partsNeedingAttention: number
+        partsNeedingAttentionList?: Array<{
+            id: string
+            name: string
+            status: 'Warning' | 'Critical'
+            healthPercentage: number
+            part_number?: string
+        }>
     }
     recentActivity: DashboardLog[]
     mods: VehicleMod[]
     logs: DashboardLog[]
 }
 
-function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, onConfig, inventoryStats }: {
+function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick }: {
     stats: VehicleDashboardProps['stats'],
     inventoryStats?: VehicleDashboardProps['inventoryStats'],
     recentActivity: DashboardLog[],
     onAction: (type: string) => void,
     vehicleImage: string | null,
     isOwner: boolean,
-    onConfig: () => void
+    onConfig: () => void,
+    onActivityClick: (activity: DashboardLog) => void
+    onNeedsAttentionClick: () => void
 }) {
     // Helper for drive type abbreviation
     const formatDriveType = (type: string | null | undefined) => {
@@ -142,15 +153,27 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Image Section (Desktop Left, Mobile 1st) */}
-                <div className="relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm order-1 md:order-1">
+                <div className="relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm order-1 md:order-1 group">
                     {vehicleImage ? (
-                        <Image
-                            src={vehicleImage}
-                            alt="Vehicle"
-                            fill
-                            className="object-cover"
-                            unoptimized={true}
-                        />
+                        <>
+                            {/* Blurred Background Layer */}
+                            <Image
+                                src={vehicleImage}
+                                alt="Vehicle Background"
+                                fill
+                                className="object-cover blur-xl opacity-40 scale-110"
+                                unoptimized={true}
+                                aria-hidden="true"
+                            />
+                            {/* Main Image Layer */}
+                            <Image
+                                src={vehicleImage}
+                                alt="Vehicle"
+                                fill
+                                className="object-contain z-10 relative transition-transform duration-700 group-hover:scale-[1.02]"
+                                unoptimized={true}
+                            />
+                        </>
                     ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-muted to-card flex items-center justify-center">
                             <Home className="w-16 h-16 text-muted-foreground opacity-20" />
@@ -199,6 +222,8 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                             factoryMpg={stats.factoryMpg}
                             inventoryStats={inventoryStats}
                             fuelType={stats.fuel_type}
+                            onNeedsAttentionClick={onNeedsAttentionClick}
+                            onBuildClick={() => onAction('view_build')} // We might not need this if we handle navigation differently, but passing callback for now
                         />
                     </div>
 
@@ -244,11 +269,11 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                                             <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 truncate w-full">Color</span>
                                             <div className="flex flex-col items-center gap-1">
                                                 <div
-                                                    className="w-6 h-6 rounded-full border border-border shadow-sm"
+                                                    className="w-6 h-6 rounded-full border border-border shadow-sm shrink-0"
                                                     style={{ backgroundColor: `rgb(${r},${g},${b})` }}
                                                     title={color}
                                                 />
-                                                <span className="text-xs font-bold truncate max-w-[100px]" title={name?.trim()}>{name?.trim()}</span>
+                                                <span className="text-xs font-bold leading-tight break-words max-w-[100px]" title={name?.trim()}>{name?.trim()}</span>
                                             </div>
                                         </div>
                                     )
@@ -258,8 +283,8 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                                     <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
                                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Color</span>
                                         <div className="flex flex-col items-center gap-1">
-                                            <div className="w-6 h-6 rounded-full border border-border shadow-sm" style={{ backgroundColor: color }} title={color} />
-                                            <span className="text-xs font-bold truncate max-w-[100px]">{color}</span>
+                                            <div className="w-6 h-6 rounded-full border border-border shadow-sm shrink-0" style={{ backgroundColor: color }} title={color} />
+                                            <span className="text-xs font-bold leading-tight break-words max-w-[100px]">{color}</span>
                                         </div>
                                     </div>
                                 )
@@ -312,7 +337,11 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {recentActivity.length > 0 ? (
                             recentActivity.map((item, i) => (
-                                <div key={i} className="flex gap-4 p-4 rounded-xl bg-card border border-border items-start shadow-xs hover:shadow-md transition-shadow">
+                                <div 
+                                    key={i} 
+                                    onClick={() => onActivityClick(item)}
+                                    className="flex gap-4 p-4 rounded-xl bg-card border border-border items-start shadow-xs hover:shadow-md transition-shadow cursor-pointer hover:bg-muted/50"
+                                >
                                     <div className={`p-2 rounded-full shrink-0 ${item.type === 'fuel' ? 'bg-green-500/10 text-green-500' :
                                         item.type === 'service' ? 'bg-blue-500/10 text-blue-500' :
                                             'bg-yellow-500/10 text-yellow-500'
@@ -456,6 +485,8 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
     const [isWishlistOpen, setIsWishlistOpen] = useState(false)
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
     const [selectedMod, setSelectedMod] = useState<VehicleMod | null>(null)
+    const [activeActivity, setActiveActivity] = useState<DashboardLog | null>(null)
+    const [isNeedsAttentionOpen, setIsNeedsAttentionOpen] = useState(false)
     const [privacy, setPrivacy] = useState(vehicle.privacy || 'PRIVATE')
 
     // Set tab, update localStorage, do NOT set URL param (keep it clean)
@@ -599,6 +630,8 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                         isOwner={isOwner}
                         onConfig={() => setIsConfigModalOpen(true)}
                         inventoryStats={inventoryStats}
+                        onActivityClick={setActiveActivity}
+                        onNeedsAttentionClick={() => setIsNeedsAttentionOpen(true)}
                     />
                 )}
                 {activeTab === 'build' && <TabBuild vehicleId={vehicle.id} />}
@@ -653,6 +686,29 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                     mod={selectedMod}
                 />
             )}
+
+            <ActivityDetailModal
+                isOpen={!!activeActivity}
+                activity={activeActivity}
+                onClose={() => setActiveActivity(null)}
+                onViewInBuild={(partId) => {
+                   // This logic is tricky because we need to switch tabs to 'build' and optionally focus the node
+                   // For now, let's just switch the tab. The partId might need to be passed down if we want deep linking inside the diagram.
+                   // The Build Tab component is `TabBuild`. It renders `PartsDiagramContainer`.
+                   // Currently PartsDiagramContainer doesn't accept a focused part ID prop easily accessible here without more plumbing.
+                   // So we simply switch tabs.
+                   setActiveTab('build')
+                }}
+            />
+
+            <NeedsAttentionModal
+                isOpen={isNeedsAttentionOpen}
+                parts={inventoryStats?.partsNeedingAttentionList || []}
+                onClose={() => setIsNeedsAttentionOpen(false)}
+                onViewInBuild={(partId) => {
+                    setActiveTab('build')
+                }}
+            />
         </div>
     )
 }

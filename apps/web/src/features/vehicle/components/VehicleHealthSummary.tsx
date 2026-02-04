@@ -14,9 +14,11 @@ interface VehicleHealthSummaryProps {
         partsNeedingAttention: number
     }
     fuelType?: string | null
+    onNeedsAttentionClick?: () => void
+    onBuildClick?: () => void
 }
 
-export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, fuelType }: VehicleHealthSummaryProps) {
+export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, fuelType, onNeedsAttentionClick }: VehicleHealthSummaryProps) {
     const [isHelpOpen, setIsHelpOpen] = React.useState(false)
 
     // MPG Calculations
@@ -114,7 +116,10 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
                             <span className="text-lg font-bold leading-none my-auto">{inventoryStats?.totalParts || 0}</span>
                             <span className="text-[10px] text-muted-foreground mt-1 mb-1">Parts Logged</span>
                         </div>
-                        <div className={`p-2 rounded-lg border border-border/50 flex flex-col items-center justify-start text-center h-full ${inventoryStats?.partsNeedingAttention ? 'bg-red-500/10 border-red-500/20' : 'bg-muted/30'}`}>
+                        <div 
+                            onClick={onNeedsAttentionClick}
+                            className={`p-2 rounded-lg border border-border/50 flex flex-col items-center justify-start text-center h-full cursor-pointer transition-colors active:scale-95 hover:bg-accent/50 ${inventoryStats?.partsNeedingAttention ? 'bg-red-500/10 border-red-500/20' : 'bg-muted/30'}`}
+                        >
                             <AlertTriangle className={`h-4 w-4 mb-1 mt-1 ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-muted-foreground'}`} />
                             <span className={`text-lg font-bold leading-none my-auto ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-foreground'}`}>
                                 {inventoryStats?.partsNeedingAttention || 0}

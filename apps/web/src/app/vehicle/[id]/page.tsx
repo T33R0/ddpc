@@ -257,7 +257,23 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   const inventoryHealth = {
     totalParts: installedParts.length,
     healthScore: averageHealthScore,
-    partsNeedingAttention
+    partsNeedingAttention,
+    partsNeedingAttentionList: installedParts
+        .map((part: any) => {
+            const definition = {
+                default_lifespan_miles: part.part?.default_lifespan_miles,
+                default_lifespan_months: part.part?.default_lifespan_months
+            } as any
+            const health = calculateHealth(part as VehicleInstalledComponent, definition, latestOdometer)
+            return {
+                id: part.id,
+                name: part.part?.name || part.name,
+                status: health.status,
+                healthPercentage: Math.max(0, 100 - health.percentageUsed),
+                part_number: part.part?.part_number
+            }
+        })
+        .filter((p: any) => p.status === 'Warning' || p.status === 'Critical') as Array<{ id: string; name: string; status: 'Warning' | 'Critical'; healthPercentage: number; part_number?: string }>
   }
 
   // Recent Activity (Top 3)
@@ -280,7 +296,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
   // Based on previous code, they seemed to be flattened manually. Let's do a quick flattening.
   if (vehicle.vehicle_data) {
     const { id: _, ...vehicleDataWithoutId } = vehicle.vehicle_data
-    Object.assign(vehicleWithData, vehicleDataWithoutId)
+    // Merge vehicle_data but ensure user_vehicle properties take precedence
+    Object.assign(vehicleWithData, { ...vehicleDataWithoutId, ...vehicle })
   }
 
   // --- 4. Redirects ---
