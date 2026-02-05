@@ -110,20 +110,129 @@ interface VehicleDashboardProps {
         }>
     }
     recentActivity: DashboardLog[]
+    totalLogsCount: number
     mods: VehicleMod[]
     logs: DashboardLog[]
 }
 
-function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick }: {
+// Recent Activity Section with Infinite Scroll
+function RecentActivitySection({ activities, totalLogsCount, onActivityClick, onNavigateToLogbook }: {
+    activities: DashboardLog[],
+    totalLogsCount: number,
+    onActivityClick: (activity: DashboardLog) => void,
+    onNavigateToLogbook: (startIndex?: number) => void
+}) {
+    const [visibleCount, setVisibleCount] = useState(3)
+    const loadMoreRef = React.useRef<HTMLDivElement>(null)
+
+    // Intersection Observer for infinite scroll
+    useEffect(() => {
+        if (!loadMoreRef.current) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting && visibleCount < activities.length) {
+                    setVisibleCount(prev => Math.min(prev + 3, activities.length))
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        observer.observe(loadMoreRef.current)
+        return () => observer.disconnect()
+    }, [visibleCount, activities.length])
+
+    const visibleActivities = activities.slice(0, visibleCount)
+    const hasMore = totalLogsCount > 21
+
+    const getActivityIcon = (type: string) => {
+        switch (type) {
+            case 'fuel': return <Fuel className="w-4 h-4" />
+            case 'service': return <Wrench className="w-4 h-4" />
+            case 'mod': return <Zap className="w-4 h-4" />
+            case 'job': return <Wrench className="w-4 h-4" />
+            case 'part': return <Zap className="w-4 h-4" />
+            default: return <Wrench className="w-4 h-4" />
+        }
+    }
+
+    const getActivityColor = (type: string) => {
+        switch (type) {
+            case 'fuel': return 'bg-success/10 text-success'
+            case 'service': return 'bg-info/10 text-info'
+            case 'mod': return 'bg-warning/10 text-warning'
+            case 'job': return 'bg-info/10 text-info'
+            case 'part': return 'bg-warning/10 text-warning'
+            default: return 'bg-muted/10 text-muted-foreground'
+        }
+    }
+
+    if (activities.length === 0) {
+        return (
+            <div className="py-8 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
+                No recent activity.
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {visibleActivities.map((item, i) => (
+                    <div 
+                        key={i} 
+                        onClick={() => onActivityClick(item)}
+                        className="flex gap-4 p-4 rounded-xl bg-card border border-border items-start shadow-xs hover:shadow-md transition-shadow cursor-pointer hover:bg-muted/50"
+                    >
+                        <div className={`p-2 rounded-full shrink-0 ${getActivityColor(item.type)}`}>
+                            {getActivityIcon(item.type)}
+                        </div>
+                        <div className="min-w-0">
+                            <h4 className="font-medium text-foreground truncate">{item.title}</h4>
+                            <p className="text-xs text-muted-foreground">{format(new Date(item.date), 'MMM d, yyyy')}</p>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{item.description}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Load more trigger */}
+            {visibleCount < activities.length && (
+                <div ref={loadMoreRef} className="h-4" />
+            )}
+
+            {/* Bottom message */}
+            {visibleCount >= activities.length && (
+                <div className="text-center py-4">
+                    {hasMore ? (
+                        <Button 
+                            variant="link" 
+                            onClick={() => onNavigateToLogbook(21)}
+                            className="text-primary hover:text-primary/80"
+                        >
+                            View More in Logbook →
+                        </Button>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">No more logged activity</p>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
+function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick, onNavigateToLogbook }: {
     stats: VehicleDashboardProps['stats'],
     inventoryStats?: VehicleDashboardProps['inventoryStats'],
     recentActivity: DashboardLog[],
+    totalLogsCount: number,
     onAction: (type: string) => void,
     vehicleImage: string | null,
     isOwner: boolean,
     onConfig: () => void,
     onActivityClick: (activity: DashboardLog) => void
     onNeedsAttentionClick: () => void
+    onNavigateToLogbook: (startIndex?: number) => void
 }) {
     // Helper for drive type abbreviation
     const formatDriveType = (type: string | null | undefined) => {
@@ -334,33 +443,12 @@ function TabOverview({ stats, recentActivity, onAction, vehicleImage, isOwner, o
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <Book className="w-5 h-5" /> Recent Activity
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {recentActivity.length > 0 ? (
-                            recentActivity.map((item, i) => (
-                                <div 
-                                    key={i} 
-                                    onClick={() => onActivityClick(item)}
-                                    className="flex gap-4 p-4 rounded-xl bg-card border border-border items-start shadow-xs hover:shadow-md transition-shadow cursor-pointer hover:bg-muted/50"
-                                >
-                                    <div className={`p-2 rounded-full shrink-0 ${item.type === 'fuel' ? 'bg-green-500/10 text-green-500' :
-                                        item.type === 'service' ? 'bg-blue-500/10 text-blue-500' :
-                                            'bg-yellow-500/10 text-yellow-500'
-                                        }`}>
-                                        {item.type === 'fuel' ? <Fuel className="w-4 h-4" /> :
-                                            item.type === 'service' ? <Wrench className="w-4 h-4" /> :
-                                                <Zap className="w-4 h-4" />}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-medium text-foreground truncate">{item.title}</h4>
-                                        <p className="text-xs text-muted-foreground">{format(new Date(item.date), 'MMM d, yyyy')}</p>
-                                        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{item.description}</p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="col-span-full py-8 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed">No recent activity.</div>
-                        )}
-                    </div>
+                    <RecentActivitySection 
+                        activities={recentActivity}
+                        totalLogsCount={totalLogsCount}
+                        onActivityClick={onActivityClick}
+                        onNavigateToLogbook={onNavigateToLogbook}
+                    />
                 </div>
             </div>
         </div>
@@ -453,7 +541,7 @@ function TabWorkshop({ mods, onModClick }: { mods: VehicleMod[], onModClick: (mo
 
 // --- Main Layout ---
 
-export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivity, mods, logs, inventoryStats }: VehicleDashboardProps) {
+export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivity, totalLogsCount, mods, logs, inventoryStats }: VehicleDashboardProps) {
     const searchParams = useSearchParams()
     const router = useRouter()
     const pathname = usePathname()
@@ -505,6 +593,11 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
     const handleAction = (type: string) => {
         if (type === 'fuel') setIsFuelModalOpen(true)
         if (type === 'job') setIsJobModalOpen(true)
+    }
+
+    const handleNavigateToLogbook = (startIndex?: number) => {
+        setActiveTab('logbook')
+        // TODO: In future, we could pass startIndex to TimelineFeed to scroll to specific position
     }
 
     // ... existing handlePrivacyToggle ...
@@ -625,6 +718,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                     <TabOverview
                         stats={stats}
                         recentActivity={recentActivity}
+                        totalLogsCount={totalLogsCount}
                         onAction={handleAction}
                         vehicleImage={vehicleImage}
                         isOwner={isOwner}
@@ -632,6 +726,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                         inventoryStats={inventoryStats}
                         onActivityClick={setActiveActivity}
                         onNeedsAttentionClick={() => setIsNeedsAttentionOpen(true)}
+                        onNavigateToLogbook={handleNavigateToLogbook}
                     />
                 )}
                 {activeTab === 'build' && <TabBuild vehicleId={vehicle.id} />}
@@ -698,6 +793,11 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                    // Currently PartsDiagramContainer doesn't accept a focused part ID prop easily accessible here without more plumbing.
                    // So we simply switch tabs.
                    setActiveTab('build')
+                }}
+                onViewInLogbook={(activityId) => {
+                    setActiveActivity(null)
+                    setActiveTab('logbook')
+                    // TODO: Could pass activityId to TimelineFeed to highlight specific event
                 }}
             />
 

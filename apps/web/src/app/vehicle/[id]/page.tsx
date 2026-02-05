@@ -276,8 +276,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         .filter((p: any) => p.status === 'Warning' || p.status === 'Critical') as Array<{ id: string; name: string; status: 'Warning' | 'Critical'; healthPercentage: number; part_number?: string }>
   }
 
-  // Recent Activity (Top 3)
-  const recentActivity = rawLogs.slice(0, 3)
+  // Recent Activity (Up to 21 for infinite scroll)
+  const recentActivity = rawLogs.slice(0, 21)
 
   // Vehicle Object Construction
   const vehicleWithData: Vehicle = {
@@ -337,6 +337,7 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
       }}
       inventoryStats={inventoryHealth}
       recentActivity={recentActivity}
+      totalLogsCount={rawLogs.length}
       mods={mappedMods}
       logs={rawLogs}
     />

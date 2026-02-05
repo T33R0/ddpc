@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { addPartToVehicle } from '@/features/parts/actions'
 
 export async function toggleVehiclePrivacy(vehicleId: string, currentPrivacy: string) {
     const supabase = await createClient()
@@ -51,25 +52,57 @@ export async function logJobAction(formData: FormData) {
         throw new Error('Missing required fields')
     }
 
+    // Insert the job
     const { error } = await supabase
         .from('jobs')
         .insert({
             vehicle_id: vehicleId,
             user_id: user.id,
             title,
-            date_completed: date, // mapped to date_completed
+            date_completed: date,
             type,
             odometer,
-            cost_total: cost, // mapped to cost_total
+            cost_total: cost,
             vendor,
-            notes, // notes is just text, mapped to notes column if exists or description? CHECK SCHEMA. 
-            // User request said: "Table jobs: ... notes".
+            notes,
             status: 'completed'
         })
 
     if (error) {
         console.error('Error logging job:', error)
         return { success: false, error: error.message || 'Failed to log job' }
+    }
+
+    // Extract and process parts data
+    const partsData: Array<{ name: string; category: string }> = []
+    let partIndex = 0
+    
+    while (formData.has(`parts[${partIndex}][name]`)) {
+        const name = formData.get(`parts[${partIndex}][name]`) as string
+        const category = formData.get(`parts[${partIndex}][category]`) as string
+        
+        if (name && category) {
+            partsData.push({ name, category })
+        }
+        partIndex++
+    }
+
+    // Create parts in inventory if any were provided
+    if (partsData.length > 0) {
+        for (const part of partsData) {
+            try {
+                await addPartToVehicle(vehicleId, null, {
+                    name: part.name,
+                    category: part.category,
+                    status: 'installed',
+                    installedDate: date,
+                    installedMileage: odometer
+                })
+            } catch (partError) {
+                // Log error but don't fail the entire job creation
+                console.error('Error creating part:', partError)
+            }
+        }
     }
 
     revalidatePath(`/vehicle/${vehicleId}`)

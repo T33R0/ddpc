@@ -9,7 +9,8 @@ import { Textarea } from '@repo/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select'
 import { logJobAction } from '../actions'
 import { toast } from '@repo/ui/use-toast'
-import { Briefcase } from 'lucide-react'
+import { Briefcase, Plus, X } from 'lucide-react'
+import { STANDARD_COMPONENTS, PartCategory } from '@/lib/constants/standard-components'
 
 const JOB_TYPES = [
     { value: 'service', label: 'Service' },
@@ -35,6 +36,11 @@ interface JobFormData {
     notes: string
 }
 
+interface PartEntry {
+    name: string
+    category: PartCategory
+}
+
 export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: LogJobModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -47,6 +53,8 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
         vendor: '',
         notes: ''
     })
+    const [hasParts, setHasParts] = useState(false)
+    const [parts, setParts] = useState<PartEntry[]>([{ name: '', category: 'engine' }])
 
     // Reset form when modal opens
     useEffect(() => {
@@ -60,6 +68,8 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
                 vendor: '',
                 notes: ''
             })
+            setHasParts(false)
+            setParts([{ name: '', category: 'engine' }])
             setError(null)
         }
     }, [isOpen, currentOdometer])
@@ -69,10 +79,43 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
         if (error) setError(null)
     }
 
+    const handlePartChange = (index: number, field: 'name' | 'category', value: string) => {
+        setParts(prev => {
+            const updated = [...prev]
+            const currentPart = updated[index]
+            if (!currentPart) return updated
+            
+            if (field === 'name') {
+                updated[index] = { ...currentPart, name: value }
+            } else {
+                updated[index] = { ...currentPart, category: value as PartCategory }
+            }
+            return updated
+        })
+    }
+
+    const addPart = () => {
+        setParts(prev => [...prev, { name: '', category: 'engine' }])
+    }
+
+    const removePart = (index: number) => {
+        setParts(prev => prev.filter((_, i) => i !== index))
+    }
+
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault()
         setIsSubmitting(true)
         setError(null)
+
+        // Validate parts if hasParts is true
+        if (hasParts) {
+            const invalidParts = parts.filter(p => !p.name.trim())
+            if (invalidParts.length > 0) {
+                setError('Please fill in all part names or remove empty parts')
+                setIsSubmitting(false)
+                return
+            }
+        }
 
         try {
             // Create FormData object to match expected server action input
@@ -86,12 +129,22 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
             submitData.append('vendor', formData.vendor)
             submitData.append('notes', formData.notes)
 
+            // Add parts data if applicable
+            if (hasParts) {
+                parts.forEach((part, index) => {
+                    submitData.append(`parts[${index}][name]`, part.name)
+                    submitData.append(`parts[${index}][category]`, part.category)
+                })
+            }
+
             const result = await logJobAction(submitData)
 
             if (result.success) {
                 toast({
                     title: "Job Logged",
-                    description: "The job has been successfully recorded.",
+                    description: hasParts 
+                        ? `Job and ${parts.length} part${parts.length > 1 ? 's' : ''} successfully recorded.`
+                        : "The job has been successfully recorded.",
                 })
                 onClose()
             } else {
@@ -211,6 +264,90 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
                             placeholder="Details about parts used, observations, etc."
                             className="resize-none"
                         />
+                    </div>
+
+                    {/* Parts Section */}
+                    <div className="space-y-3 pt-2 border-t border-border">
+                        <Label>Any parts for this job?</Label>
+                        <div className="flex gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setHasParts(false)}
+                                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
+                                    !hasParts
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-background border-input hover:bg-muted'
+                                }`}
+                            >
+                                No
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setHasParts(true)}
+                                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
+                                    hasParts
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-background border-input hover:bg-muted'
+                                }`}
+                            >
+                                Yes
+                            </button>
+                        </div>
+
+                        {hasParts && (
+                            <div className="space-y-3 mt-4">
+                                {parts.map((part, index) => (
+                                    <div key={index} className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <Label className="text-xs font-semibold text-muted-foreground">Part {index + 1}</Label>
+                                            {parts.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => removePart(index)}
+                                                    className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Input
+                                                placeholder="Part name (e.g., Bosch Oil Filter)"
+                                                value={part.name}
+                                                onChange={(e) => handlePartChange(index, 'name', e.target.value)}
+                                                className="bg-background"
+                                            />
+                                            <Select
+                                                value={part.category}
+                                                onValueChange={(value) => handlePartChange(index, 'category', value as PartCategory)}
+                                            >
+                                                <SelectTrigger className="bg-background">
+                                                    <SelectValue placeholder="Select category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.keys(STANDARD_COMPONENTS).map((category) => (
+                                                        <SelectItem key={category} value={category}>
+                                                            {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addPart}
+                                    className="w-full border-dashed"
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Another Part
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <ModalFooter className="gap-2 pt-4">

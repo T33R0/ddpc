@@ -50,11 +50,11 @@ export function NeedsAttentionModal({ parts, isOpen, onClose, onViewInBuild }: N
                                     className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/40 transition-colors"
                                 >
                                     <div className="flex items-start gap-3 min-w-0">
-                                        <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${part.status === 'Critical' ? 'bg-destructive' : 'bg-yellow-500'}`} />
+                                    <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${part.status === 'Critical' ? 'bg-destructive' : 'bg-warning'}`} />
                                         <div className="min-w-0">
                                             <h4 className="font-medium text-sm truncate">{part.name}</h4>
                                             <p className="text-xs text-muted-foreground">
-                                                Health: <span className={part.status === 'Critical' ? 'text-destructive font-bold' : 'text-yellow-500 font-medium'}>
+                                                Health: <span className={part.status === 'Critical' ? 'text-destructive font-bold' : 'text-warning font-medium'}>
                                                     {part.healthPercentage}%
                                                 </span>
                                             </p>
