@@ -96,6 +96,7 @@ interface VehicleDashboardProps {
         acquisition_date?: string | null
         ownership_end_date?: string | null
         vin?: string | null
+        record_count?: number
     }
     inventoryStats?: {
         totalParts: number
@@ -221,7 +222,7 @@ function RecentActivitySection({ activities, totalLogsCount, onActivityClick, on
     )
 }
 
-function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick, onNavigateToLogbook }: {
+function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick, onNavigateToLogbook, vehicleId }: {
     stats: VehicleDashboardProps['stats'],
     inventoryStats?: VehicleDashboardProps['inventoryStats'],
     recentActivity: DashboardLog[],
@@ -233,6 +234,7 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
     onActivityClick: (activity: DashboardLog) => void
     onNeedsAttentionClick: () => void
     onNavigateToLogbook: (startIndex?: number) => void
+    vehicleId: string
 }) {
     // Helper for drive type abbreviation
     const formatDriveType = (type: string | null | undefined) => {
@@ -333,6 +335,8 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
                             fuelType={stats.fuel_type}
                             onNeedsAttentionClick={onNeedsAttentionClick}
                             onBuildClick={() => onAction('view_build')} // We might not need this if we handle navigation differently, but passing callback for now
+                            recordCount={stats.record_count}
+                            vehicleId={vehicleId}
                         />
                     </div>
 
@@ -727,6 +731,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                         onActivityClick={setActiveActivity}
                         onNeedsAttentionClick={() => setIsNeedsAttentionOpen(true)}
                         onNavigateToLogbook={handleNavigateToLogbook}
+                        vehicleId={vehicle.id}
                     />
                 )}
                 {activeTab === 'build' && <TabBuild vehicleId={vehicle.id} />}

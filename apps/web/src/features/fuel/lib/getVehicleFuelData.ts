@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { calculateHealth, HealthResult } from '@/features/parts/lib/health'
+import { VehicleInstalledComponent } from '@/features/parts/types'
 
 export interface FuelEntry {
   id: string
@@ -32,6 +34,13 @@ export interface VehicleFuelData {
   fuelEntries: FuelEntry[]
   stats: FuelStats
   hasData: boolean
+  inventoryStats?: {
+      totalParts: number
+      healthScore: number | null
+      partsNeedingAttention: number
+      partsNeedingAttentionList: Array<{ id: string; name: string; status: 'Warning' | 'Critical'; healthPercentage: number; part_number?: string }>
+  }
+  recordCount?: number
 }
 
 // Helper function to check if a string is a UUID
@@ -124,17 +133,100 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
 
   const vehicleId = vehicle.id
 
-  // Fetch fuel logs from fuel_log table
-  const { data: fuelLogs, error: fuelLogsError } = await supabase
-    .from('fuel_log')
-    .select('id, event_date, odometer, gallons, price_per_gallon, total_cost, trip_miles, mpg')
-    .eq('user_vehicle_id', vehicleId)
-    .order('event_date', { ascending: true })
+  // Fetch all necessary data in parallel
+  const [
+    { data: fuelLogs, error: fuelLogsError },
+    { data: partsLogs, error: partsError },
+    { count: maintenanceCount, error: maintenanceError },
+    { count: modsCount, error: modsError }
+  ] = await Promise.all([
+    // Fuel Logs
+    supabase
+        .from('fuel_log')
+        .select('id, event_date, odometer, gallons, price_per_gallon, total_cost, trip_miles, mpg')
+        .eq('user_vehicle_id', vehicleId)
+        .order('event_date', { ascending: true }),
+    // Installed Parts (for Health Stats)
+    supabase
+        .from('inventory')
+        .select('*, part:master_parts(*)')
+        .eq('vehicle_id', vehicleId)
+        .eq('status', 'installed')
+        .order('installed_at', { ascending: false }),
+    // Maintenance Logs Count (for Total Records)
+    supabase
+        .from('maintenance_log')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicleId),
+    // Mods Count (for Total Records)
+    supabase
+        .from('mods')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_vehicle_id', vehicleId)
+  ])
 
   if (fuelLogsError) {
     console.error('Error fetching fuel logs:', fuelLogsError)
     throw new Error('Failed to fetch fuel data')
   }
+
+  // --- Calculate Inventory Health Stats ---
+  const installedParts = (partsLogs || []).map((p: any) => ({
+    ...p,
+    lifespan_miles: p.lifespan_miles || p.part?.default_lifespan_miles,
+    lifespan_months: p.lifespan_months || p.part?.default_lifespan_months,
+  }))
+
+  let totalHealthScore = 0
+  let scorablePartsCount = 0
+  let partsNeedingAttention = 0
+  const latestOdometer = vehicle.odometer || 0
+
+  installedParts.forEach((part: any) => {
+    const definition = {
+      default_lifespan_miles: part.part?.default_lifespan_miles,
+      default_lifespan_months: part.part?.default_lifespan_months
+    } as any
+
+    const health: HealthResult = calculateHealth(part as VehicleInstalledComponent, definition, latestOdometer)
+
+    if (health.status !== 'Unknown') {
+      const currentHealth = Math.max(0, 100 - health.percentageUsed)
+      totalHealthScore += currentHealth
+      scorablePartsCount++
+
+      if (health.status === 'Warning' || health.status === 'Critical') {
+        partsNeedingAttention++
+      }
+    }
+  })
+
+  const averageHealthScore = scorablePartsCount > 0 ? Math.round(totalHealthScore / scorablePartsCount) : null
+
+  const inventoryStats = {
+    totalParts: installedParts.length,
+    healthScore: averageHealthScore,
+    partsNeedingAttention,
+    partsNeedingAttentionList: installedParts
+        .map((part: any) => {
+            const definition = {
+                default_lifespan_miles: part.part?.default_lifespan_miles,
+                default_lifespan_months: part.part?.default_lifespan_months
+            } as any
+            const health = calculateHealth(part as VehicleInstalledComponent, definition, latestOdometer)
+            return {
+                id: part.id,
+                name: part.part?.name || part.name,
+                status: health.status,
+                healthPercentage: Math.max(0, 100 - health.percentageUsed),
+                part_number: part.part?.part_number
+            }
+        })
+        .filter((p: any) => p.status === 'Warning' || p.status === 'Critical') as Array<{ id: string; name: string; status: 'Warning' | 'Critical'; healthPercentage: number; part_number?: string }>
+  }
+
+  // Calculate Total Records
+  const totalRecords = (fuelLogs?.length || 0) + (maintenanceCount || 0) + (modsCount || 0)
 
   const fuelEntries: FuelEntry[] = []
   let totalGallons = 0
@@ -199,5 +291,7 @@ export async function getVehicleFuelData(vehicleSlug: string): Promise<VehicleFu
     fuelEntries,
     stats,
     hasData: fuelEntries.length > 0,
+    inventoryStats,
+    recordCount: totalRecords
   }
 }

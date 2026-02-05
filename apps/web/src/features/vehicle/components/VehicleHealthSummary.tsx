@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { Activity, AlertTriangle, Layers } from 'lucide-react'
+import Link from 'next/link'
+import { Activity, AlertTriangle, Layers, ChevronRight } from 'lucide-react'
 import { VehicleHealthHelpModal } from './VehicleHealthHelpModal'
 
 interface VehicleHealthSummaryProps {
@@ -16,9 +17,11 @@ interface VehicleHealthSummaryProps {
     fuelType?: string | null
     onNeedsAttentionClick?: () => void
     onBuildClick?: () => void
+    recordCount?: number
+    vehicleId: string
 }
 
-export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, fuelType, onNeedsAttentionClick }: VehicleHealthSummaryProps) {
+export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, fuelType, onNeedsAttentionClick, recordCount = 0, vehicleId }: VehicleHealthSummaryProps) {
     const [isHelpOpen, setIsHelpOpen] = React.useState(false)
 
     // MPG Calculations
@@ -57,9 +60,15 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
             <CardContent className="grid gap-6 flex-1 content-start pt-2">
 
                 {/* MPG Section */}
-                <div className="space-y-1">
-                    <div className="flex items-center gap-1.5">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fuel Efficiency</p>
+                <Link 
+                    href={`/vehicle/${vehicleId}/fuel`}
+                    className="block space-y-1 hover:bg-muted/50 -mx-2 px-2 py-2 rounded-lg transition-colors group/mpg cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fuel Efficiency</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover/mpg:opacity-100 transition-opacity" />
                     </div>
                     <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-bold tracking-tighter">
@@ -72,7 +81,7 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
                             </span>
                         )}
                     </div>
-                </div>
+                </Link>
 
                 {/* Divider */}
                 <div className="h-px bg-border/50 w-full" />
@@ -126,6 +135,16 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
                             </span>
                             <span className="text-[10px] text-muted-foreground mt-1 mb-1 px-1 leading-tight">Needs Attention</span>
                         </div>
+                    </div>
+
+                    <div className="bg-muted/30 p-2 rounded-lg border border-border/50 flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                            <div className="bg-background p-1.5 rounded-full">
+                                <Activity className="w-3.5 h-3.5 text-muted-foreground" />
+                            </div>
+                            <span className="text-xs font-medium text-muted-foreground">Total Records</span>
+                         </div>
+                         <span className="text-sm font-bold">{recordCount}</span>
                     </div>
                 </div>
 

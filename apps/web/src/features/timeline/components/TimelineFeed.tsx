@@ -155,8 +155,8 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
 
   return (
     <>
-      <div className="mb-6">
-        <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2 w-full flex-wrap">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2 flex-wrap">
           <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
             <Fuel className="w-4 h-4 mr-2" />
             <span className="text-xs font-medium">Fuel</span>
@@ -170,6 +170,17 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
             <span className="text-xs font-medium">Parts</span>
           </ToggleGroupItem>
         </ToggleGroup>
+
+        <div className="bg-muted/30 px-3 py-1.5 rounded-lg border border-border/50 flex items-center gap-2 self-end sm:self-auto">
+             <div className="bg-background p-1 rounded-full">
+                 {/* Reusing Activity icon for consistency with health card, or History for logbook context. Using History here as it fits the page. */}
+                 <History className="w-3.5 h-3.5 text-muted-foreground" />
+             </div>
+             <div className="flex items-baseline gap-1.5">
+                <span className="text-sm font-bold text-foreground">{filteredEvents.length}</span>
+                <span className="text-xs text-muted-foreground font-medium">Records</span>
+             </div>
+        </div>
       </div>
 
       <div className="space-y-4">

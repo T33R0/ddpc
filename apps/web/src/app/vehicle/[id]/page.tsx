@@ -333,7 +333,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         vehicle_color: (vehicleWithData as any).vehicle_color || (vehicleWithData as any).color || null,
         acquisition_date: (vehicleWithData as any).acquisition_date || null,
         ownership_end_date: (vehicleWithData as any).ownership_end_date || null,
-        vin: (vehicleWithData as any).vin || null
+        vin: (vehicleWithData as any).vin || null,
+        record_count: totalRecords
       }}
       inventoryStats={inventoryHealth}
       recentActivity={recentActivity}

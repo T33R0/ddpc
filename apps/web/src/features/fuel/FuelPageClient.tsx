@@ -17,6 +17,7 @@ import {
   FuelLogEntries
 } from './components'
 import { VehicleHealthSummary } from '@/features/vehicle/components/VehicleHealthSummary'
+import { NeedsAttentionModal } from '@/features/vehicle/components/NeedsAttentionModal'
 import { VehicleFuelData } from './lib/getVehicleFuelData'
 
 interface FuelPageClientProps {
@@ -27,6 +28,7 @@ interface FuelPageClientProps {
 export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
   const router = useRouter()
   const [isFuelModalOpen, setIsFuelModalOpen] = useState(false)
+  const [isNeedsAttentionOpen, setIsNeedsAttentionOpen] = useState(false)
 
   return (
     <>
@@ -64,9 +66,10 @@ export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
         <VehicleHealthSummary
           averageMpg={fuelData.stats.averageMpg}
           factoryMpg={fuelData.vehicle.factoryMpg}
-        // inventoryStats not available in fuelData currently, passing clear props.
-        // Or we could opt to not show the build health part if data is missing,
-        // but VehicleHealthSummary handles nulls gracefully.
+          inventoryStats={fuelData.inventoryStats}
+          recordCount={fuelData.recordCount}
+          onNeedsAttentionClick={() => setIsNeedsAttentionOpen(true)}
+          vehicleId={fuelData.vehicle.id}
         />
       </div>
 
@@ -81,6 +84,13 @@ export function FuelPageClient({ fuelData, vehicleSlug }: FuelPageClientProps) {
         }}
         vehicleId={fuelData.vehicle.id}
         currentOdometer={fuelData.vehicle.odometer ?? null}
+      />
+
+      <NeedsAttentionModal
+          isOpen={isNeedsAttentionOpen}
+          onClose={() => setIsNeedsAttentionOpen(false)}
+          parts={fuelData.inventoryStats?.partsNeedingAttentionList || []}
+          vehicleId={fuelData.vehicle.id}
       />
     </>
   )

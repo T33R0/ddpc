@@ -24,10 +24,11 @@ interface NeedsAttentionModalProps {
     parts: PartNeedingAttention[]
     isOpen: boolean
     onClose: () => void
-    onViewInBuild: (partId: string) => void
+    vehicleId?: string // Optional for now to avoid breaking other usages immediately, but we should use this for navigation
+    onViewInBuild?: (partId: string) => void // Kept for backward compatibility if needed, but we'll prefer direct linking
 }
 
-export function NeedsAttentionModal({ parts, isOpen, onClose, onViewInBuild }: NeedsAttentionModalProps) {
+export function NeedsAttentionModal({ parts, isOpen, onClose, onViewInBuild, vehicleId }: NeedsAttentionModalProps) {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md bg-card border-border">
@@ -60,17 +61,30 @@ export function NeedsAttentionModal({ parts, isOpen, onClose, onViewInBuild }: N
                                             </p>
                                         </div>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="gap-1 ml-2 shrink-0"
-                                        onClick={() => {
-                                            onViewInBuild(part.id)
-                                            onClose()
-                                        }}
-                                    >
-                                        Inspect <ChevronRight className="w-3 h-3" />
-                                    </Button>
+                                    {vehicleId ? (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 ml-2 shrink-0"
+                                            asChild
+                                        >
+                                            <a href={`/vehicle/${vehicleId}?tab=build&partId=${part.id}`}>
+                                                Inspect <ChevronRight className="w-3 h-3" />
+                                            </a>
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 ml-2 shrink-0"
+                                            onClick={() => {
+                                                onViewInBuild?.(part.id)
+                                                onClose()
+                                            }}
+                                        >
+                                            Inspect <ChevronRight className="w-3 h-3" />
+                                        </Button>
+                                    )}
                                 </div>
                             ))
                         ) : (
