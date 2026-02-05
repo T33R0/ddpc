@@ -6,7 +6,8 @@ import { ScrollArea } from '@repo/ui/scroll-area';
 import { Plus, Loader2, ArrowRightLeft, ShoppingBag, ClipboardList, Package, Wrench } from 'lucide-react';
 import { Job, WorkshopDataResponse } from './types';
 import { VehicleInstalledComponent } from '@/features/parts/types';
-import { getWorkshopData, startJob, addPartToJob, createJob, markPartArrived } from './actions';
+import { getWorkshopData, startJob, addPartToJob, createJob, markPartArrived, updateJobOrder } from './actions';
+import { Reorder } from 'framer-motion';
 
 import { PartCard } from './components/PartCard';
 import { JobCard } from './components/JobCard';
@@ -111,6 +112,27 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                 refreshData();
             }
         });
+    };
+
+    const handleReorder = (newOrder: Job[]) => {
+        if (!data) return;
+        
+        // Optimistic update
+        // We separate non-planned jobs to preserve them
+        const otherJobs = data.jobs.filter(j => j.status !== 'planned');
+        
+        setData({
+            ...data,
+            jobs: [...otherJobs, ...newOrder]
+        });
+
+        // Server update - debouncing handled by user speed usually, but here we fire every drop
+        const updates = newOrder.map((job, index) => ({
+            id: job.id,
+            order_index: index
+        }));
+        
+        updateJobOrder(updates);
     };
 
     const { profile } = useAuth();
@@ -254,9 +276,13 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
                     action={<Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setIsCreateJobOpen(true)}><Plus className="w-4 h-4" /></Button>}
                 >
                     <div className="space-y-3">
-                        {plannedJobs.map(job => (
-                            <JobCard key={job.id} job={job} onStart={handleStartJob} onOpen={setSelectedJob} />
-                        ))}
+                        <Reorder.Group axis="y" values={plannedJobs} onReorder={handleReorder} className="space-y-3">
+                            {plannedJobs.map(job => (
+                                <Reorder.Item key={job.id} value={job} className="relative">
+                                    <JobCard job={job} onStart={handleStartJob} onOpen={setSelectedJob} />
+                                </Reorder.Item>
+                            ))}
+                        </Reorder.Group>
                         {plannedJobs.length === 0 && <EmptyState text="No planned jobs" />}
                     </div>
                 </Quadrant>

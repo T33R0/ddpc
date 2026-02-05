@@ -54,6 +54,7 @@ export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataRe
       `)
             .eq('vehicle_id', vehicleId)
             .in('status', ['planned', 'in_progress'])
+            .order('order_index', { ascending: true })
             .order('created_at', { ascending: false });
 
         if (jobsError) {
@@ -136,6 +137,17 @@ export async function createJob(vehicleId: string, title: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Unauthorized' };
 
+    // Get max order index
+    const { data: maxJob } = await supabase
+        .from('jobs')
+        .select('order_index')
+        .eq('vehicle_id', vehicleId)
+        .order('order_index', { ascending: false })
+        .limit(1)
+        .single();
+    
+    const newOrderIndex = (maxJob?.order_index ?? 0) + 1;
+
     const { data, error } = await supabase
         .from('jobs')
         .insert({
@@ -143,6 +155,7 @@ export async function createJob(vehicleId: string, title: string) {
             user_id: user.id,
             title: title,
             status: 'planned',
+            order_index: newOrderIndex,
             created_at: new Date().toISOString()
         })
         .select()
@@ -455,6 +468,27 @@ export async function deleteJob(jobId: string) {
         .eq('id', jobId);
 
     if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function updateJobOrder(jobs: { id: string; order_index: number }[]) {
+    const supabase = await createClient();
+    const updates = jobs.map(job => 
+        supabase.from('jobs').update({ order_index: job.order_index }).eq('id', job.id)
+    );
+    await Promise.all(updates);
+    revalidatePath('/vehicle');
+    return { success: true };
+    return { success: true };
+}
+
+export async function updateJobTaskOrder(tasks: { id: string; order_index: number }[]) {
+    const supabase = await createClient();
+    const updates = tasks.map(task => 
+        supabase.from('job_tasks').update({ order_index: task.order_index }).eq('id', task.id)
+    );
+    await Promise.all(updates);
     revalidatePath('/vehicle');
     return { success: true };
 }

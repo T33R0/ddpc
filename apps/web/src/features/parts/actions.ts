@@ -50,6 +50,7 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
         lifespan_miles,
         lifespan_months,
         status,
+        specs,
         master_part:master_parts (
           id,
           name,

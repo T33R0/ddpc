@@ -53,8 +53,8 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
             {slot.name}
           </CardTitle>
           {isInstalled && slot.installedComponent && (
-            (!slot.installedComponent.part_number || !slot.installedComponent.installed_at || !slot.installedComponent.install_miles || !slot.installedComponent.purchase_price) && (
-              <div title="Missing information (Part #, Date, Miles, or Cost)">
+            (!slot.installedComponent.installed_at || !slot.installedComponent.install_miles || !slot.installedComponent.purchase_price) && (
+              <div title="Missing information (Date, Miles, or Cost)">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
               </div>
             )
@@ -117,26 +117,55 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
 
 
               {/* Display Specs */}
-              {slot.installedComponent.specs && Object.keys(slot.installedComponent.specs).length > 0 && (
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 mb-2 p-2 bg-muted/30 rounded text-xs">
-                  {Object.entries(slot.installedComponent.specs).map(([key, val]) => {
-                    // Try to find matching field definition for nice label/unit
-                    const fieldDef = slot.spec_schema?.fields?.find((f: any) => f.key === key);
-                    const labels = fieldDef?.label || key;
-                    const displayVal = val;
-                    const unit = fieldDef?.unit ? ` ${fieldDef.unit}` : '';
-
-                    return (
-                      <div key={key} className="flex flex-col">
-                        <span className="text-muted-foreground uppercase text-[10px]">{labels}</span>
-                        <span className="font-medium truncate" title={`${displayVal}${unit}`}>
-                          {displayVal}{unit}
-                        </span>
+              {slot.installedComponent.specs && Object.keys(slot.installedComponent.specs).length > 0 && (() => {
+                const specs = slot.installedComponent.specs;
+                const category = slot.installedComponent.category || slot.category;
+                
+                // Special handling for tires - show formatted tire sizes
+                if (category === 'wheels_tires' && specs.width && specs.aspectRatio && specs.diameter) {
+                  const frontSize = `${specs.width}/${specs.aspectRatio}R${specs.diameter}`;
+                  const rearSize = specs.isStaggered && specs.rearWidth && specs.rearAspectRatio && specs.rearDiameter
+                    ? `${specs.rearWidth}/${specs.rearAspectRatio}R${specs.rearDiameter}`
+                    : null;
+                  
+                  return (
+                    <div className={`mt-2 mb-2 p-2 bg-muted/30 rounded text-xs ${rearSize ? 'grid grid-cols-2 gap-2' : ''}`}>
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground uppercase text-[10px]">Tire Size (Front)</span>
+                        <span className="font-medium">{frontSize}</span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                      {rearSize && (
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground uppercase text-[10px]">Tire Size (Rear)</span>
+                          <span className="font-medium">{rearSize}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                
+                // Generic display for other part types
+                return (
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 mb-2 p-2 bg-muted/30 rounded text-xs">
+                    {Object.entries(specs).map(([key, val]) => {
+                      // Try to find matching field definition for nice label/unit
+                      const fieldDef = slot.spec_schema?.fields?.find((f: any) => f.key === key);
+                      const labels = fieldDef?.label || key;
+                      const displayVal = val;
+                      const unit = fieldDef?.unit ? ` ${fieldDef.unit}` : '';
+
+                      return (
+                        <div key={key} className="flex flex-col">
+                          <span className="text-muted-foreground uppercase text-[10px]">{labels}</span>
+                          <span className="font-medium truncate" title={`${displayVal}${unit}`}>
+                            {displayVal}{unit}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="space-y-1 min-h-[2rem]">

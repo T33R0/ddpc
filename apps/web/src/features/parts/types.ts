@@ -60,3 +60,44 @@ export interface PartsDataResponse {
   slots: PartSlot[];
   inventory: VehicleInstalledComponent[];
 }
+
+export interface PartFormData {
+  // Base fields
+  partName: string;
+  category: string;
+  variant: string;
+  partNumber: string;
+  vendorLink: string;
+  installedDate: string;
+  installedMileage: string;
+  purchaseCost: string;
+  customLifespanMiles: string;
+  customLifespanMonths: string;
+  
+  // Type selection
+  partType?: string;
+}
+
+export interface TireSpecificData {
+  // Front tire (or all if not staggered)
+  width: number;
+  aspectRatio: number;
+  diameter: number;
+  
+  // Optional fields
+  speedRating?: string;
+  loadIndex?: number;
+  dotDateCode?: string;
+  treadDepthAtInstall?: number;
+  
+  // Staggered setup
+  isStaggered?: boolean;
+  position?: 'front' | 'rear' | 'all';
+  
+  // Rear tire (if staggered)
+  rearWidth?: number;
+  rearAspectRatio?: number;
+  rearDiameter?: number;
+}
+
+export type TypeSpecificData = TireSpecificData | Record<string, unknown>;

@@ -10,6 +10,8 @@ import { PartSlot } from '../types';
 import { updatePartInstallation } from '../actions';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { FieldLabel } from './forms/FieldLabel';
+import { getDisplayComponentForType } from './forms/type-specific';
 
 interface ComponentDetailModalProps {
   isOpen: boolean;
@@ -113,10 +115,20 @@ export const ComponentDetailModal = ({
     return null;
   }
 
+  // Helper to check if crucial field is missing
+  const isCrucialFieldMissing = (fieldName: string, value: any) => {
+    const crucialFields = ['installedDate', 'installedMileage', 'purchaseCost'];
+    return crucialFields.includes(fieldName) && (!value || value === '');
+  };
+
   const defaultLifespanMiles = slot.default_lifespan_miles;
   const defaultLifespanMonths = slot.default_lifespan_months;
   const effectiveLifespanMiles = installed.lifespan_miles ?? defaultLifespanMiles;
   const effectiveLifespanMonths = installed.lifespan_months ?? defaultLifespanMonths;
+
+  // Get type-specific display component
+  const partType = installed.category || slot.category || 'default';
+  const TypeSpecificDisplay = getDisplayComponentForType(partType);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -207,7 +219,13 @@ export const ComponentDetailModal = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="installedDate">Date Installed</Label>
+              <FieldLabel 
+                htmlFor="installedDate"
+                showHazard={isCrucialFieldMissing('installedDate', formData.installedDate)}
+                hazardTooltip="Installation date is missing"
+              >
+                Date Installed
+              </FieldLabel>
               <Input
                 id="installedDate"
                 type="date"
@@ -218,7 +236,13 @@ export const ComponentDetailModal = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="installedMileage">Mileage Installed</Label>
+              <FieldLabel 
+                htmlFor="installedMileage"
+                showHazard={isCrucialFieldMissing('installedMileage', formData.installedMileage)}
+                hazardTooltip="Installation mileage is missing"
+              >
+                Mileage Installed
+              </FieldLabel>
               <Input
                 id="installedMileage"
                 type="number"
@@ -231,7 +255,13 @@ export const ComponentDetailModal = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="purchaseCost">Purchase Cost ($)</Label>
+            <FieldLabel 
+              htmlFor="purchaseCost"
+              showHazard={isCrucialFieldMissing('purchaseCost', formData.purchaseCost)}
+              hazardTooltip="Purchase cost is missing"
+            >
+              Purchase Cost ($)
+            </FieldLabel>
             <Input
               id="purchaseCost"
               type="number"
@@ -298,6 +328,14 @@ export const ComponentDetailModal = ({
               </div>
             </div>
           </div>
+
+          {/* Type-Specific Fields Display */}
+          {installed.specs && Object.keys(installed.specs).length > 0 && (
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold mb-3">Type-Specific Details</h3>
+              <TypeSpecificDisplay specs={installed.specs} />
+            </div>
+          )}
 
           {/* Status Section for Planned Parts */}
           {installed.status === 'planned' && (

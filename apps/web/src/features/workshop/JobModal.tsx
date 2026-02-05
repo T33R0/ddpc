@@ -11,15 +11,16 @@ import { Separator } from '@repo/ui/separator';
 import { Checkbox } from '@repo/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
-import { ClipboardList, Plus, Trash2, Package, Search, Play, Wrench, CheckCircle2, ArrowRight, ArrowLeft, MoreHorizontal, Bolt, Hammer, Gauge, Zap, Maximize2, Minimize2, Loader2, ListTodo, Pencil } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Package, Search, Play, Wrench, CheckCircle2, ArrowRight, ArrowLeft, MoreHorizontal, Bolt, Hammer, Gauge, Zap, Maximize2, Minimize2, Loader2, ListTodo, Pencil, GripVertical } from 'lucide-react';
 import { Job, JobTask, JobTool, JobSpec } from './types';
 import {
     createJobTask, addPartToJob, startJob, updateJobTask, updateJobTaskContent, completeJob, addCustomPartToJob,
     removePartFromJob, removeJobTask, deleteJob, moveJobToPlanned,
     createJobTool, updateJobTool, deleteJobTool,
     createJobSpec, updateJobSpec, deleteJobSpec,
-    generateMissionPlan, addToolToUserInventory
+    generateMissionPlan, addToolToUserInventory, updateJobTaskOrder
 } from './actions';
+import { Reorder } from 'framer-motion';
 import { EditJobItemModal, EditItemType, EditItemData } from './EditJobItemModal';
 import { VehicleInstalledComponent } from '@/features/parts/types';
 import { toast } from 'react-hot-toast';
@@ -245,6 +246,32 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
             onSuccess();
         });
     }
+
+    const handleReorderTasks = (newOrder: JobTask[]) => {
+        // Separate tasks by phase to ensure we only reorder the current view's tasks
+        const otherPhaseTasks = localTasks.filter(t => t.phase !== planView);
+        
+        // CRITICAL: Update the order_index property on the objects themselves.
+        // Since our render logic sorts by order_index, we must update this value 
+        // to match the new visual order provided by Reorder.Group.
+        const updatedNewOrder = newOrder.map((task, index) => ({
+            ...task,
+            order_index: index
+        }));
+        
+        // Update local state immediately with the modified objects
+        const updatedAllTasks = [...otherPhaseTasks, ...updatedNewOrder];
+        setLocalTasks(updatedAllTasks);
+
+        // Prepare server update with the new indices
+        const updates = updatedNewOrder.map((task) => ({
+            id: task.id,
+            order_index: task.order_index
+        }));
+        
+        // Optimistic update fired
+        updateJobTaskOrder(updates);
+    };
 
     // Job Lifecycle
     const handleStartJob = () => {
@@ -533,8 +560,13 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     <div className="p-6 space-y-4">
                         {/* Step Editor */}
                         <div className="space-y-2">
+
+                             <Reorder.Group axis="y" values={currentTasks} onReorder={handleReorderTasks} className="space-y-2">
                             {currentTasks.map((task) => (
-                                <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative">
+                                <Reorder.Item key={task.id} value={task} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative">
+                                    <div className="mt-0.5 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground">
+                                        <GripVertical className="w-4 h-4" />
+                                    </div>
                                     <Checkbox
                                         checked={planView === 'teardown' ? task.is_done_tear : task.is_done_build}
                                         onCheckedChange={() => handleTaskToggle(task.id, planView === 'teardown' ? task.is_done_tear : task.is_done_build, planView)}
@@ -543,7 +575,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                     <div className={cn("flex-1 leading-snug", (planView === 'teardown' ? task.is_done_tear : task.is_done_build) && "line-through text-muted-foreground opacity-60")}>
                                         {task.instruction}
                                     </div>
-                                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-card shadow-sm border rounded-md p-1">
                                         <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => openEditModal('step', task)}>
                                             <Pencil className="w-3 h-3" />
                                         </Button>
@@ -551,8 +583,9 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                             <Trash2 className="w-3 h-3" />
                                         </Button>
                                     </div>
-                                </div>
+                                </Reorder.Item>
                             ))}
+                            </Reorder.Group>
                             {currentTasks.length === 0 && <p className="text-muted-foreground italic text-sm">No {planView} steps generated yet.</p>}
                         </div>
                     </div>

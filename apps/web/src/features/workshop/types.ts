@@ -44,6 +44,7 @@ export interface Job {
     cost_total?: number | null;
     vendor?: string | null;
     notes?: string | null;
+    order_index: number;
 
     // Joins
     tasks?: JobTask[];
