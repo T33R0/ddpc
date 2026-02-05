@@ -1,135 +1,127 @@
-# Turborepo starter
+# ddpc // Daily Driven Project Car
 
-This Turborepo starter is maintained by the Turborepo core team.
+**The Operating System for the Garage.**
 
-## Using this example
+ddpc is a tactical project management platform for automotive enthusiasts, converting the chaos of paper receipts and mental notes into a structured command center. It treats vehicle builds like software projects—managing lifecycle, logistics, and execution.
 
-Run the following command:
+![Status](https://img.shields.io/badge/Status-Active_Beta-success)
+![Stack](https://img.shields.io/badge/Stack-Next.js_|_Supabase_|_Vercel-black)
 
-```sh
-npx create-turbo@latest
-```
+---
 
-## What's inside?
+## ⚡ Mission
 
-This Turborepo includes the following packages/apps:
+To replace the "Digital Glovebox" (passive record keeping) with **Mission Control** (active build execution). We enable users to plan complex repairs, track component health, and execute jobs with military precision.
 
-### Apps and Packages
+## 🏗 Architecture
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+This project is built as a monorepo using [Turborepo](https://turbo.build/repo).
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### The Stack
 
-### Utilities
+- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
+- **Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth)
+- **Deployment:** [Vercel](https://vercel.com)
+- **AI Intelligence:** Vercel AI SDK + Anthropic Claude 3.7 Sonnet
+- **UI System:** Tailwind CSS + Shadcn/ui
 
-This Turborepo has some additional tools already setup for you:
+### Repository Structure
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+.
+├── apps
+│ └── web # The core ddpc PWA (Main Application)
+│ └── docs # (Optional) Documentation site
+├── packages
+│ ├── ui # Shared React component library
+│ ├── eslint-config # Shared linting rules
+│ └── typescript-config # Shared TS configuration
 
-### Build
+---
 
-To build all apps and packages, run the following command:
+## 🛠 Core Capabilities
 
-```
-cd my-turborepo
+### 1. The Maintainer (Fleet Log)
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+- **Digital Service History:** Immutable logs for maintenance and repairs.
+- **Energy Intelligence:** Agnostic tracking for ICE (MPG/Oil), EV (mi/kWh / Battery Health), and Hybrid.
+- **VIN Decoding:** Instant chassis validation via NHTSA API.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+### 2. The Workshop (Project Management)
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- **Kanban Logistics:** A 4-stage board tracking parts from _Wishlist_ -> _Ordered_ -> _Planned_ -> _Installed_.
+- **Smart Tracking:** Universal shipment tracking via smart-links.
+- **Health Bars:** Component lifespan tracking (Miles/Months) with visual decay indicators.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### 3. AI Mission Planner (Pro)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- **Generator:** Ingests Vehicle Context + Job Title + Parts List.
+- **Output:** Structured JSON execution plans including:
+- **Loadout:** Required tools list.
+- **HUD:** Torque specs and fluid capacities.
+- **Execution:** Imperative, step-by-step teardown and assembly instructions.
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## 🚀 Getting Started
 
-```
-cd my-turborepo
+### Prerequisites
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+- Node.js 18+
+- npm / pnpm
+- A Supabase project (for local env)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
+### 1. Environment Setup
+
+Create a `.env.local` file in `apps/web`:
+
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+OPENAI_API_KEY=your_key (or Vercel AI Gateway Config)
+
+### 2. Install Dependencies
+
+Run from the root directory:
+
+npm install
+
+# or
+
+pnpm install
+
+### 3. Development Server
+
+Start the entire monorepo in dev mode:
+
 npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+> The application will launch at `http://localhost:3000`
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+### 4. Build for Production
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+To build all apps and packages:
 
-### Remote Caching
+npx turbo build
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+---
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## 📦 Database Schema
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+The core logic relies on a condensed schema design (~7 core tables):
 
-```
-cd my-turborepo
+- **`jobs`**: The event header (Who, What, When).
+- **`inventory`**: Polymorphic table using `JSONB` for part specs (Tires vs. Oil).
+- **`job_parts`**: Link table for parts consumed during a job.
+- **`job_tools`** & **`job_specs`**: Static reference data for execution plans.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+## 🤝 Contribution
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+This is a proprietary codebase.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+- **Branching:** Feature branches should use the format `feature/feature-name`.
+- **Commits:** Follow conventional commits (e.g., `feat: add AI planner`).
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+_© 2026 ddpc. Built for the silent operators._
