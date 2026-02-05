@@ -7,14 +7,16 @@ import { z } from 'zod'
 
 const BREAKGLASS_EMAIL = 'myddpc@gmail.com'
 
-export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
+export async function getAdminUsers(page = 1, pageSize = 20, query = '', sortBy = 'joined', sortDir = 'desc') {
   const schema = z.object({
     page: z.number().int().min(1),
     pageSize: z.number().int().min(1).max(100),
-    query: z.string().max(100).optional()
+    query: z.string().max(100).optional(),
+    sortBy: z.string().max(50).optional(),
+    sortDir: z.string().max(5).optional()
   });
 
-  const parse = schema.safeParse({ page, pageSize, query });
+  const parse = schema.safeParse({ page, pageSize, query, sortBy, sortDir });
   if (!parse.success) {
     console.error('Validation error in getAdminUsers:', parse.error);
     throw new Error('Invalid input');
@@ -43,34 +45,37 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
   const { data, error } = await supabase.rpc('get_admin_users_stats', {
     limit_offset: offset,
     limit_count: pageSize,
-    search_query: query || null
+    search_query: query || null,
+    sort_by: sortBy,
+    sort_dir: sortDir
   })
 
   if (error) {
-    console.error('RPC Error, falling back to basic fetch:', error)
+    console.error('RPC Error, falling back to basic fetch:', JSON.stringify(error, null, 2))
     // Fallback: fetch profiles and map
-    // Note: This fallback won't have auth.users email data unless we use admin client
-    // Use admin client for fallback to get emails
     const adminClient = createAdminClient()
 
-    const { data: profiles, error: profileError } = await adminClient
+    let queryBuilder = adminClient
       .from('user_profile')
-      .select('*')
+      .select('*', { count: 'exact' })
       .ilike('username', `%${query}%`)
       .range(offset, offset + pageSize - 1)
-      .order('created_at', { ascending: false })
+
+    // Basic sorting for fields available on user_profile
+    if (sortBy === 'user') {
+      queryBuilder = queryBuilder.order('username', { ascending: sortDir === 'asc' })
+    } else {
+      // Default to created_at (joined) for 'joined' and unsupported sorts in fallback
+      queryBuilder = queryBuilder.order('created_at', { ascending: sortDir === 'asc' })
+    }
+
+    const { data: profiles, error: profileError, count: totalCount } = await queryBuilder
 
     if (profileError) throw profileError
 
     // Enhance with auth data (slow N+1 but works for fallback)
     const users = await Promise.all(profiles.map(async (p: { user_id: string; username: string; created_at: string; role: string; banned: boolean; plan: string | null }) => {
       const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(p.user_id)
-
-      // Get vehicle stats
-      const { count } = await adminClient
-        .from('user_vehicle')
-        .select('*', { count: 'exact', head: true })
-        .eq('owner_id', p.user_id)
 
       // Get status counts
       const { data: vehicles } = await adminClient
@@ -89,19 +94,39 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '') {
         username: p.username,
         join_date: p.created_at, // Profile creation approx join date
         email: authUser?.email || 'N/A',
+        last_sign_in_at: authUser?.last_sign_in_at || null,
         provider: authUser?.app_metadata?.provider || 'email',
-        vehicle_count: count || 0,
+        vehicle_count: vehicles?.length || 0,
         status_counts: statusCounts,
         role: p.role,
         banned: p.banned,
-        plan: p.plan || 'free'
+        plan: p.plan || 'free',
+        total_count: totalCount || 0
       }
     }))
 
-    return users
+    return { users, totalCount: totalCount || 0 }
   }
 
-  return data
+  // Map RPC output columns to User interface
+  const mappedUsers = data.map((u: any) => ({
+    user_id: u.o_user_id,
+    username: u.o_username,
+    display_name: u.o_display_name,
+    join_date: u.o_join_date,
+    email: u.o_email,
+    provider: u.o_provider,
+    vehicle_count: u.o_vehicle_count,
+    status_counts: u.o_status_counts,
+    role: u.o_role,
+    banned: u.o_banned,
+    plan: u.o_plan,
+    last_sign_in_at: u.o_last_sign_in_at,
+    total_count: u.o_total_count
+  }))
+
+  const totalCount = mappedUsers?.[0]?.total_count || 0
+  return { users: mappedUsers, totalCount }
 }
 
 export async function toggleUserSuspension(userId: string, shouldSuspend: boolean) {

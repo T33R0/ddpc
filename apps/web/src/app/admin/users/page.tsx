@@ -10,15 +10,14 @@ export default async function AdminUsersPage({
   const params = await searchParams
   const page = typeof params.page === 'string' ? parseInt(params.page) : 1
   const query = typeof params.q === 'string' ? params.q : ''
+  const sortBy = typeof params.sort === 'string' ? params.sort : 'joined'
+  const sortDir = typeof params.dir === 'string' ? params.dir : 'desc'
   const pageSize = 20
 
-  const users = await getAdminUsers(page, pageSize, query)
+  const { users, totalCount } = await getAdminUsers(page, pageSize, query, sortBy, sortDir)
   
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
-  // Check if there are more results
-  const hasMore = users && users.length === pageSize
 
   return (
     <div className="px-4 sm:px-0">
@@ -30,7 +29,10 @@ export default async function AdminUsersPage({
         users={users || []} 
         currentEmail={user?.email} 
         page={page}
-        hasMore={hasMore}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        sortBy={sortBy}
+        sortDir={sortDir}
       />
     </div>
   )

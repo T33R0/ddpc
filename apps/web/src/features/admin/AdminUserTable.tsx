@@ -2,15 +2,23 @@
 
 import { useState, useTransition } from 'react'
 import { toggleUserSuspension, toggleAdminRole, grantProAccess } from '@/actions/admin'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Switch } from '@repo/ui/switch'
 import { Label } from '@repo/ui/label'
+import { ArrowUpDown, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/ui/dropdown-menu'
 
 interface User {
   user_id: string
   username: string
   join_date: string
-  vehicle_count: number
+  last_sign_in_at: string | null
+  // vehicle_count: number // Hidden
   status_counts: Record<string, number>
   email: string
   provider: string
@@ -23,18 +31,86 @@ export function AdminUserTable({
   users,
   currentEmail,
   page,
-  hasMore
+  totalCount,
+  pageSize,
+  sortBy,
+  sortDir
 }: {
   users: User[]
   currentEmail?: string
   page: number
-  hasMore: boolean
+  totalCount: number
+  pageSize: number
+  sortBy: string
+  sortDir: string
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [confirmSuspend, setConfirmSuspend] = useState<string | null>(null)
 
   const isBreakglass = currentEmail === 'myddpc@gmail.com'
+
+  const setSort = (column: string, direction: 'asc' | 'desc') => {
+    const newParams = new URLSearchParams(window.location.search)
+    newParams.set('sort', column)
+    newParams.set('dir', direction)
+    newParams.set('page', '1') // Reset to page 1 on sort change
+    router.push(`/admin/users?${newParams.toString()}`)
+  }
+
+  const goToPage = (p: number) => {
+    const newParams = new URLSearchParams(window.location.search)
+    newParams.set('page', p.toString())
+    router.push(`/admin/users?${newParams.toString()}`)
+  }
+
+  const SortHeader = ({ column, label, options }: { 
+    column: string, 
+    label: string,
+    options?: { label: string, value: 'asc' | 'desc' }[]
+  }) => {
+    const isActive = sortBy === column
+
+    return (
+      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="outline-none focus:outline-none group flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors cursor-pointer">
+            <span>{label}</span>
+            {isActive ? (
+               sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-indigo-600" /> : <ArrowDown className="h-3.5 w-3.5 text-indigo-600" />
+            ) : (
+              <ChevronsUpDown className="h-3.5 w-3.5 text-gray-400 opacity-50 group-hover:opacity-100" />
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {options ? (
+               options.map((opt) => (
+                 <DropdownMenuItem 
+                   key={opt.label}
+                   onClick={() => setSort(column, opt.value)}
+                   className={isActive && sortDir === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : ''}
+                 >
+                   {opt.label}
+                 </DropdownMenuItem>
+               ))
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => setSort(column, 'asc')}>
+                  Ascending
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSort(column, 'desc')}>
+                  Descending
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </th>
+    )
+  }
+
+  const totalPages = Math.ceil(totalCount / pageSize)
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
 
   const handleSuspend = async (userId: string, shouldSuspend: boolean) => {
     startTransition(async () => {
@@ -97,10 +173,39 @@ export function AdminUserTable({
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">User</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Joined</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Vehicles</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status Breakdown</th>
+              <SortHeader 
+                column="user" 
+                label="User" 
+                options={[
+                  { label: 'A-Z', value: 'asc' },
+                  { label: 'Z-A', value: 'desc' }
+                ]}
+              />
+              <SortHeader 
+                column="joined" 
+                label="Joined" 
+                options={[
+                  { label: 'Newest First', value: 'desc' },
+                  { label: 'Oldest First', value: 'asc' }
+                ]}
+              />
+              <SortHeader 
+                column="login" 
+                label="Last Login" 
+                options={[
+                  { label: 'Newest First', value: 'desc' },
+                  { label: 'Oldest First', value: 'asc' }
+                ]}
+              />
+              <SortHeader 
+                column="active" 
+                label="Status Breakdown" 
+                options={[
+                  { label: 'Most Active', value: 'desc' },
+                  { label: 'Least Active', value: 'asc' },
+                  // { label: 'Most Total', value: 'desc' } // Could add 'total' sort_by option here if needed
+                ]}
+              />
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Account</th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
             </tr>
@@ -122,8 +227,8 @@ export function AdminUserTable({
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   {new Date(user.join_date).toLocaleDateString()}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                  {user.vehicle_count}
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   {Object.entries(user.status_counts).map(([status, count]) => (
@@ -210,21 +315,44 @@ export function AdminUserTable({
       </div>
 
       <div className="flex justify-between items-center pt-4">
-        <button
-          onClick={() => router.push(`/admin/users?page=${Math.max(1, page - 1)}`)}
-          disabled={page === 1 || isPending}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="text-sm text-gray-700 dark:text-gray-300">Page {page}</span>
-        <button
-          onClick={() => router.push(`/admin/users?page=${page + 1}`)}
-          disabled={!hasMore || isPending}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-        >
-          Next
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => goToPage(Math.max(1, page - 1))}
+            disabled={page === 1 || isPending}
+            className="p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            {pageNumbers.map((p) => (
+              <button
+                key={p}
+                onClick={() => goToPage(p)}
+                disabled={isPending}
+                className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                  page === p
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => goToPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages || isPending}
+            className="p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+        
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Showing {Math.min(totalCount, (page - 1) * pageSize + 1)} to {Math.min(totalCount, page * pageSize)} of {totalCount} users
+        </div>
       </div>
     </div>
   )
