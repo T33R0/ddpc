@@ -169,7 +169,7 @@ export function ConsoleClient({ vehicles }: ConsoleClientProps) {
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <Button variant="outline" className="w-full gap-2" onClick={() => router.push(`/vehicle/${vehicle.id}/history`)}>
+                    <Button variant="outline" className="w-full gap-2" onClick={() => router.push(`/vehicle/${vehicle.id}/shop-log`)}>
                       <History className="h-4 w-4" />
                       History
                     </Button>

@@ -25,10 +25,11 @@ import { useAuth } from '@/lib/auth';
 
 interface VehicleWorkshopProps {
     vehicleId: string;
+    vehicleSlug?: string;
     odometer: number;
 }
 
-export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshopProps) {
+export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: VehicleWorkshopProps) {
     const [data, setData] = useState<WorkshopDataResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
@@ -74,11 +75,7 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
         }
     }, [data, selectedJob]);
 
-
-
     // Actions
-
-
     const handleStartJob = (id: string) => {
         startTransition(async () => {
             const res = await startJob(id);
@@ -208,6 +205,16 @@ export default function VehicleWorkshop({ vehicleId, odometer }: VehicleWorkshop
 
     return (
         <div className="h-[calc(100vh-140px)] min-h-[600px] flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2">
+
+            {/* Header / Actions */}
+            <div className="flex justify-end px-1">
+                <Button variant="outline" size="sm" asChild className="gap-2 text-muted-foreground hover:text-foreground">
+                    <a href={`/vehicle/${vehicleSlug || vehicleId}/shop-log`}>
+                        <ClipboardList className="w-4 h-4" />
+                        View Shop Log
+                    </a>
+                </Button>
+            </div>
 
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 grid-rows-2 gap-4 h-full">

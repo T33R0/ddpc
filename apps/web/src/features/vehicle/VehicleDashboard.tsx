@@ -42,6 +42,7 @@ import { EditModDialog } from '@/features/mods/components/EditModDialog'
 import { VehicleConfigModal } from '@/features/vehicle/components/VehicleConfigModal'
 import { ActivityDetailModal } from '@/features/vehicle/components/ActivityDetailModal'
 import { NeedsAttentionModal } from '@/features/vehicle/components/NeedsAttentionModal'
+import { getVehicleSlug } from '@/lib/vehicle-utils-client'
 
 // ... imports
 
@@ -736,7 +737,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                 )}
                 {activeTab === 'build' && <TabBuild vehicleId={vehicle.id} />}
                 {activeTab === 'logbook' && <TabLogbook logs={logs} />}
-                {activeTab === 'workshop' && <VehicleWorkshop vehicleId={vehicle.id} odometer={stats.odometer} />}
+                {activeTab === 'workshop' && <VehicleWorkshop vehicleId={vehicle.id} odometer={stats.odometer} vehicleSlug={getVehicleSlug(vehicle)} />}
             </main>
 
 

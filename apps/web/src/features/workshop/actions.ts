@@ -796,7 +796,6 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
             if (specsData.length > 0) await supabase.from('job_specs').insert(specsData);
         }
 
-        // Steps (Tasks) - use phase column instead of text prefixes
         const tasksData: any[] = [];
         let taskIndex = 0;
 
@@ -842,6 +841,22 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
         return { error: "Failed to generate plan. Please try again." };
     }
 
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function updateJob(jobId: string, updates: Partial<Job>) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    const { error } = await supabase
+        .from('jobs')
+        .update(updates)
+        .eq('id', jobId)
+        .eq('user_id', user.id);
+
+    if (error) return { error: error.message };
     revalidatePath('/vehicle');
     return { success: true };
 }

@@ -60,6 +60,11 @@ const nextConfig = {
         destination: '/join',
         permanent: true,
       },
+      {
+        source: '/vehicle/:id/history',
+        destination: '/vehicle/:id/shop-log',
+        permanent: true,
+      },
     ];
   },
 };

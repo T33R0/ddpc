@@ -99,7 +99,7 @@ export async function updateMaintenanceLog(
     }
   }
 
-  revalidatePath('/vehicle/[id]/history', 'page')
+  revalidatePath('/vehicle/[id]/shop-log', 'page')
   return { success: true }
 }
 
@@ -189,7 +189,7 @@ export async function updateMod(
     }
   }
 
-  revalidatePath('/vehicle/[id]/history', 'page')
+  revalidatePath('/vehicle/[id]/shop-log', 'page')
   return { success: true }
 }
 
@@ -260,7 +260,7 @@ export async function updateMileage(
     return { success: false, error: 'Failed to update mileage' }
   }
 
-  revalidatePath('/vehicle/[id]/history', 'page')
+  revalidatePath('/vehicle/[id]/shop-log', 'page')
   return { success: true }
 }
 
@@ -388,7 +388,7 @@ export async function updateFuelLog(
   // D. Update Vehicle Average MPG
   await updateVehicleAvgMpg(supabase, log.user_vehicle_id, user.id)
 
-  revalidatePath('/vehicle/[id]/history', 'page')
+  revalidatePath('/vehicle/[id]/shop-log', 'page')
   revalidatePath('/vehicle/[id]/fuel', 'page')
   return { success: true }
 }

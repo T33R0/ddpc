@@ -150,7 +150,7 @@ export async function logFuel(data: FuelLogInputs) {
     try {
       revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/service`)
       revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/fuel`)
-      revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/history`)
+      revalidatePath(`/vehicle/${validatedData.user_vehicle_id}/shop-log`)
     } catch (revalidateError) {
       console.error('Error revalidating path:', revalidateError)
       // Don't fail the whole request if revalidation fails

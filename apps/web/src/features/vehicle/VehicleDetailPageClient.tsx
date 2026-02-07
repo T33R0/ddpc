@@ -790,7 +790,7 @@ export function VehicleDetailPageClient({ vehicle: initialVehicle, vehicleNickna
           <NavigationCard
             icon={Activity}
             title="History"
-            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/history`)}
+            onClick={() => handleNavigation(`/vehicle/${encodeURIComponent(urlSlug)}/shop-log`)}
             stats={[
               { label: 'Last Service', value: stats?.lastServiceDate ? formatDate(stats.lastServiceDate) : '---' },
               { label: 'Total Records', value: stats?.totalRecords?.toLocaleString() || '0' }

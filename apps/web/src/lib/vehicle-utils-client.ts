@@ -26,7 +26,7 @@ export function slugify(text: string): string {
  * 2. YMMT (Year-Make-Model-Trim) (if unique among user's vehicles)
  * 3. ID (fallback)
  */
-export function getVehicleSlug(vehicle: { id: string, nickname?: string | null, year?: number | string | null, make?: string | null, model?: string | null, trim?: string | null }, allVehicles: { id: string, nickname?: string | null, year?: number | string | null, make?: string | null, model?: string | null, trim?: string | null }[]): string {
+export function getVehicleSlug(vehicle: { id: string, nickname?: string | null, year?: number | string | null, make?: string | null, model?: string | null, trim?: string | null }, allVehicles: { id: string, nickname?: string | null, year?: number | string | null, make?: string | null, model?: string | null, trim?: string | null }[] = []): string {
     // 1. Check Nickname
     if (vehicle.nickname) {
         const isNicknameUnique = !allVehicles.some(v =>

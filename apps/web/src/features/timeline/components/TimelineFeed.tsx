@@ -7,6 +7,7 @@ import { HistoryDetailSheet } from './HistoryDetailSheet'
 import { Wrench, Zap, Gauge, History, Fuel, Package, Briefcase } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group'
 import { updateHistoryFilters } from '@/features/preferences/actions'
+import { useRouter } from 'next/navigation'
 
 // ... existing icons ...
 
@@ -127,6 +128,7 @@ interface TimelineFeedProps {
 }
 
 export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] }: TimelineFeedProps) {
+  const router = useRouter()
   const [selectedEvent, setSelectedEvent] = useState<VehicleEvent | null>(null)
   const [activeFilters, setActiveFilters] = useState<string[]>(initialFilters)
 
