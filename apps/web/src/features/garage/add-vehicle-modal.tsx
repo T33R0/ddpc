@@ -105,6 +105,10 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
   const [selectedTrimId, setSelectedTrimId] = useState<string>('');
   const [manualVehicleData, setManualVehicleData] = useState<VehicleSummary | null>(null);
 
+  // Cascading selection state for manual entry
+  const [selectedBaseTrim, setSelectedBaseTrim] = useState<string>('');
+  const [selectedEngine, setSelectedEngine] = useState<string>('');
+
   // Common state
   const [isAddingToGarage, setIsAddingToGarage] = useState(false);
   const [isAddedToGarage, setIsAddedToGarage] = useState(false);
@@ -182,6 +186,59 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
     return currentVehicleData.trims.find((trim) => trim.id === currentSelectedTrimId) ?? currentVehicleData.trims[0] ?? null;
   }, [currentVehicleData, currentSelectedTrimId]);
 
+  // Cascading selection computed values for manual entry
+  const uniqueBaseTrims = useMemo<string[]>(() => {
+    if (!manualVehicleData) return [];
+    const trimNames = new Set<string>();
+    manualVehicleData.trims.forEach((trim) => {
+      const name = trim.trim || 'Base';
+      trimNames.add(name);
+    });
+    return Array.from(trimNames).sort();
+  }, [manualVehicleData]);
+
+  const availableEnginesForTrim = useMemo<string[]>(() => {
+    if (!manualVehicleData || !selectedBaseTrim) return [];
+    const engines = new Set<string>();
+    manualVehicleData.trims
+      .filter((t) => (t.trim || 'Base') === selectedBaseTrim)
+      .forEach((t) => {
+        const engine = t.engine_size_l ? `${t.engine_size_l}L${t.cylinders ? ` ${t.cylinders}` : ''}` : 'Unknown';
+        engines.add(engine);
+      });
+    return Array.from(engines).sort();
+  }, [manualVehicleData, selectedBaseTrim]);
+
+  const filteredTrims = useMemo(() => {
+    if (!manualVehicleData) return [];
+    return manualVehicleData.trims.filter((t) => {
+      const trimName = t.trim || 'Base';
+      if (selectedBaseTrim && trimName !== selectedBaseTrim) return false;
+      if (selectedEngine) {
+        const engine = t.engine_size_l ? `${t.engine_size_l}L${t.cylinders ? ` ${t.cylinders}` : ''}` : 'Unknown';
+        if (engine !== selectedEngine) return false;
+      }
+      return true;
+    });
+  }, [manualVehicleData, selectedBaseTrim, selectedEngine]);
+
+  // Auto-select first matching trim when filters narrow down to options
+  useEffect(() => {
+    const firstTrim = filteredTrims[0];
+    if (firstTrim && selectedEngine) {
+      // When engine is selected, auto-select the first matching trim
+      setSelectedTrimId(firstTrim.id);
+    } else if (filteredTrims.length === 1 && firstTrim) {
+      // If only one option, auto-select it
+      setSelectedTrimId(firstTrim.id);
+    }
+  }, [filteredTrims, selectedEngine]);
+
+  // Reset engine selection when base trim changes
+  useEffect(() => {
+    setSelectedEngine('');
+  }, [selectedBaseTrim]);
+
   const searchVehicles = async (year: string, make: string, model: string) => {
     try {
       // Fetch vehicle data based on year/make/model
@@ -204,7 +261,10 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
         const data = await response.json();
         if (data.data && data.data.length > 0) {
           setManualVehicleData(data.data[0]);
-          setSelectedTrimId(data.data[0].trims[0]?.id || '');
+          // Reset cascading selection state for new search
+          setSelectedBaseTrim('');
+          setSelectedEngine('');
+          setSelectedTrimId('');
           return true;
         } else {
           return false;
@@ -506,20 +566,65 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                 </div>
 
                 {manualVehicleData && (
-                  <div className="space-y-2">
-                    <Label htmlFor="trim-select">Trim</Label>
-                    <select
-                      id="trim-select"
-                      value={selectedTrimId}
-                      onChange={(e) => setSelectedTrimId(e.target.value)}
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {manualVehicleData.trims.map((trim) => (
-                        <option key={trim.id} value={trim.id}>
-                          {trim.trim || trim.trim_description || trim.model}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Step 1: Select Base Trim */}
+                    <div className="space-y-2">
+                      <Label htmlFor="base-trim-select">Trim</Label>
+                      <select
+                        id="base-trim-select"
+                        value={selectedBaseTrim}
+                        onChange={(e) => setSelectedBaseTrim(e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Select Trim</option>
+                        {uniqueBaseTrims.map((trimName) => (
+                          <option key={trimName} value={trimName}>
+                            {trimName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Step 2: Select Engine (shown after trim selection) */}
+                    <div className="space-y-2">
+                      <Label htmlFor="engine-select">Engine</Label>
+                      <select
+                        id="engine-select"
+                        value={selectedEngine}
+                        onChange={(e) => setSelectedEngine(e.target.value)}
+                        disabled={!selectedBaseTrim || availableEnginesForTrim.length === 0}
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">{selectedBaseTrim ? 'Select Engine' : '—'}</option>
+                        {availableEnginesForTrim.map((engine) => (
+                          <option key={engine} value={engine}>
+                            {engine}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Show remaining variants if multiple match after engine selection */}
+                    {filteredTrims.length > 1 && selectedEngine && (
+                      <div className="col-span-2 space-y-2">
+                        <Label htmlFor="variant-select">Variant</Label>
+                        <select
+                          id="variant-select"
+                          value={selectedTrimId}
+                          onChange={(e) => setSelectedTrimId(e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {filteredTrims.map((trim) => {
+                            const description = trim.trim_description || `${trim.drive_type || ''} ${trim.body_type || ''}`.trim() || 'Standard';
+                            return (
+                              <option key={trim.id} value={trim.id}>
+                                {description}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -549,6 +654,7 @@ const AddVehicleModal = ({ open = false, onOpenChange, onVehicleAdded }: AddVehi
                       </h3>
                       <p className="text-muted-foreground text-sm">
                         {selectedTrim.trim || `${currentVehicleData.trims.length} trims available`}
+                        {selectedTrim.engine_size_l && ` • ${selectedTrim.engine_size_l}L${selectedTrim.cylinders ? ` ${selectedTrim.cylinders}-cyl` : ''}`}
                       </p>
                     </div>
                   </div>

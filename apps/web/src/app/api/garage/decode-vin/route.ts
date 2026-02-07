@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { decodeVin } from '@/lib/nhtsa';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-
-interface NHTSAResult {
-  Value: string | null;
-  ValueId: string | null;
-  Variable: string;
-  VariableId: number;
-  ErrorCode?: string;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,124 +19,127 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'VIN is required' }, { status: 400 });
     }
 
-    // Fetch data from NHTSA vPIC API
-    const nhtsaResponse = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinExtended/${vin}?format=json`);
-    if (!nhtsaResponse.ok) {
-      return NextResponse.json({ error: 'Failed to decode VIN' }, { status: 502 });
-    }
+    // Use shared VIN decoding logic
+    const decodedVal = await decodeVin(vin);
 
-    const vinData = await nhtsaResponse.json();
-    const results = vinData.Results;
-
-    // Check if the VIN was valid according to NHTSA
-    const hasError = results.some((r: NHTSAResult) => r.ErrorCode && r.ErrorCode !== '0');
-    if (hasError || results.length === 0) {
-      return NextResponse.json({
+    if (!decodedVal) {
+       return NextResponse.json({
         error: "We're unable to match this VIN to a vehicle in the NHTSA database. Please ensure you entered your VIN correctly."
       }, { status: 404 });
     }
 
-    // Parse NHTSA results first as we might need them for enrichment
-    const getValue = (variable: string) => results.find((r: NHTSAResult) => r.Variable === variable)?.Value || null;
+    const { make, model, year, trim, specs, full_data } = decodedVal;
 
-    const make = getValue('Make');
-    const model = getValue('Model');
-    const year = parseInt(getValue('Model Year'), 10);
-    const trim = getValue('Trim');
-
-    // Build the spec object from NHTSA regardless of match status
-    const nhtsaSpecs = {
-      engine_size_l: getValue('Displacement (L)'),
-      cylinders: getValue('Engine Number of Cylinders'),
-      horsepower_hp: getValue('Engine Brake (hp) From'),
-      torque_ft_lbs: getValue('Engine Torque (ft-lbs) From'),
-      fuel_type: getValue('Fuel Type - Primary'),
-      drive_type: getValue('Drive Type'),
-      transmission: getValue('Transmission Style'),
-      body_type: getValue('Body Class'),
-      epa_combined_mpg: getValue('EPA Combined City/Hwy MPG'),
-      epa_city_highway_mpg: getValue('City/Hwy MPG'),
-      curb_weight_lbs: getValue('Curb Weight (lbs)'),
-    };
-
-    // Also build the full snapshot
-    const specSnapshot = results.reduce((acc: Record<string, string | null>, curr: NHTSAResult) => {
-      if (curr.Value && curr.Value !== 'Not Applicable' && curr.Variable) {
-        const key = curr.Variable.replace(/ /g, '_').toLowerCase();
-        acc[key] = curr.Value;
-      }
-      return acc;
-    }, {});
-
-    // Try to find a match in our curated vehicle_data table
-    const { data: matchedVehicle } = await supabase
+    // Try to find a match in our curated vehicle_data table using case-insensitive matching
+    const { data: matchedVehicles } = await supabase
       .from('vehicle_data')
       .select('*')
-      .eq('make', make)
-      .eq('model', model)
-      .eq('year', year)
-      .limit(1)
-      .maybeSingle();
+      .ilike('make', make || '')
+      .ilike('model', model || '')
+      .eq('year', year || 0);
 
-    if (matchedVehicle) {
-      // Match found! Return our rich vehicle data
-      const { data: vehicleSummaries } = await supabase
-        .from('v_vehicle_explore')
-        .select('*')
-        .eq('make', make)
-        .eq('model', model)
-        .eq('year', year)
-        .limit(1);
+    if (matchedVehicles && matchedVehicles.length > 0) {
+      // Logic to find the BEST match based on VIN-decoded specs
+      let bestMatch = matchedVehicles[0];
+      let bestScore = 0;
 
-      if (vehicleSummaries && vehicleSummaries.length > 0) {
-        // Ensure trims exists
-        const vehicleData = vehicleSummaries[0];
-        if (!vehicleData.trims) {
-          vehicleData.trims = [];
+      for (const vehicle of matchedVehicles) {
+        let score = 0;
+        
+        // Trim match (high priority - but NHTSA often returns null for trim)
+        if (trim && vehicle.trim && vehicle.trim.toLowerCase() === trim.toLowerCase()) {
+          score += 10;
         }
 
-        // ENRICHMENT: If we found a vehicle, let's fill in any missing blanks with NHTSA data
-        // We act on the specific selected trim if possible, but since we don't know which trim corresponds
-        // to the VIN's specific trim without more logic, we will apply these enrichments to the PRIMARY trim found
-        // if it matches, or arguably we could just return them as "overrides" for the frontend to handle.
-        // However, the cleanest way is to iterate over the trims and if we find one that looks like a base match, enrich it.
-        // For simplicity in this "preview" phase, we will enrich ALL trims that have missing data with the high-level specs
-        // from the VIN decode (e.g. if the DB doesn't know the Body Type, but VIN does, apply it).
+        // Engine displacement match (high priority for engine variant identification)
+        if (specs.engine_size_l && vehicle.engine_size_l) {
+          const vinEngine = parseFloat(String(specs.engine_size_l));
+          const dbEngine = parseFloat(String(vehicle.engine_size_l));
+          if (!isNaN(vinEngine) && !isNaN(dbEngine) && Math.abs(vinEngine - dbEngine) < 0.1) {
+            score += 8; // Increased priority - this is how we distinguish EcoBoost from V8
+          }
+        }
+        
+        // Cylinder count match (medium-high priority)
+        if (specs.cylinders && vehicle.cylinders) {
+          if (String(vehicle.cylinders) === String(specs.cylinders)) {
+            score += 6;
+          }
+        }
 
-        vehicleData.trims = vehicleData.trims.map((t: any) => {
-          // Create a new enriched trim object
-          const enriched = { ...t };
+        // Horsepower match (medium priority - further refines engine variant)
+        if (specs.horsepower_hp && vehicle.horsepower_hp) {
+          const vinHp = parseFloat(String(specs.horsepower_hp));
+          const dbHp = parseFloat(String(vehicle.horsepower_hp));
+          if (!isNaN(vinHp) && !isNaN(dbHp) && Math.abs(vinHp - dbHp) < 20) {
+            score += 4;
+          }
+        }
 
-          // List of fields we want to backfill if missing in DB
-          const fieldsToEnrich = [
-            'engine_size_l', 'cylinders', 'horsepower_hp', 'torque_ft_lbs',
-            'fuel_type', 'drive_type', 'transmission', 'body_type',
-            'epa_combined_mpg', 'epa_city_highway_mpg', 'curb_weight_lbs'
-          ];
+        // Drive type match (lower priority)
+        if (specs.drive_type && vehicle.drive_type) {
+          if (String(vehicle.drive_type).toLowerCase().includes(String(specs.drive_type).toLowerCase()) ||
+              String(specs.drive_type).toLowerCase().includes(String(vehicle.drive_type).toLowerCase())) {
+            score += 2;
+          }
+        }
 
-          fieldsToEnrich.forEach(field => {
-            // If local data is null/undefined, and we have NHTSA data, use it
-            if ((enriched[field] === null || enriched[field] === undefined || enriched[field] === '') && (nhtsaSpecs as any)[field]) {
-              enriched[field] = (nhtsaSpecs as any)[field];
-            }
-          });
-
-          return enriched;
-        });
-
-        return NextResponse.json({
-          success: true,
-          vehicleData: vehicleData,
-          matchFound: true
-        });
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = vehicle;
+        }
       }
+
+      console.log(`[VIN Decode] Best match found with score ${bestScore}: ${bestMatch.trim || 'No Trim'} ${bestMatch.engine_size_l}L ${bestMatch.cylinders}-cyl`);
+
+      // Build vehicle data structure directly from bestMatch, enriched with VIN specs
+      const enrichedTrim = { ...bestMatch };
+      
+      // List of fields where VIN data is AUTHORITATIVE and should override stock data
+      const authFields = [
+        'engine_size_l', 'cylinders', 'horsepower_hp', 'torque_ft_lbs',
+        'fuel_type', 'drive_type', 'transmission', 'body_type',
+        'epa_combined_mpg', 'epa_city_highway_mpg', 'curb_weight_lbs',
+        'length_in', 'width_in', 'height_in'
+      ] as const;
+
+      authFields.forEach(field => {
+        // If we have valid NHTSA data, use it to override stock data
+        if ((specs as any)[field]) {
+          (enrichedTrim as any)[field] = (specs as any)[field];
+        }
+      });
+
+      // Fetch hero image for this vehicle
+      const { data: imageData } = await supabase
+        .from('vehicle_primary_image')
+        .select('url')
+        .eq('vehicle_id', bestMatch.id)
+        .maybeSingle();
+
+      const vehicleData = {
+        id: bestMatch.id,
+        year: bestMatch.year?.toString() || year?.toString() || '',
+        make: bestMatch.make || make,
+        model: bestMatch.model || model,
+        heroImage: imageData?.url || null,
+        trims: [enrichedTrim], // Return only the best matched trim
+        _matchedTrimId: bestMatch.id, // Include the matched ID for the frontend
+        _matchScore: bestScore // Include score for debugging
+      };
+
+      return NextResponse.json({
+        success: true,
+        vehicleData: vehicleData,
+        matchFound: true
+      });
     }
 
     // No match found in curated data, build from NHTSA data
     // Create a minimal vehicle summary from NHTSA data
     const vehicleData = {
       id: `vin-${vin}`,
-      year: year.toString(),
+      year: year?.toString() || '',
       make: make,
       model: model,
       heroImage: null,
@@ -151,11 +147,11 @@ export async function POST(request: NextRequest) {
         id: `vin-trim-${vin}`,
         make: make,
         model: model,
-        year: year.toString(),
+        year: year?.toString() || '',
         trim: trim || 'Base',
         trim_description: trim || 'Base Trim',
-        ...nhtsaSpecs,
-        ...specSnapshot
+        ...specs,
+        ...full_data
       }]
     };
 

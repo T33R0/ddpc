@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { decodeVin } from '@/lib/nhtsa'
 
 export type AddVehicleState = {
     success?: boolean
@@ -41,6 +42,21 @@ export async function addVehicleToGarage(
         }
         console.log(`[addVehicleToGarage] User authenticated: ${user.id}`)
 
+        // --- 0. VIN Parsing (Override Source) ---
+        // If we have a valid VIN, we want to respect its specs above all else.
+        // Even if manualData was passed from the client, the authoritative source is the fresh VIN decode.
+        let vinOverrides: any = null;
+        if (vin) {
+            console.log('[addVehicleToGarage] Decoding VIN for authoritative overrides...');
+            const vinResult = await decodeVin(vin);
+            if (vinResult) {
+                console.log('[addVehicleToGarage] VIN decoded successfully.');
+                vinOverrides = vinResult.specs;
+            } else {
+                console.warn('[addVehicleToGarage] VIN decoding failed or returned null.');
+            }
+        }
+
         // --- 1. Fetch Stock Data ---
         let stockData: any = null;
         let primaryImage = null;
@@ -59,34 +75,14 @@ export async function addVehicleToGarage(
 
             if (error || !data) {
                 console.warn('[addVehicleToGarage] Stock data lookup failed:', error)
-                // If we fail to find it but have manualData, we can fall back to that
-                if (!manualData) {
+                // If we fail to find it but have manualData or vinOverrides, we can fall back to that
+                if (!manualData && !vinOverrides) {
                     return { error: 'Failed to find stock vehicle data' }
                 }
                 stockDataIdToUse = null; // Detach from stock data ID if invalid
             } else {
                 stockData = data;
                 console.log('[addVehicleToGarage] Stock data found')
-
-                // PATCHING LOGIC: If manualData is provided (e.g. from enriched VIN decode),
-                // use it to fill in missing fields in stockData before we create the user_vehicle.
-                if (manualData) {
-                    const fieldsToPatch = [
-                        'engine_size_l', 'cylinders', 'horsepower_hp', 'torque_ft_lbs',
-                        'fuel_type', 'drive_type', 'transmission', 'body_type',
-                        'epa_combined_mpg', 'epa_city_highway_mpg', 'curb_weight_lbs',
-                        'length_in', 'width_in', 'height_in'
-                    ];
-
-                    fieldsToPatch.forEach(field => {
-                        // If stockData is missing the field, but manualData has it
-                        if ((stockData[field] === null || stockData[field] === undefined || stockData[field] === '') &&
-                            (manualData[field] !== null && manualData[field] !== undefined && manualData[field] !== '')) {
-                            console.log(`[addVehicleToGarage] Patching missing field ${field} with value: ${manualData[field]}`);
-                            stockData[field] = manualData[field];
-                        }
-                    });
-                }
 
                 // Also fetch the primary image for the vehicle
                 const { data: img } = await supabase
@@ -106,11 +102,47 @@ export async function addVehicleToGarage(
             if (manualData) {
                 console.log('[addVehicleToGarage] Using provided manual data.');
                 stockData = manualData;
+            } else if (vinOverrides) {
+                console.log('[addVehicleToGarage] Using VIN overrides as base data.');
+                stockData = vinOverrides;
+                 // backfill basic info if missing
+                stockData.make = stockData.make || 'Unknown'; 
+                stockData.model = stockData.model || 'Unknown';
             } else {
                 return { error: 'Failed to find stock vehicle data and no manual data provided.' }
             }
         }
 
+        // PATCHING LOGIC: 
+        // 1. Apply manualData (if provided)
+        // 2. Apply vinOverrides (authoritative, overwrites manualData and stockData)
+        
+        const fieldsToPatch = [
+            'engine_size_l', 'cylinders', 'horsepower_hp', 'torque_ft_lbs',
+            'fuel_type', 'drive_type', 'transmission', 'body_type',
+            'epa_combined_mpg', 'epa_city_highway_mpg', 'curb_weight_lbs',
+            'length_in', 'width_in', 'height_in'
+        ];
+
+        // Apply manualData first
+        if (manualData) {
+             fieldsToPatch.forEach(field => {
+                if (manualData[field] !== null && manualData[field] !== undefined && manualData[field] !== '') {
+                    stockData[field] = manualData[field];
+                }
+            });
+        }
+
+        // Apply VIN Overrides second (Highest priority)
+        if (vinOverrides) {
+             fieldsToPatch.forEach(field => {
+                if (vinOverrides[field] !== null && vinOverrides[field] !== undefined && vinOverrides[field] !== '') {
+                     console.log(`[addVehicleToGarage] VIN Override field ${field}: Old=${stockData[field]} -> New=${vinOverrides[field]}`);
+                    stockData[field] = vinOverrides[field];
+                }
+            });
+        }
+        
         // --- 2. Create the User's Vehicle ---
         console.log('[addVehicleToGarage] Creating user vehicle...')
 
