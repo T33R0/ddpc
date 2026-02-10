@@ -92,8 +92,104 @@ export async function POST(request: NextRequest) {
 
       console.log(`[VIN Decode] Best match found with score ${bestScore}: ${bestMatch.trim || 'No Trim'} ${bestMatch.engine_size_l}L ${bestMatch.cylinders}-cyl`);
 
-      // Build vehicle data structure directly from bestMatch, enriched with VIN specs
-      const enrichedTrim = { ...bestMatch };
+      // AUTO-POPULATION: If score is low (no exact engine match), create the missing combo
+      // Score < 14 means no trim+engine match (max possible with trim+engine is 18)
+      const EXACT_MATCH_THRESHOLD = 14;
+      const needsAutoCreation = bestScore < EXACT_MATCH_THRESHOLD && 
+        specs.engine_size_l && 
+        specs.cylinders;
+
+      let finalMatch = bestMatch;
+
+      if (needsAutoCreation) {
+        console.log(`[VIN Decode] Low score (${bestScore}), attempting to auto-create missing trim/engine combo...`);
+        
+        // Find a record with the same trim to use as a template (or closest match)
+        const trimToUse = trim || bestMatch.trim || 'Base';
+        const templateRecord = matchedVehicles.find(v => 
+          v.trim?.toLowerCase() === trimToUse.toLowerCase()
+        ) || bestMatch;
+
+        // Check if this exact combo already exists (same trim + engine + cylinders)
+        const { data: existingExact } = await supabase
+          .from('vehicle_data')
+          .select('id')
+          .ilike('make', make || '')
+          .ilike('model', model || '')
+          .eq('year', year || 0)
+          .ilike('trim', trimToUse)
+          .eq('engine_size_l', specs.engine_size_l)
+          .eq('cylinders', String(specs.cylinders))
+          .limit(1);
+
+        if (existingExact && existingExact.length > 0) {
+          // Exact record already exists, use it
+          const existingId = (existingExact[0] as { id: string }).id;
+          console.log(`[VIN Decode] Found existing exact match: ${existingId}`);
+          const { data: exactMatch } = await supabase
+            .from('vehicle_data')
+            .select('*')
+            .eq('id', existingId)
+            .single();
+          if (exactMatch) {
+            finalMatch = exactMatch;
+          }
+        } else {
+          // Create the new trim/engine combo
+          const newId = `vin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          
+          // Generate new trim description
+          const engineDesc = `${specs.engine_size_l}L ${specs.cylinders}cyl`;
+          const hpDesc = specs.horsepower_hp ? ` ${specs.horsepower_hp}hp` : '';
+          const newTrimDescription = `${trimToUse} (${engineDesc}${hpDesc}) [VIN-derived]`;
+
+          // Clone template record with VIN-decoded engine specs
+          const newRecord: Record<string, unknown> = {
+            id: newId,
+            make: templateRecord.make,
+            model: templateRecord.model,
+            year: templateRecord.year,
+            trim: trimToUse,
+            trim_description: newTrimDescription,
+            // Engine specs from VIN (authoritative)
+            engine_size_l: specs.engine_size_l,
+            cylinders: String(specs.cylinders),
+            horsepower_hp: specs.horsepower_hp || null,
+            torque_ft_lbs: specs.torque_ft_lbs || null,
+            fuel_type: specs.fuel_type || templateRecord.fuel_type,
+            drive_type: specs.drive_type || templateRecord.drive_type,
+            transmission: specs.transmission || templateRecord.transmission,
+            body_type: specs.body_type || templateRecord.body_type,
+            // Preserve from template
+            base_msrp: templateRecord.base_msrp,
+            base_invoice: templateRecord.base_invoice,
+            colors_exterior: templateRecord.colors_exterior,
+            colors_interior: templateRecord.colors_interior,
+            car_classification: templateRecord.car_classification,
+            country_of_origin: templateRecord.country_of_origin,
+            // Flag as VIN-derived
+            source: 'vin_derived',
+            created_from_vin: vin
+          };
+
+          const { data: insertedRecord, error: insertError } = await supabase
+            .from('vehicle_data')
+            .insert(newRecord)
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`[VIN Decode] Failed to auto-create record:`, insertError.message);
+            // Continue with best match if insert fails
+          } else if (insertedRecord) {
+            console.log(`[VIN Decode] ✅ Auto-created new vehicle_data record: ${newId} (${trimToUse} ${engineDesc})`);
+            finalMatch = insertedRecord;
+          }
+        }
+      }
+
+      // Build vehicle data structure directly from finalMatch, enriched with VIN specs
+      const enrichedTrim = { ...finalMatch };
       
       // List of fields where VIN data is AUTHORITATIVE and should override stock data
       const authFields = [
@@ -114,18 +210,19 @@ export async function POST(request: NextRequest) {
       const { data: imageData } = await supabase
         .from('vehicle_primary_image')
         .select('url')
-        .eq('vehicle_id', bestMatch.id)
+        .eq('vehicle_id', finalMatch.id)
         .maybeSingle();
 
       const vehicleData = {
-        id: bestMatch.id,
-        year: bestMatch.year?.toString() || year?.toString() || '',
-        make: bestMatch.make || make,
-        model: bestMatch.model || model,
+        id: finalMatch.id,
+        year: finalMatch.year?.toString() || year?.toString() || '',
+        make: finalMatch.make || make,
+        model: finalMatch.model || model,
         heroImage: imageData?.url || null,
         trims: [enrichedTrim], // Return only the best matched trim
-        _matchedTrimId: bestMatch.id, // Include the matched ID for the frontend
-        _matchScore: bestScore // Include score for debugging
+        _matchedTrimId: finalMatch.id, // Include the matched ID for the frontend
+        _matchScore: bestScore, // Include score for debugging
+        _autoCreated: needsAutoCreation && finalMatch.id !== bestMatch.id // Flag if we auto-created
       };
 
       return NextResponse.json({

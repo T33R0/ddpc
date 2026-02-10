@@ -141,6 +141,11 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
     const plannedJobs = data?.jobs.filter(j => j.status === 'planned') || [];
     const activeJobs = data?.jobs.filter(j => j.status === 'in_progress') || [];
 
+    // Collect all inventory IDs already linked to any job (for deduplication in part search)
+    const linkedPartIds = new Set(
+        (data?.jobs ?? []).flatMap(j => (j.parts ?? []).map(p => p.id))
+    );
+
     if (loading && !data) {
         return (
             <div className="flex h-[400px] items-center justify-center">
@@ -321,7 +326,8 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                     currentOdometer={odometer}
                     vehicleId={vehicleId}
                     wishlist={wishlist}
-                    inventory={inStock} // Pass inStock items
+                    inventory={inStock}
+                    linkedPartIds={linkedPartIds}
                     onSuccess={refreshData}
                 />
             )}

@@ -20,7 +20,7 @@ import {
     createJobSpec, updateJobSpec, deleteJobSpec,
     generateMissionPlan, addToolToUserInventory, updateJobTaskOrder
 } from './actions';
-import { Reorder } from 'framer-motion';
+import { Reorder, useDragControls } from 'framer-motion';
 import { EditJobItemModal, EditItemType, EditItemData } from './EditJobItemModal';
 import { VehicleInstalledComponent } from '@/features/parts/types';
 import { toast } from 'react-hot-toast';
@@ -40,11 +40,12 @@ interface JobModalProps {
     vehicleId: string;
     wishlist: VehicleInstalledComponent[];
     inventory: VehicleInstalledComponent[];
+    linkedPartIds?: Set<string>;
     onSuccess: () => void;
     currentOdometer?: number;
 }
 
-export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory, onSuccess, currentOdometer }: JobModalProps) {
+export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory, linkedPartIds = new Set(), onSuccess, currentOdometer }: JobModalProps) {
     const [isPending, startTransition] = useTransition();
     const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -340,7 +341,9 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     // Render Helpers
     const searchItems = [...wishlist, ...inventory];
     const uniqueItems = Array.from(new Map(searchItems.map(item => [item.id, item])).values());
-    const filteredWishlist = uniqueItems.filter(p => (p.master_part?.name || p.name || 'Unknown').toLowerCase().includes(partSearchQuery.toLowerCase()));
+    // Exclude parts already linked to any job
+    const availableItems = uniqueItems.filter(p => !linkedPartIds.has(p.id));
+    const filteredWishlist = availableItems.filter(p => (p.master_part?.name || p.name || 'Unknown').toLowerCase().includes(partSearchQuery.toLowerCase()));
 
     const renderSetupTab = () => (
         <ScrollArea className="flex-1">
@@ -563,10 +566,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
 
                              <Reorder.Group axis="y" values={currentTasks} onReorder={handleReorderTasks} className="space-y-2">
                             {currentTasks.map((task) => (
-                                <Reorder.Item key={task.id} value={task} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative">
-                                    <div className="mt-0.5 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground">
-                                        <GripVertical className="w-4 h-4" />
-                                    </div>
+                                <DraggableTaskItem key={task.id} task={task}>
                                     <Checkbox
                                         checked={planView === 'teardown' ? task.is_done_tear : task.is_done_build}
                                         onCheckedChange={() => handleTaskToggle(task.id, planView === 'teardown' ? task.is_done_tear : task.is_done_build, planView)}
@@ -583,7 +583,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                                             <Trash2 className="w-3 h-3" />
                                         </Button>
                                     </div>
-                                </Reorder.Item>
+                                </DraggableTaskItem>
                             ))}
                             </Reorder.Group>
                             {currentTasks.length === 0 && <p className="text-muted-foreground italic text-sm">No {planView} steps generated yet.</p>}
@@ -765,5 +765,27 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                 />
             </ModalContent>
         </Modal>
+    );
+}
+
+// Wrapper component that restricts drag to the grip handle only (enables mobile scrolling)
+function DraggableTaskItem({ task, children }: { task: JobTask; children: React.ReactNode }) {
+    const dragControls = useDragControls();
+
+    return (
+        <Reorder.Item
+            value={task}
+            dragListener={false}
+            dragControls={dragControls}
+            className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm group relative"
+        >
+            <div
+                className="mt-0.5 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground touch-none"
+                onPointerDown={(e) => dragControls.start(e)}
+            >
+                <GripVertical className="w-4 h-4" />
+            </div>
+            {children}
+        </Reorder.Item>
     );
 }

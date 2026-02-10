@@ -733,6 +733,21 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
             5. CONTEXT-AWARE: A garage with hand tools vs. a shop with a lift changes the approach. Assume garage unless specified.
             6. CONCURRENT OPPORTUNITIES: What's accessible now that would be a pain to reach later? What commonly fails alongside this part?
 
+            VEHICLE-SPECIFIC RULES (CRITICAL):
+            - Generate steps ONLY for the specific vehicle provided. Do NOT include alternative procedures for other makes, models, or platforms.
+            - NEVER mention GM, Ford, Chrysler, Toyota, Honda, or any other manufacturer unless it IS the target vehicle's make.
+            - NEVER provide branching steps like "For C-clip type... For flange type...". Research the actual design of this specific vehicle and provide ONLY the correct procedure.
+            - Each step must be a single, definitive action. No "if/then" alternatives.
+            - Verify step order is physically logical: do NOT instruct to do ground-level work after raising the vehicle, or vice versa.
+            - Use specific fastener sizes (e.g., "14mm bolt" not just "bolt"), torque specs inline where critical, and actual part descriptions.
+
+            SPECS RULES (CRITICAL):
+            - Provide ACTUAL numeric values for this specific vehicle. You know automotive specs — use them.
+            - NEVER return "VEHICLE SPECIFIC", "verify in service manual", "typically X-Y", or any placeholder/range language.
+            - If you know the exact value for this vehicle, state it (e.g., "185 ft-lb" not "150-250 ft-lb").
+            - If you genuinely cannot determine the exact spec for this specific vehicle, provide the most accurate value for the vehicle's platform/generation and append "(verify)" — but this should be rare.
+            - Include all specs relevant to the job: torque values, fluid capacities, fluid types with exact specs, seal/bearing part dimensions, etc.
+
             OUTPUT RULES:
             - Imperative voice ("Remove", "Torque to", "Verify")
             - Each step should be one action, not a paragraph
@@ -758,7 +773,7 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
             Job Title: ${jobTitle}
             Parts to Install: ${partsList.length > 0 ? partsList.join(", ") : "Infer from job title"}
             
-            Generate the execution plan. IMPORTANT: For AWD/4WD vehicles, include steps for disconnecting/reconnecting axles and any drivetrain-specific procedures.`
+            Generate the execution plan for THIS SPECIFIC vehicle only. Look up the actual design, configuration, and specs for this exact year/make/model/trim. Do not provide generic multi-vehicle procedures or branching alternatives. Every spec value must be an actual number, not a range or placeholder.`
         });
         // 4. Parse Response
         const jsonMatch = text.match(/\{[\s\S]*\}/);
