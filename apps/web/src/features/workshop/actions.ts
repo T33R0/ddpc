@@ -694,26 +694,32 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
         return { error: "Failed to fetch job details" };
     }
 
-    // 2. Fetch Vehicle with specs
+    // 2. Fetch Vehicle info directly from user_vehicle columns (not the vehicle_data join, which can be null)
     const { data: vehicleData, error: vehicleError } = await supabase
         .from('user_vehicle')
-        .select('year, make, model, trim, vehicle_data(drive_type, engine_description, transmission_description)')
+        .select('year, make, model, trim, drive_type, engine_size_l, cylinders, fuel_type, transmission, spec_snapshot')
         .eq('id', job.vehicle_id)
         .single();
 
-    const vd = (vehicleData as any)?.vehicle_data;
     const vehicleString = vehicleData
         ? `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} ${vehicleData.trim || ''}`.trim()
         : "Unknown Vehicle";
-    const driveType = vd?.drive_type || 'Unknown';
-    const engineDesc = vd?.engine_description || 'Unknown';
-    const transDesc = vd?.transmission_description || 'Unknown';
+    const driveType = vehicleData?.drive_type || 'Unknown';
+    // Build engine description from direct columns
+    const engineDesc = vehicleData?.engine_size_l && vehicleData?.cylinders
+        ? `${vehicleData.engine_size_l}L ${vehicleData.cylinders}-cylinder ${vehicleData.fuel_type || ''}`.trim()
+        : (vehicleData as any)?.spec_snapshot?.engine_description || 'Unknown';
+    const transDesc = vehicleData?.transmission
+        || (vehicleData as any)?.spec_snapshot?.transmission_description
+        || 'Unknown';
     const jobTitle = job.title;
+
+    console.log(`[generateMissionPlan] Vehicle: ${vehicleString} | Engine: ${engineDesc} | Drive: ${driveType} | Trans: ${transDesc}`);
 
     // 3. Generate Plan with AI (skill-calibrated)
     try {
         const { text } = await generateText({
-            model: vercelGateway.languageModel('anthropic/claude-sonnet-4.5'),
+            model: vercelGateway.languageModel('anthropic/claude-sonnet-4'),
             system: `You are DDPC Crew Chief — a composite of every grizzled shop foreman, forum elder, and factory service manual writer who actually turned wrenches.
 
             ${skillCalibration[skillLevel]}
