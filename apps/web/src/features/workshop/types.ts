@@ -59,4 +59,5 @@ export interface Job {
 export interface WorkshopDataResponse {
     inventory: VehicleInstalledComponent[]; // Items in 'wishlist' or 'in_stock'
     jobs: Job[]; // Items in 'planned' or 'in_progress'
+    orders: any[]; // Using any for now to avoid circular dependency if Order isn't exported, but better to import it
 }

@@ -348,7 +348,15 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     const renderSetupTab = () => (
         <ScrollArea className="flex-1">
             <div className="p-6 space-y-8">
-                {/* 1. Generate Section */}
+                {/* 1. Mission Brief / Description */}
+                {job.notes && (
+                    <div className="bg-muted/30 border rounded-xl p-4">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Mission Brief</h4>
+                        <p className="text-sm">{job.notes}</p>
+                    </div>
+                )}
+
+                {/* 2. Generate Section */}
                 {(!job.tools?.length && !job.specs?.length && !job.tasks?.length) && (
                     <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-center justify-between">
                         <div>

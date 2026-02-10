@@ -5,13 +5,14 @@ import { Button } from '@repo/ui/button';
 import { ScrollArea } from '@repo/ui/scroll-area';
 import { Plus, Loader2, ArrowRightLeft, ShoppingBag, ClipboardList, Package, Wrench } from 'lucide-react';
 import { Job, WorkshopDataResponse } from './types';
-import { VehicleInstalledComponent } from '@/features/parts/types';
+import { VehicleInstalledComponent, Order } from '@/features/parts/types'; // Updated import
 import { getWorkshopData, startJob, addPartToJob, createJob, markPartArrived, updateJobOrder } from './actions';
 import { Reorder } from 'framer-motion';
 
 import { PartCard } from './components/PartCard';
 import { JobCard } from './components/JobCard';
 import { WishlistItemCard } from '../wishlist/components/WishlistItem';
+import { OrderModal } from './OrderModal'; // Import OrderModal
 
 import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog';
@@ -22,6 +23,7 @@ import { JobModal } from './JobModal';
 import { SelectJobModal } from './SelectJobModal';
 import { AddWishlistDialog } from '../wishlist/components/AddWishlistDialog';
 import { useAuth } from '@/lib/auth';
+import { CheckSquare, PackageOpen, LayoutGrid, List } from 'lucide-react'; // Added icons
 
 interface VehicleWorkshopProps {
     vehicleId: string;
@@ -38,6 +40,11 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [partToLink, setPartToLink] = useState<VehicleInstalledComponent | null>(null); // For "Add to Job"
     const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
+
+    // Order State
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [editOrder, setEditOrder] = useState<any>(null);
+    const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
 
     // Edit Modal State
     const [editItem, setEditItem] = useState<any>(null);
@@ -225,29 +232,92 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
             <div className="grid grid-cols-1 md:grid-cols-2 grid-rows-2 gap-4 h-full">
 
                 {/* Q1: Sourcing */}
+                {/* Q1: Sourcing */}
                 <Quadrant
                     title="Sourcing (Wishlist)"
                     icon={ShoppingBag}
                     badge={wishlist.length}
                     className="border-dashed border-border/60 bg-muted/20"
-                    action={<Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditItem(null); setIsEditOpen(true); }}><Plus className="w-4 h-4" /></Button>}
+                    action={
+                        <div className="flex items-center gap-1">
+                            {selectedPartIds.size > 0 && (
+                                <Button size="sm" variant="default" className="h-6 px-2 text-xs" onClick={() => { setEditOrder(null); setIsOrderModalOpen(true); }}>
+                                    Batch Order ({selectedPartIds.size})
+                                </Button>
+                            )}
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditItem(null); setIsEditOpen(true); }}><Plus className="w-4 h-4" /></Button>
+                        </div>
+                    }
                 >
                     <div className="space-y-3">
-                        {wishlist.map(part => (
+                        {/* 1. Render Active Orders */}
+                        {(data?.orders || []).filter(o => o.status === 'ordered' || o.status === 'shipped').map(order => {
+                             const orderParts = wishlist.filter(p => p.order_id === order.id);
+                             return (
+                                <div key={order.id} className="border border-primary/20 bg-primary/5 rounded-lg p-2 space-y-2">
+                                    <div className="flex justify-between items-center text-xs text-primary font-medium px-1">
+                                        <div className="flex items-center gap-2">
+                                            <PackageOpen className="w-4 h-4" />
+                                            <span>{order.vendor}</span>
+                                            <span className="opacity-70">#{order.order_number || 'N/A'}</span>
+                                        </div>
+                                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-primary/20" onClick={(e) => { e.stopPropagation(); setEditOrder(order); setIsOrderModalOpen(true); }}>
+                                            <Wrench className="w-3 h-3" />
+                                        </Button>
+                                    </div>
+                                    <div className="pl-2 border-l-2 border-primary/20 space-y-2">
+                                        {orderParts.map(part => (
+                                            <WishlistItemCard
+                                                key={part.id}
+                                                item={{
+                                                    ...part,
+                                                    priority: part.priority || 1, 
+                                                    purchase_price: part.purchase_price,
+                                                    purchase_url: part.purchase_url,
+                                                    vehicle_id: vehicleId,
+                                                    tracking_number: part.tracking_number, 
+                                                    carrier: part.carrier
+                                                }}
+                                                onUpdate={refreshData}
+                                                onEdit={handleEditItem}
+                                                onMarkArrived={handleMarkArrived}
+                                                // Ordered parts in an order group usually don't need selection for *creating* an order, 
+                                                // but maybe we want to select them to move/remove? defaulting to not selectable for creation.
+                                            />
+                                        ))}
+                                        {orderParts.length === 0 && <div className="text-xs text-muted-foreground italic pl-2">No parts linked</div>}
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] text-muted-foreground px-1 pt-1 border-t border-primary/10">
+                                        <span>Ordered: {new Date(order.order_date).toLocaleDateString()}</span>
+                                        <span>{order.status}</span>
+                                    </div>
+                                </div>
+                             )
+                        })}
+
+                        {/* 2. Render Unordered Wishlist Items */}
+                        {wishlist.filter(p => !p.order_id).map(part => (
                             <WishlistItemCard
                                 key={part.id}
                                 item={{
                                     ...part,
-                                    priority: 1, // Default priority as it might be missing in VehicleInstalledComponent type overlap
+                                    priority: part.priority || 1, 
                                     purchase_price: part.purchase_price,
                                     purchase_url: part.purchase_url,
                                     vehicle_id: vehicleId,
-                                    tracking_number: part.tracking_number, // Pass tracking info
+                                    tracking_number: part.tracking_number, 
                                     carrier: part.carrier
                                 }}
                                 onUpdate={refreshData}
                                 onEdit={handleEditItem}
                                 onMarkArrived={handleMarkArrived}
+                                isSelected={selectedPartIds.has(part.id)}
+                                onToggleSelect={(id) => {
+                                    const newSet = new Set(selectedPartIds);
+                                    if (newSet.has(id)) newSet.delete(id);
+                                    else newSet.add(id);
+                                    setSelectedPartIds(newSet);
+                                }}
                             />
                         ))}
                         {wishlist.length === 0 && <EmptyState text="No items in wishlist" />}
@@ -266,7 +336,7 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                                 key={part.id}
                                 item={{
                                     ...part,
-                                    priority: 1,
+                                    priority: part.priority || 1,
                                     purchase_price: part.purchase_price,
                                     purchase_url: part.purchase_url,
                                     vehicle_id: vehicleId
@@ -357,6 +427,18 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                 vehicleId={vehicleId}
                 initialData={editItem}
                 onSuccess={refreshData}
+            />
+
+            <OrderModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+                vehicleId={vehicleId}
+                initialData={editOrder}
+                selectedInventoryIds={Array.from(selectedPartIds)}
+                onSuccess={() => {
+                    refreshData();
+                    setSelectedPartIds(new Set()); // Clear selection after successful order
+                }}
             />
 
         </div>

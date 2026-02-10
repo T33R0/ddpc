@@ -27,9 +27,11 @@ interface WishlistItemProps {
   onUpdate?: () => void
   onAddToJob?: (id: string) => void
   onMarkArrived?: (id: string) => void
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
 }
 
-export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArrived }: WishlistItemProps & { onEdit?: (item: any) => void }) {
+export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArrived, isSelected, onToggleSelect }: WishlistItemProps & { onEdit?: (item: any) => void }) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -66,15 +68,35 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArr
   return (
     <Card
       className={cn(
-        "mb-2 transition-colors h-22 flex flex-col justify-center relative", // Reduced height to h-22 (88px)
+        "mb-2 transition-colors flex flex-col justify-center relative", // Removed fixed height class
         !isHistory ? 'cursor-pointer hover:border-primary/50' : '',
-        isHistory ? 'opacity-60 bg-muted/50' : ''
+        isHistory ? 'opacity-60 bg-muted/50' : '',
+        isSelected ? 'border-primary bg-primary/5' : ''
       )}
-      onClick={() => !isHistory && onEdit?.(item)}
+      onClick={() => {
+        if (!isHistory) onEdit?.(item);
+      }}
     >
-
-      <CardContent className="p-3"> {/* Reduced padding */}
+      <CardContent className="p-3"> 
         <div className="flex justify-between items-start gap-3">
+          {/* Selection Checkbox Area */}
+            {onToggleSelect && !isHistory && (
+            <div 
+                className="flex items-center justify-center p-1 cursor-pointer self-center"
+                onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect(item.id);
+                }}
+            >
+                <div className={cn(
+                "w-4 h-4 rounded border transition-colors flex items-center justify-center",
+                isSelected ? "bg-primary border-primary" : "border-muted-foreground hover:border-primary"
+                )}>
+                {isSelected && <div className="w-2 h-2 bg-primary-foreground rounded-[1px]" />}
+                </div>
+            </div>
+            )}
+
           <div className="flex-1 space-y-1 overflow-hidden">
             <div className="flex items-center gap-2 flex-wrap pr-2">
               <span className={`font-medium truncate max-w-[200px] ${isHistory ? 'line-through text-muted-foreground' : ''}`} title={item.name}>

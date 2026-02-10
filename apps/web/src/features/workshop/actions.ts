@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { WorkshopDataResponse, Job, JobTask } from './types';
-import { VehicleInstalledComponent } from '@/features/parts/types';
+import { VehicleInstalledComponent, Order } from '@/features/parts/types';
 import { vercelGateway } from '@/lib/ai-gateway';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
@@ -85,9 +85,22 @@ export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataRe
             console.log(`[getWorkshopData] No jobs found for vehicle ${vehicleId}`);
         }
 
+        // 3. Fetch Orders
+        const { data: ordersData, error: ordersError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('vehicle_id', vehicleId)
+            .order('created_at', { ascending: false });
+
+        if (ordersError) {
+            console.error('Error fetching orders:', ordersError);
+            // Don't fail the whole request, just log it.
+        }
+
         return {
             inventory: inventoryData as unknown as VehicleInstalledComponent[],
-            jobs: formattedJobs
+            jobs: formattedJobs,
+            orders: ordersData || []
         };
 
     } catch (err) {
@@ -132,7 +145,7 @@ export async function markPartArrived(inventoryId: string) {
     return { success: true };
 }
 
-export async function createJob(vehicleId: string, title: string) {
+export async function createJob(vehicleId: string, title: string, description?: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Unauthorized' };
@@ -154,6 +167,7 @@ export async function createJob(vehicleId: string, title: string) {
             vehicle_id: vehicleId,
             user_id: user.id,
             title: title,
+            notes: description,
             status: 'planned',
             order_index: newOrderIndex,
             created_at: new Date().toISOString()
@@ -685,7 +699,7 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
     // 1. Fetch Job
     const { data: job, error: jobError } = await supabase
         .from('jobs')
-        .select('title, vehicle_id')
+        .select('title, vehicle_id, notes')
         .eq('id', jobId)
         .single();
 
@@ -713,6 +727,7 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
         || (vehicleData as any)?.spec_snapshot?.transmission_description
         || 'Unknown';
     const jobTitle = job.title;
+    const jobDescription = job.notes ? `\nPlan Description/Context: ${job.notes}` : "";
 
     console.log(`[generateMissionPlan] Vehicle: ${vehicleString} | Engine: ${engineDesc} | Drive: ${driveType} | Trans: ${transDesc}`);
 
@@ -778,6 +793,7 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
             Transmission: ${transDesc}
             Job Title: ${jobTitle}
             Parts to Install: ${partsList.length > 0 ? partsList.join(", ") : "Infer from job title"}
+            ${jobDescription}
             
             Generate the execution plan for THIS SPECIFIC vehicle only. Look up the actual design, configuration, and specs for this exact year/make/model/trim. Do not provide generic multi-vehicle procedures or branching alternatives. Every spec value must be an actual number, not a range or placeholder.`
         });
@@ -881,3 +897,179 @@ export async function updateJob(jobId: string, updates: Partial<Job>) {
     revalidatePath('/vehicle');
     return { success: true };
 }
+
+// --- Order Actions ---
+
+export async function createOrder(
+    vehicleId: string,
+    data: {
+        vendor: string;
+        orderNumber?: string;
+        orderDate?: string;
+        subtotal?: number;
+        tax?: number;
+        shipping?: number;
+        status?: 'ordered' | 'shipped' | 'delivered' | 'cancelled';
+        trackingNumber?: string;
+        carrier?: string;
+    },
+    inventoryIds: string[] = []
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    const subtotal = data.subtotal || 0;
+    const tax = data.tax || 0;
+    const shipping = data.shipping || 0;
+    const total = subtotal + tax + shipping;
+
+    const { data: order, error: createError } = await supabase
+        .from('orders')
+        .insert({
+            user_id: user.id,
+            vehicle_id: vehicleId,
+            vendor: data.vendor,
+            order_number: data.orderNumber,
+            order_date: data.orderDate || new Date().toISOString(),
+            status: data.status || 'ordered',
+            subtotal,
+            tax,
+            shipping_cost: shipping,
+            total,
+            tracking_number: data.trackingNumber,
+            carrier: data.carrier
+        })
+        .select()
+        .single();
+
+    if (createError) return { error: createError.message };
+
+    if (inventoryIds.length > 0) {
+        const { error: linkError } = await supabase
+            .from('inventory')
+            .update({ 
+                order_id: order.id,
+                status: 'ordered',
+                purchased_at: data.orderDate || new Date().toISOString()
+            })
+            .in('id', inventoryIds)
+            .eq('user_id', user.id);
+
+        if (linkError) {
+            console.error('Failed to link items to order:', linkError);
+        }
+    }
+
+    revalidatePath('/vehicle');
+    return { success: true, order };
+}
+
+export async function updateOrder(
+    orderId: string,
+    data: {
+        vendor?: string;
+        orderNumber?: string;
+        orderDate?: string;
+        subtotal?: number;
+        tax?: number;
+        shipping?: number;
+        status?: 'ordered' | 'shipped' | 'delivered' | 'cancelled';
+        trackingNumber?: string;
+        carrier?: string;
+    }
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    const updates: any = {};
+    if (data.vendor !== undefined) updates.vendor = data.vendor;
+    if (data.orderNumber !== undefined) updates.order_number = data.orderNumber;
+    if (data.orderDate !== undefined) updates.order_date = data.orderDate;
+    if (data.status !== undefined) updates.status = data.status;
+    if (data.trackingNumber !== undefined) updates.tracking_number = data.trackingNumber;
+    if (data.carrier !== undefined) updates.carrier = data.carrier;
+    
+    updates.updated_at = new Date().toISOString();
+
+    const { error } = await supabase
+        .from('orders')
+        .update(updates)
+        .eq('id', orderId)
+        .eq('user_id', user.id);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function deleteOrder(orderId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+    
+    await supabase
+        .from('inventory')
+        .update({ 
+            order_id: null,
+            status: 'wishlist',
+            purchased_at: null
+        })
+        .eq('order_id', orderId)
+        .eq('user_id', user.id);
+
+    const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId)
+        .eq('user_id', user.id);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function linkInventoryToOrder(orderId: string, inventoryIds: string[]) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    const { data: order } = await supabase.from('orders').select('order_date').eq('id', orderId).single();
+    if (!order) return { error: 'Order not found' };
+
+    const { error } = await supabase
+        .from('inventory')
+        .update({ 
+            order_id: orderId,
+            status: 'ordered',
+            purchased_at: order.order_date
+        })
+        .in('id', inventoryIds)
+        .eq('user_id', user.id);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+export async function unlinkInventoryFromOrder(inventoryId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    const { error } = await supabase
+        .from('inventory')
+        .update({ 
+            order_id: null,
+            status: 'wishlist',
+            purchased_at: null
+        })
+        .eq('id', inventoryId)
+        .eq('user_id', user.id);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+

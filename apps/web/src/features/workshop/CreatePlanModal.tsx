@@ -9,6 +9,8 @@ import { createJob } from './actions' // Importing actions relative to where thi
 import { toast } from '@repo/ui/use-toast'
 import { ClipboardList, Loader2 } from 'lucide-react'
 
+import { Textarea } from '@repo/ui/textarea'
+
 // Note: I will place this in basic components folder or alongside VehicleWorkshop?
 // The file path requested was features/workshop/CreatePlanModal.tsx (or similar in plan)
 // I will stick to features/workshop/components/CreatePlanModal.tsx for better org, or features/workshop/CreatePlanModal.tsx if simple.
@@ -24,6 +26,7 @@ interface CreatePlanModalProps {
 
 export function CreatePlanModal({ isOpen, onClose, vehicleId, onSuccess }: CreatePlanModalProps) {
     const [title, setTitle] = useState('')
+    const [description, setDescription] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +35,7 @@ export function CreatePlanModal({ isOpen, onClose, vehicleId, onSuccess }: Creat
 
         setIsSubmitting(true)
         try {
-            const res = await createJob(vehicleId, title)
+            const res = await createJob(vehicleId, title, description)
             if (res.error) {
                 toast({
                     title: "Error",
@@ -45,6 +48,7 @@ export function CreatePlanModal({ isOpen, onClose, vehicleId, onSuccess }: Creat
                     description: "Your new plan has been created successfully."
                 })
                 setTitle('')
+                setDescription('')
                 onSuccess()
                 onClose()
             }
@@ -81,6 +85,17 @@ export function CreatePlanModal({ isOpen, onClose, vehicleId, onSuccess }: Creat
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Plan Description (Optional)</Label>
+                        <Textarea
+                            id="description"
+                            placeholder="Describe what needs to be done. E.g. 'Wait for parts to arrive, then replace both front rotors and pads.'"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="resize-none"
+                            rows={4}
                         />
                     </div>
 

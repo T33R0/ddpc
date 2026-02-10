@@ -6,7 +6,7 @@ import { Button } from '@repo/ui/button'
 import { Input } from '@repo/ui/input'
 import { Label } from '@repo/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select'
-import { ListTodo, Loader2, Trash2 } from 'lucide-react'
+import { ListTodo, Loader2, Trash2, PackageOpen } from 'lucide-react'
 import { createWishlistItem, updateWishlistItem, deleteWishlistItem } from '../actions'
 import { useRouter } from 'next/navigation'
 import { toast } from '@repo/ui/use-toast'
@@ -168,6 +168,12 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
             </ModalTitle>
             <ModalDescription>
               {initialData ? 'Update item details.' : 'Save a part or service item for later.'}
+              {initialData?.order_id && (
+                <div className="flex items-center gap-1.5 mt-2 p-1.5 bg-blue-500/10 text-blue-500 rounded text-xs font-medium w-fit">
+                    <PackageOpen className="w-3.5 h-3.5" />
+                    <span>Linked to Order</span>
+                </div>
+              )}
             </ModalDescription>
           </div>
           {initialData && (

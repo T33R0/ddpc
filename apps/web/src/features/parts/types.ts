@@ -43,6 +43,26 @@ export interface VehicleInstalledComponent {
   specs?: Record<string, any>;
   lifespan_miles?: number | null;
   lifespan_months?: number | null;
+  priority?: number;
+  order_id?: string | null;
+}
+
+export interface Order {
+  id: string;
+  user_id: string;
+  vehicle_id?: string;
+  vendor: string;
+  order_number?: string;
+  order_date: string;
+  status: 'ordered' | 'shipped' | 'delivered' | 'cancelled';
+  subtotal: number;
+  tax: number;
+  shipping_cost: number;
+  total: number;
+  tracking_number?: string;
+  carrier?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserVehicle {
