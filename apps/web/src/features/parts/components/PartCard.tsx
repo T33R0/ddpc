@@ -26,10 +26,10 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
   // Color mapping for health bar
   const getHealthColor = (status: HealthStatus) => {
     switch (status) {
-      case 'Good': return 'bg-success';
-      case 'Warning': return 'bg-warning';
-      case 'Critical': return 'bg-destructive';
-      default: return 'bg-muted';
+      case 'Good': return 'bg-green-500';
+      case 'Warning': return 'bg-yellow-500';
+      case 'Critical': return 'bg-red-500';
+      default: return 'bg-gray-200';
     }
   };
 
@@ -53,7 +53,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
             {slot.name}
           </CardTitle>
           {isInstalled && slot.installedComponent && (
-            (!slot.installedComponent.installed_at || !slot.installedComponent.install_miles || !slot.installedComponent.purchase_price) && (
+            (!slot.installedComponent.installed_at || !slot.installedComponent.install_miles || (slot.installedComponent.purchase_price === null && !slot.installedComponent.specs?.acquisition_type)) && (
               <div title="Missing information (Date, Miles, or Cost)">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
               </div>
@@ -144,10 +144,40 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                   );
                 }
                 
+                // Acquisition Type Badge (if cost is 0 or null)
+                const acquisitionType = slot.installedComponent.specs?.acquisition_type;
+                if ((slot.installedComponent.purchase_price === 0 || !slot.installedComponent.purchase_price) && acquisitionType) {
+                  return (
+                     <div className="mt-2 mb-2 p-2 bg-muted/30 rounded text-xs">
+                        <div className="flex flex-col">
+                           <span className="text-muted-foreground uppercase text-[10px]">Cost</span>
+                           <div className="flex items-center gap-2">
+                             <span className="font-mono font-medium">$0.00</span>
+                             <Badge variant="outline" className="text-[10px] h-4 px-1 py-0 uppercase bg-primary/10 text-primary border-primary/20">
+                                {acquisitionType}
+                             </Badge>
+                           </div>
+                        </div>
+                     </div>
+                  )
+                }
+
                 // Generic display for other part types
                 return (
                   <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 mb-2 p-2 bg-muted/30 rounded text-xs">
+                    {/* Display Cost if not 0 or if 0 and explicit */}
+                    {(slot.installedComponent.purchase_price !== null && slot.installedComponent.purchase_price !== undefined) && (
+                         <div className="flex flex-col">
+                           <span className="text-muted-foreground uppercase text-[10px]">Cost</span>
+                           <span className="font-mono font-medium truncate">
+                             ${slot.installedComponent.purchase_price.toFixed(2)}
+                           </span>
+                         </div>
+                    )}
+                    
                     {Object.entries(specs).map(([key, val]) => {
+                      if (key === 'acquisition_type') return null; // Handled above
+                      
                       // Try to find matching field definition for nice label/unit
                       const fieldDef = slot.spec_schema?.fields?.find((f: any) => f.key === key);
                       const labels = fieldDef?.label || key;
@@ -166,6 +196,20 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                   </div>
                 );
               })()}
+
+              {/* Display Attached Hardware */}
+              {slot.installedComponent.hardware && slot.installedComponent.hardware.length > 0 && (
+                <div className="mt-2 space-y-1 border-t pt-2">
+                  <span className="text-[10px] uppercase text-muted-foreground font-semibold">Attached Hardware</span>
+                  <div className="flex flex-wrap gap-1">
+                    {slot.installedComponent.hardware.map(hw => (
+                      <Badge key={hw.id} variant="outline" className="text-[10px] px-1.5 py-0 h-auto font-normal text-muted-foreground bg-muted/20">
+                        {hw.quantity > 1 ? `${hw.quantity}x ` : ''}{hw.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1 min-h-[2rem]">
@@ -175,7 +219,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                   slot.installedComponent.status === 'planned' ? 'text-info font-bold' :
                     health?.status === 'Critical' ? 'text-destructive font-bold' :
                       health?.status === 'Warning' ? 'text-warning font-bold' :
-                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-success' // Handle Unknown color
+                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-green-500' // Handle Unknown color
                 }>
                   {slot.installedComponent.status === 'planned' ? 'Planned' : health?.status}
                 </span>
@@ -195,6 +239,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                         <div
                           className={`h-full transition-all duration-500 ${getHealthColor(health.mileage.percentage > 90 ? 'Critical' : health.mileage.percentage > 70 ? 'Warning' : 'Good')}`}
                           style={{ width: `${Math.max(0, 100 - health.mileage.percentage)}%` }}
+                          title={`Used: ${health.mileage.percentage.toFixed(1)}%`}
                         />
                       </div>
                     </div>
@@ -209,6 +254,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                         <div
                           className={`h-full transition-all duration-500 ${getHealthColor(health.time.percentage > 90 ? 'Critical' : health.time.percentage > 70 ? 'Warning' : 'Good')}`}
                           style={{ width: `${Math.max(0, 100 - health.time.percentage)}%` }}
+                          title={`Used: ${health.time.percentage.toFixed(1)}%`}
                         />
                       </div>
                     </div>
@@ -227,6 +273,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                       <div
                         className={`h-full ${statusColor} transition-all duration-500`}
                         style={{ width: `${healthValue}%` }}
+                        title={`Remaining: ${healthValue.toFixed(1)}%`}
                       />
                     </div>
                   </div>

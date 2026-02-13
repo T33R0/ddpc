@@ -10,6 +10,7 @@ import { Loader2, AlertCircle, Plus, ChevronDown, ChevronUp } from 'lucide-react
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/alert';
 import { STANDARD_COMPONENTS, PartCategory } from '@/lib/constants/standard-components';
 import { Button } from '@repo/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
 
 // Categories Configuration
 const CATEGORIES: { label: string; id: PartCategory }[] = [
@@ -107,8 +108,30 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
 
   // --- Requirement 2: 3-Zone Logic ---
 
+  // Pre-process inventory to attach hardware and filter visibility
+  const processedInventory = React.useMemo(() => {
+    // 1. Separate Hardware
+    const hardwareItems = inventory.filter(i => i.visibility === 'hardware');
+    const mainItems = inventory.filter(i => i.visibility !== 'hardware' && i.visibility !== 'history_only');
+
+    // 2. Map hardware to parents
+    const hardwareMap = new Map<string, VehicleInstalledComponent[]>();
+    hardwareItems.forEach(hw => {
+      if (hw.parent_id) {
+        const current = hardwareMap.get(hw.parent_id) || [];
+        hardwareMap.set(hw.parent_id, [...current, hw]);
+      }
+    });
+
+    // 3. Attach to parents
+    return mainItems.map(item => ({
+      ...item,
+      hardware: hardwareMap.get(item.id) || []
+    }));
+  }, [inventory]);
+
   // Zone 1: Installed
-  const zone1Installed = inventory.filter(item => {
+  const zone1Installed = processedInventory.filter(item => {
     if (item.status !== 'installed') return false;
     // Check category matches active category
     return item.category === activeCategory || item.master_part?.category === activeCategory;
@@ -158,27 +181,35 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Top: Category Selection Buttons */}
-      <section className="bg-card/50 rounded-xl p-6 border shadow-sm">
-        <h2 className="text-xl font-semibold text-center mb-6">Select Category</h2>
-
-        <div className="flex flex-wrap gap-3 justify-center">
-          {CATEGORIES.map((cat) => (
-            <Button
-              key={cat.id}
-              variant={activeCategory === cat.id ? 'default' : 'secondary'}
-              onClick={() => setActiveCategory(cat.id)}
-              className={activeCategory === cat.id ? 'shadow-md' : ''}
-            >
-              {cat.label}
-            </Button>
-          ))}
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-foreground">
+            Viewing: {CATEGORIES.find(c => c.id === activeCategory)?.label}
+          </h1>
+          <p className="text-lg text-muted-foreground mt-2">
+            Manage and track your vehicle's {CATEGORIES.find(c => c.id === activeCategory)?.label.toLowerCase()} components
+          </p>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Viewing: <span className="font-semibold">{CATEGORIES.find(c => c.id === activeCategory)?.label}</span>
-        </p>
-      </section>
+        <div className="w-full md:w-auto min-w-[200px]">
+          <Select
+            value={activeCategory}
+            onValueChange={(val) => setActiveCategory(val as PartCategory)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Bottom: Component Grid (3-Zone) */}
       <section className="space-y-8">

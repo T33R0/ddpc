@@ -3,6 +3,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { PartsDataResponse, PartSlot, ComponentType, VehicleInstalledComponent, MasterPart } from './types';
 
+const PART_LIFESPAN_OVERRIDES: Record<string, { miles: number; months: number }> = {
+  'Fuel Tank': { miles: 300000, months: 240 }, // 20 years
+}
+
 export async function getPartsData(vehicleId: string): Promise<PartsDataResponse | { error: string }> {
   const supabase = await createClient();
 
@@ -29,7 +33,18 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
       return { error: 'Failed to fetch component types' };
     }
 
-    const definitions = definitionsData as ComponentType[];
+    const definitions = (definitionsData as ComponentType[]).map(def => {
+       // Apply Overrides
+       const override = PART_LIFESPAN_OVERRIDES[def.name];
+       if (override) {
+         return {
+           ...def,
+           default_lifespan_miles: override.miles,
+           default_lifespan_months: override.months
+         }
+       }
+       return def
+    });
 
     // 3. Fetch Inventory Items for this Vehicle (Replacting vehicle_installed_components)
     const { data: inventoryData, error: inventoryError } = await supabase
@@ -49,8 +64,14 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
         purchase_price,
         lifespan_miles,
         lifespan_months,
+        lifespan_miles,
+        lifespan_months,
         status,
         specs,
+        parent_id,
+        install_group_id,
+        inventory_source_id,
+        visibility,
         master_part:master_parts (
           id,
           name,
@@ -116,8 +137,14 @@ export async function addPartToVehicle(
     status?: 'installed' | 'planned';
     specs?: Record<string, any>;
     bomId?: string;
+    
+    // Decomposition fields
+    parentId?: string;
+    installGroupId?: string;
+    inventorySourceId?: string;
+    visibility?: 'public' | 'hardware' | 'history_only';
   }
-): Promise<{ success: true } | { error: string }> {
+): Promise<{ success: true; id: string } | { error: string }> {
   const supabase = await createClient();
 
   try {
@@ -155,7 +182,7 @@ export async function addPartToVehicle(
 
     // 2. Insert into Inventory (This REPLACES creating vehicle_installed_components)
     // We are adding a part to the user's inventory AND installing it on the vehicle simultaneously
-    const { error: insertError } = await supabase
+    const { data: insertData, error: insertError } = await supabase
       .from('inventory')
       .insert({
         user_id: user.id,
@@ -175,21 +202,33 @@ export async function addPartToVehicle(
 
         installed_at: partData.installedDate || null,
         install_miles: partData.installedMileage || null,
-        purchase_price: partData.purchaseCost || null,
+        purchase_price: partData.purchaseCost ?? null,
         specs: partData.specs || null,
         lifespan_miles: partData.customLifespanMiles ?? null,
         lifespan_months: partData.customLifespanMonths ?? null,
 
         status: partData.status || 'installed',
-        quantity: 1 // Default
-      });
+        quantity: 1, // Default
+
+        // Decomposition
+        parent_id: partData.parentId || null,
+        install_group_id: partData.installGroupId || null,
+        inventory_source_id: partData.inventorySourceId || null,
+        visibility: partData.visibility || 'public'
+      })
+      .select('id')
+      .single();
 
     if (insertError) {
       console.error('Error creating inventory item:', insertError);
       return { error: insertError.message };
     }
 
-    return { success: true };
+    if (!insertData || !insertData.id) {
+      return { error: 'Failed to create inventory item' };
+    }
+
+    return { success: true, id: (insertData as any).id };
   } catch (err) {
     console.error('Unexpected error in addPartToVehicle:', err);
     return { error: 'Internal server error' };
@@ -233,7 +272,7 @@ export async function updatePartInstallation(
 
         ...(updateData.installedDate !== undefined && { installed_at: updateData.installedDate || null }),
         ...(updateData.installedMileage !== undefined && { install_miles: updateData.installedMileage || null }),
-        ...(updateData.purchaseCost !== undefined && { purchase_price: updateData.purchaseCost || null }),
+        ...(updateData.purchaseCost !== undefined && { purchase_price: updateData.purchaseCost ?? null }),
         ...(updateData.customLifespanMiles !== undefined && { lifespan_miles: updateData.customLifespanMiles ?? null }),
         ...(updateData.customLifespanMonths !== undefined && { lifespan_months: updateData.customLifespanMonths ?? null }),
         ...(updateData.specs && { specs: updateData.specs }),
@@ -250,6 +289,206 @@ export async function updatePartInstallation(
     return { success: true };
   } catch (err) {
     console.error('Unexpected error in updatePartInstallation:', err);
+    return { error: 'Internal server error' };
+  }
+}
+
+export type ComplexPart = {
+  name: string;
+  partNumber?: string;
+  category?: string;
+  cost?: number;
+  qty?: number;
+  hardware?: Array<{
+    name: string;
+    qty: number;
+    cost?: number; // Prorated or individual
+  }>
+}
+
+export async function installComplexPart(
+  vehicleId: string,
+  kitData: {
+    name: string;
+    partNumber?: string;
+    vendorLink?: string;
+    installedDate?: string;
+    installedMileage?: number;
+    purchaseCost?: number;
+    category?: string;
+    lifespanMiles?: number;
+    lifespanMonths?: number;
+  },
+  childParts: ComplexPart[],
+  sourceInventoryId?: string // Optional existing inventory ID to convert
+): Promise<{ success: true; id: string } | { error: string }> {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { error: 'Unauthorized' };
+
+    let kitId = sourceInventoryId;
+
+    // 1. Create or Update the "Kit" (History Only)
+    if (sourceInventoryId) {
+      // Update existing record
+      const { data: updatedKit, error: updateError } = await supabase
+        .from('inventory')
+        .update({
+          name: kitData.name,
+          part_number: kitData.partNumber || null,
+          purchase_url: kitData.vendorLink || null,
+          category: kitData.category || 'other',
+          installed_at: kitData.installedDate || null,
+          install_miles: kitData.installedMileage || null,
+          purchase_price: kitData.purchaseCost || null,
+          lifespan_miles: kitData.lifespanMiles || null,
+          lifespan_months: kitData.lifespanMonths || null,
+          status: 'installed',
+          visibility: 'history_only', // Hidden from active build
+          // quantity remains as is or 1
+        })
+        .eq('id', sourceInventoryId)
+        .eq('user_id', user.id)
+        .select('id')
+        .single();
+
+      if (updateError) {
+        console.error('Error updating kit source:', updateError);
+        return { error: 'Failed to update existing kit record' };
+      }
+      // kitId is already set
+    } else {
+      // Create new record
+      const { data: kit, error: kitError } = await supabase
+        .from('inventory')
+        .insert({
+          user_id: user.id,
+          vehicle_id: vehicleId,
+          name: kitData.name,
+          part_number: kitData.partNumber || null,
+          purchase_url: kitData.vendorLink || null,
+          category: kitData.category || 'other',
+          installed_at: kitData.installedDate || null,
+          install_miles: kitData.installedMileage || null,
+          purchase_price: kitData.purchaseCost || null,
+          lifespan_miles: kitData.lifespanMiles || null,
+          lifespan_months: kitData.lifespanMonths || null,
+          status: 'installed',
+          visibility: 'history_only', // Hidden from active build
+          quantity: 1
+        })
+        .select('id')
+        .single();
+
+      if (kitError || !kit) {
+        console.error('Error creating kit:', kitError);
+        return { error: 'Failed to create kit record' };
+      }
+      kitId = kit.id;
+    }
+
+    if (!kitId) return { error: 'Failed to determine kit ID' };
+
+    const installGroupId = crypto.randomUUID(); // Group ID for sibling parts
+
+    // 2. Install Child Parts
+    for (const part of childParts) {
+      const { data: child, error: childError } = await supabase
+        .from('inventory')
+        .insert({
+          user_id: user.id,
+          vehicle_id: vehicleId,
+          name: part.name,
+          part_number: part.partNumber || null,
+          category: part.category || kitData.category || 'other', // Inherit or override
+          installed_at: kitData.installedDate || null,
+          install_miles: kitData.installedMileage || null,
+          purchase_price: part.cost || 0, // Split cost logic handled by UI or 0
+          lifespan_miles: kitData.lifespanMiles || null,
+          lifespan_months: kitData.lifespanMonths || null,
+          status: 'installed',
+          visibility: 'public', // Show in build
+          inventory_source_id: kitId, // Linked to Kit
+          install_group_id: installGroupId, // Linked to siblings
+          quantity: part.qty || 1
+        })
+        .select('id')
+        .single();
+
+      if (childError || !child) {
+        console.error('Error creating child part:', childError);
+        // Continue? Or abort? Partial failure risk.
+        // For now, log.
+        continue;
+      }
+
+      // 3. Install Hardware for this Child
+      if (part.hardware && part.hardware.length > 0) {
+        const hardwareInserts = part.hardware.map(hw => ({
+          user_id: user.id,
+          vehicle_id: vehicleId,
+          name: hw.name,
+          category: 'hardware',
+          installed_at: kitData.installedDate || null,
+          install_miles: kitData.installedMileage || null,
+          status: 'installed',
+          visibility: 'hardware' as const, // TS cast
+          parent_id: child.id, // Attached to Child Part
+          inventory_source_id: kitId,
+          quantity: hw.qty || 1
+        }));
+
+        const { error: hwError } = await supabase
+          .from('inventory')
+          .insert(hardwareInserts);
+
+        if (hwError) console.error('Error creating hardware:', hwError);
+      }
+    }
+
+    return { success: true, id: kitId };
+  } catch (err) {
+    console.error('Unexpected error in installComplexPart:', err);
+    return { error: 'Internal server error' };
+  }
+}
+
+export async function deletePart(partId: string): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { error: 'Unauthorized' };
+
+    // Check if part exists and belongs to user
+    const { data: part, error: fetchError } = await supabase
+      .from('inventory')
+      .select('id, user_id, inventory_source_id')
+      .eq('id', partId)
+      .single();
+
+    if (fetchError || !part) return { error: 'Part not found' };
+    if (part.user_id !== user.id) return { error: 'Unauthorized' };
+
+    // If it's a child part of a kit, just delete it (it'll be removed from public view)
+    // If it's a standalone part, delete it.
+    // Ideally, if it's a kit child, we might want to warn, but user asked for delete.
+
+    const { error: deleteError } = await supabase
+      .from('inventory')
+      .delete()
+      .eq('id', partId);
+
+    if (deleteError) {
+      console.error('Error deleting part:', deleteError);
+      return { error: deleteError.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('Error in deletePart:', err);
     return { error: 'Internal server error' };
   }
 }

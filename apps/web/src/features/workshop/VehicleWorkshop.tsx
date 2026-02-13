@@ -13,6 +13,7 @@ import { PartCard } from './components/PartCard';
 import { JobCard } from './components/JobCard';
 import { WishlistItemCard } from '../wishlist/components/WishlistItem';
 import { OrderModal } from './OrderModal'; // Import OrderModal
+import { AddPartModal } from '../parts/components/AddPartModal'; // Import AddPartModal
 
 import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@repo/ui/dialog';
@@ -39,6 +40,7 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
     // Modals
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [partToLink, setPartToLink] = useState<VehicleInstalledComponent | null>(null); // For "Add to Job"
+    const [installPart, setInstallPart] = useState<VehicleInstalledComponent | null>(null); // For "Install / Decompose"
     const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
 
     // Order State
@@ -343,6 +345,7 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                                 }}
                                 onUpdate={refreshData}
                                 onAddToJob={() => setPartToLink(part)}
+                                onInstall={() => setInstallPart(part)}
                                 onEdit={handleEditItem}
                             />
                         ))}
@@ -412,6 +415,21 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                 isPending={isPending}
                 part={partToLink}
             />
+
+            {/* Add/Install Part Modal */}
+            {installPart && (
+                <AddPartModal
+                    isOpen={!!installPart}
+                    onClose={() => setInstallPart(null)}
+                    slot={null}
+                    vehicleId={vehicleId}
+                    existingPart={installPart}
+                    onSuccess={() => {
+                        setInstallPart(null);
+                        refreshData();
+                    }}
+                />
+            )}
 
             {/* Create Job Modal */}
             <CreatePlanModal

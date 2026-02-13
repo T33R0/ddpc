@@ -45,6 +45,13 @@ export interface VehicleInstalledComponent {
   lifespan_months?: number | null;
   priority?: number;
   order_id?: string | null;
+
+  // Decomposition & Hardware fields
+  parent_id?: string | null;
+  install_group_id?: string | null;
+  inventory_source_id?: string | null;
+  visibility?: 'public' | 'hardware' | 'history_only';
+  hardware?: VehicleInstalledComponent[];
 }
 
 export interface Order {
@@ -93,6 +100,7 @@ export interface PartFormData {
   purchaseCost: string;
   customLifespanMiles: string;
   customLifespanMonths: string;
+  acquisitionType?: string;
   
   // Type selection
   partType?: string;

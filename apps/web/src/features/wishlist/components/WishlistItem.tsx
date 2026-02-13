@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
-import { ExternalLink, Trash2, ShoppingBag, Loader2, Plus } from 'lucide-react'
+import { ExternalLink, Trash2, ShoppingBag, Loader2, Plus, Wrench } from 'lucide-react'
 import { deleteWishlistItem } from '../actions'
 import { cn } from '@repo/ui/lib/utils'
 import { useRouter } from 'next/navigation'
@@ -26,12 +26,13 @@ interface WishlistItemProps {
   }
   onUpdate?: () => void
   onAddToJob?: (id: string) => void
+  onInstall?: (id: string) => void
   onMarkArrived?: (id: string) => void
   isSelected?: boolean
   onToggleSelect?: (id: string) => void
 }
 
-export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArrived, isSelected, onToggleSelect }: WishlistItemProps & { onEdit?: (item: any) => void }) {
+export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onInstall, onMarkArrived, isSelected, onToggleSelect }: WishlistItemProps & { onEdit?: (item: any) => void }) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -166,6 +167,21 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onMarkArr
                 title="Add to Job"
               >
                 <Plus className="w-4 h-4" />
+              </Button>
+            )}
+
+            {onInstall && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onInstall(item.id)
+                }}
+                title="Install / Decompose"
+              >
+                <Wrench className="w-4 h-4" />
               </Button>
             )}
 

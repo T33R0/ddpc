@@ -22,6 +22,7 @@ import {
 } from './actions';
 import { Reorder, useDragControls } from 'framer-motion';
 import { EditJobItemModal, EditItemType, EditItemData } from './EditJobItemModal';
+import { AddPartModal } from '@/features/parts/components/AddPartModal';
 import { VehicleInstalledComponent } from '@/features/parts/types';
 import { toast } from 'react-hot-toast';
 import { cn } from '@repo/ui/lib/utils';
@@ -87,6 +88,9 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editType, setEditType] = useState<EditItemType>('tool');
     const [editData, setEditData] = useState<EditItemData | null>(null);
+
+    // Add Part Modal State
+    const [isAddPartModalOpen, setIsAddPartModalOpen] = useState(false);
 
     const openEditModal = (type: EditItemType, item: any) => {
         setEditType(type);
@@ -324,7 +328,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
             if (res.error) toast.error(res.error);
             else onSuccess();
         });
-    }
+    };
 
     const handleMoveToPlanned = () => {
         startTransition(async () => {
@@ -337,6 +341,13 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
             }
         });
     }
+
+    const handleNewPartCreated = (newPartId?: string) => {
+        if (newPartId) {
+            handleAddPart(newPartId);
+        }
+        setIsAddPartModalOpen(false);
+    };
 
     // Render Helpers
     const searchItems = [...wishlist, ...inventory];
@@ -509,13 +520,19 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                         <h5 className="font-semibold">Add Part to Mission</h5>
                         <Button size="sm" variant="ghost" onClick={() => setShowPartSearch(false)}>Close</Button>
                     </div>
-                    <Input
-                        placeholder="Search wishlist & stock..."
-                        value={partSearchQuery}
-                        onChange={(e) => setPartSearchQuery(e.target.value)}
-                        autoFocus
-                        className="mb-4"
-                    />
+                    <div className="flex gap-2 mb-4">
+                       <Input
+                           placeholder="Search wishlist & stock..."
+                           value={partSearchQuery}
+                           onChange={(e) => setPartSearchQuery(e.target.value)}
+                           autoFocus
+                           className="flex-1"
+                       />
+                       <Button variant="secondary" onClick={() => setIsAddPartModalOpen(true)}>
+                           <Plus className="w-4 h-4 mr-2" />
+                           New Part
+                       </Button>
+                    </div>
                     <div className="flex-1 overflow-y-auto space-y-1">
                         {filteredWishlist.map(p => (
                             <button
@@ -533,6 +550,14 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     </div>
                 </div>
             )}
+
+            <AddPartModal
+                isOpen={isAddPartModalOpen}
+                onClose={() => setIsAddPartModalOpen(false)}
+                slot={null}
+                vehicleId={vehicleId}
+                onSuccess={handleNewPartCreated}
+            />
         </ScrollArea>
     );
 

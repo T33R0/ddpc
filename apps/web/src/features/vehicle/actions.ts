@@ -105,6 +105,19 @@ export async function logJobAction(formData: FormData) {
         }
     }
 
+    // Update vehicle odometer if new value is higher
+    if (!isNaN(odometer) && odometer > 0) {
+        const { error: odometerError } = await supabase
+            .from('user_vehicle')
+            .update({ odometer })
+            .eq('id', vehicleId)
+            .lt('odometer', odometer)
+
+        if (odometerError) {
+             console.error('Error auto-updating odometer:', odometerError)
+        }
+    }
+
     revalidatePath(`/vehicle/${vehicleId}`)
     return { success: true }
 }

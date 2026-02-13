@@ -105,17 +105,37 @@ export const BasePartFields: React.FC<BasePartFieldsProps> = ({ formData, onFiel
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="purchaseCost">Purchase Cost ($)</Label>
-        <Input
-          id="purchaseCost"
-          type="number"
-          step="0.01"
-          inputMode="decimal"
-          value={formData.purchaseCost}
-          onChange={(e) => onFieldChange('purchaseCost', e.target.value)}
-          placeholder="0.00"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="purchaseCost">Purchase Cost ($)</Label>
+          <Input
+            id="purchaseCost"
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={formData.purchaseCost}
+            onChange={(e) => onFieldChange('purchaseCost', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="acquisitionType">Acquisition Type</Label>
+          <Select
+            value={formData.acquisitionType || 'purchase'}
+            onValueChange={(val) => onFieldChange('acquisitionType', val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="purchase">Purchase</SelectItem>
+              <SelectItem value="warranty">Warranty</SelectItem>
+              <SelectItem value="gift">Gift</SelectItem>
+              <SelectItem value="trade">Trade</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="border-t pt-4 space-y-4">
