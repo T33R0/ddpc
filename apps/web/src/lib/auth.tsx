@@ -110,7 +110,6 @@ export function AuthProvider({
         }
 
         if (!mounted.current) {
-          console.log('[AUTH] Component unmounted, skipping profile update');
           return;
         }
 

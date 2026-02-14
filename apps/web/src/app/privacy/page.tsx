@@ -12,7 +12,7 @@ export default function PrivacyPage() {
             <p className="text-muted-foreground">Last updated: October 2024</p>
           </div>
 
-          <div className="prose dark:prose-invert max-w-none space-y-8">
+          <div className="prose max-w-none space-y-8">
             <section>
               <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>
               <p className="text-muted-foreground leading-relaxed">

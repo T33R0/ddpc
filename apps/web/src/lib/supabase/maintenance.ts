@@ -56,8 +56,6 @@ export async function updateServiceInterval(
       throw new Error(`Failed to update service interval: ${updateError.message}`)
     }
 
-    console.log(`Service interval ${serviceIntervalId} updated successfully.`)
-
   } catch (error) {
     console.error('Error updating service interval:', error)
     // Depending on requirements, you might want to handle this error more gracefully

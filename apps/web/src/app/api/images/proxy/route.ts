@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
       });
 
     } catch (fetchError) {
-      console.log('Fetch error:', fetchError);
       clearTimeout(timeoutId);
       return NextResponse.json(
         { error: 'Failed to fetch image' },

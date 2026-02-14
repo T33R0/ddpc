@@ -39,3 +39,14 @@ yarn-error.log*
 
 # Cached images
 **/public/cache/
+
+# Dev artifacts (should not be in repo)
+*.exe
+*.log
+build_log*.txt
+tsc_errors.txt
+server_test.log
+dev_output.log
+schema_dump.sql
+nhtsa_response.json
+file.txt

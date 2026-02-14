@@ -35,7 +35,7 @@ export function JobCard({ job, onStart, onOpen, className }: JobCardProps) {
                     {!isPlanned && (
                         <Badge variant={isInProgress ? 'default' : 'secondary'} className={cn(
                             "font-mono text-[10px] px-1 h-5 capitalize",
-                            isInProgress ? "bg-amber-500 hover:bg-amber-600" : ""
+                            isInProgress ? "bg-warning hover:bg-warning/90" : ""
                         )}>
                             {job.status.replace('_', ' ')}
                         </Badge>

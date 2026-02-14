@@ -7,7 +7,7 @@ import { FinancialsDashboard } from '../../features/financials/financials-dashbo
 
 function FinancialsPageContent() {
   return (
-    <section className="relative py-12 bg-black min-h-screen">
+    <section className="relative py-12 bg-background min-h-screen">
       <div
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
@@ -17,8 +17,8 @@ function FinancialsPageContent() {
       </div>
       <div className="relative container px-4 md:px-6 pt-24">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white">Financials</h1>
-          <p className="text-lg text-gray-400 mt-2">Track your vehicle ownership costs and expenses</p>
+          <h1 className="text-4xl font-bold text-foreground">Financials</h1>
+          <p className="text-lg text-muted-foreground mt-2">Track your vehicle ownership costs and expenses</p>
         </div>
         <FinancialsDashboard />
       </div>

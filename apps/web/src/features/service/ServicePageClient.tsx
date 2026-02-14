@@ -167,13 +167,13 @@ export function ServicePageClient({
               <div className="flex gap-2">
                 <Button
                   onClick={() => setIsFuelModalOpen(true)}
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                 >
                   <Fuel className="mr-2 h-4 w-4" /> Log Fuel
                 </Button>
                 <Button
                   onClick={openAddServiceModal}
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                 >
                   <Plus className="mr-2 h-4 w-4" /> Log Service
                 </Button>

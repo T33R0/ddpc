@@ -80,19 +80,19 @@ export default function HubClient({ user, isAdmin }: HubClientProps) {
           <div className="flex gap-2">
             <Button
               onClick={() => handleActionClick('fuel')}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
             >
               <Fuel className="mr-2 h-4 w-4" /> Log Fuel
             </Button>
             <Button
               onClick={() => handleActionClick('service')}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
             >
               <Plus className="mr-2 h-4 w-4" /> Log Service
             </Button>
             <Button
               onClick={() => handleActionClick('wishlist')}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground"
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
             >
               <ListTodo className="mr-2 h-4 w-4" /> Wishlist
             </Button>

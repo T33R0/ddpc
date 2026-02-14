@@ -22,7 +22,7 @@ export default async function AdminUsersPage({
   return (
     <div className="px-4 sm:px-0">
       <div className="mb-6 sm:flex sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Users</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Users</h1>
       </div>
       
       <AdminUserTable 

@@ -41,10 +41,10 @@ export function ReportViewer({ reports }: ReportViewerProps) {
                   <span
                     className={
                       report.status === 'Green'
-                        ? 'text-green-500'
+                        ? 'text-success'
                         : report.status === 'Yellow'
-                        ? 'text-yellow-500'
-                        : 'text-red-500'
+                        ? 'text-warning'
+                        : 'text-destructive'
                     }
                   >
                     {report.status}

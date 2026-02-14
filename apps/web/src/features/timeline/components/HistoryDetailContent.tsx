@@ -150,12 +150,12 @@ export function HistoryDetailContent({ event, onClose }: HistoryDetailContentPro
         <div className="flex items-center space-x-2">
           <span className={cn(
             "text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider",
-            event.type === 'maintenance' ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" :
-              event.type === 'modification' ? "bg-lime-500/10 text-lime-600 dark:text-lime-400" :
-                event.type === 'fuel' ? "bg-red-500/10 text-red-600 dark:text-red-400" :
-                  event.type === 'part' ? "bg-purple-500/10 text-purple-600 dark:text-purple-400" :
-                    event.type === 'job' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
-                      "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+            event.type === 'maintenance' ? "bg-accent/10 text-accent" :
+              event.type === 'modification' ? "bg-success/10 text-success" :
+                event.type === 'fuel' ? "bg-destructive/10 text-destructive" :
+                  event.type === 'part' ? "bg-accent/10 text-accent" :
+                    event.type === 'job' ? "bg-info/10 text-info" :
+                      "bg-warning/10 text-warning"
           )}>
             {event.type}
           </span>

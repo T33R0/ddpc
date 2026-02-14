@@ -84,7 +84,7 @@ export default function ConsolePage() {
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-lg font-medium text-foreground">Manage your vehicles:</span>
               <Button
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 onClick={() => router.push('/hub')}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -113,7 +113,7 @@ export default function ConsolePage() {
                   size="sm"
                   onClick={() => setSelectedFilter(filter)}
                   className={selectedFilter === filter
-                    ? "bg-red-600 hover:bg-red-700 text-white border-red-600"
+                    ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground border-red-600"
                     : "flex items-center justify-center gap-2 bg-card border-border hover:bg-accent hover:text-accent-foreground text-foreground"
                   }
                 >

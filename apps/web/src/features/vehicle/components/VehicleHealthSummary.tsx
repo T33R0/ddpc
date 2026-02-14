@@ -26,19 +26,19 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
 
     // MPG Calculations
     const mpgDiff = (averageMpg && factoryMpg) ? averageMpg - factoryMpg : null
-    const diffColor = mpgDiff && mpgDiff > 0 ? 'text-green-500' : 'text-red-500'
+    const diffColor = mpgDiff && mpgDiff > 0 ? 'text-success' : 'text-destructive'
 
     // Health Calculations
     const healthScore = inventoryStats?.healthScore ?? null
-    let healthColor = 'bg-green-500'
-    let healthTextColor = 'text-green-500'
+    let healthColor = 'bg-success'
+    let healthTextColor = 'text-success'
     if (healthScore !== null) {
         if (healthScore < 50) {
-            healthColor = 'bg-red-500'
-            healthTextColor = 'text-red-500'
+            healthColor = 'bg-destructive'
+            healthTextColor = 'text-destructive'
         } else if (healthScore < 80) {
-            healthColor = 'bg-yellow-500'
-            healthTextColor = 'text-yellow-500'
+            healthColor = 'bg-warning'
+            healthTextColor = 'text-warning'
         }
     }
 
@@ -53,7 +53,7 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
                         className="p-1.5 rounded-full hover:bg-muted transition-all duration-300 cursor-pointer shadow-[0_0_8px_rgba(239,68,68,0.4)] hover:shadow-[0_0_12px_rgba(239,68,68,0.6)] animate-pulse hover:animate-none"
                         title="How is this calculated?"
                     >
-                        <Activity className="h-4 w-4 text-red-500" />
+                        <Activity className="h-4 w-4 text-destructive" />
                     </button>
                 </CardTitle>
             </CardHeader>
@@ -125,12 +125,12 @@ export function VehicleHealthSummary({ averageMpg, factoryMpg, inventoryStats, f
                             <span className="text-lg font-bold leading-none my-auto">{inventoryStats?.totalParts || 0}</span>
                             <span className="text-[10px] text-muted-foreground mt-1 mb-1">Parts Logged</span>
                         </div>
-                        <div 
+                        <div
                             onClick={onNeedsAttentionClick}
-                            className={`p-2 rounded-lg border border-border/50 flex flex-col items-center justify-start text-center h-full cursor-pointer transition-colors active:scale-95 hover:bg-accent/50 ${inventoryStats?.partsNeedingAttention ? 'bg-red-500/10 border-red-500/20' : 'bg-muted/30'}`}
+                            className={`p-2 rounded-lg border border-border/50 flex flex-col items-center justify-start text-center h-full cursor-pointer transition-colors active:scale-95 hover:bg-accent/50 ${inventoryStats?.partsNeedingAttention ? 'bg-destructive/10 border-destructive/20' : 'bg-muted/30'}`}
                         >
-                            <AlertTriangle className={`h-4 w-4 mb-1 mt-1 ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-muted-foreground'}`} />
-                            <span className={`text-lg font-bold leading-none my-auto ${inventoryStats?.partsNeedingAttention ? 'text-red-500' : 'text-foreground'}`}>
+                            <AlertTriangle className={`h-4 w-4 mb-1 mt-1 ${inventoryStats?.partsNeedingAttention ? 'text-destructive' : 'text-muted-foreground'}`} />
+                            <span className={`text-lg font-bold leading-none my-auto ${inventoryStats?.partsNeedingAttention ? 'text-destructive' : 'text-foreground'}`}>
                                 {inventoryStats?.partsNeedingAttention || 0}
                             </span>
                             <span className="text-[10px] text-muted-foreground mt-1 mb-1 px-1 leading-tight">Needs Attention</span>

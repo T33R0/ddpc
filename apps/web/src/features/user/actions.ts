@@ -22,7 +22,6 @@ export async function updateUserTheme(theme: 'light' | 'dark' | 'auto') {
             return { success: false, error: error.message };
         }
 
-        console.log(`updateUserTheme: Successfully updated theme to ${theme} for user ${user.id}`);
 
         // Revalidate relevant paths if needed, though theme is client-side state mostly
         // revalidatePath('/');

@@ -57,7 +57,6 @@ function ImageWithTimeoutFallback({
 
     const timer = setTimeout(() => {
       if (!imageLoaded) {
-        console.log('Image load timeout for:', currentSrc)
         setShowFallback(true)
       }
     }, timeout)
@@ -90,7 +89,6 @@ function ImageWithTimeoutFallback({
       priority
       unoptimized={unoptimized}
       onLoad={() => {
-        console.log('Image loaded successfully:', currentSrc)
         setImageLoaded(true)
       }}
       onError={() => {
@@ -158,11 +156,9 @@ function VehicleImageCard({ vehicle, vehicleId, isOwner }: { vehicle: Vehicle; v
       }
 
       if (result.success && result.imageUrl) {
-        console.log('Setting image URL:', result.imageUrl)
         setImageUrl(result.imageUrl)
         // Force a small delay to ensure state updates
         setTimeout(() => {
-          console.log('Image URL state updated')
           router.refresh()
         }, 100)
       } else {
@@ -297,12 +293,6 @@ function StatusBadge({
         return
       }
 
-      console.log('Status updated successfully:', {
-        vehicleId: result.vehicle?.id,
-        newStatus: result.vehicle?.current_status,
-        response: result
-      })
-
       onUpdate(newStatus)
       // Soft refresh to update server state without page flash
       router.refresh()
@@ -398,12 +388,6 @@ function PrivacyBadge({
         alert('Update may have failed. Please check the console for details.')
         return
       }
-
-      console.log('Privacy updated successfully:', {
-        vehicleId: result.vehicle?.id,
-        newPrivacy: result.vehicle?.privacy,
-        response: result
-      })
 
       onUpdate(newPrivacy)
       // Soft refresh to update server state without page flash

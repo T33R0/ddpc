@@ -166,7 +166,7 @@ function CommunityContent() {
             {/* Gallery or Loading State */}
             {error ? (
               <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="text-red-400 text-lg">Error: {error}</div>
+                <div className="text-destructive text-lg">Error: {error}</div>
               </div>
             ) : loading ? (
               <GalleryLoadingSkeleton />

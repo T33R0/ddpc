@@ -617,7 +617,7 @@ export default function AccountPage() {
             <Card className="w-full">
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">Access Restricted</CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardDescription className="text-muted-foreground">
                   You must be signed in to access this page
                 </CardDescription>
               </CardHeader>
@@ -634,7 +634,7 @@ export default function AccountPage() {
                   <Button
                     onClick={handleSignUpClick}
                     variant="outline"
-                    className="w-full border-gray-700 hover:bg-gray-800"
+                    className="w-full"
                     size="lg"
                   >
                     Create Account
@@ -649,7 +649,7 @@ export default function AccountPage() {
                   </Button>
                 </div>
 
-                <div className="text-center text-sm text-gray-500 mt-6">
+                <div className="text-center text-sm text-muted-foreground mt-6">
                   <p>Manage your profile, security settings, and account preferences</p>
                 </div>
               </CardContent>
@@ -682,9 +682,9 @@ export default function AccountPage() {
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
-      case 'free': return 'text-gray-400';
-      case 'pro': return 'text-red-500';
-      default: return 'text-gray-400';
+      case 'free': return 'text-muted-foreground';
+      case 'pro': return 'text-warning';
+      default: return 'text-muted-foreground';
     }
   };
 
@@ -718,8 +718,8 @@ export default function AccountPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-400">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
                       Member since: {new Date(user.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -730,8 +730,8 @@ export default function AccountPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-400">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
                       Email confirmed
                     </span>
                   </div>
@@ -893,7 +893,7 @@ export default function AccountPage() {
                           <img
                             src={avatarUrl}
                             alt="Avatar preview"
-                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-border"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
@@ -907,14 +907,14 @@ export default function AccountPage() {
                           id="isPublic"
                           checked={isPublic}
                           onChange={(e) => setIsPublic(e.target.checked)}
-                          className="w-4 h-4 rounded border-white/30 bg-black/30 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                          className="w-4 h-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
                         />
-                        <Label htmlFor="isPublic" className="text-sm text-gray-300">
+                        <Label htmlFor="isPublic" className="text-sm text-foreground">
                           Make profile public
                         </Label>
                       </div>
 
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-muted-foreground">
                         {isPublic ? (
                           <div className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
@@ -1113,7 +1113,7 @@ export default function AccountPage() {
                               Your Plan: {currentPlan.name}
                             </CardTitle>
                             {user.plan !== 'free' && (
-                              <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-bold uppercase tracking-wider border border-green-500/20">
+                              <span className="px-3 py-1 rounded-full bg-success/10 text-success text-xs font-bold uppercase tracking-wider border border-success/20">
                                 Active
                               </span>
                             )}
@@ -1136,7 +1136,7 @@ export default function AccountPage() {
                             <ul className="space-y-3">
                               {currentPlan.features.map((feature, idx) => (
                                 <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
-                                  <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <Check className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                                   <span>{feature}</span>
                                 </li>
                               ))}
@@ -1187,14 +1187,14 @@ export default function AccountPage() {
                       const period = typeof plan.period === 'function' ? plan.period(false) : plan.period;
 
                       return (
-                        <Card key={plan.id} className={`relative overflow-hidden transition-all hover:border-primary/50 ${plan.premium ? 'border-yellow-500/30 bg-yellow-500/5' : ''}`}>
+                        <Card key={plan.id} className={`relative overflow-hidden transition-all hover:border-primary/50 ${plan.premium ? 'border-warning/30 bg-warning/5' : ''}`}>
                           {plan.premium && (
-                            <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-xl">
+                            <div className="absolute top-0 right-0 bg-warning text-foreground text-xs font-bold px-3 py-1 rounded-bl-xl">
                               LIMITED
                             </div>
                           )}
                           <CardHeader>
-                            <CardTitle className={`flex justify-between items-start ${plan.premium ? 'text-yellow-500' : ''}`}>
+                            <CardTitle className={`flex justify-between items-start ${plan.premium ? 'text-warning' : ''}`}>
                               <span>{plan.name}</span>
                               <div className="text-right">
                                 <span className="text-lg">{price}</span>
@@ -1207,7 +1207,7 @@ export default function AccountPage() {
                             <ul className="space-y-2">
                               {plan.features.slice(0, 4).map((f, i) => (
                                 <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                  <Check className={`w-3 h-3 mt-0.5 ${plan.premium ? 'text-yellow-500' : 'text-primary'}`} />
+                                  <Check className={`w-3 h-3 mt-0.5 ${plan.premium ? 'text-warning' : 'text-primary'}`} />
                                   <span className="line-clamp-1">{f}</span>
                                 </li>
                               ))}
@@ -1219,7 +1219,7 @@ export default function AccountPage() {
                             </ul>
 
                             <Button
-                              className={`w-full ${plan.premium ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : ''}`}
+                              className={`w-full ${plan.premium ? 'bg-warning hover:bg-warning/90 text-warning-foreground' : ''}`}
                               disabled={plan.disabled || isRedirecting}
                               onClick={() => {
                                 if (plan.id === 'vanguard') {
@@ -1284,7 +1284,7 @@ export default function AccountPage() {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Status:</span>
-                            <span className={user.banned ? 'text-red-400' : 'text-green-400'}>
+                            <span className={user.banned ? 'text-destructive' : 'text-success'}>
                               {user.banned ? 'Banned' : 'Active'}
                             </span>
                           </div>
@@ -1334,7 +1334,7 @@ export default function AccountPage() {
                         Export Data
                       </Button>
 
-                      <Button variant="outline" disabled className="border-red-600 text-red-400">
+                      <Button variant="outline" disabled className="border-destructive text-destructive">
                         Delete Account
                       </Button>
                     </div>

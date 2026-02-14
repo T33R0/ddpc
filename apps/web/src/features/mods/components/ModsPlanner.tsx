@@ -25,7 +25,7 @@ export function ModsPlanner({ mods, vehicleId, onEdit }: ModsPlannerProps) {
     >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
-          <Clock className="h-5 w-5 text-yellow-500" />
+          <Clock className="h-5 w-5 text-warning" />
           In Progress
         </CardTitle>
         <p className="text-sm text-muted-foreground">

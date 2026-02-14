@@ -27,12 +27,6 @@ export async function scanStructureData(options: { webRoot?: string; repoRoot?: 
 
   const items: StructureItem[] = [];
 
-  console.log(`Scanning structure from:
-  Web Root: ${WEB_ROOT}
-  Repo Root: ${REPO_ROOT}
-  App Dir: ${APP_DIR}
-  UI Dir: ${UI_DIR}`);
-
   // 1. Scan Pages
   if (fs.existsSync(APP_DIR)) {
     const pages = await glob('**/page.tsx', { cwd: APP_DIR });

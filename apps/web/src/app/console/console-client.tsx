@@ -66,7 +66,7 @@ export function ConsoleClient({ vehicles }: ConsoleClientProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 text-warning border border-warning/20">
                 <Calendar className="h-5 w-5 mt-0.5 shrink-0" />
                 <div>
                   <div className="font-medium">Registration Expiring</div>
@@ -74,7 +74,7 @@ export function ConsoleClient({ vehicles }: ConsoleClientProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 text-warning border border-warning/20">
                 <FileText className="h-5 w-5 mt-0.5 shrink-0" />
                 <div>
                   <div className="font-medium">Document Pending</div>

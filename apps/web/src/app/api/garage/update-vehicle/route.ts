@@ -20,12 +20,10 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError) {
-      console.log('❌ Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized', details: authError.message }, { status: 401 });
     }
 
     if (!user) {
-      console.log('❌ No user found');
       return NextResponse.json({ error: 'Unauthorized', details: 'No user found' }, { status: 401 });
     }
 
@@ -37,14 +35,12 @@ export async function POST(request: NextRequest) {
       body = await request.json();
 
     } catch (error) {
-      console.log('❌ Failed to parse request body:', error);
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
     const { vehicleId, nickname, status, photo_url, privacy, vehicle_image } = body;
 
     if (!vehicleId) {
-      console.log('❌ Missing vehicleId');
       return NextResponse.json({ error: 'Missing required field: vehicleId' }, { status: 400 });
     }
 
@@ -59,7 +55,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (vehicleCheckError || !vehicleCheck) {
-      console.log('❌ Vehicle check error:', vehicleCheckError);
       return NextResponse.json({
         error: 'Vehicle not found or access denied',
         details: vehicleCheckError?.message || 'Vehicle not found'
@@ -89,11 +84,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.log('❌ Database update error:', updateError);
-      console.log('❌ Error code:', updateError.code);
-      console.log('❌ Error details:', updateError.details);
-      console.log('❌ Error hint:', updateError.hint);
-      console.log('❌ Update data attempted:', updateData);
       
       // Check if it's an RLS policy error
       if (updateError.code === '42501' || 
@@ -119,7 +109,6 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Verify the update actually happened
     // Without WITH CHECK clause, RLS can return success but not update the row
     if (!updatedVehicle) {
-      console.log('❌ Update returned no data - RLS policy likely blocking update');
       return NextResponse.json({
         error: 'Update completed but no vehicle data returned',
         details: 'The update may have been silently blocked by RLS policies. Please verify the user_vehicle_update_self policy has both USING and WITH CHECK clauses.',
@@ -137,10 +126,6 @@ export async function POST(request: NextRequest) {
     })
 
     if (!updateSucceeded) {
-      console.log('❌ Update values do not match:', {
-        attempted: updateData,
-        returned: updatedVehicle
-      })
       return NextResponse.json({
         error: 'Update may have been blocked - values do not match',
         details: 'The update returned but the values were not changed. This suggests RLS is blocking the update.',

@@ -123,7 +123,6 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
 
     useEffect(() => {
         if (job) {
-            console.log('[JobModal] Updated job:', job.id, 'Tasks:', job.tasks?.length);
             setLocalTools(job.tools || []);
             setLocalSpecs(job.specs || []);
             setLocalTasks(job.tasks || []);

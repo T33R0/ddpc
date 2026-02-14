@@ -26,10 +26,10 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
   // Color mapping for health bar
   const getHealthColor = (status: HealthStatus) => {
     switch (status) {
-      case 'Good': return 'bg-green-500';
-      case 'Warning': return 'bg-yellow-500';
-      case 'Critical': return 'bg-red-500';
-      default: return 'bg-gray-200';
+      case 'Good': return 'bg-success';
+      case 'Warning': return 'bg-warning';
+      case 'Critical': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
 
@@ -55,7 +55,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
           {isInstalled && slot.installedComponent && (
             (!slot.installedComponent.installed_at || !slot.installedComponent.install_miles || (slot.installedComponent.purchase_price === null && !slot.installedComponent.specs?.acquisition_type)) && (
               <div title="Missing information (Date, Miles, or Cost)">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <AlertTriangle className="h-4 w-4 text-warning" />
               </div>
             )
           )}
@@ -219,7 +219,7 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                   slot.installedComponent.status === 'planned' ? 'text-info font-bold' :
                     health?.status === 'Critical' ? 'text-destructive font-bold' :
                       health?.status === 'Warning' ? 'text-warning font-bold' :
-                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-green-500' // Handle Unknown color
+                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-success' // Handle Unknown color
                 }>
                   {slot.installedComponent.status === 'planned' ? 'Planned' : health?.status}
                 </span>

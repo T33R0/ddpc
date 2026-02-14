@@ -116,7 +116,6 @@ export async function POST(request: NextRequest) {
       
       // If bucket is not public, try creating a signed URL (valid for 1 year)
       // But first check if the URL is accessible
-      console.log('Upload successful:', { uploadedPath, publicUrl, filePath })
     } catch (urlError) {
       console.error('Error getting public URL:', urlError)
       // Fallback: create signed URL if bucket is private
@@ -133,7 +132,6 @@ export async function POST(request: NextRequest) {
       }
       
       publicUrl = signedData.signedUrl
-      console.log('Using signed URL:', publicUrl)
     }
 
     // Update vehicle record
@@ -150,8 +148,6 @@ export async function POST(request: NextRequest) {
         details: updateError.message 
       }, { status: 500 })
     }
-
-    console.log('Vehicle updated with image URL:', publicUrl)
 
     return NextResponse.json({
       success: true,

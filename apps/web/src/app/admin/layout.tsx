@@ -33,58 +33,30 @@ export default async function AdminLayout({
     }
   }
 
+  const navLinkClasses = "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-muted-foreground hover:border-border hover:text-foreground"
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="fixed top-16 left-0 right-0 z-50 bg-white shadow dark:bg-gray-800">
+    <div className="min-h-screen bg-muted/30">
+      <nav className="fixed top-16 left-0 right-0 z-50 bg-card shadow border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between">
             <div className="flex">
               <div className="flex flex-shrink-0 items-center">
-                <Link href="/admin" className="text-xl font-bold text-gray-900 dark:text-white">
+                <Link href="/admin" className="text-xl font-bold text-foreground">
                   Admin Console
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/admin"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/admin/users"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-                >
-                  Users
-                </Link>
-                <Link
-                  href="/admin/issues"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-                >
-                  Issues
-                </Link>
-                <Link
-                  href="/admin/structure"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-                >
-                  Structure
-                </Link>
-                <Link
-                  href="/admin/ogma"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-                >
-                  Ogma
-                </Link>
-                <Link
-                  href="/admin/email"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-                >
-                  Email Ops
-                </Link>
+                <Link href="/admin" className={navLinkClasses}>Dashboard</Link>
+                <Link href="/admin/users" className={navLinkClasses}>Users</Link>
+                <Link href="/admin/issues" className={navLinkClasses}>Issues</Link>
+                <Link href="/admin/structure" className={navLinkClasses}>Structure</Link>
+                <Link href="/admin/ogma" className={navLinkClasses}>Ogma</Link>
+                <Link href="/admin/email" className={navLinkClasses}>Email Ops</Link>
               </div>
             </div>
             <div className="flex items-center">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-muted-foreground">
                 {user.email} {isBreakglass && '(Super Admin)'}
               </span>
             </div>

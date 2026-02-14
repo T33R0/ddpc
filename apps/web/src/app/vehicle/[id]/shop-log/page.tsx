@@ -19,31 +19,22 @@ interface ShopLogPageProps {
 }
 
 export default async function ShopLogPage({ params, searchParams }: ShopLogPageProps) {
-  console.log('[SHOP-LOG] Page function called');
-  
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   const vehicleSlug = decodeURIComponent(resolvedParams.id);
 
-  console.log('[SHOP-LOG] vehicleSlug:', vehicleSlug);
-
   if (!vehicleSlug) {
-    console.log('[SHOP-LOG] No vehicleSlug, returning notFound');
     notFound();
   }
 
   // Resolve vehicle slug to UUID (will fetch user internally)
-  console.log('[SHOP-LOG] Calling resolveVehicleSlug...');
   const resolvedVehicle = await resolveVehicleSlug(vehicleSlug);
-  console.log('[SHOP-LOG] resolveVehicleSlug result:', resolvedVehicle);
-  
+
   if (!resolvedVehicle) {
-    console.log('[SHOP-LOG] resolvedVehicle is null, returning notFound');
     return notFound();
   }
 
   const vehicleId = resolvedVehicle.vehicleId;
-  console.log('[SHOP-LOG] vehicleId:', vehicleId);
 
   const supabase = await createClient();
 
@@ -54,27 +45,21 @@ export default async function ShopLogPage({ params, searchParams }: ShopLogPageP
     .eq('id', vehicleId)
     .single();
 
-  console.log('[SHOP-LOG] vehicleData:', vehicleData ? 'found' : 'not found', 'error:', vehicleError);
-
   if (!vehicleData) {
-    console.log('[SHOP-LOG] No vehicleData, returning notFound');
     return notFound();
   }
 
   const jobsResult = await getCompletedJobs(vehicleId, resolvedSearchParams.search);
-  console.log('[SHOP-LOG] jobsResult:', 'jobs' in jobsResult ? `${jobsResult.jobs.length} jobs` : 'error');
 
   // Handle error case
   if ('error' in jobsResult) {
     console.error('[SHOP-LOG] getCompletedJobs error:', jobsResult.error);
   }
-  
+
   const jobs = 'jobs' in jobsResult ? jobsResult.jobs : [];
 
   const nickname = vehicleData.nickname || vehicleData.vehicle_data?.model || 'Vehicle';
   const vehicleSlugForLink = resolvedVehicle.canonicalSlug;
-
-  console.log('[SHOP-LOG] Rendering page with nickname:', nickname);
 
   return (
     <section className="relative py-12 bg-background min-h-screen">

@@ -19,48 +19,48 @@ interface TimelineFeedProps {
 // Icon components for different event types
 function FuelIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center ${className}`}>
-      <Fuel className="w-4 h-4 text-red-400" />
+    <div className={`w-8 h-8 bg-destructive/20 rounded-full flex items-center justify-center ${className}`}>
+      <Fuel className="w-4 h-4 text-destructive" />
     </div>
   )
 }
 
 function JobIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center ${className}`}>
-      <Wrench className="w-4 h-4 text-blue-400" />
+    <div className={`w-8 h-8 bg-info/20 rounded-full flex items-center justify-center ${className}`}>
+      <Wrench className="w-4 h-4 text-info" />
     </div>
   )
 }
 
 function PartIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center ${className}`}>
-      <Package className="w-4 h-4 text-purple-400" />
+    <div className={`w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center ${className}`}>
+      <Package className="w-4 h-4 text-accent" />
     </div>
   )
 }
 
 function MaintenanceIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center ${className}`}>
-      <Wrench className="w-4 h-4 text-cyan-400" />
+    <div className={`w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center ${className}`}>
+      <Wrench className="w-4 h-4 text-accent" />
     </div>
   )
 }
 
 function ModificationIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-8 bg-lime-500/20 rounded-full flex items-center justify-center ${className}`}>
-      <Zap className="w-4 h-4 text-lime-400" />
+    <div className={`w-8 h-8 bg-success/20 rounded-full flex items-center justify-center ${className}`}>
+      <Zap className="w-4 h-4 text-success" />
     </div>
   )
 }
 
 function MileageIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center ${className}`}>
-      <Gauge className="w-4 h-4 text-orange-400" />
+    <div className={`w-8 h-8 bg-warning/20 rounded-full flex items-center justify-center ${className}`}>
+      <Gauge className="w-4 h-4 text-warning" />
     </div>
   )
 }
@@ -106,17 +106,17 @@ function getEventTypeLabel(type: VehicleEvent['type']) {
 function getEventTypeColor(type: VehicleEvent['type']) {
   switch (type) {
     case 'job':
-      return 'text-blue-400'
+      return 'text-info'
     case 'part':
-      return 'text-purple-400'
+      return 'text-accent'
     case 'maintenance':
-      return 'text-cyan-400'
+      return 'text-accent'
     case 'modification':
-      return 'text-lime-400'
+      return 'text-success'
     case 'mileage':
-      return 'text-orange-400'
+      return 'text-warning'
     case 'fuel':
-      return 'text-red-400'
+      return 'text-destructive'
     default:
       return 'text-muted-foreground'
   }
@@ -159,15 +159,15 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
     <>
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2 flex-wrap">
-          <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
+          <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary data-[state=on]:!bg-secondary/10 data-[state=on]:!border-secondary flex-1 sm:flex-none justify-center">
             <Fuel className="w-4 h-4 mr-2" />
             <span className="text-xs font-medium">Fuel</span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="job" aria-label="Toggle jobs" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
+          <ToggleGroupItem value="job" aria-label="Toggle jobs" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary data-[state=on]:!bg-secondary/10 data-[state=on]:!border-secondary flex-1 sm:flex-none justify-center">
             <Wrench className="w-4 h-4 mr-2" />
             <span className="text-xs font-medium">Jobs</span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="part" aria-label="Toggle parts" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary dark:data-[state=on]:!text-primary data-[state=on]:!bg-secondary/10 dark:data-[state=on]:!bg-primary/10 data-[state=on]:!border-secondary dark:data-[state=on]:!border-primary flex-1 sm:flex-none justify-center">
+          <ToggleGroupItem value="part" aria-label="Toggle parts" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary data-[state=on]:!bg-secondary/10 data-[state=on]:!border-secondary flex-1 sm:flex-none justify-center">
             <Package className="w-4 h-4 mr-2" />
             <span className="text-xs font-medium">Parts</span>
           </ToggleGroupItem>

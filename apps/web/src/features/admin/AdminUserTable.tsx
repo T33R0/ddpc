@@ -72,14 +72,14 @@ export function AdminUserTable({
     const isActive = sortBy === column
 
     return (
-      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
         <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none focus:outline-none group flex items-center space-x-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors cursor-pointer">
+          <DropdownMenuTrigger className="outline-none focus:outline-none group flex items-center space-x-1 hover:text-foreground transition-colors cursor-pointer">
             <span>{label}</span>
             {isActive ? (
-               sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-indigo-600" /> : <ArrowDown className="h-3.5 w-3.5 text-indigo-600" />
+               sortDir === 'asc' ? <ArrowUp className="h-3.5 w-3.5 text-primary" /> : <ArrowDown className="h-3.5 w-3.5 text-primary" />
             ) : (
-              <ChevronsUpDown className="h-3.5 w-3.5 text-gray-400 opacity-50 group-hover:opacity-100" />
+              <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground opacity-50 group-hover:opacity-100" />
             )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
@@ -88,7 +88,7 @@ export function AdminUserTable({
                  <DropdownMenuItem 
                    key={opt.label}
                    onClick={() => setSort(column, opt.value)}
-                   className={isActive && sortDir === opt.value ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : ''}
+                   className={isActive && sortDir === opt.value ? 'bg-primary/10 text-primary' : ''}
                  >
                    {opt.label}
                  </DropdownMenuItem>
@@ -169,9 +169,9 @@ export function AdminUserTable({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow dark:border-gray-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+      <div className="overflow-x-auto rounded-lg border border-border shadow">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted">
             <tr>
               <SortHeader 
                 column="user" 
@@ -206,31 +206,31 @@ export function AdminUserTable({
                   // { label: 'Most Total', value: 'desc' } // Could add 'total' sort_by option here if needed
                 ]}
               />
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Account</th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Account</th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+          <tbody className="divide-y divide-border bg-card">
             {optimisticUsers.map((user) => (
-              <tr key={user.user_id} className={user.banned ? 'bg-red-50 dark:bg-red-900/20' : ''}>
+              <tr key={user.user_id} className={user.banned ? 'bg-destructive/10' : ''}>
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{user.username}</span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{user.email}</span>
+                    <span className="text-sm font-medium text-foreground">{user.username}</span>
+                    <span className="text-sm text-muted-foreground">{user.email}</span>
                     {user.role === 'admin' && (
-                      <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                      <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
                         Admin
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-muted-foreground">
                   {new Date(user.join_date).toLocaleDateString()}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-muted-foreground">
                   {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-6 py-4 text-sm text-muted-foreground">
                   {Object.entries(user.status_counts).map(([status, count]) => (
                     <div key={status} className="flex justify-between space-x-2">
                       <span className="capitalize">{status.replace('_', ' ')}:</span>
@@ -239,14 +239,14 @@ export function AdminUserTable({
                   ))}
                   {Object.keys(user.status_counts).length === 0 && '-'}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-muted-foreground">
                   <div className="flex flex-col">
                     <span className="capitalize">{user.provider || 'Email'}</span>
                     <div className="mt-1">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         user.plan === 'pro'
-                          ? 'bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 dark:from-indigo-900 dark:to-purple-900 dark:text-indigo-200'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
                       }`}>
                         {user.plan === 'pro' ? 'Pro' : 'Free'}
                       </span>
@@ -258,17 +258,17 @@ export function AdminUserTable({
                    <div className="flex space-x-2">
                     {confirmSuspend === user.user_id ? (
                       <div className="flex items-center space-x-2">
-                        <span className="text-red-600 text-xs">Are you sure?</span>
+                        <span className="text-destructive text-xs">Are you sure?</span>
                         <button
                           onClick={() => handleSuspend(user.user_id, !user.banned)}
                           disabled={isPending}
-                          className="text-red-600 hover:text-red-900 font-bold"
+                          className="text-destructive hover:text-destructive/90 font-bold"
                         >
                           Yes
                         </button>
                         <button
                           onClick={() => setConfirmSuspend(null)}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-foreground/60 hover:text-foreground"
                         >
                           No
                         </button>
@@ -277,7 +277,7 @@ export function AdminUserTable({
                       <button
                         onClick={() => setConfirmSuspend(user.user_id)}
                         disabled={isPending}
-                        className={`${user.banned ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'
+                        className={`${user.banned ? 'text-success hover:text-success/90' : 'text-destructive hover:text-destructive/90'
                           }`}
                       >
                         {user.banned ? 'Unsuspend' : 'Suspend'}
@@ -291,7 +291,7 @@ export function AdminUserTable({
                         onCheckedChange={(checked) => handleGrantPro(user.user_id, checked)}
                         disabled={isPending}
                       />
-                      <Label htmlFor={`pro-toggle-${user.user_id}`} className="text-sm font-normal text-gray-600 dark:text-gray-400">
+                      <Label htmlFor={`pro-toggle-${user.user_id}`} className="text-sm font-normal text-muted-foreground">
                         {user.plan === 'pro' ? 'Pro' : 'Free'}
                       </Label>
                     </div>
@@ -301,7 +301,7 @@ export function AdminUserTable({
                       <button
                         onClick={() => handleToggleAdmin(user.user_id, user.role !== 'admin')}
                         disabled={isPending}
-                        className="text-blue-600 hover:text-blue-900 text-left"
+                        className="text-info hover:text-info/90 text-left"
                       >
                         {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
                       </button>
@@ -319,7 +319,7 @@ export function AdminUserTable({
           <button
             onClick={() => goToPage(Math.max(1, page - 1))}
             disabled={page === 1 || isPending}
-            className="p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
+            className="p-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -333,7 +333,7 @@ export function AdminUserTable({
                 className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
                   page === p
                     ? 'bg-indigo-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                    : 'text-foreground hover:bg-muted'
                 }`}
               >
                 {p}
@@ -344,13 +344,13 @@ export function AdminUserTable({
           <button
             onClick={() => goToPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages || isPending}
-            className="p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
+            className="p-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted disabled:opacity-50"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
         
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-muted-foreground">
           Showing {Math.min(totalCount, (page - 1) * pageSize + 1)} to {Math.min(totalCount, page * pageSize)} of {totalCount} users
         </div>
       </div>

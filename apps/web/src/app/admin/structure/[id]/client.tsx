@@ -222,7 +222,7 @@ export default function StructureDetailClient({ item }: { item: StructureItem })
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Preview Area */}
         <div className="lg:col-span-2 space-y-4">
-          <Card className="overflow-hidden bg-slate-100/50 dark:bg-slate-900/50 border-dashed">
+          <Card className="overflow-hidden bg-muted/50 border-dashed">
              <div className="p-4 flex items-center justify-between border-b bg-background/50 backdrop-blur">
                <span className="text-xs font-medium text-muted-foreground">Preview Canvas</span>
                <div className="text-xs text-muted-foreground">
@@ -239,7 +239,7 @@ export default function StructureDetailClient({ item }: { item: StructureItem })
                >
                  {item.type === 'page' ? (
                    <div className="w-full h-full min-h-[600px] bg-white flex flex-col">
-                     <div className="p-4 border-b bg-yellow-50 text-yellow-800 text-sm flex items-center gap-2">
+                     <div className="p-4 border-b bg-warning/10 text-warning text-sm flex items-center gap-2">
                        <ExternalLink className="h-4 w-4" />
                        Page previews are rendered via iframe. Screenshots must be manually uploaded.
                      </div>

@@ -174,7 +174,7 @@ export default function IssuesPage() {
                     href={selectedIssue.page_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 hover:underline flex items-center gap-1 text-sm break-all"
+                    className="text-info hover:underline flex items-center gap-1 text-sm break-all"
                   >
                     {selectedIssue.page_url} <ExternalLink className="h-3 w-3" />
                   </a>
@@ -191,7 +191,7 @@ export default function IssuesPage() {
               {selectedIssue.screenshot_url && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-1">Screenshot</h4>
-                  <div className="border rounded-md overflow-hidden bg-gray-50 dark:bg-gray-900 flex justify-center">
+                  <div className="border rounded-md overflow-hidden bg-muted flex justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={selectedIssue.screenshot_url}
@@ -204,7 +204,7 @@ export default function IssuesPage() {
                       href={selectedIssue.screenshot_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                      className="text-xs text-info hover:underline flex items-center gap-1"
                     >
                       Open original <ExternalLink className="h-3 w-3" />
                     </a>
@@ -244,7 +244,7 @@ export default function IssuesPage() {
               <Button
                 variant={selectedIssue.resolved ? "outline" : "default"} // Changed logic to highlight action
                 onClick={() => toggleResolved(selectedIssue.id, selectedIssue.resolved)}
-                className={selectedIssue.resolved ? "text-green-600 border-green-200 hover:bg-green-50" : ""}
+                className={selectedIssue.resolved ? "text-success border-success/20 hover:bg-success/10" : ""}
               >
                 {selectedIssue.resolved ? (
                   <span className="flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Re-open Issue</span>
@@ -273,7 +273,7 @@ export default function IssuesPage() {
           )}
         </div>
 
-        <div className="flex items-center space-x-4 bg-white dark:bg-gray-800 p-2 rounded-lg border">
+        <div className="flex items-center space-x-4 bg-card p-2 rounded-lg border border-border">
           <div className="flex items-center space-x-2">
             <input
               type="radio"
@@ -282,7 +282,7 @@ export default function IssuesPage() {
               value="all"
               checked={filter === 'all'}
               onChange={() => setFilter('all')}
-              className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+              className="h-4 w-4 text-primary border-input focus:ring-primary"
             />
             <Label htmlFor="filter-all" className="cursor-pointer">All</Label>
           </div>
@@ -294,7 +294,7 @@ export default function IssuesPage() {
               value="unresolved"
               checked={filter === 'unresolved'}
               onChange={() => setFilter('unresolved')}
-              className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+              className="h-4 w-4 text-primary border-input focus:ring-primary"
             />
             <Label htmlFor="filter-unresolved" className="cursor-pointer">Unresolved</Label>
           </div>
@@ -341,7 +341,7 @@ export default function IssuesPage() {
           ) : (
             <div className="relative overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <thead className="text-xs text-muted-foreground uppercase bg-muted">
                   <tr>
                     <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Date</th>
@@ -356,7 +356,7 @@ export default function IssuesPage() {
                   {issues.map((issue) => (
                     <tr
                       key={issue.id}
-                      className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                      className="bg-card border-b border-border hover:bg-accent/50 cursor-pointer transition-colors"
                       onClick={() => handleRowClick(issue)}
                     >
                       <td className="px-6 py-4">
@@ -375,7 +375,7 @@ export default function IssuesPage() {
                           href={issue.page_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-600 hover:underline flex items-center gap-1"
+                          className="text-info hover:underline flex items-center gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
                           View Page <ExternalLink className="h-3 w-3" />
@@ -392,14 +392,14 @@ export default function IssuesPage() {
                             href={issue.screenshot_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-blue-600 hover:underline flex items-center gap-1"
+                            className="text-info hover:underline flex items-center gap-1"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ImageIcon className="h-4 w-4" />
                             Image
                           </a>
                         ) : (
-                          <span className="text-gray-400 flex items-center gap-1 cursor-not-allowed">
+                          <span className="text-muted-foreground flex items-center gap-1 cursor-not-allowed">
                             <ImageIcon className="h-4 w-4" />
                             Image
                           </span>
@@ -413,7 +413,7 @@ export default function IssuesPage() {
                             e.stopPropagation();
                             toggleResolved(issue.id, issue.resolved);
                           }}
-                          className={issue.resolved ? "text-green-600" : "text-orange-600"}
+                          className={issue.resolved ? "text-success" : "text-warning"}
                         >
                           {issue.resolved ? (
                             <span className="flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Re-open</span>

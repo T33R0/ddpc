@@ -1,13 +1,11 @@
 'use client';
 
-// Remove useChat entirely to avoid crashes
-// import { useChat } from '@ai-sdk/react';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Terminal, Loader2, PenTool, Lightbulb, Cpu, LayoutDashboard } from 'lucide-react';
+import { Send, Terminal, Loader2, LayoutDashboard } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
+import { Button } from '@repo/ui/button';
+import { Input } from '@repo/ui/input';
 
 import { getChatMessages, createChatSession } from '../actions';
 
@@ -147,13 +145,15 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                 
                 {/* Dashboard Shortcut */}
                 <div className="absolute top-4 right-4 z-20">
-                    <button 
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => router.push('/admin/ogma/dashboard')}
-                        className="p-2 text-muted-foreground hover:text-primary transition-colors bg-background/50 backdrop-blur-sm rounded-full border border-border/50 hover:bg-accent"
+                        className="bg-background/50 backdrop-blur-sm border border-border/50"
                         title="Open Dashboard"
                     >
                         <LayoutDashboard className="w-5 h-5" />
-                    </button>
+                    </Button>
                 </div>
 
                 {messages.map((m: any, idx: number) => (
@@ -189,22 +189,22 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
             <div className="p-4 border-t bg-background/95 backdrop-blur-sm z-10 shrink-0">
                 <div className="max-w-4xl mx-auto w-full">
                     <form onSubmit={handleSend} className="flex gap-2 items-center relative">
-                        <input
-                            className="flex-1 bg-muted/50 border border-input rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 transition-all shadow-sm"
+                        <Input
+                            className="flex-1 py-3"
                             value={localInput}
                             onChange={(e) => setLocalInput(e.target.value)}
                             placeholder={sessionId ? "Message Ogma..." : "Select a chat or start typing..."}
                             autoFocus
                             disabled={isLoading}
                         />
-                        <button
+                        <Button
                             type="submit"
                             disabled={isLoading || !localInput?.trim()}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2 shadow-sm"
+                            className="px-4 py-3 flex items-center gap-2"
                         >
                             <span className="hidden sm:inline">Send</span>
                             <Send className="w-4 h-4" />
-                        </button>
+                        </Button>
                     </form>
                 </div>
             </div>

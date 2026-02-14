@@ -107,19 +107,19 @@ export function VehicleModsPageClient({ modsData, vehicleSlug }: VehicleModsPage
               <div
                 className="bg-card rounded-2xl p-4 text-foreground border border-border"
               >
-                <div className="text-2xl font-bold text-yellow-500">{modsData.summary.inProgressCount}</div>
+                <div className="text-2xl font-bold text-warning">{modsData.summary.inProgressCount}</div>
                 <div className="text-sm text-muted-foreground">In Progress</div>
               </div>
               <div
                 className="bg-card rounded-2xl p-4 text-foreground border border-border"
               >
-                <div className="text-2xl font-bold text-green-500">{modsData.summary.completedCount}</div>
+                <div className="text-2xl font-bold text-success">{modsData.summary.completedCount}</div>
                 <div className="text-sm text-muted-foreground">Completed</div>
               </div>
               <div
                 className="bg-card rounded-2xl p-4 text-foreground border border-border"
               >
-                <div className="text-2xl font-bold text-blue-500">${modsData.summary.totalCost.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-info">${modsData.summary.totalCost.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Total Cost</div>
               </div>
             </div>

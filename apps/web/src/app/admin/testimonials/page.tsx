@@ -72,7 +72,7 @@ export default function TestimonialsAdminPage() {
           testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className={`p-6 bg-card rounded-lg border ${testimonial.is_approved ? 'border-green-500/50' : 'border-border'} transition-colors`}
+              className={`p-6 bg-card rounded-lg border ${testimonial.is_approved ? 'border-success/50' : 'border-border'} transition-colors`}
             >
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex-shrink-0 flex flex-col items-center space-y-2">
@@ -92,7 +92,7 @@ export default function TestimonialsAdminPage() {
                       <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm ${testimonial.is_approved ? 'text-green-500' : 'text-yellow-500'}`}>
+                      <span className={`text-sm ${testimonial.is_approved ? 'text-success' : 'text-warning'}`}>
                         {testimonial.is_approved ? 'Visible' : 'Hidden'}
                       </span>
                       <Switch

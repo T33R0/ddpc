@@ -368,14 +368,14 @@ export function FinancialsDashboard() {
                       ${vehicle.total_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right text-orange-600 dark:text-orange-400">
+                  <TableCell className="text-right text-warning">
                     ${vehicle.mods_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </TableCell>
-                  <TableCell className="text-right text-blue-600 dark:text-blue-400">
+                  <TableCell className="text-right text-info">
                     ${vehicle.maintenance_spend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className={`font-medium ${vehicle.cost_per_mile > overallStats.averageCostPerMile ? 'text-destructive' : 'text-green-600 dark:text-green-400'
+                    <span className={`font-medium ${vehicle.cost_per_mile > overallStats.averageCostPerMile ? 'text-destructive' : 'text-success'
                       }`}>
                       ${vehicle.cost_per_mile.toFixed(2)}
                     </span>

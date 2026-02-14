@@ -35,11 +35,7 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
         if (loading) return;
 
         const syncTheme = async () => {
-            // Log to confirm trigger source
-            console.log(`ThemeProvider: syncTheme running. User ID: ${user?.id}`);
-
             if (!user) {
-                console.log('ThemeProvider: No user logged in, enforcing dark mode.');
                 setThemeState('dark');
                 setResolvedTheme('dark');
                 return;
@@ -47,16 +43,11 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
 
             try {
                 // Use Server Action to fetch theme to avoid client-side RLS/network issues
-                console.log('ThemeProvider: Fetching theme via Server Action...');
                 const { theme: fetchedTheme } = await getUserTheme();
 
-                console.log('ThemeProvider: Server Action returned theme:', fetchedTheme);
-
                 if (fetchedTheme && ['light', 'dark', 'auto'].includes(fetchedTheme)) {
-                    console.log(`ThemeProvider: Setting local state to '${fetchedTheme}' from Server Action.`);
                     setThemeState(fetchedTheme as Theme);
                 } else {
-                    console.log(`ThemeProvider: Invalid or missing theme from Server Action ('${fetchedTheme}'), defaulting to dark.`);
                     setThemeState('dark');
                 }
             } catch (err) {
@@ -119,10 +110,8 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
         // Add the resolved theme
         root.classList.add(resolvedTheme);
 
-        // Set style attribute explicitly for debugging/redundancy if classList fails (rare but possible with some hydration issues)
+        // Set style attribute explicitly for redundancy if classList fails (rare but possible with some hydration issues)
         root.style.colorScheme = resolvedTheme;
-
-        console.log(`ThemeProvider: Applied theme class '${resolvedTheme}' to HTML element.`);
 
     }, [resolvedTheme, mounted]);
 
@@ -131,20 +120,14 @@ export function ThemeProvider({ children, initialTheme }: { children: React.Reac
     };
 
     const saveTheme = async (newTheme: Theme) => {
-        console.log(`ThemeProvider: saveTheme called: ${newTheme}. User: ${user?.id}`);
         setThemeState(newTheme);
 
         if (user) {
             try {
-                console.log('ThemeProvider: Initiating Server Action update...');
                 const result = await updateUserTheme(newTheme);
-
-                console.log('ThemeProvider: Server Action result:', result);
 
                 if (!result.success) {
                     console.error('ThemeProvider: Error saving theme via Server Action:', result.error);
-                } else {
-                    console.log('ThemeProvider: Successfully saved theme via Server Action.');
                 }
             } catch (err) {
                 console.error('ThemeProvider: Unexpected error calling server action:', err);

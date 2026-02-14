@@ -302,7 +302,7 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
                     <div className="col-span-6 grid grid-cols-3 gap-4">
                         <Button
                             variant="outline"
-                            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground h-auto py-2"
+                            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground h-auto py-2"
                             onClick={() => onAction('fuel')}
                         >
                             <Fuel className="mr-2 h-4 w-4" /> <span>Log Fuel</span>
@@ -310,7 +310,7 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
 
                         <Button
                             variant="outline"
-                            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground h-auto py-2"
+                            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground h-auto py-2"
                             onClick={() => onAction('job')}
                         >
                             <Plus className="mr-2 h-4 w-4" /> <span>Log Job</span>
@@ -319,7 +319,7 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
                         {isOwner && (
                             <Button
                                 variant="outline"
-                                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground h-auto py-2"
+                                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground h-auto py-2"
                                 onClick={onConfig}
                             >
                                 <Settings className="mr-2 h-4 w-4" /> <span>Config</span>

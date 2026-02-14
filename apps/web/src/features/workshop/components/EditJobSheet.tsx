@@ -148,7 +148,7 @@ export function EditJobSheet({ job, isOpen, onClose }: EditJobSheetProps) {
           </ModalHeader>
           <ModalFooter>
             <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleContinueEditing} className="bg-amber-500 hover:bg-amber-600">
+            <Button onClick={handleContinueEditing} className="bg-warning hover:bg-warning/90">
               I understand, edit anyway
             </Button>
           </ModalFooter>
@@ -184,26 +184,26 @@ export function EditJobSheet({ job, isOpen, onClose }: EditJobSheetProps) {
                             <div className="space-y-2">
                                 <Label htmlFor="title">Job Title</Label>
                                 <Input id="title" {...register('title')} />
-                                {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+                                {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="date_completed">Date Completed</Label>
                                 <Input type="date" id="date_completed" {...register('date_completed')} />
-                                {errors.date_completed && <p className="text-sm text-red-500">{errors.date_completed.message}</p>}
+                                {errors.date_completed && <p className="text-sm text-destructive">{errors.date_completed.message}</p>}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="odometer">Odometer (mi)</Label>
                                     <Input type="number" id="odometer" {...register('odometer')} />
-                                    {errors.odometer && <p className="text-sm text-red-500">{errors.odometer.message}</p>}
+                                    {errors.odometer && <p className="text-sm text-destructive">{errors.odometer.message}</p>}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="cost_total">Total Cost ($)</Label>
                                     <Input type="number" step="0.01" id="cost_total" {...register('cost_total')} />
-                                    {errors.cost_total && <p className="text-sm text-red-500">{errors.cost_total.message}</p>}
+                                    {errors.cost_total && <p className="text-sm text-destructive">{errors.cost_total.message}</p>}
                                 </div>
                             </div>
 
@@ -215,7 +215,7 @@ export function EditJobSheet({ job, isOpen, onClose }: EditJobSheetProps) {
                                     className="min-h-[100px]"
                                     {...register('notes')} 
                                 />
-                                {errors.notes && <p className="text-sm text-red-500">{errors.notes.message}</p>}
+                                {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
                             </div>
                         </form>
                     </div>

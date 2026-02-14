@@ -10,19 +10,19 @@ export function GalleryLoadingSkeleton() {
             className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 flex flex-col gap-4 border border-white/30"
           >
             {/* Garage count skeleton */}
-            <div className="h-4 w-32 bg-gray-700 rounded" />
+            <div className="h-4 w-32 bg-muted rounded" />
 
             {/* Image skeleton */}
-            <div className="w-full aspect-video bg-gray-700 rounded-lg" />
+            <div className="w-full aspect-video bg-muted rounded-lg" />
 
             {/* Title skeleton */}
             <div className="space-y-2">
-              <div className="h-5 w-3/4 bg-gray-700 rounded mx-auto" />
-              <div className="h-4 w-1/2 bg-gray-700 rounded mx-auto" />
+              <div className="h-5 w-3/4 bg-muted rounded mx-auto" />
+              <div className="h-4 w-1/2 bg-muted rounded mx-auto" />
             </div>
 
             {/* Trim info skeleton */}
-            <div className="h-8 w-full bg-gray-700 rounded-lg" />
+            <div className="h-8 w-full bg-muted rounded-lg" />
           </div>
         </div>
       ))}

@@ -48,7 +48,7 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onInstall
   const renderPriorityBadge = (priority: number) => {
     let colorClass = 'text-muted-foreground border-border'
     if (priority >= 5) colorClass = 'text-destructive border-destructive/50'
-    else if (priority >= 3) colorClass = 'text-yellow-500 border-yellow-500/50'
+    else if (priority >= 3) colorClass = 'text-warning border-warning/50'
 
     return (
       <Badge variant="outline" className={`text-xs py-0 h-5 ${colorClass}`}>
@@ -174,7 +174,7 @@ export function WishlistItemCard({ item, onUpdate, onEdit, onAddToJob, onInstall
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                className="h-8 w-8 text-warning hover:text-warning/90 hover:bg-warning/10"
                 onClick={(e) => {
                   e.stopPropagation()
                   onInstall(item.id)

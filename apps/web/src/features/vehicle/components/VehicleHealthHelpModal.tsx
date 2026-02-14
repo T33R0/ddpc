@@ -21,7 +21,7 @@ export function VehicleHealthHelpModal({ isOpen, onClose }: VehicleHealthHelpMod
             <DialogContent className="sm:max-w-md bg-card border-border">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Activity className="h-5 w-5 text-red-500" />
+                        <Activity className="h-5 w-5 text-destructive" />
                         Understanding Vehicle Health
                     </DialogTitle>
                     <DialogDescription>
@@ -68,8 +68,8 @@ export function VehicleHealthHelpModal({ isOpen, onClose }: VehicleHealthHelpMod
                         <div className="space-y-1">
                             <h4 className="font-semibold text-sm">Critical Alerts</h4>
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                Parts drop to <span className="text-yellow-500 font-medium">Warning</span> status at 30% remaining life,
-                                and <span className="text-red-500 font-medium">Critical</span> at 10%. We recommend ordering replacements
+                                Parts drop to <span className="text-warning font-medium">Warning</span> status at 30% remaining life,
+                                and <span className="text-destructive font-medium">Critical</span> at 10%. We recommend ordering replacements
                                 as soon as you see a warning.
                             </p>
                         </div>

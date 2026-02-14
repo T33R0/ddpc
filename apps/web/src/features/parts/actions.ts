@@ -58,12 +58,9 @@ export async function getPartsData(vehicleId: string): Promise<PartsDataResponse
         part_number,
         variant,
         purchase_url,
-        category,
         installed_at,
         install_miles,
         purchase_price,
-        lifespan_miles,
-        lifespan_months,
         lifespan_miles,
         lifespan_months,
         status,
@@ -228,7 +225,7 @@ export async function addPartToVehicle(
       return { error: 'Failed to create inventory item' };
     }
 
-    return { success: true, id: (insertData as any).id };
+    return { success: true, id: insertData.id };
   } catch (err) {
     console.error('Unexpected error in addPartToVehicle:', err);
     return { error: 'Internal server error' };

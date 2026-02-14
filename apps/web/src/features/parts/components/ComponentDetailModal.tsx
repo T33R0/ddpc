@@ -162,10 +162,10 @@ export const ComponentDetailModal = ({
   // Color mapping matches PartCard
   const getHealthColor = (status: HealthStatus) => {
     switch (status) {
-      case 'Good': return 'bg-green-500';
-      case 'Warning': return 'bg-yellow-500';
-      case 'Critical': return 'bg-red-500';
-      default: return 'bg-gray-200';
+      case 'Good': return 'bg-success';
+      case 'Warning': return 'bg-warning';
+      case 'Critical': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
 

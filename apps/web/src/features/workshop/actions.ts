@@ -73,17 +73,6 @@ export async function getWorkshopData(vehicleId: string): Promise<WorkshopDataRe
             };
         });
 
-        // Debug logging
-        if (formattedJobs.length > 0) {
-            const jobWithTasks = formattedJobs.find((j: any) => j.tasks && j.tasks.length > 0);
-            if (jobWithTasks) {
-                console.log(`[getWorkshopData] Found job ${jobWithTasks.id} with ${jobWithTasks.tasks?.length} tasks.`);
-            } else {
-                console.log(`[getWorkshopData] Jobs found but NONE have tasks. Sample job raw tasks:`, jobsData[0]?.tasks, (jobsData[0] as any)?.job_tasks);
-            }
-        } else {
-            console.log(`[getWorkshopData] No jobs found for vehicle ${vehicleId}`);
-        }
 
         // 3. Fetch Orders
         const { data: ordersData, error: ordersError } = await supabase
@@ -289,8 +278,6 @@ export async function completeJob(jobId: string, odometer: number) {
         // We rely on 'category' being correct on the inventory item.
         // If it's a custom part, it was set on creation.
         // If it's a master part, it was set on creation (addPartToVehicle).
-        console.log(`[completeJob] Updating ${inventoryIds.length} parts to installed:`, inventoryIds);
-
         const { error: updateError } = await supabase
             .from('inventory')
             .update({
@@ -729,8 +716,6 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
     const jobTitle = job.title;
     const jobDescription = job.notes ? `\nPlan Description/Context: ${job.notes}` : "";
 
-    console.log(`[generateMissionPlan] Vehicle: ${vehicleString} | Engine: ${engineDesc} | Drive: ${driveType} | Trans: ${transDesc}`);
-
     // 3. Generate Plan with AI (skill-calibrated)
     try {
         const { text } = await generateText({
@@ -874,7 +859,7 @@ export async function generateMissionPlan(jobId: string, partsList: string[]) {
         });
 
     } catch (e) {
-        console.error("AI Generation Error:", e);
+        console.error("Failed to generate plan:", e);
         return { error: "Failed to generate plan. Please try again." };
     }
 

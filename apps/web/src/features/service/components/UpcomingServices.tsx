@@ -51,7 +51,7 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
                     <Badge variant="destructive">Overdue</Badge>
                   )}
                   {service.due_status === 'due' && (
-                    <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600">
+                    <Badge variant="default" className="bg-warning hover:bg-warning/90">
                       Due Soon
                     </Badge>
                   )}
@@ -59,7 +59,7 @@ export function UpcomingServices({ upcomingServices, onLogService }: UpcomingSer
                     <Badge variant="secondary">OK</Badge>
                   )}
                   {!service.due_status && (
-                    <Badge variant="outline" className="text-yellow-400 border-yellow-400/50">
+                    <Badge variant="outline" className="text-warning border-warning/50">
                       Due
                     </Badge>
                   )}

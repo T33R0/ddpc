@@ -32,9 +32,7 @@ export async function runOgma(input: EngineInput): Promise<EngineOutput> {
   const { userPrompt, sessionId, config, sophiaContext } = input;
 
   // Phase 1: Scout Reconnaissance
-  console.log('[Ogma:Engine] Starting Scout phase...');
   const scoutBriefing = await runScout(userPrompt, sessionId, config);
-  console.log(`[Ogma:Engine] Scout complete. Files: ${scoutBriefing.filesExamined.length}, Cost: $${scoutBriefing.cost.toFixed(4)}`);
 
   // Combine Sophia context with Scout findings
   const groundedContext = `${sophiaContext}
@@ -43,16 +41,12 @@ export async function runOgma(input: EngineInput): Promise<EngineOutput> {
 ${scoutBriefing.context}`;
 
   // Phase 2: Trinity Parallel Thinking
-  console.log('[Ogma:Engine] Starting Trinity phase...');
-  
   const trinityResults = await runTrinity(
     userPrompt,
     groundedContext,
     sessionId,
     config
   );
-  
-  console.log(`[Ogma:Engine] Trinity complete. Streams: ${trinityResults.length}`);
 
   // Format trinity results for synthesis
   const allSolutions = trinityResults

@@ -28,7 +28,7 @@ export function PartCard({ part, onPurchase, onAddToJob, className }: PartCardPr
                     </div>
                     <div className="flex gap-1 shrink-0">
                         {part.status === 'ordered' && (
-                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] px-1 h-5">
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] px-1 h-5">
                                 Ordered
                             </Badge>
                         )}
@@ -49,7 +49,7 @@ export function PartCard({ part, onPurchase, onAddToJob, className }: PartCardPr
 
                     <div className="flex gap-2 ml-auto">
                         {isWishlist && onPurchase && (
-                            <Button size="sm" variant="outline" className="h-7 text-xs px-2 gap-1 bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:text-green-700 border-green-500/20" onClick={(e) => { e.stopPropagation(); onPurchase(part.id); }}>
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2 gap-1 bg-success/10 text-success hover:bg-success/20 border-success/20" onClick={(e) => { e.stopPropagation(); onPurchase(part.id); }}>
                                 <ShoppingCart className="w-3 h-3" /> Buy
                             </Button>
                         )}

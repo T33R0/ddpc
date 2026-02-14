@@ -20,7 +20,7 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
       {children}
       {showHazard && (
         <span title={hazardTooltip}>
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+          <AlertTriangle className="h-3.5 w-3.5 text-warning" />
         </span>
       )}
     </Label>
