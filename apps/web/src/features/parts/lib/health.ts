@@ -2,9 +2,14 @@ import { VehicleInstalledComponent, ComponentType } from '../types';
 
 export type HealthStatus = 'Good' | 'Warning' | 'Critical' | 'Unknown';
 
+export type UnknownReason =
+  | 'no_lifespan'        // No lifespan data defined (user or default)
+  | 'no_install_data'    // Has lifespan but missing install date AND install mileage
+
 export interface HealthResult {
   status: HealthStatus;
   percentageUsed: number;
+  unknownReason?: UnknownReason;
   mileage?: {
     used: number; // miles
     total: number; // miles
@@ -31,7 +36,7 @@ export function calculateHealth(
   // Rule: If "the user leaves these blank, simply hide the health bar".
   // Interpreted as: If we have NO valid lifespan data at all (or 0), return Unknown.
   if ((!lifespanMiles || lifespanMiles <= 0) && (!lifespanMonths || lifespanMonths <= 0)) {
-    return { status: 'Unknown', percentageUsed: 0 };
+    return { status: 'Unknown', percentageUsed: 0, unknownReason: 'no_lifespan' };
   }
 
   // Vars for detailed breakdown
@@ -89,8 +94,8 @@ export function calculateHealth(
   } else if (hasTimeData) {
     finalUsagePct = timeUsage;
   } else {
-    // Had definitions but missing installed data to calc against
-    return { status: 'Unknown', percentageUsed: 0 };
+    // Had lifespan definitions but missing installed data (date + mileage) to calc against
+    return { status: 'Unknown', percentageUsed: 0, unknownReason: 'no_install_data' };
   }
 
   // Determine Status based on Remaining Health (100 - Usage)
@@ -109,5 +114,17 @@ export function calculateHealth(
     mileage: mileageData,
     time: timeData
   };
+}
+
+/** Returns a user-friendly explanation for why health status is Unknown */
+export function getUnknownReasonMessage(reason?: UnknownReason): string {
+  switch (reason) {
+    case 'no_lifespan':
+      return 'Add expected lifespan (miles or months) to enable health tracking.';
+    case 'no_install_data':
+      return 'Add install date or mileage to calculate remaining life.';
+    default:
+      return 'Missing data needed to calculate health.';
+  }
 }
 

@@ -130,6 +130,18 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
     }));
   }, [inventory]);
 
+  // Build a map of inventory_source_id → kit name for lineage display
+  const kitNameMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    // Kit records have visibility='history_only' — look them up by ID
+    inventory.forEach(item => {
+      if (item.visibility === 'history_only') {
+        map.set(item.id, item.name);
+      }
+    });
+    return map;
+  }, [inventory]);
+
   // Zone 1: Installed
   const zone1Installed = processedInventory.filter(item => {
     if (item.status !== 'installed') return false;
@@ -218,7 +230,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b pb-2">
             <h3 className="text-lg font-bold flex items-center gap-2">
-              <span className="w-2 h-6 bg-green-500 rounded-full" />
+              <span className="w-2 h-6 bg-success rounded-full" />
               Installed Components
             </h3>
             <div className="flex items-center gap-3">
@@ -258,6 +270,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
                   currentOdometer={vehicle?.odometer || 0}
                   onAddPart={handleAddPart}
                   onViewDetails={handleViewDetails}
+                  kitName={item.inventory_source_id ? kitNameMap.get(item.inventory_source_id) : undefined}
                 />
               ))}
             </div>
@@ -272,7 +285,7 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
             onClick={() => setIsBlueprintExpanded(!isBlueprintExpanded)}
           >
             <h3 className="text-lg font-bold flex items-center gap-2">
-              <span className="w-2 h-6 bg-blue-500 rounded-full" />
+              <span className="w-2 h-6 bg-info rounded-full" />
               Blueprint (Recommended)
               <span className="text-xs font-normal text-muted-foreground ml-2">
                 {isBlueprintExpanded ? 'Hide' : 'Show'}

@@ -315,6 +315,7 @@ export async function installComplexPart(
     category?: string;
     lifespanMiles?: number;
     lifespanMonths?: number;
+    specs?: Record<string, any>;
   },
   childParts: ComplexPart[],
   sourceInventoryId?: string // Optional existing inventory ID to convert
@@ -342,6 +343,7 @@ export async function installComplexPart(
           purchase_price: kitData.purchaseCost || null,
           lifespan_miles: kitData.lifespanMiles || null,
           lifespan_months: kitData.lifespanMonths || null,
+          specs: kitData.specs || null,
           status: 'installed',
           visibility: 'history_only', // Hidden from active build
           // quantity remains as is or 1
@@ -372,6 +374,7 @@ export async function installComplexPart(
           purchase_price: kitData.purchaseCost || null,
           lifespan_miles: kitData.lifespanMiles || null,
           lifespan_months: kitData.lifespanMonths || null,
+          specs: kitData.specs || null,
           status: 'installed',
           visibility: 'history_only', // Hidden from active build
           quantity: 1

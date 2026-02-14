@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { PlusCircle, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { PartSlot } from '../types';
-import { calculateHealth, HealthStatus } from '../lib/health';
+import { calculateHealth, HealthStatus, getUnknownReasonMessage } from '../lib/health';
 import { format } from 'date-fns';
 
 interface PartCardProps {
@@ -13,9 +13,10 @@ interface PartCardProps {
   currentOdometer: number;
   onAddPart: (slot: PartSlot) => void;
   onViewDetails?: (slot: PartSlot) => void;
+  kitName?: string; // Name of the parent kit if this part came from a kit
 }
 
-export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: PartCardProps) => {
+export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails, kitName }: PartCardProps) => {
   const isInstalled = !!slot.installedComponent;
 
   // Calculate health if installed
@@ -80,6 +81,12 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
               </Badge>
             )}
           </div>
+        )}
+        {/* Kit Lineage Indicator */}
+        {kitName && (
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Part of: <span className="font-medium text-foreground">{kitName}</span>
+          </p>
         )}
       </CardHeader>
 
@@ -219,11 +226,17 @@ export const PartCard = ({ slot, currentOdometer, onAddPart, onViewDetails }: Pa
                   slot.installedComponent.status === 'planned' ? 'text-info font-bold' :
                     health?.status === 'Critical' ? 'text-destructive font-bold' :
                       health?.status === 'Warning' ? 'text-warning font-bold' :
-                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-success' // Handle Unknown color
+                        health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-success'
                 }>
                   {slot.installedComponent.status === 'planned' ? 'Planned' : health?.status}
                 </span>
               </div>
+              {/* Unknown reason hint */}
+              {slot.installedComponent.status !== 'planned' && health?.status === 'Unknown' && (
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  {getUnknownReasonMessage(health.unknownReason)}
+                </p>
+              )}
 
               {slot.installedComponent.status !== 'planned' && health?.status !== 'Unknown' && (
                 health?.mileage && health?.time ? (

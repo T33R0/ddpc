@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { FieldLabel } from './forms/FieldLabel';
 import { getDisplayComponentForType } from './forms/type-specific';
-import { calculateHealth, HealthStatus } from '../lib/health';
+import { calculateHealth, HealthStatus, getUnknownReasonMessage } from '../lib/health';
 import { AlertTriangle, Pencil, Trash2, X, Check, Calendar, Gauge, ExternalLink, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
@@ -445,7 +445,7 @@ export const ComponentDetailModal = ({
                              <Button 
                                  type="button" 
                                  variant="ghost" 
-                                 className="text-red-500 hover:text-red-900 hover:bg-red-50"
+                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                  onClick={() => setIsDeleteConfirmOpen(true)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -480,7 +480,7 @@ export const ComponentDetailModal = ({
                                 <span className={`text-3xl font-bold ${
                                      health?.status === 'Critical' ? 'text-destructive' :
                                       health?.status === 'Warning' ? 'text-warning' :
-                                       health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-green-500' 
+                                       health?.status === 'Unknown' ? 'text-muted-foreground' : 'text-success'
                                 }`}>
                                    {installed.status === 'planned' ? 'Planned' : health?.status || 'Unknown'}
                                 </span>
@@ -495,6 +495,11 @@ export const ComponentDetailModal = ({
                                         </div>
                                      )}
                                 </div>
+                                {health?.status === 'Unknown' && (
+                                  <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
+                                    {getUnknownReasonMessage(health.unknownReason)}
+                                  </p>
+                                )}
                              </div>
 
                              {/* Center/Right: detailed bars */}
@@ -547,7 +552,7 @@ export const ComponentDetailModal = ({
                              {/* Installation Details */}
                              <div>
                                  <h3 className="font-semibold text-sm text-foreground mb-4 flex items-center gap-2">
-                                    <Check className="h-4 w-4 text-green-500" /> Installation
+                                    <Check className="h-4 w-4 text-success" /> Installation
                                  </h3>
                                  <div className="space-y-3">
                                       <div className="flex justify-between border-b pb-2 border-border/50">
@@ -572,7 +577,7 @@ export const ComponentDetailModal = ({
                              {/* Purchase Details */}
                              <div>
                                  <h3 className="font-semibold text-sm text-foreground mb-4 flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4 text-blue-500" /> Purchase Info
+                                    <DollarSign className="h-4 w-4 text-info" /> Purchase Info
                                  </h3>
                                  <div className="space-y-3">
                                       <div className="flex justify-between border-b pb-2 border-border/50">

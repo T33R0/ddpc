@@ -164,15 +164,57 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, defaultCategory
   }
 
   const handleSubmit = async (actionType: 'plan' | 'install') => {
-    if (!formData.partName) {
+    if (!formData.partName.trim()) {
       setError("Part Name is required")
       return
+    }
+
+    // Numeric validation — no negative values
+    const mileage = formData.installedMileage ? parseInt(formData.installedMileage, 10) : null
+    const cost = formData.purchaseCost ? parseFloat(formData.purchaseCost) : null
+    const lifespanMi = formData.customLifespanMiles ? parseInt(formData.customLifespanMiles, 10) : null
+    const lifespanMo = formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : null
+
+    if (mileage !== null && mileage < 0) {
+      setError("Installed mileage cannot be negative")
+      return
+    }
+    if (cost !== null && cost < 0) {
+      setError("Purchase cost cannot be negative")
+      return
+    }
+    if (lifespanMi !== null && lifespanMi <= 0) {
+      setError("Lifespan miles must be greater than zero")
+      return
+    }
+    if (lifespanMo !== null && lifespanMo <= 0) {
+      setError("Lifespan months must be greater than zero")
+      return
+    }
+
+    // Date validation — no future install dates for installed parts
+    if (actionType === 'install' && formData.installedDate) {
+      const installDate = new Date(formData.installedDate)
+      const today = new Date()
+      today.setHours(23, 59, 59, 999) // Allow today
+      if (installDate > today) {
+        setError("Install date cannot be in the future")
+        return
+      }
     }
 
     setLoading(true)
     setError(null)
 
     try {
+      // Merge acquisitionType into specs for persistence
+      const mergedSpecs = {
+        ...specs,
+        ...(formData.acquisitionType && formData.acquisitionType !== 'purchase'
+          ? { acquisition_type: formData.acquisitionType }
+          : {}),
+      }
+
       if (mode === 'kit' && actionType === 'install') {
         const result = await installComplexPart(
           vehicleId,
@@ -186,6 +228,7 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, defaultCategory
             category: formData.category || undefined,
             lifespanMiles: formData.customLifespanMiles ? parseInt(formData.customLifespanMiles, 10) : undefined,
             lifespanMonths: formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : undefined,
+            specs: Object.keys(mergedSpecs).length > 0 ? mergedSpecs : undefined,
           },
           childParts.map(p => ({
             name: p.name,
@@ -225,7 +268,7 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, defaultCategory
             customLifespanMonths: formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : undefined,
             category: formData.category || undefined,
             status: 'installed',
-            specs: specs,
+            specs: Object.keys(mergedSpecs).length > 0 ? mergedSpecs : undefined,
           })
 
           if ('error' in result) {
@@ -249,7 +292,7 @@ export const AddPartModal = ({ isOpen, onClose, slot, vehicleId, defaultCategory
             customLifespanMonths: formData.customLifespanMonths ? parseInt(formData.customLifespanMonths, 10) : undefined,
             category: formData.category || undefined,
             status,
-            specs,
+            specs: Object.keys(mergedSpecs).length > 0 ? mergedSpecs : undefined,
           })
 
           if ('error' in result) {
