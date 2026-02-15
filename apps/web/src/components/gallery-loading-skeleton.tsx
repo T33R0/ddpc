@@ -7,7 +7,7 @@ export function GalleryLoadingSkeleton() {
           className="animate-pulse"
         >
           <div
-            className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 flex flex-col gap-4 border border-white/30"
+            className="bg-background/50 backdrop-blur-lg rounded-2xl p-4 flex flex-col gap-4 border border-border"
           >
             {/* Garage count skeleton */}
             <div className="h-4 w-32 bg-muted rounded" />

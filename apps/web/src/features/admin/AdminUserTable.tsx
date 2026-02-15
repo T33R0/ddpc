@@ -332,7 +332,7 @@ export function AdminUserTable({
                 disabled={isPending}
                 className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
                   page === p
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-accent text-accent-foreground'
                     : 'text-foreground hover:bg-muted'
                 }`}
               >

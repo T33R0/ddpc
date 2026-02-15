@@ -638,8 +638,8 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                 aria-hidden="true"
                 className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none z-0"
             >
-                <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-                <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+                <div className="blur-[106px] h-56 bg-gradient-brand" />
+                <div className="blur-[106px] h-32 bg-gradient-to-r from-accent to-info" />
             </div>
 
             {/* Sticky Header */}
@@ -699,16 +699,16 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                             ${activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}
                         `}
                             >
-                                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-red-500' : ''}`} />
+                                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary' : ''}`} />
 
                                 {/* MODIFIED LINE BELOW: Text hidden on mobile, inline on small screens and up */}
                                 <span className="max-sm:hidden">{tab.label}</span>
 
-                                {tab.pro && <Badge className="hidden sm:inline-flex ml-1 h-3.5 text-[9px] px-1 py-0 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-bold">PRO</Badge>}
+                                {tab.pro && <Badge className="hidden sm:inline-flex ml-1 h-3.5 text-[9px] px-1 py-0 bg-gradient-brand-r text-black font-bold">PRO</Badge>}
 
                                 {/* Active Indicator */}
                                 {activeTab === tab.id && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                                 )}
                             </button>
                         ))}

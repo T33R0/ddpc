@@ -42,7 +42,7 @@ export function PartCard({ part, onPurchase, onAddToJob, className }: PartCardPr
 
                 <div className="flex justify-between items-center pt-1">
                     {part.purchase_url && (
-                        <a href={part.purchase_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                        <a href={part.purchase_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline flex items-center gap-1">
                             Vendor <ExternalLink className="w-3 h-3" />
                         </a>
                     )}

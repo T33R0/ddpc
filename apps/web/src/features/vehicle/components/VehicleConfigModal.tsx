@@ -179,7 +179,7 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                                                 </SelectItem>
                                                 <SelectItem value="PUBLIC">
                                                     <div className="flex items-center gap-2">
-                                                        <ExternalLink className="w-3 h-3 text-green-500" /> Public
+                                                        <ExternalLink className="w-3 h-3 text-success" /> Public
                                                     </div>
                                                 </SelectItem>
                                             </SelectContent>

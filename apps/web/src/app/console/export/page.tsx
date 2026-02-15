@@ -9,7 +9,7 @@ export default function Page() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 px-4 md:px-6">
+    <div className="min-h-screen bg-background text-foreground pt-24 px-4 md:px-6">
       <Button
         variant="ghost"
         className="mb-6 text-muted-foreground hover:text-foreground"

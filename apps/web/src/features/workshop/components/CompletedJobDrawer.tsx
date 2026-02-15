@@ -41,7 +41,7 @@ export function CompletedJobDrawer({ job, isOpen, onClose }: CompletedJobDrawerP
     <>
         <Drawer direction="right" open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DrawerPortal>
-            <DrawerOverlay className="fixed inset-0 bg-black/40" />
+            <DrawerOverlay className="fixed inset-0 bg-background/40" />
             <DrawerContent className="bg-background flex flex-col fixed bottom-0 right-0 h-full w-full sm:max-w-lg mt-0 border-l rounded-none shadow-xl outline-none z-50 overflow-hidden">
             
             {/* Header */}
@@ -50,7 +50,7 @@ export function CompletedJobDrawer({ job, isOpen, onClose }: CompletedJobDrawerP
                 <div className="space-y-1">
                     <DrawerTitle className="text-xl font-bold">{job.title}</DrawerTitle>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 capitalize">
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 capitalize">
                             {job.status}
                         </Badge>
                     <span>{job.date_completed ? format(new Date(job.date_completed), 'PPP') : 'Date unknown'}</span>

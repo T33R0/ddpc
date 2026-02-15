@@ -15,7 +15,7 @@ export function DDSRPopup({ isOpen, onClose }: DDSRPopupProps) {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 bg-gray-800 text-white p-4 rounded-lg shadow-lg w-80">
+    <div className="fixed bottom-20 left-4 bg-popover text-popover-foreground p-4 rounded-lg shadow-lg w-80">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold">ddsr</h3>
         <Button onClick={onClose} variant="ghost" size="sm">

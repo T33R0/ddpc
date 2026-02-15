@@ -66,7 +66,7 @@ export function ServiceHistoryTable({ serviceHistory }: ServiceHistoryTableProps
                 </div>
               </div>
               {service.cost && (
-                <div className="flex items-center gap-1 text-green-400 font-medium">
+                <div className="flex items-center gap-1 text-success font-medium">
                   <DollarSign className="h-4 w-4" />
                   ${service.cost.toLocaleString()}
                 </div>

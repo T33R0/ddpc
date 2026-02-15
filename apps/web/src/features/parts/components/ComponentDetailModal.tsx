@@ -221,8 +221,8 @@ export const ComponentDetailModal = ({
                             </Button>
                         </>
                      ) : (
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
-                            Cancel Edit
+                        <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9">
+                            <X className="h-4 w-4" />
                         </Button>
                      )}
                 </div>

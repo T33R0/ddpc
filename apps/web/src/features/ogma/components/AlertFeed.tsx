@@ -30,7 +30,7 @@ export function AlertFeed({ alerts }: AlertFeedProps) {
                   ) : alert.severity === 'warning' ? (
                     <AlertTriangle className="h-5 w-5 text-warning" />
                   ) : (
-                    <Info className="h-5 w-5 text-blue-500" />
+                    <Info className="h-5 w-5 text-info" />
                   )}
                 </div>
                 <div className="flex-1 space-y-1">

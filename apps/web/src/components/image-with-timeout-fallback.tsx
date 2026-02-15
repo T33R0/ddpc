@@ -50,8 +50,8 @@ export function ImageWithTimeoutFallback({
                 />
                 {showMissingText && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
-                            <span className="text-white text-lg font-semibold">Image Missing</span>
+                        <div className="bg-background/70 backdrop-blur-sm px-4 py-2 rounded-lg border border-border">
+                            <span className="text-foreground text-lg font-semibold">Image Missing</span>
                         </div>
                     </div>
                 )}

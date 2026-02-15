@@ -54,7 +54,7 @@ export function PricingDropdown() {
             <div className="space-y-1">
               {plan.features.slice(0, 3).map((feature, featureIndex) => (
                 <div key={featureIndex} className="flex items-start gap-2">
-                  <Check className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
+                  <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
                   <span className="text-xs leading-relaxed text-muted-foreground">{feature}</span>
                 </div>
               ))}
@@ -92,8 +92,8 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none"
       >
-        <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-        <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+        <div className="blur-[106px] h-56 bg-gradient-brand" />
+        <div className="blur-[106px] h-32 bg-gradient-brand-r" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -111,16 +111,16 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
             <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'} transition-colors`}>Monthly</span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 bg-secondary`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 bg-secondary`}
             >
               <span
                 className={`${isAnnual ? 'translate-x-6' : 'translate-x-1'
-                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  } inline-block h-4 w-4 transform rounded-full bg-foreground transition-transform`}
               />
             </button>
             <div className="relative flex flex-col items-center">
               {isAnnual && (
-                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-green-500 text-[10px] font-bold whitespace-nowrap animate-in fade-in slide-in-from-bottom-1">
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-success text-[10px] font-bold whitespace-nowrap animate-in fade-in slide-in-from-bottom-1">
                   Save 17%
                 </span>
               )}
@@ -143,45 +143,45 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
               <div
                 key={plan.id}
                 className={`relative bg-card rounded-3xl p-6 border-2 transition-all duration-300 flex flex-col h-full ${plan.popular
-                  ? 'border-red-500/50 shadow-lg shadow-red-900/10 z-10 md:-mt-4 md:mb-4'
+                  ? 'border-primary/50 shadow-lg shadow-primary/10 z-10 md:-mt-4 md:mb-4'
                   : plan.premium
-                    ? 'border-yellow-500/30 bg-gradient-to-b from-yellow-950/10 to-transparent shadow-lg shadow-yellow-900/5'
+                    ? 'border-accent/30 bg-gradient-to-b from-accent/10 to-transparent shadow-lg shadow-accent/5'
                     : 'border-border'
                   }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                     Most Popular
                   </div>
                 )}
 
                 {plan.premium && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                     Limited Release
                   </div>
                 )}
 
                 <div className="text-center mb-6">
-                  <h3 className={`text-2xl font-bold mb-1 ${plan.premium ? 'text-yellow-500' : 'text-foreground'}`}>{plan.name}</h3>
+                  <h3 className={`text-2xl font-bold mb-1 ${plan.premium ? 'text-accent' : 'text-foreground'}`}>{plan.name}</h3>
                   <div className="text-sm font-medium text-muted-foreground mb-4">{plan.header}</div>
 
                   <div className="flex flex-col items-center justify-center mb-2">
                     <div className="flex items-baseline gap-1">
-                      <span className={`text-4xl font-bold ${plan.premium ? 'text-yellow-500' : 'text-foreground'}`}>{price}</span>
+                      <span className={`text-4xl font-bold ${plan.premium ? 'text-accent' : 'text-foreground'}`}>{price}</span>
                       <span className="text-muted-foreground text-sm">/ {period}</span>
                     </div>
                     {billingNote && (
-                      <span className="text-xs text-green-500 font-medium mt-1">{billingNote}</span>
+                      <span className="text-xs text-success font-medium mt-1">{billingNote}</span>
                     )}
                   </div>
 
                   {/* Spots Remaining for Vanguard */}
                   {plan.premium && typeof plan.spotsRemaining === 'number' && (
-                    <div className="mt-2 text-xs font-semibold text-yellow-500 bg-yellow-500/10 py-1 px-3 rounded-full inline-block">
+                    <div className="mt-2 text-xs font-semibold text-accent bg-accent/10 py-1 px-3 rounded-full inline-block">
                       {plan.spotsRemaining} / {plan.totalSpots} Spots Remaining
-                      <div className="w-full bg-yellow-900/30 h-1 mt-1 rounded-full overflow-hidden">
+                      <div className="w-full bg-accent/20 h-1 mt-1 rounded-full overflow-hidden">
                         <div
-                          className="bg-yellow-500 h-full rounded-full"
+                          className="bg-accent h-full rounded-full"
                           style={{ width: `${(plan.spotsRemaining / (plan.totalSpots || 100)) * 100}%` }}
                         />
                       </div>
@@ -194,11 +194,11 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
                     const [title, description] = feature.includes(':') ? feature.split(':') : [feature, ''];
                     return (
                       <li key={featureIndex} className="flex items-start gap-3 text-left">
-                        <Check className={`w-4 h-4 flex-shrink-0 mt-1 ${plan.premium ? 'text-yellow-500' : 'text-green-500'}`} />
+                        <Check className={`w-4 h-4 flex-shrink-0 mt-1 ${plan.premium ? 'text-accent' : 'text-success'}`} />
                         <div className="text-sm leading-snug text-muted-foreground">
                           {description ? (
                             <>
-                              <span className={`font-semibold ${plan.premium ? 'text-yellow-500/90' : 'text-foreground'}`}>{title}:</span>{description}
+                              <span className={`font-semibold ${plan.premium ? 'text-accent' : 'text-foreground'}`}>{title}:</span>{description}
                             </>
                           ) : (
                             feature
@@ -222,9 +222,9 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
                       href={plan.href}
                       onClick={onPlanCtaClick ? handlePlanCtaClick(plan.id) : undefined}
                       className={`block w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-center ${plan.popular
-                        ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-red-600/25'
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-primary/25'
                         : plan.premium
-                          ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-500 hover:to-yellow-600 shadow-lg hover:shadow-yellow-600/25'
+                          ? 'bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg hover:shadow-accent/25'
                           : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                         }`}
                     >

@@ -113,7 +113,7 @@ export function OrderModal({ isOpen, onClose, vehicleId, onSuccess, initialData,
                     </ModalTitle>
                 </ModalHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4 py-2">
+                <form onSubmit={handleSubmit} className="space-y-4 px-6 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="vendor">Vendor *</Label>

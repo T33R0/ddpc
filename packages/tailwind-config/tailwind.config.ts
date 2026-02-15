@@ -73,8 +73,13 @@ const config: Omit<Config, "content"> = {
           '2xl': '1400px',
         },
       },
+      gradientColorStops: {
+        'gradient-from': "hsl(var(--gradient-from))",
+        'gradient-to': "hsl(var(--gradient-to))",
+      },
       backgroundImage: {
-        'gradient-orbital': 'linear-gradient(to bottom right, theme("colors.indigo.500"), theme("colors.blue.500"), theme("colors.teal.500"))',
+        'gradient-brand': 'linear-gradient(to bottom right, hsl(var(--gradient-from)), hsl(var(--gradient-to)))',
+        'gradient-brand-r': 'linear-gradient(to right, hsl(var(--gradient-from)), hsl(var(--gradient-to)))',
       },
       boxShadow: {
         'orbital': '0 0 15px rgba(255, 255, 255, 0.1)',

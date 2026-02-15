@@ -119,17 +119,44 @@ export async function markPartArrived(inventoryId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Unauthorized' };
 
+    // Fetch the part first to get its order_id
+    const { data: part } = await supabase
+        .from('inventory')
+        .select('order_id')
+        .eq('id', inventoryId)
+        .eq('user_id', user.id)
+        .single();
+
     const { error } = await supabase
         .from('inventory')
-        .update({ 
+        .update({
             status: 'in_stock',
-            tracking_number: null, // Clear tracking number as requested
-            carrier: null // Clear carrier as well to keep it clean
+            tracking_number: null,
+            carrier: null
         })
         .eq('id', inventoryId)
         .eq('user_id', user.id);
 
     if (error) return { error: error.message };
+
+    // If part was linked to an order, check if the order is now empty
+    if (part?.order_id) {
+        const { data: remainingParts } = await supabase
+            .from('inventory')
+            .select('id')
+            .eq('order_id', part.order_id)
+            .in('status', ['ordered', 'wishlist'])
+            .limit(1);
+
+        // No more pending parts — mark the order as delivered
+        if (!remainingParts || remainingParts.length === 0) {
+            await supabase
+                .from('orders')
+                .update({ status: 'delivered' })
+                .eq('id', part.order_id);
+        }
+    }
+
     revalidatePath('/vehicle');
     return { success: true };
 }

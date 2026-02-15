@@ -770,7 +770,7 @@ export function JobModal({ isOpen, onClose, job, vehicleId, wishlist, inventory,
                     <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                         <div className="bg-card border shadow-lg rounded-xl p-6 max-w-sm w-full space-y-4 animate-in fade-in zoom-in-95">
                             <div className="text-center space-y-2">
-                                <div className="mx-auto w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+                                <div className="mx-auto w-12 h-12 bg-warning/20 text-warning rounded-full flex items-center justify-center">
                                     <ListTodo className="w-6 h-6" />
                                 </div>
                                 <h3 className="font-semibold text-lg">Ready to Plan?</h3>

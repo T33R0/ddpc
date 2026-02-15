@@ -194,20 +194,20 @@ function VehicleGallery({
                 showDragHandle={!!onManualReorder} // Show handle only if reordering is allowed
                 footer={
                   // Updated Footer: Odometer | Avg MPG | # Records
-                  <div className="flex items-center justify-between w-full text-xs font-medium text-white/90">
+                  <div className="flex items-center justify-between w-full text-xs font-medium text-foreground/90">
                     <div className="flex items-center gap-1">
                       <span>{vehicle.odometer ? vehicle.odometer.toLocaleString() : '—'}</span>
-                      <span className="text-white/60 font-normal">mi</span>
+                      <span className="text-foreground/60 font-normal">mi</span>
                     </div>
-                    <div className="h-3 w-px bg-white/20 mx-2" />
+                    <div className="h-3 w-px bg-foreground/20 mx-2" />
                     <div className="flex items-center gap-1">
                       <span>{vehicle.avg_mpg ? vehicle.avg_mpg.toFixed(1) : '—'}</span>
-                      <span className="text-white/60 font-normal">mpg</span>
+                      <span className="text-foreground/60 font-normal">mpg</span>
                     </div>
-                    <div className="h-3 w-px bg-white/20 mx-2" />
+                    <div className="h-3 w-px bg-foreground/20 mx-2" />
                     <div className="flex items-center gap-1">
                       <span>{vehicle.record_count || 0}</span>
-                      <span className="text-white/60 font-normal">recs</span>
+                      <span className="text-foreground/60 font-normal">recs</span>
                     </div>
                   </div>
                 }

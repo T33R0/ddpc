@@ -312,7 +312,7 @@ const VehicleDetailsModal = ({
                         e.stopPropagation();
                         onNavigate?.('prev');
                       }}
-                      className="pointer-events-auto p-3 bg-black/60 text-white rounded-full backdrop-blur-md shadow-lg active:scale-95 transition-transform"
+                      className="pointer-events-auto p-3 bg-background/80 text-foreground rounded-full backdrop-blur-md shadow-lg active:scale-95 transition-transform"
                       aria-label="Previous vehicle"
                     >
                       <ChevronLeft className="w-6 h-6" />
@@ -325,7 +325,7 @@ const VehicleDetailsModal = ({
                         e.stopPropagation();
                         onNavigate?.('next');
                       }}
-                      className="pointer-events-auto p-3 bg-black/60 text-white rounded-full backdrop-blur-md shadow-lg active:scale-95 transition-transform"
+                      className="pointer-events-auto p-3 bg-background/80 text-foreground rounded-full backdrop-blur-md shadow-lg active:scale-95 transition-transform"
                       aria-label="Next vehicle"
                     >
                       <ChevronRight className="w-6 h-6" />

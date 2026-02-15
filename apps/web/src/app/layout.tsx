@@ -81,8 +81,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     aria-hidden="true"
                     className="fixed inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none z-0"
                   >
-                    <div className="blur-[100px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-                    <div className="blur-[100px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+                    <div className="blur-[100px] h-56 bg-gradient-brand" />
+                    <div className="blur-[100px] h-32 bg-gradient-to-r from-accent to-info" />
                   </div>
                   <HeaderWithAuth />
                   <Toaster />

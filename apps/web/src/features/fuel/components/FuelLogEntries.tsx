@@ -87,7 +87,7 @@ export function FuelLogEntries({ fuelEntries }: FuelLogEntriesProps) {
                       })}
                     </div>
                     {entry.mpg && (
-                      <div className="px-2 py-1 bg-green-500/20 rounded text-xs text-green-500 font-medium">
+                      <div className="px-2 py-1 bg-success/20 rounded text-xs text-success font-medium">
                         {entry.mpg.toFixed(1)} MPG
                       </div>
                     )}

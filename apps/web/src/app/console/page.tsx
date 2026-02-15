@@ -70,8 +70,8 @@ export default function ConsolePage() {
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none"
       >
-        <div className="blur-[106px] h-56 bg-gradient-to-br from-red-500 to-purple-400" />
-        <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300" />
+        <div className="blur-[106px] h-56 bg-gradient-brand" />
+        <div className="blur-[106px] h-32 bg-gradient-to-r from-info to-primary" />
       </div>
 
       <div className="relative container px-4 md:px-6 pt-24">
@@ -132,9 +132,9 @@ export default function ConsolePage() {
               ) : filteredVehicles.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="text-center">
-                    <Car className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <div className="text-gray-400 text-lg mb-2">No vehicles found</div>
-                    <div className="text-gray-500 text-sm">Add your first vehicle to get started</div>
+                    <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <div className="text-muted-foreground text-lg mb-2">No vehicles found</div>
+                    <div className="text-muted-foreground text-sm">Add your first vehicle to get started</div>
                   </div>
                 </div>
               ) : (
@@ -209,7 +209,7 @@ export default function ConsolePage() {
                 <h3 className="text-lg font-semibold text-foreground mb-4">Priority Alerts &amp; Reminders</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-destructive/10 text-destructive">
                       <AlertTriangle className="w-4 h-4" />
                     </div>
                     <div>
@@ -218,7 +218,7 @@ export default function ConsolePage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-warning/10 text-warning">
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div>
@@ -227,7 +227,7 @@ export default function ConsolePage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-yellow-500/10 text-yellow-500">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-warning/10 text-warning">
                       <FileText className="w-4 h-4" />
                     </div>
                     <div>

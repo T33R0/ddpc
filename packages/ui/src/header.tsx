@@ -90,8 +90,8 @@ export function Header({
         onEmailSignIn={onEmailSignIn}
       />
 
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-neutral-800">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between text-white">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between text-foreground">
           <div className="flex items-center gap-4">
             <Link href={buildHref('/hub')}>
               <Logo />
@@ -99,17 +99,17 @@ export function Header({
           </div>
 
           <nav className="flex items-center gap-8">
-            <Link href={buildHref('/explore')} className="text-white hover:text-gray-300 transition-colors">
+            <Link href={buildHref('/explore')} className="text-foreground/80 hover:text-foreground transition-colors">
               Explore
             </Link>
             {user ? (
               <>
-                <Link href={buildHref('/garage')} className="text-white hover:text-gray-300 transition-colors">
+                <Link href={buildHref('/garage')} className="text-foreground/80 hover:text-foreground transition-colors">
                   Garage
                 </Link>
               </>
             ) : (
-              <Link href="/pricing" className="text-white hover:text-gray-300 transition-colors">
+              <Link href="/pricing" className="text-foreground/80 hover:text-foreground transition-colors">
                 Pricing
               </Link>
             )}

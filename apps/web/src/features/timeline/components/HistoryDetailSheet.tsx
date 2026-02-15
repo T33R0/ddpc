@@ -24,7 +24,7 @@ export function HistoryDetailSheet({ event, isOpen, onClose }: HistoryDetailShee
   return (
     <Drawer direction="right" open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerPortal>
-        <DrawerOverlay className="fixed inset-0 bg-black/40" />
+        <DrawerOverlay className="fixed inset-0 bg-background/40" />
         <DrawerContent className="bg-background flex flex-col fixed bottom-0 right-0 h-full w-full sm:max-w-lg mt-0 border-l rounded-none shadow-xl outline-none z-50 overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             {event && (

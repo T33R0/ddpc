@@ -16,11 +16,11 @@ export default function NotFound() {
       />
 
       {/* Dark Overlay */}
-      <div className="absolute inset-0 z-10 bg-black/70" />
+      <div className="absolute inset-0 z-10 bg-background/70" />
 
       {/* Content */}
       <div className="relative z-20 flex flex-col items-center text-center space-y-6 px-4">
-        <h1 className="text-8xl font-bold text-white tracking-tighter">404</h1>
+        <h1 className="text-8xl font-bold text-foreground tracking-tighter">404</h1>
         <div className="space-y-2">
           <h2 className="text-2xl font-medium text-foreground/80">Page Not Found</h2>
           <p className="text-muted-foreground max-w-md">

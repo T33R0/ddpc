@@ -252,9 +252,10 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                     }
                 >
                     <div className="space-y-3">
-                        {/* 1. Render Active Orders */}
+                        {/* 1. Render Active Orders (skip empty ones where all parts have arrived) */}
                         {(data?.orders || []).filter(o => o.status === 'ordered' || o.status === 'shipped').map(order => {
                              const orderParts = wishlist.filter(p => p.order_id === order.id);
+                             if (orderParts.length === 0) return null; // Skip empty orders
                              return (
                                 <div key={order.id} className="border border-primary/20 bg-primary/5 rounded-lg p-2 space-y-2">
                                     <div className="flex justify-between items-center text-xs text-primary font-medium px-1">

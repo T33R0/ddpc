@@ -28,7 +28,7 @@ export function FuelStatsCard({ stats }: FuelStatsCardProps) {
           {/* Factory MPG */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Factory EPA MPG</p>
-            <p className="text-2xl font-bold text-blue-500">
+            <p className="text-2xl font-bold text-info">
               {stats.factoryMpg ? formatNumber(stats.factoryMpg, 0) : 'N/A'}
             </p>
           </div>
@@ -36,7 +36,7 @@ export function FuelStatsCard({ stats }: FuelStatsCardProps) {
           {/* Average MPG */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Your Average MPG</p>
-            <p className="text-2xl font-bold text-green-500">
+            <p className="text-2xl font-bold text-success">
               {stats.averageMpg ? formatNumber(stats.averageMpg) : 'N/A'}
             </p>
           </div>
@@ -48,9 +48,9 @@ export function FuelStatsCard({ stats }: FuelStatsCardProps) {
             <p className="text-sm text-muted-foreground">vs Factory Rating</p>
             <p className={`text-lg font-semibold ${
               stats.mpgDifference > 0
-                ? 'text-green-500'
+                ? 'text-success'
                 : stats.mpgDifference < 0
-                ? 'text-red-500'
+                ? 'text-destructive'
                 : 'text-muted-foreground'
             }`}>
               {stats.mpgDifference > 0 ? '+' : ''}{formatNumber(stats.mpgDifference)} MPG
@@ -70,7 +70,7 @@ export function FuelStatsCard({ stats }: FuelStatsCardProps) {
           {/* Cost per Mile */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Cost per Mile</p>
-            <p className="text-xl font-bold text-orange-500">
+            <p className="text-xl font-bold text-warning">
               {stats.fuelCostPerMile ? formatCurrency(stats.fuelCostPerMile) : 'N/A'}
             </p>
           </div>

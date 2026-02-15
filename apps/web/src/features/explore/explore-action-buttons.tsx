@@ -63,7 +63,7 @@ export function ExploreActionButtons({
         {filters.length > 0 && (
           <button
             onClick={handleReset}
-            className="text-red-500 hover:text-red-400 transition-colors text-sm font-medium"
+            className="text-destructive hover:text-destructive/80 transition-colors text-sm font-medium"
           >
             Reset Filters
           </button>

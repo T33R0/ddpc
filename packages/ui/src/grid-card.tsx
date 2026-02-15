@@ -35,13 +35,13 @@ export function GridCard({
           <div
             className={cn(
               'absolute -inset-[10%] opacity-0 blur-[50px] md:transition-opacity duration-150 md:group-hover:opacity-10',
-              'bg-[conic-gradient(#F35066_0deg,#F35066_117deg,#9071F9_180deg,#5182FC_240deg,#F35066_360deg)]'
+              'bg-[conic-gradient(hsl(var(--primary))_0deg,hsl(var(--primary))_117deg,hsl(var(--chart-3))_180deg,hsl(var(--accent))_240deg,hsl(var(--primary))_360deg)]'
             )}
           />
         </div>
         <div className="relative z-10">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <p className="mt-2 text-sm text-slate-400">{children}</p>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <p className="mt-2 text-sm text-muted-foreground">{children}</p>
         </div>
       </div>
     </Link>

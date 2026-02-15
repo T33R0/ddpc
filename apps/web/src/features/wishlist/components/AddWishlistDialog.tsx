@@ -169,7 +169,7 @@ export function AddWishlistDialog({ isOpen, onClose, vehicleId, onSuccess, initi
             <ModalDescription>
               {initialData ? 'Update item details.' : 'Save a part or service item for later.'}
               {initialData?.order_id && (
-                <div className="flex items-center gap-1.5 mt-2 p-1.5 bg-blue-500/10 text-blue-500 rounded text-xs font-medium w-fit">
+                <div className="flex items-center gap-1.5 mt-2 p-1.5 bg-info/10 text-info rounded text-xs font-medium w-fit">
                     <PackageOpen className="w-3.5 h-3.5" />
                     <span>Linked to Order</span>
                 </div>
