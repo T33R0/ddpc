@@ -88,7 +88,7 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
     const handleStartJob = (id: string) => {
         startTransition(async () => {
             const res = await startJob(id);
-            if (res.error) toast.error(res.error);
+            if ('error' in res) toast.error(res.error || 'Failed to start job');
             else {
                 toast.success("Job started!");
                 refreshData();

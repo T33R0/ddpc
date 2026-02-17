@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui/table';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '@repo/ui/auth-context';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/components/auth/auth-context';
 import { DollarSign, TrendingUp, Car, BarChart3, Download } from 'lucide-react';
 
 interface VehicleFinancials {
@@ -45,6 +45,7 @@ export function FinancialsDashboard() {
         setLoading(true);
 
         // Fetch vehicle data with financial information
+        const supabase = createClient();
         const { data: vehicles, error: vehicleError } = await supabase
           .from('user_vehicle')
           .select('id, name, nickname, ymmt, odometer')

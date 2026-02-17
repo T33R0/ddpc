@@ -11,6 +11,8 @@ import { Alert, AlertDescription, AlertTitle } from '@repo/ui/alert';
 import { STANDARD_COMPONENTS, PartCategory } from '@/lib/constants/standard-components';
 import { Button } from '@repo/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/select';
+import { Separator } from '@repo/ui/separator';
+import { FluidsList } from '@/features/fluids/components/FluidsList';
 
 // Categories Configuration
 const CATEGORIES: { label: string; id: PartCategory }[] = [
@@ -315,6 +317,10 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
 
 
       </section>
+
+      {/* Fluids Section — Phase 3 */}
+      <Separator className="my-4" />
+      <FluidsList vehicleId={vehicleId} />
 
       {/* Modals */}
       <AddPartModal

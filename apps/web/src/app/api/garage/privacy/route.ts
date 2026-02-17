@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextRequest } from 'next/server'
+import { createClient } from '@/lib/supabase/client'
+import { apiSuccess, unauthorized, badRequest, notFound, forbidden, serverError } from '@/lib/api-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,27 +8,20 @@ export async function POST(request: NextRequest) {
     const { garageId, privacy } = body
 
     if (!garageId || !privacy) {
-      return NextResponse.json(
-        { error: 'Missing required fields: garageId and privacy' },
-        { status: 400 }
-      )
+      return badRequest('Missing required fields: garageId and privacy')
     }
 
     if (!['PRIVATE', 'PUBLIC'].includes(privacy)) {
-      return NextResponse.json(
-        { error: 'Invalid privacy setting' },
-        { status: 400 }
-      )
+      return badRequest('Invalid privacy setting')
     }
+
+    const supabase = createClient()
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return unauthorized()
     }
 
     // Verify the garage belongs to the current user
@@ -38,17 +32,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (garageError || !garageData) {
-      return NextResponse.json(
-        { error: 'Garage not found' },
-        { status: 404 }
-      )
+      return notFound('Garage not found')
     }
 
     if (garageData.owner_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized to modify this garage' },
-        { status: 403 }
-      )
+      return forbidden('Unauthorized to modify this garage')
     }
 
     // Update garage privacy
@@ -59,22 +47,16 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating garage privacy:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update garage privacy', details: updateError.message },
-        { status: 500 }
-      )
+      return serverError()
     }
 
-    return NextResponse.json({
+    return apiSuccess({
       success: true,
       message: 'Garage privacy updated successfully'
     })
 
   } catch (error) {
     console.error('Unexpected error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return serverError()
   }
 }

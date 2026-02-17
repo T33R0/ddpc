@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
 import { Plus, RotateCcw, Copy, GripVertical } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { ModStep } from './ModStep'
 import { ModStepData } from '../types'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from '@repo/ui/modal'
@@ -88,6 +88,7 @@ export function ModPlanBuilder({
 
     setIsLoading(true)
     try {
+      const supabase = createClient()
       const { data, error } = await supabase
         .from('mod_steps')
         .select('*')

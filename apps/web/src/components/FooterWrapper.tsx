@@ -1,6 +1,6 @@
 'use client';
 
-import { Footer } from '@repo/ui/footer';
+import { Footer } from './layout/footer';
 import { usePathname } from 'next/navigation';
 import { useReportModal } from '../lib/report-modal-context';
 

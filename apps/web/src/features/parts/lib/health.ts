@@ -9,6 +9,7 @@ export type UnknownReason =
 export interface HealthResult {
   status: HealthStatus;
   percentageUsed: number;
+  reorderRecommended: boolean;
   unknownReason?: UnknownReason;
   mileage?: {
     used: number; // miles
@@ -36,7 +37,7 @@ export function calculateHealth(
   // Rule: If "the user leaves these blank, simply hide the health bar".
   // Interpreted as: If we have NO valid lifespan data at all (or 0), return Unknown.
   if ((!lifespanMiles || lifespanMiles <= 0) && (!lifespanMonths || lifespanMonths <= 0)) {
-    return { status: 'Unknown', percentageUsed: 0, unknownReason: 'no_lifespan' };
+    return { status: 'Unknown', percentageUsed: 0, reorderRecommended: false, unknownReason: 'no_lifespan' };
   }
 
   // Vars for detailed breakdown
@@ -95,7 +96,7 @@ export function calculateHealth(
     finalUsagePct = timeUsage;
   } else {
     // Had lifespan definitions but missing installed data (date + mileage) to calc against
-    return { status: 'Unknown', percentageUsed: 0, unknownReason: 'no_install_data' };
+    return { status: 'Unknown', percentageUsed: 0, reorderRecommended: false, unknownReason: 'no_install_data' };
   }
 
   // Determine Status based on Remaining Health (100 - Usage)
@@ -108,9 +109,13 @@ export function calculateHealth(
     status = 'Warning';
   }
 
+  // Recommend reorder when health drops below 30% (Warning or Critical)
+  const reorderRecommended = remainingHealth <= 30;
+
   return {
     status,
     percentageUsed: finalUsagePct,
+    reorderRecommended,
     mileage: mileageData,
     time: timeData
   };

@@ -12,7 +12,6 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/assets": "*",
     "@repo/types": "*",
     "@repo/ui": "*",
     "@vercel/speed-insights": "*",

@@ -36,7 +36,7 @@ export interface VehicleInstalledComponent {
   purchased_at: string | null;
   tracking_number?: string | null;
   carrier?: string | null;
-  status: 'installed' | 'planned' | 'wishlist' | 'in_stock' | 'ordered'; // expanded status
+  status: 'installed' | 'planned' | 'wishlist' | 'in_stock' | 'ordered' | 'replaced'; // expanded status
 
   master_part_id?: string; // Foreign Key to master_parts
   master_part?: MasterPart; // Joined
@@ -52,6 +52,16 @@ export interface VehicleInstalledComponent {
   inventory_source_id?: string | null;
   visibility?: 'public' | 'hardware' | 'history_only';
   hardware?: VehicleInstalledComponent[];
+
+  // Replacement tracking
+  install_batch_id?: string | null;
+  replacement_reason?: 'wear' | 'upgrade' | 'failure' | 'scheduled' | null;
+  replaced_part_id?: string | null;
+  replaced_part?: VehicleInstalledComponent | null;
+  is_reusable?: boolean;
+
+  // Inspection link
+  inspection_finding_id?: string | null;
 }
 
 export interface Order {

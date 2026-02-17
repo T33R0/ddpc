@@ -1,6 +1,6 @@
 'use client';
 
-import { Header } from '@repo/ui/header';
+import { Header } from './layout/header';
 import { usePathname } from 'next/navigation';
 
 import { useAuth } from '../lib/auth';

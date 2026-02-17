@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CommunityGallery } from "../../features/community/community-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
 import type { VehicleSummary } from "@repo/types";
-import { AuthProvider } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
+import { AuthProvider } from '@/components/auth/auth-context';
+import { createClient } from '@/lib/supabase/client';
 import { Search, X, Wrench } from 'lucide-react';
 import { Input } from '@repo/ui/input';
 import { useSearch } from '../../lib/hooks/useSearch';
@@ -186,6 +186,7 @@ function CommunityContent() {
 }
 
 export default function Community() {
+  const supabase = createClient();
   return (
     <AuthProvider supabase={supabase}>
       <CommunityContent />

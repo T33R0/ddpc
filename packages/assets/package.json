@@ -1,5 +1,6 @@
 {
   "name": "@repo/assets",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "description": "DEPRECATED — images served from /public/branding/. This package can be deleted once removed from package-lock.json."
 }

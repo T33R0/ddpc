@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pricing } from '@repo/ui/landing';
+import { Pricing } from '@/components/landing';
 import LandingLayout from '../landing-layout';
-import { AuthModal } from '@repo/ui/auth-modal';
+import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '../../lib/auth';
 
 export default function PricingPage() {

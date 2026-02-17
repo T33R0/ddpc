@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './auth';
-import { supabase } from './supabase';
 import { updateUserTheme, getUserTheme } from '@/features/user/actions';
 
 export type Theme = 'light' | 'dark' | 'auto';

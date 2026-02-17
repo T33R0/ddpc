@@ -4,13 +4,13 @@ import { useAuth } from '../../lib/auth';
 import { useTheme } from '../../lib/theme-context';
 import { Button } from '@repo/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
-import { Pricing, PRICING_PLANS } from '@repo/ui/landing';
+import { Pricing, PRICING_PLANS } from '@/components/landing';
 import { Input } from '@repo/ui/input';
 import { Label } from '@repo/ui/label';
 import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
 import { Switch } from '@repo/ui/switch';
-import { AuthModal } from '@repo/ui/auth-modal';
+import { AuthModal } from '@/components/auth/auth-modal';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -35,7 +35,7 @@ import {
   X
 } from 'lucide-react';
 import { User as UserType, SkillLevel, UserTool } from '@repo/types';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { stripUsernamePrefixFromPathname, toUsernameSlug } from '../../lib/user-routing';
 
 type TabType = 'profile' | 'security' | 'billing' | 'account' | 'theme' | 'workshop';
@@ -89,6 +89,7 @@ export default function AccountPage() {
     if (!session?.access_token) return;
 
     try {
+      const supabase = createClient();
       // Fetch active channels
       const { data: channels, error: channelsError } = await supabase
         .from('email_channels')
@@ -149,6 +150,7 @@ export default function AccountPage() {
         return data.user;
       } else if (response.status === 401 && retry) {
         // Attempt to refresh session and retry once
+        const supabase = createClient();
         const { data: { session: newSession }, error } = await supabase.auth.refreshSession();
         if (error || !newSession?.access_token) {
           console.error('Session refresh failed:', error);
@@ -209,6 +211,7 @@ export default function AccountPage() {
     if (authUser && session?.access_token) {
       fetchUserProfile();
       // Fetch workshop preferences
+      const supabase = createClient();
       supabase
         .from('user_preferences')
         .select('skill_level, tool_inventory')
@@ -382,7 +385,8 @@ export default function AccountPage() {
       const usernameSlug = toUsernameSlug(normalizedUsername) ?? normalizedUsername.toLowerCase();
 
       try {
-        const { error: metadataError } = await supabase.auth.updateUser({
+        const supabase = createClient();
+      const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             username: usernameSlug,
             preferred_username: normalizedUsername,
@@ -522,14 +526,14 @@ export default function AccountPage() {
     }
   };
 
-  const handlePreferenceToggle = async (channelId: string, currentState: boolean) => {
-    // Optimistic update
-    const newState = !currentState;
+  const handlePreferenceToggle = async (channelId: string, newState: boolean) => {
+    // Optimistic update — newState comes directly from onCheckedChange
     setUserPreferences(prev => ({ ...prev, [channelId]: newState }));
 
     if (!session?.access_token || !authUser) return;
 
     try {
+      const supabase = createClient();
       const { error } = await supabase
         .from('user_email_preferences')
         .upsert({
@@ -547,7 +551,7 @@ export default function AccountPage() {
       console.error('Error updating preference:', error);
       toast.error('Failed to update preference');
       // Revert on error
-      setUserPreferences(prev => ({ ...prev, [channelId]: currentState }));
+      setUserPreferences(prev => ({ ...prev, [channelId]: !newState }));
     }
   };
 
@@ -1614,6 +1618,7 @@ export default function AccountPage() {
                       if (!session?.access_token || !authUser) return;
                       setIsLoadingWorkshop(true);
                       try {
+                        const supabase = createClient();
                         const { error } = await supabase
                           .from('user_preferences')
                           .upsert({

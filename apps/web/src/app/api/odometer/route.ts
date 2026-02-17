@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanForUser, requireFeature } from '@/lib/plan-utils';
 import { validateAndRecordOdometerReading } from '@/lib/odometer-service';
 import { z } from 'zod';
-import type { UpgradeRequiredError } from '@repo/types';
+import { apiSuccess, unauthorized, badRequest, notFound, serverError } from '@/lib/api-utils';
 
 const updateOdometerSchema = z.object({
   vehicleId: z.string(),
@@ -17,27 +16,14 @@ export async function PATCH(request: NextRequest) {
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user tier
-    const tier = await getPlanForUser(user.id);
-
-    // Check if user has maintenance scheduling feature (T1+)
-    if (!requireFeature(tier, 'maintenance_scheduling')) {
-      const error: UpgradeRequiredError = {
-        code: 'UPGRADE_REQUIRED',
-        targetTier: 'T1',
-        message: 'Odometer updates require a paid plan'
-      };
-      return NextResponse.json(error, { status: 403 });
+      return unauthorized();
     }
 
     // Parse request body
     const body = await request.json();
     const validation = updateOdometerSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return badRequest('Invalid request body');
     }
 
     const { vehicleId, odometer } = validation.data;
@@ -51,7 +37,7 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (vehicleError || !vehicle) {
-      return NextResponse.json({ error: 'Vehicle not found or access denied' }, { status: 404 });
+      return notFound('Vehicle not found or access denied');
     }
 
     // Record the odometer reading in the log
@@ -63,10 +49,7 @@ export async function PATCH(request: NextRequest) {
     );
 
     if (!validationResult.success) {
-      return NextResponse.json({
-        error: validationResult.error,
-        code: validationResult.code
-      }, { status: 400 });
+      return badRequest(validationResult.error ?? 'Validation failed');
     }
 
     // Update the vehicle's current odometer value
@@ -77,13 +60,11 @@ export async function PATCH(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating vehicle odometer:', updateError);
-      // We don't fail the request here because the log entry was successful,
-      // but we should probably log it.
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
     console.error('Error updating odometer:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return serverError();
   }
 }

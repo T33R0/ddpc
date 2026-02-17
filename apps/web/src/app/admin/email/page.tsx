@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { supabase } from '../../../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@repo/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
 import { Input } from '@repo/ui/input';
@@ -66,6 +66,7 @@ export default function EmailAdminPage() {
 
     // Fetch Channels
     const fetchChannels = useCallback(async () => {
+        const supabase = createClient();
         const { data, error } = await supabase
             .from('email_channels')
             .select('*')
@@ -147,6 +148,7 @@ export default function EmailAdminPage() {
     };
 
     const toggleChannelActive = async (id: string, currentState: boolean) => {
+        const supabase = createClient();
         const { error } = await supabase
             .from('email_channels')
             .update({ is_active: !currentState })
@@ -172,6 +174,7 @@ export default function EmailAdminPage() {
 
         setIsSending(true);
         try {
+            const supabase = createClient();
             const response = await fetch('/api/admin/send-newsletter', {
                 method: 'POST',
                 headers: {

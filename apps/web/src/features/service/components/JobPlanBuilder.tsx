@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Input } from '@repo/ui/input'
 import { Button } from '@repo/ui/button'
 import { Plus, RotateCcw, Copy, GripVertical } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { JobStep, JobStepData } from './JobStep'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from '@repo/ui/modal'
 import { Label } from '@repo/ui/label'
@@ -62,6 +62,7 @@ export function JobPlanBuilder({
   const fetchOrCreateJobPlan = React.useCallback(async () => {
     try {
       // First, try to find existing job plan for this maintenance log
+      const supabase = createClient()
       const { data: existingPlan } = await supabase
         .from('job_plans')
         .select('id')
@@ -99,6 +100,7 @@ export function JobPlanBuilder({
 
     setIsLoading(true)
     try {
+      const supabase = createClient()
       const { data, error } = await supabase
         .from('job_steps')
         .select('*')

@@ -8,7 +8,6 @@ import { Input } from '@repo/ui/input';
 import { Textarea } from '@repo/ui/textarea';
 import { Label } from '@repo/ui/label';
 import { useAuth } from '../lib/auth';
-import { supabase } from '../lib/supabase';
 
 interface IssueReportFormProps {
   defaultUrl?: string;

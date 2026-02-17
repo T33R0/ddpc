@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { createClient } from '@/lib/supabase/client';
 import { getUserTheme } from '@/features/user/actions';
 import { signOut as signOutAction } from '@/features/auth/actions';
 
@@ -49,6 +49,7 @@ export function AuthProvider({
   children: React.ReactNode;
   initialSession?: Session | null;
 }) {
+  const supabase = createClient();
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession);
   const [profile, setProfile] = useState<UserProfile | null>(null);

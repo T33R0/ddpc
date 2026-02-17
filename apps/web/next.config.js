@@ -41,7 +41,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  transpilePackages: ["@repo/assets", "@repo/ui"],
+  transpilePackages: ["@repo/ui"],
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',
@@ -157,6 +157,16 @@ const config = {
       {
         protocol: 'http',
         hostname: 'localhost',
+      },
+      // Google profile avatars
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      // Custom Supabase auth domain
+      {
+        protocol: 'https',
+        hostname: 'auth.myddpc.com',
       },
       // Supabase Storage
       {

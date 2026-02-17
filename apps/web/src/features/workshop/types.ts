@@ -31,6 +31,8 @@ export interface JobTask {
     is_done_build: boolean;
 }
 
+export type PlanStatus = 'draft' | 'ready' | 'active';
+
 export interface Job {
     id: string;
     vehicle_id: string;
@@ -39,6 +41,7 @@ export interface Job {
     created_at: string;
     date_completed?: string | null;
     status: JobStatus;
+    plan_status: PlanStatus;
     type?: string; // 'repair', 'mod', 'maintenance' etc.
     odometer?: number | null;
     cost_total?: number | null;

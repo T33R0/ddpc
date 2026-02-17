@@ -1,11 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-
-const BREAKGLASS_EMAIL = 'myddpc@gmail.com'
+import { requireAdmin, requireBreakglass } from '@/lib/require-admin'
 
 export async function getAdminUsers(page = 1, pageSize = 20, query = '', sortBy = 'joined', sortDir = 'desc') {
   const schema = z.object({
@@ -22,27 +20,11 @@ export async function getAdminUsers(page = 1, pageSize = 20, query = '', sortBy 
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
+  await requireAdmin()
 
-  // Check auth
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  // Check admin role
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  const isBreakglass = user.email === BREAKGLASS_EMAIL
-  if (!isBreakglass && profile?.role !== 'admin') {
-    throw new Error('Unauthorized access')
-  }
-
-  // Try RPC first
+  const adminClient = createAdminClient()
   const offset = (page - 1) * pageSize
-  const { data, error } = await supabase.rpc('get_admin_users_stats', {
+  const { data, error } = await adminClient.rpc('get_admin_users_stats', {
     limit_offset: offset,
     limit_count: pageSize,
     search_query: query || null,
@@ -141,26 +123,11 @@ export async function toggleUserSuspension(userId: string, shouldSuspend: boolea
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('Unauthorized')
-
-  // Verify admin
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await requireAdmin()
 
   const adminClient = createAdminClient()
 
-  // Update auth ban (ban duration in hours)
-  // 876000 hours is ~100 years
+  // Update auth ban (876000 hours is ~100 years)
   const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
     ban_duration: shouldSuspend ? '876000h' : '0h'
   })
@@ -192,12 +159,7 @@ export async function toggleAdminRole(userId: string, makeAdmin: boolean) {
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user || user.email !== BREAKGLASS_EMAIL) {
-    throw new Error('Only the breakglass admin can manage administrators')
-  }
+  await requireBreakglass()
 
   const adminClient = createAdminClient()
   const roleValue = makeAdmin ? 'admin' : 'user'
@@ -277,21 +239,7 @@ export async function grantProAccess(userId: string, isPro: boolean) {
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('Unauthorized')
-
-  // Verify admin
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await requireAdmin()
 
   const adminClient = createAdminClient()
 
@@ -318,21 +266,7 @@ export async function getIssueReports(page = 0, pageSize = 50, filter: 'all' | '
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('Unauthorized')
-
-  // Verify admin
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await requireAdmin()
 
   const adminClient = createAdminClient()
 
@@ -367,21 +301,7 @@ export async function toggleIssueResolution(issueId: string, resolved: boolean) 
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('Unauthorized')
-
-  // Verify admin
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await requireAdmin()
 
   const adminClient = createAdminClient()
 
@@ -407,21 +327,7 @@ export async function updateIssueNotes(issueId: string, notes: string) {
     throw new Error('Invalid input');
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('Unauthorized')
-
-  // Verify admin
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  if (user.email !== BREAKGLASS_EMAIL && profile?.role !== 'admin') {
-    throw new Error('Unauthorized')
-  }
+  await requireAdmin()
 
   const adminClient = createAdminClient()
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { UsageStats } from '@repo/types';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client'
 
 export function useMeters() {
   const [data, setData] = useState<UsageStats | null>(null);
@@ -13,6 +13,7 @@ export function useMeters() {
         setIsLoading(true);
 
         // Get the current session
+        const supabase = createClient()
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError || !session) {

@@ -12,7 +12,7 @@ import { Plus, Wrench, ArrowLeft } from 'lucide-react'
 import { ServiceInterval } from '@repo/types'
 import { logPlannedService, logFreeTextService, getServiceCategories, getServiceItems } from '../actions'
 import { ServiceLogInputs } from '../schema'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 
 interface PlannedServiceLog {
   id: string
@@ -156,6 +156,7 @@ export function AddServiceDialog({
       }
 
       // Fallback to fetching from Supabase if not in initial data
+      const supabase = createClient()
       const { data: item, error: itemError } = await supabase
         .from('service_items')
         .select('id, name, category_id')
@@ -182,7 +183,7 @@ export function AddServiceDialog({
 
         // Fallback: fetch from Supabase
         await fetchServiceItems(item.category_id)
-        const { data: categoryData, error: categoryError } = await supabase
+        const { data: categoryData, error: categoryError } = await supabase  // reuses client from above
           .from('service_categories')
           .select('id, name')
           .eq('id', item.category_id)
@@ -392,6 +393,7 @@ export function AddServiceDialog({
 
       // If we're marking a planned log as complete, update it instead of creating new
       if (plannedLog) {
+        const supabase = createClient()
         const { error: updateError } = await supabase
           .from('maintenance_log')
           .update({

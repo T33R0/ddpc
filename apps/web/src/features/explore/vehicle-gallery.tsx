@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { VehicleSummary } from '@/lib/types';
+import { VehicleSummary } from '@repo/types';
 import VehicleDetailsModal from './vehicle-details-modal';
 import { VehicleCard } from '@/components/vehicle-card';
 

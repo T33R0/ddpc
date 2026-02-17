@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     `;
 
     // 4. Send Email
-    const recipients = ['teehanrh@gmail.com', 'myddpc@gmail.com'];
+    const recipients = (process.env.OGMA_CRON_RECIPIENTS || '').split(',').map(e => e.trim()).filter(Boolean);
     const emailResult = await sendEmail({
       to: recipients,
       subject,

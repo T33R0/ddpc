@@ -52,8 +52,8 @@ export async function POST(req: Request) {
     })();
 
     // Verify Identity
-    const verifiedEmails = ['myddpc@gmail.com', 'teehanrh@gmail.com'];
-    const verifiedIds = ['b9e8c442-5e0e-48ec-ac97-576682bf2251'];
+    const verifiedEmails = (process.env.OGMA_VERIFIED_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+    const verifiedIds = (process.env.OGMA_VERIFIED_IDS || '').split(',').map(e => e.trim()).filter(Boolean);
     let userEmail = '';
     let userId = '';
 

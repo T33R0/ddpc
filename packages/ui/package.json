@@ -4,8 +4,6 @@
   "private": true,
   "exports": {
     "./*": "./src/*.tsx",
-    "./auth-context": "./src/auth-context.tsx",
-    "./landing": "./src/landing/index.tsx",
     "./lib/utils": "./src/lib/utils.ts",
     "./textarea": "./src/textarea.tsx",
     "./toggle": "./src/toggle.tsx",

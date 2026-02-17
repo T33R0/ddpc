@@ -1,22 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Create a Supabase client with service role key (bypasses RLS)
-function getServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase environment variables are not configured correctly for service role client.')
-    throw new Error('Supabase environment variables are not configured.')
-  }
-
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  })
-}
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Fetches a public vehicle by slug (nickname or UUID) with full data
@@ -29,7 +11,7 @@ export async function getPublicVehicleBySlug(vehicleSlug: string): Promise<{
   owner_id: string
   [key: string]: unknown
 } | null> {
-  const supabase = getServiceRoleClient()
+  const supabase = createAdminClient()
   const isLikelyUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vehicleSlug)
 
   const selectClause = `

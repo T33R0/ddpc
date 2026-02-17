@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { MaintenanceLog } from '@repo/types'
@@ -114,6 +114,7 @@ export function ServiceHistoryList({ initialHistory = [] }: ServiceHistoryListPr
 
     try {
       // Fetch service items with categories
+      const supabase = createClient()
       const { data: itemsData, error } = await supabase
         .from('service_items')
         .select('id, name, category_id, service_categories(id, name)')

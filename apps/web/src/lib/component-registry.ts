@@ -9,5 +9,5 @@ export const ComponentRegistry: Record<string, LazyExoticComponent<ComponentType
   'table': lazy(() => import('@repo/ui/table').then((m: any) => ({ default: m.Table || m.table || m.default }))),
   'switch': lazy(() => import('@repo/ui/switch').then((m: any) => ({ default: m.Switch || m.switch || m.default }))),
   'scroll-area': lazy(() => import('@repo/ui/scroll-area').then((m: any) => ({ default: m.ScrollArea || m.scrollarea || m.default }))),
-  'auth-context': lazy(() => import('@repo/ui/auth-context').then((m: any) => ({ default: m.AuthContext || m.authcontext || m.default }))),
+  'auth-context': lazy(() => import('@/components/auth/auth-context').then((m: any) => ({ default: m.AuthContext || m.authcontext || m.default }))),
 };

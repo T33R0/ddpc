@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { isBreakglassEmail } from '@/lib/require-admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
@@ -18,10 +19,9 @@ export default async function AdminLayout({
     redirect(EXTERNAL_REDIRECT)
   }
 
-  const isBreakglass = user.email === 'myddpc@gmail.com'
+  const isBreakglass = isBreakglassEmail(user.email)
 
   if (!isBreakglass) {
-    // Check role
     const { data: profile } = await supabase
       .from('user_profile')
       .select('role')

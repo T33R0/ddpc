@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import LandingLayout from './landing-layout';
 import { Button } from '@repo/ui/button';
 import Link from 'next/link';
-import { AuthModal } from '@repo/ui/auth-modal';
+import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '../lib/auth';
 import { useRouter } from 'next/navigation';
 

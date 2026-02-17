@@ -200,6 +200,13 @@ export async function addPartToJob(jobId: string, inventoryId: string, qty: numb
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // 0. Check job plan_status to gate part additions
+    const { data: job } = await supabase
+        .from('jobs')
+        .select('plan_status')
+        .eq('id', jobId)
+        .single();
+
     // 1. Fetch current item details
     const { data: item, error: fetchError } = await supabase
         .from('inventory')
@@ -208,6 +215,12 @@ export async function addPartToJob(jobId: string, inventoryId: string, qty: numb
         .single();
 
     if (fetchError || !item) return { error: 'Part not found' };
+
+    // Plan status gate: ready/active jobs only accept in_stock parts
+    const planStatus = job?.plan_status || 'draft';
+    if (planStatus !== 'draft' && item.status !== 'in_stock') {
+        return { error: 'Only parts that have arrived (in stock) can be added to a finalized plan.' };
+    }
 
     const currentQty = item.quantity || 1;
     let finalInventoryId = inventoryId;
@@ -264,9 +277,35 @@ export async function addPartToJob(jobId: string, inventoryId: string, qty: numb
 
 export async function startJob(jobId: string) {
     const supabase = await createClient();
+
+    // Fetch job to check plan_status
+    const { data: job } = await supabase
+        .from('jobs')
+        .select('plan_status')
+        .eq('id', jobId)
+        .single();
+
+    const planStatus = job?.plan_status || 'draft';
+
+    // If still in draft, auto-transition to ready first (validates parts)
+    if (planStatus === 'draft') {
+        const readiness = await checkJobReadiness(jobId);
+        if ('error' in readiness) return readiness;
+        if (!readiness.ready) {
+            const issues: string[] = [];
+            if (readiness.missingParts.length > 0) {
+                issues.push(`${readiness.missingParts.length} part(s) not in stock`);
+            }
+            if (readiness.missingTools.length > 0) {
+                issues.push(`${readiness.missingTools.length} tool(s) not acquired`);
+            }
+            return { error: `Job not ready to start. ${issues.join(', ')}.` };
+        }
+    }
+
     const { error } = await supabase
         .from('jobs')
-        .update({ status: 'in_progress' })
+        .update({ status: 'in_progress', plan_status: 'active' })
         .eq('id', jobId);
 
     if (error) return { error: error.message };
@@ -1072,7 +1111,7 @@ export async function unlinkInventoryFromOrder(inventoryId: string) {
 
     const { error } = await supabase
         .from('inventory')
-        .update({ 
+        .update({
             order_id: null,
             status: 'wishlist',
             purchased_at: null
@@ -1083,5 +1122,446 @@ export async function unlinkInventoryFromOrder(inventoryId: string) {
     if (error) return { error: error.message };
     revalidatePath('/vehicle');
     return { success: true };
+}
+
+// ============================================================
+// Phase 1: Parts Delivery Breakdown & Batch Install
+// ============================================================
+
+/**
+ * Decomposes a delivered order into individual installable parts.
+ * Original order line items become history_only, and new individual
+ * parts are created as 'public' or 'hardware' visibility.
+ */
+export async function decomposeDeliveredOrder(
+    orderId: string,
+    parts: Array<{
+        sourceInventoryId: string;
+        children: Array<{
+            name: string;
+            category?: string;
+            partNumber?: string;
+            quantity?: number;
+            visibility: 'public' | 'hardware';
+            parentIndex?: number; // index into this children array for hardware parent
+            isReusable?: boolean;
+            lifespanMiles?: number;
+            lifespanMonths?: number;
+        }>;
+    }>
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    // Validate order exists and is delivered
+    const { data: order } = await supabase
+        .from('orders')
+        .select('id, status, vehicle_id')
+        .eq('id', orderId)
+        .eq('user_id', user.id)
+        .single();
+
+    if (!order) return { error: 'Order not found' };
+    if (order.status !== 'delivered') return { error: 'Order must be delivered before decomposing' };
+
+    const createdIds: string[] = [];
+    const installGroupId = crypto.randomUUID();
+
+    for (const sourceItem of parts) {
+        // Fetch the source inventory item
+        const { data: source } = await supabase
+            .from('inventory')
+            .select('*')
+            .eq('id', sourceItem.sourceInventoryId)
+            .eq('user_id', user.id)
+            .single();
+
+        if (!source) continue;
+
+        // Mark source as history_only
+        await supabase
+            .from('inventory')
+            .update({ visibility: 'history_only' })
+            .eq('id', sourceItem.sourceInventoryId);
+
+        // Create child parts — first pass for public parts, second for hardware
+        const childIdMap: Record<number, string> = {};
+
+        // First: create non-hardware parts
+        for (let i = 0; i < sourceItem.children.length; i++) {
+            const child = sourceItem.children[i];
+            if (!child) continue;
+            if (child.visibility === 'hardware') continue;
+
+            const { data: created, error: createError } = await supabase
+                .from('inventory')
+                .insert({
+                    user_id: user.id,
+                    vehicle_id: order.vehicle_id || source.vehicle_id,
+                    name: child.name,
+                    category: child.category || source.category,
+                    part_number: child.partNumber,
+                    purchase_price: source.purchase_price,
+                    purchase_url: source.purchase_url,
+                    status: 'in_stock',
+                    quantity: child.quantity || 1,
+                    order_id: orderId,
+                    inventory_source_id: sourceItem.sourceInventoryId,
+                    install_group_id: installGroupId,
+                    visibility: 'public',
+                    lifespan_miles: child.lifespanMiles || source.lifespan_miles,
+                    lifespan_months: child.lifespanMonths || source.lifespan_months,
+                    purchased_at: source.purchased_at,
+                })
+                .select('id')
+                .single();
+
+            if (createError) {
+                console.error('[decomposeDeliveredOrder] Failed to create child part:', createError);
+                continue;
+            }
+            if (created) {
+                childIdMap[i] = created.id;
+                createdIds.push(created.id);
+            }
+        }
+
+        // Second: create hardware items with parent_id references
+        for (let i = 0; i < sourceItem.children.length; i++) {
+            const child = sourceItem.children[i];
+            if (!child) continue;
+            if (child.visibility !== 'hardware') continue;
+
+            const parentId = child.parentIndex !== undefined
+                ? childIdMap[child.parentIndex]
+                : undefined;
+
+            const { data: created, error: createError } = await supabase
+                .from('inventory')
+                .insert({
+                    user_id: user.id,
+                    vehicle_id: order.vehicle_id || source.vehicle_id,
+                    name: child.name,
+                    category: child.category || 'hardware',
+                    part_number: child.partNumber,
+                    status: 'in_stock',
+                    quantity: child.quantity || 1,
+                    order_id: orderId,
+                    inventory_source_id: sourceItem.sourceInventoryId,
+                    install_group_id: installGroupId,
+                    parent_id: parentId || null,
+                    visibility: 'hardware',
+                    is_reusable: child.isReusable || false,
+                    purchased_at: source.purchased_at,
+                })
+                .select('id')
+                .single();
+
+            if (createError) {
+                console.error('[decomposeDeliveredOrder] Failed to create hardware:', createError);
+                continue;
+            }
+            if (created) {
+                createdIds.push(created.id);
+            }
+        }
+    }
+
+    revalidatePath('/vehicle');
+    return { success: true, createdIds, installGroupId };
+}
+
+/**
+ * Batch-installs multiple parts with shared install date/mileage.
+ * Generates a shared install_batch_id for all parts.
+ * Optionally tracks which old part each new part replaces and why.
+ */
+export async function batchInstallParts(
+    vehicleId: string,
+    data: {
+        installDate: string;
+        installMiles: number;
+        parts: Array<{
+            inventoryId: string;
+            replacedPartId?: string;
+            replacementReason?: 'wear' | 'upgrade' | 'failure' | 'scheduled';
+            lifespanMilesOverride?: number;
+            lifespanMonthsOverride?: number;
+        }>;
+        hardware?: Array<{
+            name: string;
+            parentInventoryId: string;
+            quantity?: number;
+            isReusable?: boolean;
+        }>;
+    }
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    // Validate all parts exist and are in_stock
+    const partIds = data.parts.map(p => p.inventoryId);
+    const { data: existingParts, error: fetchError } = await supabase
+        .from('inventory')
+        .select('id, status')
+        .in('id', partIds)
+        .eq('user_id', user.id);
+
+    if (fetchError) return { error: 'Failed to verify parts' };
+
+    const notReady = existingParts?.filter(p => p.status !== 'in_stock') || [];
+    if (notReady.length > 0) {
+        return { error: `${notReady.length} part(s) are not in stock and cannot be installed yet.` };
+    }
+
+    const installBatchId = crypto.randomUUID();
+
+    // Install each part
+    for (const part of data.parts) {
+        const updatePayload: Record<string, unknown> = {
+            status: 'installed',
+            installed_at: data.installDate,
+            install_miles: data.installMiles,
+            install_batch_id: installBatchId,
+        };
+
+        if (part.lifespanMilesOverride) updatePayload.lifespan_miles = part.lifespanMilesOverride;
+        if (part.lifespanMonthsOverride) updatePayload.lifespan_months = part.lifespanMonthsOverride;
+
+        if (part.replacedPartId) {
+            updatePayload.replaced_part_id = part.replacedPartId;
+            updatePayload.replacement_reason = part.replacementReason || null;
+
+            // Mark the old part as replaced
+            await supabase
+                .from('inventory')
+                .update({
+                    status: 'replaced',
+                    visibility: 'history_only',
+                })
+                .eq('id', part.replacedPartId)
+                .eq('user_id', user.id);
+        }
+
+        const { error: installError } = await supabase
+            .from('inventory')
+            .update(updatePayload)
+            .eq('id', part.inventoryId)
+            .eq('user_id', user.id);
+
+        if (installError) {
+            console.error('[batchInstallParts] Failed to install part:', part.inventoryId, installError);
+        }
+    }
+
+    // Create any additional hardware added during install
+    if (data.hardware && data.hardware.length > 0) {
+        for (const hw of data.hardware) {
+            await supabase
+                .from('inventory')
+                .insert({
+                    user_id: user.id,
+                    vehicle_id: vehicleId,
+                    name: hw.name,
+                    category: 'hardware',
+                    status: 'installed',
+                    quantity: hw.quantity || 1,
+                    parent_id: hw.parentInventoryId,
+                    visibility: 'hardware',
+                    is_reusable: hw.isReusable || false,
+                    installed_at: data.installDate,
+                    install_miles: data.installMiles,
+                    install_batch_id: installBatchId,
+                });
+        }
+    }
+
+    // Update vehicle odometer if higher
+    await supabase
+        .from('user_vehicle')
+        .update({ odometer: data.installMiles })
+        .eq('id', vehicleId)
+        .lt('odometer', data.installMiles);
+
+    revalidatePath('/vehicle');
+    return { success: true, installBatchId };
+}
+
+// ============================================================
+// Phase 2: Planning Workflow — Draft → Ready → Execute
+// ============================================================
+
+/**
+ * Checks if a job has all requirements met to transition to 'ready'.
+ * Returns readiness status with details on what's missing.
+ */
+export async function checkJobReadiness(jobId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    // Fetch job with parts and tools
+    const { data: job } = await supabase
+        .from('jobs')
+        .select(`
+            id, plan_status, status,
+            job_parts:job_parts(
+                inventory_id,
+                inventory:inventory(id, name, status)
+            ),
+            tools:job_tools(id, name, is_acquired)
+        `)
+        .eq('id', jobId)
+        .single();
+
+    if (!job) return { error: 'Job not found' };
+
+    const missingParts: Array<{ id: string; name: string; status: string }> = [];
+    const missingTools: Array<{ id: string; name: string }> = [];
+
+    // Check parts — all must be in_stock or installed
+    for (const jp of (job.job_parts || [])) {
+        const inv = (jp as Record<string, unknown>).inventory as Record<string, unknown> | null;
+        if (inv && inv.status !== 'in_stock' && inv.status !== 'installed') {
+            missingParts.push({
+                id: inv.id as string,
+                name: inv.name as string,
+                status: inv.status as string,
+            });
+        }
+    }
+
+    // Check tools — all must be acquired
+    for (const tool of (job.tools || [])) {
+        if (!(tool as Record<string, unknown>).is_acquired) {
+            missingTools.push({
+                id: (tool as Record<string, unknown>).id as string,
+                name: (tool as Record<string, unknown>).name as string,
+            });
+        }
+    }
+
+    const ready = missingParts.length === 0 && missingTools.length === 0;
+
+    return {
+        success: true,
+        ready,
+        missingParts,
+        missingTools,
+        partsCount: (job.job_parts || []).length,
+        toolsCount: (job.tools || []).length,
+    };
+}
+
+/**
+ * Transitions a job's plan_status through the planning workflow.
+ * draft → ready: validates all parts in_stock
+ * ready → active: locks plan and starts job
+ * ready → draft: unlocks (user changed mind)
+ */
+export async function transitionJobPlanStatus(
+    jobId: string,
+    targetStatus: 'draft' | 'ready' | 'active'
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    // Fetch current job state
+    const { data: job } = await supabase
+        .from('jobs')
+        .select('id, plan_status, status')
+        .eq('id', jobId)
+        .eq('user_id', user.id)
+        .single();
+
+    if (!job) return { error: 'Job not found' };
+
+    const current = job.plan_status || 'draft';
+
+    // Validate transition
+    const validTransitions: Record<string, string[]> = {
+        draft: ['ready'],
+        ready: ['active', 'draft'],
+        active: [], // no going back from active
+    };
+
+    if (!validTransitions[current]?.includes(targetStatus)) {
+        return { error: `Cannot transition from '${current}' to '${targetStatus}'` };
+    }
+
+    // For draft → ready: validate all parts are in_stock
+    if (current === 'draft' && targetStatus === 'ready') {
+        const readiness = await checkJobReadiness(jobId);
+        if ('error' in readiness) return readiness;
+        if (!readiness.ready) {
+            const partNames = readiness.missingParts.map(p => `${p.name} (${p.status})`);
+            const toolNames = readiness.missingTools.map(t => t.name);
+            const messages: string[] = [];
+            if (partNames.length > 0) messages.push(`Parts not ready: ${partNames.join(', ')}`);
+            if (toolNames.length > 0) messages.push(`Tools not acquired: ${toolNames.join(', ')}`);
+            return { error: messages.join('. ') };
+        }
+    }
+
+    // For ready → active: also set job status to in_progress
+    const updates: Record<string, unknown> = { plan_status: targetStatus };
+    if (targetStatus === 'active') {
+        updates.status = 'in_progress';
+    }
+
+    const { error } = await supabase
+        .from('jobs')
+        .update(updates)
+        .eq('id', jobId)
+        .eq('user_id', user.id);
+
+    if (error) return { error: error.message };
+    revalidatePath('/vehicle');
+    return { success: true };
+}
+
+/**
+ * Enhanced markPartArrived that also checks if any draft jobs
+ * now have all parts ready, enabling plan transitions.
+ */
+export async function markPartArrivedWithReadinessCheck(inventoryId: string) {
+    // First, do the standard arrival marking
+    const arrivalResult = await markPartArrived(inventoryId);
+    if ('error' in arrivalResult && arrivalResult.error) return arrivalResult;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return arrivalResult;
+
+    // Find jobs that reference this part
+    const { data: jobLinks } = await supabase
+        .from('job_parts')
+        .select('job_id')
+        .eq('inventory_id', inventoryId);
+
+    if (!jobLinks || jobLinks.length === 0) return { ...arrivalResult, readyJobs: [] };
+
+    const readyJobs: Array<{ jobId: string; jobTitle: string }> = [];
+
+    for (const link of jobLinks) {
+        // Check if this job is in draft and now ready
+        const { data: job } = await supabase
+            .from('jobs')
+            .select('id, title, plan_status')
+            .eq('id', link.job_id)
+            .single();
+
+        if (!job || job.plan_status !== 'draft') continue;
+
+        const readiness = await checkJobReadiness(job.id);
+        if (!('error' in readiness) && readiness.ready) {
+            readyJobs.push({ jobId: job.id, jobTitle: job.title });
+        }
+    }
+
+    return { ...arrivalResult, readyJobs };
 }
 

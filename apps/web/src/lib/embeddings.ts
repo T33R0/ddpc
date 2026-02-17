@@ -1,7 +1,7 @@
 
 import { embed } from 'ai';
 import { vercelGateway } from './ai-gateway';
-import { Vehicle } from './types';
+import { Vehicle } from '@repo/types';
 
 export async function generateVehicleEmbedding(vehicle: Vehicle): Promise<number[]> {
     // Concatenate key fields: Year, Make, Model, Trim, Description (trim_description)

@@ -1,0 +1,77 @@
+import { createClient } from '@/lib/supabase/client'
+import type { Vehicle, VehicleSummary } from '@repo/types'
+import type { SupabaseFilter, FilterOptions } from '../types'
+
+type VehicleSummaryResponse = {
+  data: VehicleSummary[]
+  hasMore: boolean
+  page: number
+  pageSize: number
+}
+
+export async function getVehicleSummaries(
+  page = 1,
+  pageSize = 24,
+  filters: SupabaseFilter[] = []
+): Promise<{ data: VehicleSummary[]; hasMore: boolean }> {
+  const searchParams = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  })
+
+  // Add filters as JSON string
+  if (filters.length > 0) {
+    searchParams.set('filters', JSON.stringify(filters))
+  }
+
+  const response = await fetch(`/api/explore/vehicles?${searchParams.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}))
+    const message = (errorBody && errorBody.error) || 'Failed to fetch vehicle summaries'
+    throw new Error(message)
+  }
+
+  const payload = (await response.json()) as VehicleSummaryResponse
+  return { data: payload.data, hasMore: payload.hasMore ?? (payload.data.length === pageSize) }
+}
+
+export async function getVehicleFilterOptions(): Promise<FilterOptions> {
+  const response = await fetch('/api/explore/filters', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}))
+    const message = (errorBody && errorBody.error) || 'Failed to fetch filter options'
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
+export async function getVehicleById(id: string): Promise<Vehicle | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('v_vehicle_explore')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching vehicle:', error)
+    throw new Error(`Failed to fetch vehicle: ${error.message}`)
+  }
+
+  return data as Vehicle
+}

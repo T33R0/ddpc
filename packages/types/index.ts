@@ -140,7 +140,6 @@ export interface WorkItem {
 }
 
 // Garage Dashboard Types
-export type Tier = 'T0' | 'T1' | 'T2' | 'T3';
 
 export interface KPI {
   key: 'lastEvent' | 'vehicles' | 'nextDue' | 'overdue' | 'stageName' | 'stageETA' | 'budgetUsed' | 'compatFlags' | 'activeBuilds' | 'spendVsPlan' | 'onTimePct' | 'downtime30d';
@@ -196,12 +195,6 @@ export interface BotMessage {
 export interface BotResponse {
   response: string;
   tokensUsed: number;
-}
-
-export interface UpgradeRequiredError {
-  code: 'UPGRADE_REQUIRED';
-  targetTier: Tier;
-  message: string;
 }
 
 // Garage-specific types

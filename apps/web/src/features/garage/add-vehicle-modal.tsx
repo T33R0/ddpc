@@ -19,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@repo/ui/tabs';
 import { Search } from 'lucide-react';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { getVehicleImageSources } from '@/lib/vehicle-images';
-import { VehicleSummary, TrimVariant } from '@/lib/types';
+import { VehicleSummary, TrimVariant } from '@repo/types';
 import { addVehicleToGarage } from '@/features/garage/actions';
 
 interface AddVehicleModalProps {

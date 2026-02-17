@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextRequest } from 'next/server'
+import { createClient } from '@/lib/supabase/client'
+import { apiSuccess, unauthorized, badRequest, notFound, forbidden, serverError } from '@/lib/api-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,20 +8,16 @@ export async function POST(request: NextRequest) {
     const { garageId, email } = body
 
     if (!garageId || !email) {
-      return NextResponse.json(
-        { error: 'Missing required fields: garageId and email' },
-        { status: 400 }
-      )
+      return badRequest('Missing required fields: garageId and email')
     }
+
+    const supabase = createClient()
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return unauthorized()
     }
 
     // Verify the garage belongs to the current user
@@ -31,17 +28,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (garageError || !garageData) {
-      return NextResponse.json(
-        { error: 'Garage not found' },
-        { status: 404 }
-      )
+      return notFound('Garage not found')
     }
 
     if (garageData.owner_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized to share this garage' },
-        { status: 403 }
-      )
+      return forbidden('Unauthorized to share this garage')
     }
 
     // Find the user to share with
@@ -52,10 +43,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (userError) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+      return notFound('User not found')
     }
 
     // Check if already shared
@@ -67,10 +55,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingShare) {
-      return NextResponse.json(
-        { error: 'Garage already shared with this user' },
-        { status: 400 }
-      )
+      return badRequest('Garage already shared with this user')
     }
 
     // Create the share record
@@ -84,22 +69,16 @@ export async function POST(request: NextRequest) {
 
     if (shareError) {
       console.error('Error sharing garage:', shareError)
-      return NextResponse.json(
-        { error: 'Failed to share garage', details: shareError.message },
-        { status: 500 }
-      )
+      return serverError()
     }
 
-    return NextResponse.json({
+    return apiSuccess({
       success: true,
       message: 'Garage shared successfully'
     })
 
   } catch (error) {
     console.error('Unexpected error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return serverError()
   }
 }

@@ -48,7 +48,8 @@ export function AdminUserTable({
   const [isPending, startTransition] = useTransition()
   const [confirmSuspend, setConfirmSuspend] = useState<string | null>(null)
 
-  const isBreakglass = currentEmail === 'myddpc@gmail.com'
+  const breakglassEmail = process.env.NEXT_PUBLIC_BREAKGLASS_EMAIL ?? 'myddpc@gmail.com'
+  const isBreakglass = currentEmail === breakglassEmail
 
   const setSort = (column: string, direction: 'asc' | 'desc') => {
     const newParams = new URLSearchParams(window.location.search)
@@ -297,7 +298,7 @@ export function AdminUserTable({
                     </div>
                    </div>
 
-                   {isBreakglass && user.email !== 'myddpc@gmail.com' && (
+                   {isBreakglass && user.email !== breakglassEmail && (
                       <button
                         onClick={() => handleToggleAdmin(user.user_id, user.role !== 'admin')}
                         disabled={isPending}

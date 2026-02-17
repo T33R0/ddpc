@@ -7,8 +7,8 @@ import { Button } from '@repo/ui/button';
 import { VehicleGallery } from "../../features/explore/vehicle-gallery";
 import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleton";
 import type { VehicleSummary } from "@repo/types";
-import { AuthProvider } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
+import { AuthProvider } from '@/components/auth/auth-context';
+import { createClient } from '@/lib/supabase/client';
 
 
 const PAGE_SIZE = 24;
@@ -181,6 +181,7 @@ function ExploreContent() {
 }
 
 export default function Explore() {
+  const supabase = createClient();
   return (
     <AuthProvider supabase={supabase}>
       <ExploreContent />

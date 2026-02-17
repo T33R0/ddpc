@@ -1,6 +1,7 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isBreakglassEmail } from '@/lib/require-admin'
 import HubClient from './hub-client'
 
 export default async function HubPage() {
@@ -18,7 +19,7 @@ export default async function HubPage() {
     .eq('user_id', user.id)
     .single()
 
-  const isAdmin = profile?.role === 'admin' || user.email === 'myddpc@gmail.com'
+  const isAdmin = profile?.role === 'admin' || isBreakglassEmail(user.email)
 
   return <HubClient user={user} isAdmin={isAdmin} />
 }

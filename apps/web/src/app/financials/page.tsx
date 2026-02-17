@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { AuthProvider } from '@repo/ui/auth-context';
-import { supabase } from '../../lib/supabase';
+import { AuthProvider } from '@/components/auth/auth-context';
+import { createClient } from '@/lib/supabase/client';
 import { FinancialsDashboard } from '../../features/financials/financials-dashboard';
 
 function FinancialsPageContent() {
@@ -27,6 +27,7 @@ function FinancialsPageContent() {
 }
 
 export default function FinancialsPage() {
+  const supabase = createClient();
   return (
     <AuthProvider supabase={supabase}>
       <FinancialsPageContent />

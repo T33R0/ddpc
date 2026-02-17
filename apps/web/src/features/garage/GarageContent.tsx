@@ -6,11 +6,11 @@ import { useRouter } from 'next/navigation'
 import { useStoredVehicles } from '@/lib/hooks/useVehicles'
 import { Card, CardContent } from '@repo/ui/card'
 import AddVehicleModal from './add-vehicle-modal'
-import { AuthProvider } from '@repo/ui/auth-context'
+import { AuthProvider } from '@/components/auth/auth-context'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { VehicleWithOdometer } from '@repo/types'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { getVehicleSlug } from '@/lib/vehicle-utils-client'
 import { VehicleCard } from '@/components/vehicle-card'
 import { User } from '@supabase/supabase-js'
@@ -312,6 +312,7 @@ export function GarageContent({ initialVehicles, user }: GarageContentProps) {
 
   const handleStatusChange = async (vehicleId: string, newStatus: string) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('user_vehicle')
         .update({ current_status: newStatus })

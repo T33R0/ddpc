@@ -4,10 +4,16 @@ import React from 'react';
 import { Card, CardContent } from '@repo/ui/card';
 import { Button } from '@repo/ui/button';
 import { Badge } from '@repo/ui/badge';
-import { Play, ClipboardList, CheckCircle2 } from 'lucide-react';
-import { Job } from '../types';
+import { Play, ClipboardList, CheckCircle2, FileEdit, CircleCheck } from 'lucide-react';
+import { Job, PlanStatus } from '../types';
 import { cn } from '@repo/ui/lib/utils';
 import { format } from 'date-fns';
+
+const planStatusConfig: Record<PlanStatus, { label: string; className: string }> = {
+    draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },
+    ready: { label: 'Ready', className: 'bg-success/15 text-success' },
+    active: { label: 'Active', className: 'bg-warning text-warning-foreground' },
+};
 
 interface JobCardProps {
     job: Job;
@@ -19,6 +25,8 @@ interface JobCardProps {
 export function JobCard({ job, onStart, onOpen, className }: JobCardProps) {
     const isPlanned = job.status === 'planned';
     const isInProgress = job.status === 'in_progress';
+    const planStatus = job.plan_status || 'draft';
+    const statusCfg = planStatusConfig[planStatus];
 
     return (
         <Card className={cn("bg-card border-border shadow-sm hover:shadow-md transition-all cursor-pointer group active:scale-[0.98] h-22 flex flex-col justify-center", className)} onClick={() => onOpen?.(job)}>
@@ -32,14 +40,23 @@ export function JobCard({ job, onStart, onOpen, className }: JobCardProps) {
                                 : `Created ${format(new Date(job.created_at), 'MMM d')}`}
                         </p>
                     </div>
-                    {!isPlanned && (
-                        <Badge variant={isInProgress ? 'default' : 'secondary'} className={cn(
-                            "font-mono text-[10px] px-1 h-5 capitalize",
-                            isInProgress ? "bg-warning hover:bg-warning/90" : ""
-                        )}>
-                            {job.status.replace('_', ' ')}
-                        </Badge>
-                    )}
+                    <div className="flex items-center gap-1">
+                        {isPlanned && (
+                            <Badge variant="outline" className={cn("font-mono text-[10px] px-1.5 h-5", statusCfg.className)}>
+                                {planStatus === 'draft' && <FileEdit className="w-2.5 h-2.5 mr-0.5" />}
+                                {planStatus === 'ready' && <CircleCheck className="w-2.5 h-2.5 mr-0.5" />}
+                                {statusCfg.label}
+                            </Badge>
+                        )}
+                        {!isPlanned && (
+                            <Badge variant={isInProgress ? 'default' : 'secondary'} className={cn(
+                                "font-mono text-[10px] px-1 h-5 capitalize",
+                                isInProgress ? "bg-warning hover:bg-warning/90" : ""
+                            )}>
+                                {job.status.replace('_', ' ')}
+                            </Badge>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">

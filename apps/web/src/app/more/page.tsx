@@ -1,6 +1,6 @@
 import React from 'react';
 import LandingLayout from '../landing-layout';
-import { Hero, Features, Testimonials, Pricing, ZoomParallax } from '@repo/ui/landing';
+import { Hero, Features, Testimonials, Pricing, ZoomParallax } from '@/components/landing';
 import { getApprovedTestimonials } from '../../actions/testimonials';
 import SmoothScroll from './smooth-scroll';
 import { Metadata } from 'next';

@@ -1,23 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { User, Vehicle } from './types'
-
-// Create a Supabase client with service role key (bypasses RLS)
-function getServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase environment variables are not configured correctly for service role client.')
-    throw new Error('Supabase environment variables are not configured.')
-  }
-
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  })
-}
+import { createAdminClient } from '@/lib/supabase/admin'
+import { User, Vehicle } from '@repo/types'
 
 /**
  * Fetches a user profile by username.
@@ -25,7 +7,7 @@ function getServiceRoleClient() {
  * Privacy checks must be handled by the caller.
  */
 export async function getUserProfileByUsername(username: string): Promise<User | null> {
-  const supabase = getServiceRoleClient()
+  const supabase = createAdminClient()
 
   // Normalize username handling - try exact match or case insensitive
   const { data, error } = await supabase
@@ -69,7 +51,7 @@ interface GetProfileVehiclesOptions {
  * By default only returns PUBLIC vehicles unless includePrivate is true.
  */
 export async function getProfileVehicles(ownerId: string, options: GetProfileVehiclesOptions = {}): Promise<any[]> {
-  const supabase = getServiceRoleClient()
+  const supabase = createAdminClient()
   const { includePrivate = false } = options
 
   // Select user_vehicle joined with vehicle_data
