@@ -1,4 +1,4 @@
-// Ogma Sensors - Codebase
+// Steward Sensors - Codebase
 // Wraps tools for sensor interface
 // Phase 4 Implementation - Currently a placeholder
 

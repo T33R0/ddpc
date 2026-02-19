@@ -1,10 +1,10 @@
-// Ogma Feature - Public API
-// Single entry point for all Ogma exports
+// Steward Feature - Public API
+// Single entry point for all Steward exports
 
 // ============================================================================
 // Core Engine
 // ============================================================================
-export { runOgma, DEFAULT_CONFIG } from './core/engine';
+export { runSteward, DEFAULT_CONFIG } from './core/engine';
 export { runTrinity, formatTrinityForSynthesis, buildPersonaPrompts } from './core/trinity';
 export { runStreamingSynthesis, runSynthesis } from './core/synthesizer';
 export { runScout } from './core/scout';
@@ -13,8 +13,8 @@ export { runScout } from './core/scout';
 // Types
 // ============================================================================
 export type {
-  OgmaConfig,
-  OgmaResponse,
+  StewardConfig,
+  StewardResponse,
   EngineInput,
   EngineOutput,
   ScoutBriefing,
@@ -25,14 +25,14 @@ export type {
   PersonaResponse,
   DebateRound,
   SensorData,
-  OgmaAlert,
+  StewardAlert,
   AlertSeverity,
 } from './types';
 
 // ============================================================================
 // Tools
 // ============================================================================
-export { ogmaTools } from './tools';
+export { stewardTools } from './tools';
 export {
   get_repo_structure,
   read_file_content,
@@ -45,7 +45,7 @@ export {
 // ============================================================================
 // Sensors
 // ============================================================================
-export { ogmaSensors } from './sensors';
+export { stewardSensors } from './sensors';
 
 // ============================================================================
 // Scheduler
@@ -57,7 +57,7 @@ export { runDailyHealthCheck, evaluateAlerts } from './scheduler';
 // ============================================================================
 export { ChatSidebar } from './components/ChatSidebar';
 export { ModelSelectorButton } from './components/ModelSelectorButton';
-export { OgmaChatWindow } from './components/OgmaChatWindow';
+export { StewardChatWindow } from './components/StewardChatWindow';
 
 // ============================================================================
 // Actions (Server Actions)

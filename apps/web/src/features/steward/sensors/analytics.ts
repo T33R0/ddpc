@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 
-// Ogma Sensors - Analytics
+// Steward Sensors - Analytics
 // User metrics and engagement tracking
 // Phase 4 Implementation
 /**
- * Get overall Ogma usage statistics
+ * Get overall Steward usage statistics
  */
-export async function getOgmaUsage(): Promise<{ 
+export async function getStewardUsage(): Promise<{ 
   activeSessions24h: number; 
   totalSessions: number;
   totalInteractions: number;
@@ -47,7 +47,7 @@ export async function getOgmaUsage(): Promise<{
       totalInteractions: totalInteractions || 0
     };
   } catch (error) {
-    console.error('[Sensors/Analytics] Error in getOgmaUsage:', error);
+    console.error('[Sensors/Analytics] Error in getStewardUsage:', error);
     return {
       activeSessions24h: 0,
       totalSessions: 0,

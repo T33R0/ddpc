@@ -1,14 +1,14 @@
 'use client';
 
-import { OgmaChatWindow } from '@/features/ogma/components/OgmaChatWindow';
-import { ChatSidebar } from '@/features/ogma/components/ChatSidebar';
-import { ModelSelectorButton } from '@/features/ogma/components/ModelSelectorButton';
+import { StewardChatWindow } from '@/features/steward/components/StewardChatWindow';
+import { ChatSidebar } from '@/features/steward/components/ChatSidebar';
+import { ModelSelectorButton } from '@/features/steward/components/ModelSelectorButton';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-export default function OgmaAdminPage() {
+export default function StewardAdminPage() {
     const { user, profile, loading } = useAuth();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
@@ -71,7 +71,7 @@ export default function OgmaAdminPage() {
                         When sessionId changes, we want a fresh chat window 
                         so existing messages clear and useChat re-inits 
                     */}
-                    <OgmaChatWindow
+                    <StewardChatWindow
                         key={sessionId || 'new'}
                         sessionId={sessionId}
                         modelConfig={modelConfig}

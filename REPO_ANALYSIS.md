@@ -25,7 +25,7 @@
 Core tables, basic auth, free/pro plan model. RLS was added iteratively and broke multiple times. Three separate migrations fix `user_profile` RLS (permissions → recursion → final consolidation). The pattern: build fast, fix permissions after.
 
 ### Phase 2 — Feature Sprint (Jan – Nov 2025)
-Ogma AI system built out (most sophisticated module: 32 files, Trinity Protocol, sensors, scheduler). Fuel, service, and mods matured into clean feature modules. The T0-T3 tier abstraction was attempted but never completed — `getPlanForUser()` always returns T0.
+Steward AI system built out (most sophisticated module: 32 files, Trinity Protocol, sensors, scheduler). Fuel, service, and mods matured into clean feature modules. The T0-T3 tier abstraction was attempted but never completed — `getPlanForUser()` always returns T0.
 
 ### Phase 3 — Stability Crisis (Nov – Dec 2025)
 Performance audit revealed zombie functions, materialized view needs, and 13 redundant RLS policies on `user_profile` alone. Major cleanup migration dropped stale functions, consolidated policies, fixed `security_definer` warnings. Beta launch audit documented critical blockers.
@@ -48,13 +48,13 @@ RLS on `user_profile` was fixed three times across three separate migrations. Th
 - Migration `fix_user_profile_rls_final` (Dec 2025) — comprehensive rewrite
 - Migration `fix_rls_recursion` (Feb 2025) — recursive evaluation fix
 - `actions/admin.ts` lines 8, 38, 156, 198, 292, 382 — `BREAKGLASS_EMAIL = 'myddpc@gmail.com'` repeated 6 times
-- `api/ogma/route.ts` lines 55-56 — hardcoded `verifiedEmails` and `verifiedIds` arrays
+- `api/steward/route.ts` lines 55-56 — hardcoded `verifiedEmails` and `verifiedIds` arrays
 
 ### Action items
 - [x] Extract `requireAdmin()` utility (single auth check, env-based breakglass email) — **DONE (Session 1)**
 - [x] Move `BREAKGLASS_EMAIL` to environment variable — **DONE (Session 1)**
-- [x] Move `verifiedEmails` / `verifiedIds` from Ogma route to env vars — **DONE (Session 2)**: Now reads `OGMA_VERIFIED_EMAILS` and `OGMA_VERIFIED_IDS` env vars
-- [x] Move Ogma cron recipients to env var — **DONE (Session 2)**: Now reads `OGMA_CRON_RECIPIENTS`
+- [x] Move `verifiedEmails` / `verifiedIds` from Steward route to env vars — **DONE (Session 2)**: Now reads `STEWARD_VERIFIED_EMAILS` and `STEWARD_VERIFIED_IDS` env vars
+- [x] Move Steward cron recipients to env var — **DONE (Session 2)**: Now reads `STEWARD_CRON_RECIPIENTS`
 - [ ] Consider adding RLS regression tests to prevent future policy breakage
 
 ---
@@ -106,14 +106,14 @@ Two incompatible tier models exist simultaneously. The T0-T3 system was an attem
 ## Pattern 4: Feature Modules at Different Maturity Levels
 
 ### What happened
-Features were built depth-first. Core modules (ogma, parts, workshop, service, fuel) are production-ready with clean patterns. Others are stubs with a single `actions.ts` and no UI.
+Features were built depth-first. Core modules (steward, parts, workshop, service, fuel) are production-ready with clean patterns. Others are stubs with a single `actions.ts` and no UI.
 
 ### Evidence
 
 **Production-ready:**
 | Feature | Files | Pattern |
 |---------|-------|---------|
-| ogma | 32 | Core/sensors/tools/scheduler architecture, Trinity Protocol |
+| steward | 32 | Core/sensors/tools/scheduler architecture, Trinity Protocol |
 | parts | 16 | Type-specific forms, health tracking, 4-phase migration |
 | workshop | 17 | Job/order management, complex workflows |
 | service | 15 | Job planning, duplication, reordering |
@@ -175,7 +175,7 @@ During fast iteration, copy-paste was faster than extraction. Now multiple files
 
 ### Documentation Health
 - CHANGELOG.md last entry: Dec 2025 (gap in Jan-Feb 2026 despite heavy migration activity)
-- Ogma constitution effective date says 2025-01-27 but references Next.js 16 (released later)
+- Steward constitution effective date says 2025-01-27 but references Next.js 16 (released later)
 - BETA_LAUNCH_AUDIT.md has open items (animation library duplication, middleware optimization) not tracked anywhere
 
 ---
@@ -281,8 +281,8 @@ During fast iteration, copy-paste was faster than extraction. Now multiple files
 - `apps/web/src/components/FooterWrapper.tsx`
 
 **Modified Files (Remaining Cleanup):**
-- `apps/web/src/app/api/ogma/route.ts` — Hardcoded emails → `OGMA_VERIFIED_EMAILS` / `OGMA_VERIFIED_IDS` env vars
-- `apps/web/src/app/api/ogma/cron/daily/route.ts` — Hardcoded recipients → `OGMA_CRON_RECIPIENTS` env var
+- `apps/web/src/app/api/steward/route.ts` — Hardcoded emails → `STEWARD_VERIFIED_EMAILS` / `STEWARD_VERIFIED_IDS` env vars
+- `apps/web/src/app/api/steward/cron/daily/route.ts` — Hardcoded recipients → `STEWARD_CRON_RECIPIENTS` env var
 - `apps/web/src/lib/public-profile.ts` — Replaced `getServiceRoleClient()` with `createAdminClient()`
 - `apps/web/src/lib/public-vehicle-utils.ts` — Replaced `getServiceRoleClient()` with `createAdminClient()`
 - `apps/web/next.config.js` — Removed `@repo/assets` from transpilePackages
@@ -290,7 +290,7 @@ During fast iteration, copy-paste was faster than extraction. Now multiple files
 - `apps/docs/package.json` — Removed `@repo/assets` dependency
 - `packages/assets/package.json` — Added deprecation note
 - `packages/ui/package.json` — Removed explicit `auth-context` and `landing` exports
-- `turbo.json` — Added `OGMA_VERIFIED_EMAILS`, `OGMA_VERIFIED_IDS`, `OGMA_CRON_RECIPIENTS`, `BREAKGLASS_EMAIL`, `NEXT_PUBLIC_BREAKGLASS_EMAIL`
+- `turbo.json` — Added `STEWARD_VERIFIED_EMAILS`, `STEWARD_VERIFIED_IDS`, `STEWARD_CRON_RECIPIENTS`, `BREAKGLASS_EMAIL`, `NEXT_PUBLIC_BREAKGLASS_EMAIL`
 - `apps/web/src/lib/supabase.ts` — Gutted, marked deprecated
 - `apps/web/src/app/api/garage/share/route.ts` — Migrated to `apiError`/`apiSuccess`
 - `apps/web/src/app/api/garage/privacy/route.ts` — Migrated to `apiError`/`apiSuccess`

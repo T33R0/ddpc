@@ -8,7 +8,7 @@ export function FooterWrapper() {
   const pathname = usePathname();
   const { open: openReportModal } = useReportModal();
 
-  if (pathname === '/' || pathname?.startsWith('/admin/ogma')) {
+  if (pathname === '/' || pathname?.startsWith('/admin/steward')) {
     return null;
   }
 

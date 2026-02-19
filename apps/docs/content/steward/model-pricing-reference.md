@@ -1,5 +1,5 @@
 # AI Model Pricing Reference
-## For Ogma's Parliament Engine
+## For Steward's Parliament Engine
 
 This document provides pricing information for AI models available through the Vercel AI Gateway, optimized for cost-effective operation while maintaining quality.
 
@@ -87,7 +87,7 @@ This document provides pricing information for AI models available through the V
 
 ## Final Synthesis Model
 
-For the final "Voice of Ogma" synthesis:
+For the final "Voice of Steward" synthesis:
 - **Current**: `anthropic/claude-3.5-haiku` ($0.25/$1.25) - Cost-optimized, good quality
 - **Premium Option**: `anthropic/claude-3.5-sonnet` ($3.00/$15.00) - Best eloquence (12x more expensive)
 

@@ -11,7 +11,7 @@ if (fs.existsSync(envPath)) {
 }
 
 async function testModels() {
-    console.log('Testing Model Availability via Ogma Gateway...');
+    console.log('Testing Model Availability via Steward Gateway...');
 
     // Dynamic import
     const { vercelGateway } = await import('../lib/ai-gateway');

@@ -3,7 +3,7 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
 // Universal Gateway Adapter
 export const vercelGateway = createOpenAICompatible({
-    name: 'ogma-gateway',
+    name: 'steward-gateway',
     baseURL: 'https://ai-gateway.vercel.sh/v1',
     apiKey: process.env.AI_GATEWAY_API_KEY,
     headers: {

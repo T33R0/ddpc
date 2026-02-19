@@ -18,11 +18,11 @@ The documentation has been consolidated into `apps/docs/content`.
 | [`COMPONENT_BIBLE.md`](../design/COMPONENT_BIBLE.md) | **Critical Document.** "The Gold Standard" for UI development. Mandates usage of `@repo/ui` components. |
 | [`branding.md`](../design/branding.md) | **Branding Guide.** Official brand identity, logos, color palette, typography and design system principles. |
 
-### Agents & AI (`agents/`, `ogma/`)
+### Agents & AI (`agents/`, `steward/`)
 | File Path | Purpose |
 | :--- | :--- |
 | [`agents/AGENTS.md`](../agents/AGENTS.md) | **Agent Operational Directive.** Mission, standards, and rules of engagement for AI agents working on the project. |
-| [`ogma/model-pricing-reference.md`](../ogma/model-pricing-reference.md) | **Ogma Pricing.** Reference for AI model pricing used by the Ogma assistant. |
+| [`steward/model-pricing-reference.md`](../steward/model-pricing-reference.md) | **Steward Pricing.** Reference for AI model pricing used by the Steward assistant. |
 
 ### Engineering (`engineering/`)
 | File Path | Purpose |

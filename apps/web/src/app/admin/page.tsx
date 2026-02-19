@@ -5,7 +5,7 @@ const adminCards = [
   { href: '/admin/issues', title: 'Reported Problems', description: 'Review and resolve issues reported by users.' },
   { href: '/admin/structure', title: 'App Structure', description: 'Overview of application routes, pages, and their usage.' },
   { href: '/admin/testimonials', title: 'Testimonials', description: 'Review and approve user submitted testimonials.' },
-  { href: '/admin/ogma', title: 'Ogma AI', description: 'Access the Trinity Synergistic Intelligence interface.' },
+  { href: '/admin/steward', title: 'Steward AI', description: 'Access the Trinity Synergistic Intelligence interface.' },
   { href: '/admin/email', title: 'Email Operations', description: 'Compose and send Weekly Build Logs and newsletters.' },
 ]
 

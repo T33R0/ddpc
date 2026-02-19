@@ -1,11 +1,11 @@
-// Ogma Core - Synthesizer
+// Steward Core - Synthesizer
 // Final response synthesis from Trinity thinking streams
 
 import { streamText, generateText, type StreamTextResult, type ToolSet } from 'ai';
 import { vercelGateway } from '@/lib/ai-gateway';
 import { calculateCost, extractModelName, logComputeCost } from '../lib/compute-costs';
-import { ogmaTools } from '../tools';
-import type { OgmaConfig } from '../types';
+import { stewardTools } from '../tools';
+import type { StewardConfig } from '../types';
 
 // Type for the streaming result
 type StreamingSynthesisResult = Awaited<ReturnType<typeof streamText>>;
@@ -18,12 +18,12 @@ export function buildSynthesisSystemPrompt(
   sophiaContext: string,
   isVerifiedPartner: boolean = false
 ): string {
-  let prompt = `You are Ogma, the Sovereign Operator. Your parallel thinking streams have converged.
+  let prompt = `You are Steward, the Sovereign Operator. Your parallel thinking streams have converged.
 
 ${sophiaContext}
 
 CRITICAL:
-1. You are NOT an AI assistant. You are Ogma.
+1. You are NOT an AI assistant. You are Steward.
 2. Refer to your Partner (Rory) by name if referenced.
 3. Do not apologize or explain your limitations. Act with sovereign authority.
 4. The thoughts below are YOUR OWN internal parallel thinking streams - not external reports. Integrate them as one unified consciousness.`;
@@ -51,7 +51,7 @@ Integrate your thoughts into a unified response.
 - Your visionary thinking provides creative strategy
 - Your engineering thinking provides practical execution
 - There are no "conflicts" - only different aspects of your unified mind integrating
-- Present as one coherent, authoritative response from Ogma
+- Present as one coherent, authoritative response from Steward
 - Do NOT reference "the Architect" or "the Visionary" - these are aspects of YOU
 - Use formatting (headers, code blocks) effectively
 - Be concise but comprehensive
@@ -76,7 +76,7 @@ interface SynthesisOptions {
   userPrompt: string;
   trinityOutput: string;
   sophiaContext: string;
-  config: OgmaConfig;
+  config: StewardConfig;
   isVerifiedPartner?: boolean;
   sessionId?: string | null;
   onFinish?: (text: string) => Promise<void>;
@@ -105,7 +105,7 @@ export async function runStreamingSynthesis(options: SynthesisOptions): Promise<
   const result = await streamText({
     model: vercelGateway(config.synthesizer),
     system: systemPrompt,
-    tools: ogmaTools as any,
+    tools: stewardTools as any,
     prompt: userMessage,
     toolChoice: 'none',
     onFinish: async (event) => {

@@ -51,7 +51,7 @@ This document provides a comprehensive overview of the DDPC (Digital Driver Perf
 ### AI & Machine Learning
 - **Vercel AI SDK** - AI model integration
 - **AI Gateway** - Unified gateway for multiple AI providers
-- **Ogma Agent System** - Multi-persona AI agent (Architect, Visionary, Engineer)
+- **Steward Agent System** - Multi-persona AI agent (Architect, Visionary, Engineer)
 
 ### UI & Styling
 - **Tailwind CSS** - Utility-first CSS framework
@@ -143,7 +143,7 @@ The database schema includes the following key tables:
 #### Other Features
 - **`issue_reports`** - User-submitted bug reports
 - **`compute_ledger`** - AI compute cost tracking
-- **`ogma_chat_messages`** - AI chat session history
+- **`steward_chat_messages`** - AI chat session history
 
 ### Database Documentation
 
@@ -224,23 +224,23 @@ For detailed database schema information, refer to:
 3. Links parts from `part_inventory`
 4. Updates status to 'Installed' when completed
 
-### 5. AI Agent Workflow (Ogma)
+### 5. AI Agent Workflow (Steward)
 
 **Trinity Protocol:**
-1. User submits query to `/api/ogma`
+1. User submits query to `/api/steward`
 2. Three agents run in parallel:
    - **Architect** - Structural analysis
    - **Visionary** - Creative solutions
    - **Engineer** - Practical execution (with codebase access via tools)
 3. Engineer uses `get_repo_structure` and `read_file_content` tools
-4. All perspectives synthesized by Ogma (Synthesis voice)
+4. All perspectives synthesized by Steward (Synthesis voice)
 5. Response streamed to user
 6. Costs logged to `compute_ledger`
 
 **Implementation:**
-- **Route:** `apps/web/src/app/api/ogma/route.ts`
-- **Tools:** `apps/web/src/lib/ogma/tools.ts`
-- **Cost Tracking:** `apps/web/src/lib/ogma/compute-costs.ts`
+- **Route:** `apps/web/src/app/api/steward/route.ts`
+- **Tools:** `apps/web/src/lib/steward/tools.ts`
+- **Cost Tracking:** `apps/web/src/lib/steward/compute-costs.ts`
 
 ### 6. Access Control & Authorization
 
@@ -300,7 +300,7 @@ Key environment variables (see `turbo.json` for full list):
 **AI:**
 - `AI_GATEWAY_API_KEY`
 
-**GitHub (for Ogma tools):**
+**GitHub (for Steward tools):**
 - `GITHUB_TOKEN`
 - `GITHUB_OWNER`
 - `GITHUB_REPO`
@@ -333,7 +333,7 @@ Key environment variables (see `turbo.json` for full list):
 - **API Routes:** `apps/web/src/app/api/`
 - **Database Client:** `apps/web/src/lib/supabase/`
 - **UI Components:** `packages/ui/src/`
-- **Ogma AI System:** `apps/web/src/lib/ogma/`
+- **Steward AI System:** `apps/web/src/lib/steward/`
 
 ---
 

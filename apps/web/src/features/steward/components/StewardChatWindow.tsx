@@ -9,14 +9,14 @@ import { Input } from '@repo/ui/input';
 
 import { getChatMessages, createChatSession } from '../actions';
 
-interface OgmaChatWindowProps {
+interface StewardChatWindowProps {
     sessionId?: string | null;
     modelConfig?: any;
     className?: string;
     initialContext?: string;
 }
 
-export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) {
+export function StewardChatWindow({ sessionId, modelConfig }: StewardChatWindowProps) {
     const router = useRouter();
     const [messages, setMessages] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +75,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                     currentSessionId = await createChatSession(content.substring(0, 30));
 
                     // Update URL silently without full reload if possible, or expect navigation
-                    router.push(`/admin/ogma?id=${currentSessionId}`);
+                    router.push(`/admin/steward?id=${currentSessionId}`);
                     // Note: router.push might trigger re-mount.
                     // Ideally we continue using currentSessionId even if re-mount happens later.
                 } catch (err) {
@@ -87,7 +87,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
             }
 
             // 4. Raw Fetch Stream
-            const response = await fetch('/api/ogma', {
+            const response = await fetch('/api/steward', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -138,7 +138,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full opacity-40 select-none">
                         <Terminal className="w-12 h-12 text-primary" />
-                        <h2 className="text-xl font-medium mt-4">Ogma Online</h2>
+                        <h2 className="text-xl font-medium mt-4">Steward Online</h2>
                         <p className="text-sm text-muted-foreground mt-2">Select a model or start typing...</p>
                     </div>
                 )}
@@ -148,7 +148,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => router.push('/admin/ogma/dashboard')}
+                        onClick={() => router.push('/admin/steward/dashboard')}
                         className="bg-background/50 backdrop-blur-sm border border-border/50"
                         title="Open Dashboard"
                     >
@@ -193,7 +193,7 @@ export function OgmaChatWindow({ sessionId, modelConfig }: OgmaChatWindowProps) 
                             className="flex-1 py-3"
                             value={localInput}
                             onChange={(e) => setLocalInput(e.target.value)}
-                            placeholder={sessionId ? "Message Ogma..." : "Select a chat or start typing..."}
+                            placeholder={sessionId ? "Message Steward..." : "Select a chat or start typing..."}
                             autoFocus
                             disabled={isLoading}
                         />

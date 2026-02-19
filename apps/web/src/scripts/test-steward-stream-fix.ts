@@ -11,10 +11,10 @@ if (fs.existsSync(envPath)) {
     console.warn('Warning: .env.local not found at', envPath);
 }
 
-async function testOgmaStream() {
-    const endpoint = 'http://localhost:3000/api/ogma';
+async function testStewardStream() {
+    const endpoint = 'http://localhost:3000/api/steward';
 
-    console.log('Testing Ogma API endpoint:', endpoint);
+    console.log('Testing Steward API endpoint:', endpoint);
 
     try {
         const response = await fetch(endpoint, {
@@ -80,4 +80,4 @@ async function testOgmaStream() {
     }
 }
 
-testOgmaStream();
+testStewardStream();

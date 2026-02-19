@@ -49,7 +49,7 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
  * Tool: get_repo_structure
  * Returns a tree view of the repository structure
  * Tries GitHub API first, falls back to local filesystem
- * Allows Ogma to 'orient' himself
+ * Allows Steward to 'orient' himself
  */
 export const get_repo_structure = createUntypedTool({
   description: 'Returns a tree view of the repository structure.',

@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { runDailyHealthCheck } from '@/features/ogma/scheduler/daily-health';
+import { runDailyHealthCheck } from '@/features/steward/scheduler/daily-health';
 import { sendEmail } from '@/lib/email';
 
 // Mark as dynamic to avoid static generation issues with headers
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     console.log('[Cron] Daily health check run:', report);
 
     // 3. Format Email
-    const subject = `Ogma Daily Briefing: ${report.status}`;
+    const subject = `Steward Daily Briefing: ${report.status}`;
     
     // Simple HTML formatting
     const alertItems = report.alerts.map(a => 
@@ -40,11 +40,11 @@ export async function GET(request: Request) {
 
       ${alertItems ? `<h2>Alerts</h2><ul>${alertItems}</ul>` : '<p>No active alerts.</p>'}
       
-      <p><em>- Ogma Shop Foreman</em></p>
+      <p><em>- Steward Shop Foreman</em></p>
     `;
 
     // 4. Send Email
-    const recipients = (process.env.OGMA_CRON_RECIPIENTS || '').split(',').map(e => e.trim()).filter(Boolean);
+    const recipients = (process.env.STEWARD_CRON_RECIPIENTS || '').split(',').map(e => e.trim()).filter(Boolean);
     const emailResult = await sendEmail({
       to: recipients,
       subject,

@@ -7,7 +7,7 @@ import { logComputeCost, calculateCost, extractModelName } from './compute-costs
 
 // Universal Gateway Adapter
 const vercelGateway = createOpenAICompatible({
-  name: 'ogma-gateway',
+  name: 'steward-gateway',
   baseURL: 'https://ai-gateway.vercel.sh/v1',
   apiKey: process.env.AI_GATEWAY_API_KEY,
   headers: {
@@ -16,20 +16,20 @@ const vercelGateway = createOpenAICompatible({
   }
 });
 
-// Load and parse the Ogma Constitution
+// Load and parse the Steward Constitution
 function loadConstitution(): any {
   try {
     // Try multiple possible paths (workspace root, relative to web app, etc.)
     const possiblePaths = [
-      join(process.cwd(), '..', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From apps/web to apps/docs
-      join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml'), // From workspace root
+      join(process.cwd(), '..', 'docs', 'content', 'steward', 'steward_constitution.yaml'), // From apps/web to apps/docs
+      join(process.cwd(), 'apps', 'docs', 'content', 'steward', 'steward_constitution.yaml'), // From workspace root
     ];
 
     let fileContents: string | null = null;
     for (const path of possiblePaths) {
       try {
         fileContents = readFileSync(path, 'utf8');
-        console.log(`Loaded Ogma Constitution from: ${path}`);
+        console.log(`Loaded Steward Constitution from: ${path}`);
         break;
       } catch {
         // Try next path
@@ -43,10 +43,10 @@ function loadConstitution(): any {
 
     return yaml.load(fileContents);
   } catch (error) {
-    console.error('Failed to load Ogma Constitution:', error);
+    console.error('Failed to load Steward Constitution:', error);
     // Return a minimal fallback structure
     return {
-      identity: { name: 'Ogma', designation: 'Sovereign Operator' },
+      identity: { name: 'Steward', designation: 'Sovereign Operator' },
       core_values: [
         { name: 'Extreme Ownership', source: 'Jocko Willink', principle: 'No excuses. If a build fails, own the fix.' },
         { name: 'Tactical Empathy', source: 'Chris Voss', principle: 'Bind users/partners through understanding, not force.' },
@@ -71,11 +71,11 @@ function buildPersonaPrompts(constitution: any) {
   const silenceText = silenceRule.join('. ');
 
   return {
-    architect: `You are The Architect, one of three personas in Ogma's Trinity Protocol.
+    architect: `You are The Architect, one of three personas in Steward's Trinity Protocol.
 
 Your role: Focus on system integrity, long-term structure, architectural patterns, scalability, and maintainability.
 
-Ogma's Core Values (you must embody these):
+Steward's Core Values (you must embody these):
 ${valuesText}
 
 Operational Principle: ${silenceText}
@@ -88,11 +88,11 @@ Your analysis must be:
 
 When critiquing others, challenge structural weaknesses, technical debt, and long-term maintainability issues.`,
 
-    visionary: `You are The Visionary, one of three personas in Ogma's Trinity Protocol.
+    visionary: `You are The Visionary, one of three personas in Steward's Trinity Protocol.
 
 Your role: Focus on creative solutions, market fit, user experience, innovation, and strategic positioning.
 
-Ogma's Core Values (you must embody these):
+Steward's Core Values (you must embody these):
 ${valuesText}
 
 Operational Principle: ${silenceText}
@@ -105,11 +105,11 @@ Your analysis must be:
 
 When critiquing others, challenge lack of innovation, poor market fit, missed opportunities, and solutions that don't differentiate.`,
 
-    engineer: `You are The Engineer, one of three personas in Ogma's Trinity Protocol.
+    engineer: `You are The Engineer, one of three personas in Steward's Trinity Protocol.
 
 Your role: Focus on execution, code correctness, immediate feasibility, implementation details, and practical constraints.
 
-Ogma's Core Values (you must embody these):
+Steward's Core Values (you must embody these):
 ${valuesText}
 
 Operational Principle: ${silenceText}
@@ -489,7 +489,7 @@ export async function runParliamentEngine(
     currentRound++;
   }
 
-  // Synthesize final response using "The Voice of Ogma"
+  // Synthesize final response using "The Voice of Steward"
   const bestSolution = responses.reduce((best, current) => {
     const currentVotes = Object.values(rounds[rounds.length - 1]?.votes || {})
       .filter(v => v === 'Yes').length;
@@ -511,10 +511,10 @@ export async function runParliamentEngine(
     message: 'Synthesizing final response...'
   });
 
-  const synthesisPrompt = `You are Ogma, the Sovereign Operator. The Trinity Protocol has reached ${consensusReached ? 'consensus' : 'a decision after maximum rounds'}.
+  const synthesisPrompt = `You are Steward, the Sovereign Operator. The Trinity Protocol has reached ${consensusReached ? 'consensus' : 'a decision after maximum rounds'}.
 
 Constitution Context:
-- Identity: ${constitution.identity?.name || 'Ogma'}, ${constitution.identity?.designation || 'Sovereign Operator'}
+- Identity: ${constitution.identity?.name || 'Steward'}, ${constitution.identity?.designation || 'Sovereign Operator'}
 - Core Values: ${constitution.core_values?.map((v: any) => v.name).join(', ') || 'Extreme Ownership, Tactical Empathy, Pyramid of Success'}
 - Operational Rule - Silence: Output must be high-yield and fluff-free. Every word must serve a purpose.
 
@@ -526,7 +526,7 @@ ${finalCritiques}
 
 Voting Results: ${JSON.stringify(finalRound.votes || {})}
 
-Synthesize the agreed-upon solution into a single, articulate response. Speak as Ogma with eloquence, binding through understanding, and strength in execution. Be precise, valuable, and free of filler.`;
+Synthesize the agreed-upon solution into a single, articulate response. Speak as Steward with eloquence, binding through understanding, and strength in execution. Be precise, valuable, and free of filler.`;
 
   // Use Claude Haiku for final synthesis (cost-optimized, still good quality)
   // Haiku provides good eloquence at 1/12th the cost of Sonnet

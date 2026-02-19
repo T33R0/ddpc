@@ -1,8 +1,8 @@
 
-import { loadConstitution, formatConstitutionForPrompt, EMERGENCY_IDENTITY } from '../src/lib/ogma/context-loader';
+import { loadConstitution, formatConstitutionForPrompt, EMERGENCY_IDENTITY } from '../src/lib/steward/context-loader';
 
 async function verify() {
-    console.log('--- Starting Ogma Context Loader Verification ---');
+    console.log('--- Starting Steward Context Loader Verification ---');
 
     try {
         const config = {};

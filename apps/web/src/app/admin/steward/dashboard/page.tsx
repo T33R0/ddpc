@@ -1,10 +1,10 @@
 
-import { OgmaChatWindow } from '@/features/ogma/components/OgmaChatWindow';
-import { MetricsCards } from '@/features/ogma/components/MetricsCards';
-import { AlertFeed } from '@/features/ogma/components/AlertFeed';
-import { ReportViewer } from '@/features/ogma/components/ReportViewer';
-import { ogmaSensors } from '@/features/ogma/sensors';
-import { evaluateAlerts, SystemStats } from '@/features/ogma/scheduler/alerts';
+import { StewardChatWindow } from '@/features/steward/components/StewardChatWindow';
+import { MetricsCards } from '@/features/steward/components/MetricsCards';
+import { AlertFeed } from '@/features/steward/components/AlertFeed';
+import { ReportViewer } from '@/features/steward/components/ReportViewer';
+import { stewardSensors } from '@/features/steward/sensors';
+import { evaluateAlerts, SystemStats } from '@/features/steward/scheduler/alerts';
 // import { Button } from '@repo/ui/button';
 import { Settings } from 'lucide-react';
 import { Button } from '@repo/ui/button';
@@ -18,11 +18,11 @@ const MOCK_REPORTS = [
 
 export const dynamic = 'force-dynamic';
 
-export default async function OgmaDashboardPage() {
+export default async function StewardDashboardPage() {
   // 1. Fetch Real Data
-  const spendData = await ogmaSensors.health.getComputeSpend();
-  const errorRate = await ogmaSensors.health.getErrorRate();
-  const activeUsers = await ogmaSensors.analytics.getActiveUsers(); // Note: check return type, might need waiting
+  const spendData = await stewardSensors.health.getComputeSpend();
+  const errorRate = await stewardSensors.health.getErrorRate();
+  const activeUsers = await stewardSensors.analytics.getActiveUsers(); // Note: check return type, might need waiting
 
   const stats: SystemStats = {
     spend24h: spendData.total,
@@ -37,7 +37,7 @@ export default async function OgmaDashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Ogma Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Steward Dashboard</h2>
           <p className="text-muted-foreground">Shop Foreman Command Center</p>
         </div>
         <div className="flex items-center space-x-2">
@@ -63,10 +63,10 @@ export default async function OgmaDashboardPage() {
         {/* Right Column (Chat) */}
         <div className="flex flex-col md:col-span-5 lg:col-span-5 h-full min-h-[500px]">
           <div className="h-full rounded-xl border bg-card text-card-foreground shadow overflow-hidden">
-             {/* We need to ensure OgmaChatWindow fits well here. 
+             {/* We need to ensure StewardChatWindow fits well here. 
                  It likely handles its own height, but we wrap it to be safe. 
              */}
-             <OgmaChatWindow 
+             <StewardChatWindow 
                 className="h-full border-0 shadow-none" 
                 initialContext="You are acting as the Shop Foreman in the Dashboard context. The user is looking at system stats."
              />

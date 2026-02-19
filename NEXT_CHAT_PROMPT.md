@@ -36,7 +36,7 @@ Auth components (`auth-context.tsx`, `auth-modal.tsx`, `user-account-dropdown.ts
 ## Priority 5: Remaining Cleanup
 
 - Delete `@repo/assets` package and remove references from `next.config.js` and `package.json` files
-- `api/ogma/route.ts` line 55 and `api/ogma/cron/daily/route.ts` line 47 still have hardcoded emails — should use env vars
+- `api/steward/route.ts` line 55 and `api/steward/cron/daily/route.ts` line 47 still have hardcoded emails — should use env vars
 - Duplicate `getServiceRoleClient()` in `lib/public-profile.ts` and `lib/public-vehicle-utils.ts` — use `createAdminClient()` from `lib/supabase/admin.ts` instead
 
 **Verify after each change:** `tsc --noEmit --project apps/web/tsconfig.json`

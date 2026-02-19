@@ -54,13 +54,13 @@ supabase/
 ### Web App (`apps/web/src/`)
 
 - **`app/`** — Next.js App Router pages and layouts. Routes include `/hub`, `/garage`, `/vehicle/[id]/*`, `/account`, `/console` (admin).
-- **`features/`** — Feature modules (18 dirs: admin, auth, fuel, garage, mods, ogma, parts, service, timeline, vehicle, workshop, etc.). Each feature contains its own components, actions, and lib code.
+- **`features/`** — Feature modules (18 dirs: admin, auth, fuel, garage, mods, steward, parts, service, timeline, vehicle, workshop, etc.). Each feature contains its own components, actions, and lib code.
 - **`lib/`** — Shared utilities, hooks, and services. Key files:
   - `lib/supabase/` — Supabase clients: `client.ts` (browser), `server.ts` (server w/ cookies), `admin.ts` (service role), `middleware.ts`
   - `lib/auth.tsx` — Auth context provider with signUp/signIn/signOut/OAuth, profile management, plan tier detection
-  - `lib/ogma/` — AI agent system (Trinity Protocol: Architect, Visionary, Engineer)
+  - `lib/steward/` — AI agent system (Trinity Protocol: Architect, Visionary, Engineer)
 - **`actions/`** — Server actions
-- **`app/api/`** — 50+ API routes: auth callbacks, Stripe checkout/webhooks, garage CRUD, Ogma AI, community features
+- **`app/api/`** — 50+ API routes: auth callbacks, Stripe checkout/webhooks, garage CRUD, Steward AI, community features
 
 ### Path Alias
 
@@ -73,7 +73,7 @@ import { FeatureComponent } from '@/features/vehicle/VehicleDashboard'
 ### Database (Supabase PostgreSQL)
 
 - RLS enabled on all user-facing tables — always assume RLS is active
-- Core tables: `user_profile`, `user_vehicle`, `maintenance_log`, `fuel_log`, `mods`, `part_inventory`, `job_plans`, `job_steps`, `service_items`, `service_intervals`, `issue_reports`, `compute_ledger`, `ogma_chat_messages`
+- Core tables: `user_profile`, `user_vehicle`, `maintenance_log`, `fuel_log`, `mods`, `part_inventory`, `job_plans`, `job_steps`, `service_items`, `service_intervals`, `issue_reports`, `compute_ledger`, `steward_chat_messages`
 - Auth: Supabase Auth with email/password + Google OAuth, JWT sessions in cookies
 - Detailed DB docs in `apps/docs/content/engineering/database/`
 
@@ -120,7 +120,7 @@ import { FeatureComponent } from '@/features/vehicle/VehicleDashboard'
 | Supabase | DB, Auth, Storage | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
 | Stripe | Payments | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_ID_*` |
 | Resend | Email | `RESEND_API_KEY` |
-| AI Gateway | AI models (Ogma) | `AI_GATEWAY_API_KEY` |
+| AI Gateway | AI models (Steward) | `AI_GATEWAY_API_KEY` |
 
 ## Deployment
 

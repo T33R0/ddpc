@@ -1,11 +1,11 @@
-// Ogma Core Types
-// Central type definitions for the Ogma system
+// Steward Core Types
+// Central type definitions for the Steward system
 
 // ============================================================================
 // Configuration Types
 // ============================================================================
 
-export interface OgmaConfig {
+export interface StewardConfig {
   synthesizer: string;
   architect: string;
   visionary: string;
@@ -84,7 +84,7 @@ export interface SynthesisResult {
   cost: number;
 }
 
-export interface OgmaResponse {
+export interface StewardResponse {
   scoutBriefing: ScoutBriefing;
   trinityResults: TrinityResult[];
   groundedContext: string;
@@ -122,7 +122,7 @@ export interface SensorData {
 export interface EngineInput {
   userPrompt: string;
   sessionId: string | null;
-  config: OgmaConfig;
+  config: StewardConfig;
   sophiaContext: string;
   isVerifiedPartner: boolean;
 }
@@ -136,7 +136,7 @@ export interface EngineOutput {
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
-export interface OgmaAlert {
+export interface StewardAlert {
   id: string;
   severity: AlertSeverity;
   title: string;

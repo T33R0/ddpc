@@ -9,7 +9,7 @@ const createUntypedTool = (config: any): any => tool(config);
  * Tool: read_file_content
  * Takes a file path and returns the raw text
  * Tries GitHub API first, falls back to local filesystem
- * Allows Ogma to 'read' code
+ * Allows Steward to 'read' code
  */
 export const read_file_content = createUntypedTool({
   description: 'Takes a file path and returns the raw text content.',

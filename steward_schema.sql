@@ -1,8 +1,8 @@
--- Ogma Schema Dump
--- Tables: ogma_chat_sessions, ogma_chat_messages, ogma_improvements, compute_ledger
+-- Steward Schema Dump
+-- Tables: steward_chat_sessions, steward_chat_messages, steward_improvements, compute_ledger
 
--- 1. ogma_chat_sessions
-CREATE TABLE IF NOT EXISTS public.ogma_chat_sessions (
+-- 1. steward_chat_sessions
+CREATE TABLE IF NOT EXISTS public.steward_chat_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     title TEXT,
@@ -11,60 +11,60 @@ CREATE TABLE IF NOT EXISTS public.ogma_chat_sessions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_ogma_sessions_user_id ON public.ogma_chat_sessions(user_id);
-CREATE INDEX IF NOT EXISTS idx_ogma_sessions_archived ON public.ogma_chat_sessions(user_id, archived);
+CREATE INDEX IF NOT EXISTS idx_steward_sessions_user_id ON public.steward_chat_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_steward_sessions_archived ON public.steward_chat_sessions(user_id, archived);
 
-ALTER TABLE public.ogma_chat_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.steward_chat_sessions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their own sessions" ON public.ogma_chat_sessions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own sessions" ON public.ogma_chat_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own sessions" ON public.ogma_chat_sessions FOR DELETE USING (auth.uid() = user_id);
-CREATE POLICY "Users can update their own sessions" ON public.ogma_chat_sessions FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can view their own sessions" ON public.steward_chat_sessions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own sessions" ON public.steward_chat_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own sessions" ON public.steward_chat_sessions FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Users can update their own sessions" ON public.steward_chat_sessions FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 
--- 2. ogma_chat_messages
-CREATE TABLE IF NOT EXISTS public.ogma_chat_messages (
+-- 2. steward_chat_messages
+CREATE TABLE IF NOT EXISTS public.steward_chat_messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID NOT NULL REFERENCES public.ogma_chat_sessions(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES public.steward_chat_sessions(id) ON DELETE CASCADE,
     role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_ogma_messages_session_id ON public.ogma_chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_steward_messages_session_id ON public.steward_chat_messages(session_id);
 
-ALTER TABLE public.ogma_chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.steward_chat_messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view messages from their sessions" ON public.ogma_chat_messages FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.ogma_chat_sessions WHERE id = ogma_chat_messages.session_id AND user_id = auth.uid())
+CREATE POLICY "Users can view messages from their sessions" ON public.steward_chat_messages FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.steward_chat_sessions WHERE id = steward_chat_messages.session_id AND user_id = auth.uid())
 );
-CREATE POLICY "Users can insert messages into their sessions" ON public.ogma_chat_messages FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.ogma_chat_sessions WHERE id = ogma_chat_messages.session_id AND user_id = auth.uid())
+CREATE POLICY "Users can insert messages into their sessions" ON public.steward_chat_messages FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.steward_chat_sessions WHERE id = steward_chat_messages.session_id AND user_id = auth.uid())
 );
 
 
--- 3. ogma_improvements
-CREATE TABLE IF NOT EXISTS public.ogma_improvements (
+-- 3. steward_improvements
+CREATE TABLE IF NOT EXISTS public.steward_improvements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT now(),
   category TEXT NOT NULL CHECK (category IN ('Correction', 'Strategy', 'Preference', 'Insight')),
   insight TEXT NOT NULL,
   confidence_score INTEGER NOT NULL CHECK (confidence_score BETWEEN 1 AND 100),
-  source_session_id UUID REFERENCES ogma_chat_sessions(id) ON DELETE SET NULL
+  source_session_id UUID REFERENCES steward_chat_sessions(id) ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_ogma_improvements_confidence_created ON public.ogma_improvements(confidence_score DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_steward_improvements_confidence_created ON public.steward_improvements(confidence_score DESC, created_at DESC);
 
-ALTER TABLE public.ogma_improvements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.steward_improvements ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authenticated users can read improvements" ON public.ogma_improvements FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated users can insert improvements" ON public.ogma_improvements FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Authenticated users can read improvements" ON public.steward_improvements FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated users can insert improvements" ON public.steward_improvements FOR INSERT TO authenticated WITH CHECK (true);
 
 
 -- 4. compute_ledger
 CREATE TABLE IF NOT EXISTS public.compute_ledger (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID REFERENCES public.ogma_chat_sessions(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES public.steward_chat_sessions(id) ON DELETE CASCADE,
     interaction_id UUID NOT NULL DEFAULT gen_random_uuid(),
     model_used TEXT NOT NULL,
     input_tokens INTEGER NOT NULL DEFAULT 0,
@@ -80,10 +80,10 @@ CREATE INDEX IF NOT EXISTS idx_compute_ledger_model_used ON public.compute_ledge
 ALTER TABLE public.compute_ledger ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own compute ledger" ON public.compute_ledger FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.ogma_chat_sessions WHERE id = compute_ledger.session_id AND user_id = auth.uid())
+    EXISTS (SELECT 1 FROM public.steward_chat_sessions WHERE id = compute_ledger.session_id AND user_id = auth.uid())
 );
 CREATE POLICY "Users can insert their own compute ledger entries" ON public.compute_ledger FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.ogma_chat_sessions WHERE id = compute_ledger.session_id AND user_id = auth.uid())
+    EXISTS (SELECT 1 FROM public.steward_chat_sessions WHERE id = compute_ledger.session_id AND user_id = auth.uid())
 );
 
 
@@ -116,7 +116,7 @@ BEGIN
         AND (
             p_session_id IS NULL OR
             EXISTS (
-                SELECT 1 FROM public.ogma_chat_sessions
+                SELECT 1 FROM public.steward_chat_sessions
                 WHERE id = p_session_id AND user_id = auth.uid()
             )
         )

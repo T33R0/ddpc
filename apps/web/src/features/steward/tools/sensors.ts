@@ -1,16 +1,16 @@
 import { tool, jsonSchema } from 'ai';
-import { ogmaSensors } from '../sensors';
+import { stewardSensors } from '../sensors';
 
 // Helper to create tools with type erasure for TypeScript
 const createUntypedTool = (config: any): any => tool(config);
 
 /**
- * Tool: query_ogma_stats
+ * Tool: query_steward_stats
  * Returns component health, compute spend, and usage stats.
- * Allows Ogma to understand its own operational state.
+ * Allows Steward to understand its own operational state.
  */
-export const query_ogma_stats = createUntypedTool({
-  description: 'Returns real-time statistics about Ogma including compute spend, active users, and error rates.',
+export const query_steward_stats = createUntypedTool({
+  description: 'Returns real-time statistics about Steward including compute spend, active users, and error rates.',
   parameters: jsonSchema({
     type: 'object',
     properties: {
@@ -29,7 +29,7 @@ export const query_ogma_stats = createUntypedTool({
   execute: async ({ metric = 'all', period = 'day' }: { metric?: string; period?: 'day' | 'week' | 'month' }) => {
     
     if (typeof window === 'undefined') {
-      console.log(`[query_ogma_stats] Tool called with metric: ${metric}, period: ${period}`);
+      console.log(`[query_steward_stats] Tool called with metric: ${metric}, period: ${period}`);
     }
 
     try {
@@ -40,7 +40,7 @@ export const query_ogma_stats = createUntypedTool({
 
       if (metric === 'spend' || metric === 'all') {
         promises.push(
-          ogmaSensors.health.getComputeSpend(period)
+          stewardSensors.health.getComputeSpend(period)
             .then(data => results.compute_spend = data)
             .catch(err => results.compute_spend_error = err.message)
         );
@@ -48,7 +48,7 @@ export const query_ogma_stats = createUntypedTool({
 
       if (metric === 'usage' || metric === 'all') {
         promises.push(
-          ogmaSensors.analytics.getOgmaUsage()
+          stewardSensors.analytics.getStewardUsage()
             .then(data => results.usage = data)
             .catch(err => results.usage_error = err.message)
         );
@@ -56,7 +56,7 @@ export const query_ogma_stats = createUntypedTool({
 
       if (metric === 'health' || metric === 'all') {
         promises.push(
-          ogmaSensors.health.getErrorRate()
+          stewardSensors.health.getErrorRate()
             .then(data => results.error_rate = data)
             .catch(err => results.health_error = err.message)
         );
@@ -72,7 +72,7 @@ export const query_ogma_stats = createUntypedTool({
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('[query_ogma_stats] Error:', errorMessage);
+      console.error('[query_steward_stats] Error:', errorMessage);
       return {
         success: false,
         error: errorMessage,

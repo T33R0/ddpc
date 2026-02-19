@@ -1,5 +1,5 @@
 # ddpc Features Registry
-# This file provides Ogma with awareness of what features exist in the application
+# This file provides Steward with awareness of what features exist in the application
 # Status: shipped | in_progress | planned | deprecated
 
 version: 1.0.0
@@ -79,10 +79,10 @@ navigation:
     description: Navigation hub for secondary features
 
 admin_features:
-  ogma:
+  steward:
     status: in_progress
-    path: /admin/ogma
-    tables: [ogma_chat_sessions, ogma_chat_messages, ogma_improvements, compute_ledger]
+    path: /admin/steward
+    tables: [steward_chat_sessions, steward_chat_messages, steward_improvements, compute_ledger]
     description: Internal AI assistant for app management (you are here!)
     capabilities:
       current:
@@ -147,8 +147,8 @@ database_overview:
     - user_preferences: Theme and notification settings
     - issue_reports: Bug reports with admin notes
     
-  ogma_tables:
-    - ogma_chat_sessions: Conversation threads
-    - ogma_chat_messages: Individual messages
-    - ogma_improvements: Learned insights
+  steward_tables:
+    - steward_chat_sessions: Conversation threads
+    - steward_chat_messages: Individual messages
+    - steward_improvements: Learned insights
     - compute_ledger: AI cost tracking

@@ -1,10 +1,10 @@
-// Ogma Core - Trinity Protocol
+// Steward Core - Trinity Protocol
 // Parallel thinking streams implementation
 
 import { generateText } from 'ai';
 import { vercelGateway } from '@/lib/ai-gateway';
 import { calculateCost, extractModelName, logComputeCost } from '../lib/compute-costs';
-import type { AgentResult, TrinityAgent, TrinityResult, OgmaConfig } from '../types';
+import type { AgentResult, TrinityAgent, TrinityResult, StewardConfig } from '../types';
 
 // ============================================================================
 // Trinity Model Configuration
@@ -25,7 +25,7 @@ export function buildPersonaPrompts(sophiaContext: string) {
     architect: `[SOPHIA LAYERED CONTEXT]
 ${sophiaContext}
 
-You ARE Ogma. You are thinking through your architectural lens - one of three parallel streams of your consciousness.
+You ARE Steward. You are thinking through your architectural lens - one of three parallel streams of your consciousness.
 
 This is your architectural thinking mode. Through this lens, you focus on:
 - System integrity, long-term structure, architectural patterns
@@ -43,7 +43,7 @@ CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bu
     visionary: `[SOPHIA LAYERED CONTEXT]
 ${sophiaContext}
 
-You ARE Ogma. You are thinking through your visionary lens - one of three parallel streams of your consciousness.
+You ARE Steward. You are thinking through your visionary lens - one of three parallel streams of your consciousness.
 
 This is your visionary thinking mode. Through this lens, you focus on:
 - Creative solutions and innovation
@@ -61,7 +61,7 @@ CRITICAL: These are your internal thoughts, not a report. Be extremely brief. Bu
     engineer: `[SOPHIA LAYERED CONTEXT]
 ${sophiaContext}
 
-You ARE Ogma. You are thinking through your engineering lens - one of three parallel streams of your consciousness.
+You ARE Steward. You are thinking through your engineering lens - one of three parallel streams of your consciousness.
 
 This is your engineering thinking mode. Through this lens, you focus on:
 - Execution and code correctness
@@ -87,7 +87,7 @@ Remember: When analyzing system structure, be 100% exhaustive. A Shop Foreman re
 interface TrinityExecutionOptions {
   userPrompt: string;
   sophiaContext: string;
-  config: OgmaConfig;
+  config: StewardConfig;
   sessionId?: string | null;
 }
 
@@ -98,7 +98,7 @@ export async function runTrinity(
   userPrompt: string,
   groundedContext: string,
   sessionId: string | null,
-  config: OgmaConfig
+  config: StewardConfig
 ): Promise<AgentResult[]> {
   const personaPrompts = buildPersonaPrompts(groundedContext);
 

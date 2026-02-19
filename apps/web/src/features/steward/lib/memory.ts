@@ -1,7 +1,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 
-export interface OgmaImprovement {
+export interface StewardImprovement {
     id: string;
     created_at: string;
     category: string;
@@ -10,7 +10,7 @@ export interface OgmaImprovement {
 }
 
 /**
- * Fetches the top relevant improvements (high confidence) to inject into Ogma's context.
+ * Fetches the top relevant improvements (high confidence) to inject into Steward's context.
  * Useful for "Learning" behavior.
  */
 export async function getRelevantImprovements(limit: number = 5): Promise<string> {
@@ -18,14 +18,14 @@ export async function getRelevantImprovements(limit: number = 5): Promise<string
 
     // Fetch top improvements: high confidence, most recent
     const { data, error } = await supabase
-        .from('ogma_improvements')
+        .from('steward_improvements')
         .select('category, insight, confidence_score')
         .gte('confidence_score', 75) // Only high confidence
         .order('created_at', { ascending: false })
         .limit(limit);
 
     if (error) {
-        console.error('Error fetching Ogma improvements:', error);
+        console.error('Error fetching Steward improvements:', error);
         return '';
     }
 
@@ -38,7 +38,7 @@ export async function getRelevantImprovements(limit: number = 5): Promise<string
         `- [${item.category}] (Confidence: ${item.confidence_score}%): ${item.insight}`
     ).join('\n');
 
-    return `\n\n## Learned Improvements\nOgma has internalized the following lessons from previous operations:\n${formatted}\n`;
+    return `\n\n## Learned Improvements\nSteward has internalized the following lessons from previous operations:\n${formatted}\n`;
 }
 
 /**
@@ -53,7 +53,7 @@ export async function recordImprovement(
     const supabase = await createClient();
 
     const { error } = await supabase
-        .from('ogma_improvements')
+        .from('steward_improvements')
         .insert({
             category,
             insight,

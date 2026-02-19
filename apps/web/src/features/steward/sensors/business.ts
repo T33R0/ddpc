@@ -1,4 +1,4 @@
-// Ogma Sensors - Business
+// Steward Sensors - Business
 // Revenue, subscriptions, and business metrics
 // Phase 4 Implementation - Currently a placeholder
 

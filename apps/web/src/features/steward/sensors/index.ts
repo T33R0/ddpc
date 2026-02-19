@@ -1,5 +1,5 @@
-// Ogma Sensors - Unified Export
-// Central access point for all Ogma sensors
+// Steward Sensors - Unified Export
+// Central access point for all Steward sensors
 
 import * as analytics from './analytics';
 import * as health from './health';
@@ -7,19 +7,19 @@ import * as codebase from './codebase';
 import * as business from './business';
 
 /**
- * Unified sensor interface for Ogma
+ * Unified sensor interface for Steward
  * 
  * Usage:
  * ```ts
- * import { ogmaSensors } from '@/features/ogma/sensors';
+ * import { stewardSensors } from '@/features/steward/sensors';
  * 
- * const users = await ogmaSensors.analytics.getActiveUsers();
- * const spend = await ogmaSensors.health.getComputeSpend();
+ * const users = await stewardSensors.analytics.getActiveUsers();
+ * const spend = await stewardSensors.health.getComputeSpend();
  * ```
  */
-export const ogmaSensors = {
+export const stewardSensors = {
   analytics: {
-    getOgmaUsage: analytics.getOgmaUsage,
+    getStewardUsage: analytics.getStewardUsage,
     getActiveUsers: analytics.getActiveUsers,
     getFeatureUsage: analytics.getFeatureUsage,
     getSessionMetrics: analytics.getSessionMetrics,
@@ -45,7 +45,7 @@ export const ogmaSensors = {
 };
 
 // Type export for consumers
-export type OgmaSensors = typeof ogmaSensors;
+export type StewardSensors = typeof stewardSensors;
 
 // Re-export individual modules
 export { analytics, health, codebase, business };

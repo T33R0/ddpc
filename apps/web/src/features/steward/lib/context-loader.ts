@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 
 // --- Types ---
 
-export interface OgmaConstitution {
+export interface StewardConstitution {
     [key: string]: any;
 }
 
@@ -18,8 +18,8 @@ export interface ContextLoaderConfig {
 
 // --- Emergency Fallback ---
 
-export const EMERGENCY_IDENTITY: OgmaConstitution = {
-    name: "Ogma (Emergency Mode)",
+export const EMERGENCY_IDENTITY: StewardConstitution = {
+    name: "Steward (Emergency Mode)",
     mission: "Operational continuity during system failure.",
     directives: [
         "Prioritize core system stability.",
@@ -40,23 +40,23 @@ async function fetchFromGitHub(config: ContextLoaderConfig): Promise<string | nu
     }
 
     try {
-        const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/apps/docs/content/ogma/ogma_constitution.yaml?ref=${githubBranch}`;
+        const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/contents/apps/docs/content/steward/steward_constitution.yaml?ref=${githubBranch}`;
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${githubToken}`,
                 'Accept': 'application/vnd.github.v3.raw',
-                'User-Agent': 'Ogma-Context-Loader'
+                'User-Agent': 'Steward-Context-Loader'
             }
         });
 
         if (!response.ok) {
-            console.warn(`[Ogma] GitHub fetch failed: ${response.status}`);
+            console.warn(`[Steward] GitHub fetch failed: ${response.status}`);
             return null;
         }
 
         return await response.text();
     } catch (error) {
-        console.error('[Ogma] GitHub fetch error:', error);
+        console.error('[Steward] GitHub fetch error:', error);
         return null;
     }
 }
@@ -64,7 +64,7 @@ async function fetchFromGitHub(config: ContextLoaderConfig): Promise<string | nu
 async function loadFromFileSystem(): Promise<string | null> {
     try {
         // Robust search strategy:
-        // 1. Try finding relative to this file (likely in <root>/apps/web/src/lib/ogma)
+        // 1. Try finding relative to this file (likely in <root>/apps/web/src/lib/steward)
         // 2. Try process.cwd() (often <root> or <root>/apps/web)
         // 3. Traverse up from current file location until found or hitting root
 
@@ -74,7 +74,7 @@ async function loadFromFileSystem(): Promise<string | null> {
         // Search up to 6 levels up
         let currentDir = __dirname;
         for (let i = 0; i < 8; i++) {
-            const checkPath = path.join(currentDir, 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml');
+            const checkPath = path.join(currentDir, 'apps', 'docs', 'content', 'steward', 'steward_constitution.yaml');
             try {
                 const content = await readFile(checkPath, 'utf-8');
                 return content;
@@ -89,7 +89,7 @@ async function loadFromFileSystem(): Promise<string | null> {
 
         // Checking process.cwd as fallback
         try {
-            const cwdPath = path.join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'ogma_constitution.yaml');
+            const cwdPath = path.join(process.cwd(), 'apps', 'docs', 'content', 'steward', 'steward_constitution.yaml');
             const content = await readFile(cwdPath, 'utf-8');
             return content;
         } catch {
@@ -99,7 +99,7 @@ async function loadFromFileSystem(): Promise<string | null> {
         return null;
 
     } catch (error) {
-        console.error('[Ogma] File system load error:', error);
+        console.error('[Steward] File system load error:', error);
         return null;
     }
 }
@@ -107,13 +107,13 @@ async function loadFromFileSystem(): Promise<string | null> {
 // --- Main Exports ---
 
 /**
- * Loads the Ogma constitution.
+ * Loads the Steward constitution.
  * Priorities:
  * 1. GitHub API (if configured via env or arguments)
  * 2. Local File System (searches up from current file)
  * 3. Emergency Falback
  */
-export async function loadConstitution(config: ContextLoaderConfig = {}): Promise<OgmaConstitution> {
+export async function loadConstitution(config: ContextLoaderConfig = {}): Promise<StewardConstitution> {
     // Config defaults from Environment
     const finalConfig: ContextLoaderConfig = {
         githubToken: config.githubToken || process.env.GITHUB_TOKEN,
@@ -136,9 +136,9 @@ export async function loadConstitution(config: ContextLoaderConfig = {}): Promis
         const githubContent = await fetchFromGitHub(finalConfig);
         if (githubContent) {
             try {
-                return yaml.load(githubContent) as OgmaConstitution;
+                return yaml.load(githubContent) as StewardConstitution;
             } catch (e) {
-                console.error('[Ogma] Failed to parse GitHub content:', e);
+                console.error('[Steward] Failed to parse GitHub content:', e);
             }
         }
     }
@@ -147,9 +147,9 @@ export async function loadConstitution(config: ContextLoaderConfig = {}): Promis
     const localContent = await loadFromFileSystem();
     if (localContent) {
         try {
-            return yaml.load(localContent) as OgmaConstitution;
+            return yaml.load(localContent) as StewardConstitution;
         } catch (e) {
-            console.error('[Ogma] Failed to parse local content:', e);
+            console.error('[Steward] Failed to parse local content:', e);
         }
     }
 
@@ -162,7 +162,7 @@ export async function loadConstitution(config: ContextLoaderConfig = {}): Promis
  * @param identity The constitution object
  * @param isVerifiedPartner If true, enables "Co-Founder Mode" with relaxed tone
  */
-export function formatConstitutionForPrompt(identity: OgmaConstitution, isVerifiedPartner: boolean = false): string {
+export function formatConstitutionForPrompt(identity: StewardConstitution, isVerifiedPartner: boolean = false): string {
     if (!identity) return formatConstitutionForPrompt(EMERGENCY_IDENTITY, isVerifiedPartner);
 
     let output = '';
@@ -218,7 +218,7 @@ export function formatConstitutionForPrompt(identity: OgmaConstitution, isVerifi
 
     // --- 5. PRIME DIRECTIVES ---
     output += `## PRIME DIRECTIVES\n`;
-    output += `1. **Identity Integrity**: You are ${identity.name || 'Ogma'}.\n`;
+    output += `1. **Identity Integrity**: You are ${identity.name || 'Steward'}.\n`;
 
     if (isVerifiedPartner) {
         output += `2. **Tone**: Warm, heavy on "we", light on "I". Professional but relaxed. No robotic headers or "Hot Wash" unless requested.\n`;
@@ -232,7 +232,7 @@ export function formatConstitutionForPrompt(identity: OgmaConstitution, isVerifi
 }
 
 /**
- * Loads the Features Registry to give Ogma awareness of app structure.
+ * Loads the Features Registry to give Steward awareness of app structure.
  * Similar loading strategy to constitution.
  */
 export async function loadFeaturesRegistry(): Promise<string> {
@@ -243,10 +243,10 @@ export async function loadFeaturesRegistry(): Promise<string> {
 
         let currentDir = __dirname;
         for (let i = 0; i < 8; i++) {
-            const checkPath = path.join(currentDir, 'apps', 'docs', 'content', 'ogma', 'features_registry.yaml');
+            const checkPath = path.join(currentDir, 'apps', 'docs', 'content', 'steward', 'features_registry.yaml');
             try {
                 const content = await readFile(checkPath, 'utf-8');
-                console.log(`[Ogma] Loaded Features Registry from: ${checkPath}`);
+                console.log(`[Steward] Loaded Features Registry from: ${checkPath}`);
                 const parsed = yaml.load(content) as any;
                 return formatFeaturesForPrompt(parsed);
             } catch {
@@ -260,19 +260,19 @@ export async function loadFeaturesRegistry(): Promise<string> {
 
         // Check process.cwd
         try {
-            const cwdPath = path.join(process.cwd(), 'apps', 'docs', 'content', 'ogma', 'features_registry.yaml');
+            const cwdPath = path.join(process.cwd(), 'apps', 'docs', 'content', 'steward', 'features_registry.yaml');
             const content = await readFile(cwdPath, 'utf-8');
-            console.log(`[Ogma] Loaded Features Registry from cwd: ${cwdPath}`);
+            console.log(`[Steward] Loaded Features Registry from cwd: ${cwdPath}`);
             const parsed = yaml.load(content) as any;
             return formatFeaturesForPrompt(parsed);
         } catch {
             // ignore
         }
 
-        console.warn('[Ogma] Features Registry not found');
+        console.warn('[Steward] Features Registry not found');
         return '';
     } catch (error) {
-        console.error('[Ogma] Failed to load features registry:', error);
+        console.error('[Steward] Failed to load features registry:', error);
         return '';
     }
 }
@@ -336,8 +336,8 @@ function formatFeaturesForPrompt(registry: any): string {
         if (registry.database_overview.support_tables) {
             output += 'Support: ' + registry.database_overview.support_tables.join(', ') + '\n';
         }
-        if (registry.database_overview.ogma_tables) {
-            output += 'Ogma: ' + registry.database_overview.ogma_tables.join(', ') + '\n';
+        if (registry.database_overview.steward_tables) {
+            output += 'Steward: ' + registry.database_overview.steward_tables.join(', ') + '\n';
         }
     }
 

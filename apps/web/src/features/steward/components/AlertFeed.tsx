@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/card';
 import { Badge } from '@repo/ui/badge';
-import { OgmaAlert } from '../types';
+import { StewardAlert } from '../types';
 import { AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
 
 interface AlertFeedProps {
-  alerts: OgmaAlert[];
+  alerts: StewardAlert[];
 }
 
 export function AlertFeed({ alerts }: AlertFeedProps) {

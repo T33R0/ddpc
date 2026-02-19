@@ -69,7 +69,7 @@ function buildFileTree(dirPath: string, repoRoot: string, prefix: string = ''): 
  * Tool: get_repo_structure
  * Returns a tree view of the repository structure
  * Tries GitHub API first, falls back to local filesystem
- * Allows Ogma to 'orient' himself
+ * Allows Steward to 'orient' himself
  */
 export const get_repo_structure = createUntypedTool({
   description: 'Returns a tree view of the repository structure.',
@@ -214,7 +214,7 @@ export const get_repo_structure = createUntypedTool({
  * Tool: read_file_content
  * Takes a file path and returns the raw text
  * Tries GitHub API first, falls back to local filesystem
- * Allows Ogma to 'read' code
+ * Allows Steward to 'read' code
  */
 export const read_file_content = createUntypedTool({
   description: 'Takes a file path and returns the raw text content.',
@@ -647,7 +647,7 @@ export const get_table_details = createUntypedTool({
 /**
  * Export all tools as a single object for easy import
  */
-export const ogmaTools = {
+export const stewardTools = {
   get_repo_structure,
   read_file_content,
   create_issue,

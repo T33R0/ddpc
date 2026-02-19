@@ -1,12 +1,12 @@
 
-import { getRelevantImprovements, recordImprovement } from '../src/lib/ogma/memory';
+import { getRelevantImprovements, recordImprovement } from '../src/lib/steward/memory';
 
 // Mock the Supabase client for local testing if needed, 
 // OR this script is intended to run where env vars allow connection.
 // For robust verification in this environment (without db access), we focus on code correctness.
 
 async function verifyMemory() {
-    console.log('--- Verifying Ogma Memory System ---');
+    console.log('--- Verifying Steward Memory System ---');
 
     try {
         // 1. Test Fetching (Expecting empty string first if DB empty, or mocked return)

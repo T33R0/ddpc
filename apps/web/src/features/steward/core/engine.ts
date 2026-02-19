@@ -1,7 +1,7 @@
-// Ogma Core - Engine
-// Orchestrates the full Ogma pipeline: Scout → Trinity → Synthesis
+// Steward Core - Engine
+// Orchestrates the full Steward pipeline: Scout → Trinity → Synthesis
 
-import type { OgmaConfig, EngineInput, EngineOutput } from '../types';
+import type { StewardConfig, EngineInput, EngineOutput } from '../types';
 import { runTrinity } from './trinity';
 import { runScout } from './scout';
 
@@ -9,7 +9,7 @@ import { runScout } from './scout';
 // Default Configuration
 // ============================================================================
 
-export const DEFAULT_CONFIG: OgmaConfig = {
+export const DEFAULT_CONFIG: StewardConfig = {
   synthesizer: 'anthropic/claude-3.5-haiku',
   architect: 'deepseek/deepseek-v3.2',
   visionary: 'anthropic/claude-3.5-haiku',
@@ -23,12 +23,12 @@ export const DEFAULT_CONFIG: OgmaConfig = {
 // ============================================================================
 
 /**
- * Run the full Ogma pipeline
+ * Run the full Steward pipeline
  *
  * Phase 2: Scout → Trinity
  * (Synthesis is handled by the API route for streaming)
  */
-export async function runOgma(input: EngineInput): Promise<EngineOutput> {
+export async function runSteward(input: EngineInput): Promise<EngineOutput> {
   const { userPrompt, sessionId, config, sophiaContext } = input;
 
   // Phase 1: Scout Reconnaissance

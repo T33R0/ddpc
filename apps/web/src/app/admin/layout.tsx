@@ -51,7 +51,7 @@ export default async function AdminLayout({
                 <Link href="/admin/users" className={navLinkClasses}>Users</Link>
                 <Link href="/admin/issues" className={navLinkClasses}>Issues</Link>
                 <Link href="/admin/structure" className={navLinkClasses}>Structure</Link>
-                <Link href="/admin/ogma" className={navLinkClasses}>Ogma</Link>
+                <Link href="/admin/steward" className={navLinkClasses}>Steward</Link>
                 <Link href="/admin/email" className={navLinkClasses}>Email Ops</Link>
               </div>
             </div>

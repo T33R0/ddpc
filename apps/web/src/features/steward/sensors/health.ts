@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 
-// Ogma Sensors - Health
+// Steward Sensors - Health
 // Error rates, performance metrics, compute spend
 // Phase 4 Implementation - Currently a placeholder
 

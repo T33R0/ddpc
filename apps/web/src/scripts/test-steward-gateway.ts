@@ -16,7 +16,7 @@ if (fs.existsSync(envPath)) {
 }
 
 async function testGateway() {
-    console.log('Testing Ogma Gateway...');
+    console.log('Testing Steward Gateway...');
 
     const apiKey = process.env.AI_GATEWAY_API_KEY;
     if (!apiKey) {

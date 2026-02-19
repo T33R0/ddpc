@@ -1,11 +1,11 @@
-import { ogmaSensors } from '../sensors';
+import { stewardSensors } from '../sensors';
 import { evaluateAlerts, SystemStats } from './alerts';
-import { OgmaAlert } from '../types';
+import { StewardAlert } from '../types';
 
 export interface DailyHealthReport {
   status: 'Green' | 'Yellow' | 'Red';
   summary: string;
-  alerts: OgmaAlert[];
+  alerts: StewardAlert[];
   stats: SystemStats;
 }
 
@@ -15,11 +15,11 @@ export async function runDailyHealthCheck(): Promise<DailyHealthReport> {
   // Checking sensor definitions in index.ts -> they point to functions.
   // Assuming they return promises or values. Based on previous context, likely promises.
   
-  const spendData = await ogmaSensors.health.getComputeSpend();
+  const spendData = await stewardSensors.health.getComputeSpend();
   // metrics usually returns { total: number, period: string }
   const spend24h = spendData.total;
 
-  const errorRate = await ogmaSensors.health.getErrorRate();
+  const errorRate = await stewardSensors.health.getErrorRate();
   // returns number
 
   const stats: SystemStats = {

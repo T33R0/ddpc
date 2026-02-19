@@ -66,7 +66,7 @@ export function ModelSelectorButton({ config, onChange }: ModelSelectorProps) {
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Ogma System Configuration</DialogTitle>
+                    <DialogTitle>Steward System Configuration</DialogTitle>
                     <DialogDescription>
                         Configure the underlying models for the Synthesizer and the Trinity agents.
                     </DialogDescription>

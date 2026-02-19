@@ -1,12 +1,12 @@
-import { OgmaAlert } from '../types';
+import { StewardAlert } from '../types';
 
 export interface SystemStats {
   spend24h: number;
   errorRate24h: number;
 }
 
-export function evaluateAlerts(stats: SystemStats): OgmaAlert[] {
-  const alerts: OgmaAlert[] = [];
+export function evaluateAlerts(stats: SystemStats): StewardAlert[] {
+  const alerts: StewardAlert[] = [];
 
   // Spend Thresholds
   if (stats.spend24h > 5.00) {

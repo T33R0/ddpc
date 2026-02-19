@@ -12,7 +12,7 @@ export async function createChatSession(title?: string) {
   }
 
   const { data, error } = await supabase
-    .from('ogma_chat_sessions')
+    .from('steward_chat_sessions')
     .insert({
       user_id: user.id,
       title: title || 'New Conversation',
@@ -25,7 +25,7 @@ export async function createChatSession(title?: string) {
     throw new Error('Failed to create chat session');
   }
 
-  revalidatePath('/admin/ogma');
+  revalidatePath('/admin/steward');
   return data.id;
 }
 
@@ -39,10 +39,10 @@ export async function getChatSessions(includeArchived: boolean = false) {
 
   // Get sessions with their first message for preview
   let query = supabase
-    .from('ogma_chat_sessions')
+    .from('steward_chat_sessions')
     .select(`
       *,
-      ogma_chat_messages (
+      steward_chat_messages (
         content,
         role,
         created_at
@@ -66,7 +66,7 @@ export async function getChatSessions(includeArchived: boolean = false) {
 
   // Process to add snippet from first user message
   return data.map((session: any) => {
-    const messages = session.ogma_chat_messages || [];
+    const messages = session.steward_chat_messages || [];
     const firstUserMessage = messages.find((m: any) => m.role === 'user');
     const snippet = firstUserMessage 
       ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? '...' : '')
@@ -93,7 +93,7 @@ export async function getChatMessages(sessionId: string) {
 
   // Verify ownership implicitly via RLS
   const { data, error } = await supabase
-    .from('ogma_chat_messages')
+    .from('steward_chat_messages')
     .select('*')
     .eq('session_id', sessionId)
     .order('created_at', { ascending: true });
@@ -115,7 +115,7 @@ export async function archiveChatSession(sessionId: string) {
   }
 
   const { error } = await supabase
-    .from('ogma_chat_sessions')
+    .from('steward_chat_sessions')
     .update({ archived: true })
     .eq('id', sessionId)
     .eq('user_id', user.id);
@@ -125,7 +125,7 @@ export async function archiveChatSession(sessionId: string) {
     throw new Error('Failed to archive chat session');
   }
 
-  revalidatePath('/admin/ogma');
+  revalidatePath('/admin/steward');
 }
 
 export async function restoreChatSession(sessionId: string) {
@@ -137,7 +137,7 @@ export async function restoreChatSession(sessionId: string) {
   }
 
   const { error } = await supabase
-    .from('ogma_chat_sessions')
+    .from('steward_chat_sessions')
     .update({ archived: false })
     .eq('id', sessionId)
     .eq('user_id', user.id);
@@ -147,7 +147,7 @@ export async function restoreChatSession(sessionId: string) {
     throw new Error('Failed to restore chat session');
   }
 
-  revalidatePath('/admin/ogma');
+  revalidatePath('/admin/steward');
 }
 
 export async function deleteChatSession(sessionId: string) {
@@ -159,7 +159,7 @@ export async function deleteChatSession(sessionId: string) {
   }
 
   const { error } = await supabase
-    .from('ogma_chat_sessions')
+    .from('steward_chat_sessions')
     .delete()
     .eq('id', sessionId)
     .eq('user_id', user.id);
@@ -169,5 +169,5 @@ export async function deleteChatSession(sessionId: string) {
     throw new Error('Failed to delete chat session');
   }
 
-  revalidatePath('/admin/ogma');
+  revalidatePath('/admin/steward');
 }

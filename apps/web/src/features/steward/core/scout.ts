@@ -1,10 +1,10 @@
 import { generateText } from 'ai';
 import { vercelGateway } from '@/lib/ai-gateway';
-import { ogmaTools } from '../tools';
+import { stewardTools } from '../tools';
 import { calculateCost, logComputeCost } from '../lib/compute-costs';
-import type { ScoutBriefing, OgmaConfig } from '../types';
+import type { ScoutBriefing, StewardConfig } from '../types';
 
-const SCOUT_SYSTEM_PROMPT = `You are Ogma's Scout Module - a reconnaissance system that gathers context before strategic analysis begins.
+const SCOUT_SYSTEM_PROMPT = `You are Steward's Scout Module - a reconnaissance system that gathers context before strategic analysis begins.
 
 YOUR MISSION:
 1. Analyze the user's request to understand what context is needed
@@ -12,7 +12,7 @@ YOUR MISSION:
 3. After using tools, write a briefing that summarizes what you found
 
 AVAILABLE TOOLS:
-- get_repo_structure: See the project file tree (use path="." for root). IMPORTANT: The app code is at "apps/web/src", so typically you should check paths like "apps/web/src/features/ogma".
+- get_repo_structure: See the project file tree (use path="." for root). IMPORTANT: The app code is at "apps/web/src", so typically you should check paths like "apps/web/src/features/steward".
 - read_file_content: Read specific files (use use_github=false, branch="main")
 
 DECISION RULES:
@@ -29,9 +29,9 @@ When reporting file structures or contents, you must be 100% exhaustive. Never o
 export async function runScout(
   userPrompt: string,
   sessionId: string | null,
-  config?: Partial<OgmaConfig>
+  config?: Partial<StewardConfig>
 ): Promise<ScoutBriefing> {
-  console.log('[Ogma:Scout] Beginning reconnaissance...');
+  console.log('[Steward:Scout] Beginning reconnaissance...');
   const startTime = Date.now();
   
   const scoutModel = config?.scout || 'google/gemini-2.5-flash';
@@ -43,13 +43,13 @@ export async function runScout(
       prompt: `User Request: "${userPrompt}"
 
 Gather the context needed. After using any tools, summarize your findings.`,
-      tools: ogmaTools,
+      tools: stewardTools,
       maxSteps: 5,
       toolChoice: 'auto',
     } as any);
 
     const elapsed = Date.now() - startTime;
-    console.log(`[Ogma:Scout] Reconnaissance complete in ${elapsed}ms`);
+    console.log(`[Steward:Scout] Reconnaissance complete in ${elapsed}ms`);
 
     // Extract usage metrics
     const usage = result.usage || { promptTokens: 0, completionTokens: 0 };
@@ -112,17 +112,17 @@ Gather the context needed. After using any tools, summarize your findings.`,
         inputTokens,
         outputTokens,
         costUsd: cost,
-      }).catch(err => console.error('[Ogma:Scout] Cost logging failed:', err));
+      }).catch(err => console.error('[Steward:Scout] Cost logging failed:', err));
     }
 
-    console.log(`[Ogma:Scout] Files examined: ${filesExamined.length}, Tools used: ${toolsUsed.join(', ') || 'none'}, Cost: $${cost.toFixed(4)}`);
+    console.log(`[Steward:Scout] Files examined: ${filesExamined.length}, Tools used: ${toolsUsed.join(', ') || 'none'}, Cost: $${cost.toFixed(4)}`);
 
     // Build the final briefing
     let briefingText = result.text || '';
     
     // If model didn't produce text but we have tool outputs, use those
     if ((!briefingText || briefingText.trim() === '') && toolOutputs.length > 0) {
-      console.log('[Ogma:Scout] Model produced no summary, using raw tool outputs');
+      console.log('[Steward:Scout] Model produced no summary, using raw tool outputs');
       briefingText = toolOutputs.join('\n\n');
     }
     
@@ -142,7 +142,7 @@ Gather the context needed. After using any tools, summarize your findings.`,
     };
 
   } catch (error) {
-    console.error('[Ogma:Scout] Reconnaissance failed:', error);
+    console.error('[Steward:Scout] Reconnaissance failed:', error);
     
     return {
       context: 'Scout reconnaissance encountered an error. Proceeding without additional context.',

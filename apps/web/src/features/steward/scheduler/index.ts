@@ -1,4 +1,4 @@
-// Ogma Scheduler - Unified Export
+// Steward Scheduler - Unified Export
 // Proactive scheduling and alert management
 
 export { runDailyHealthCheck, type DailyHealthReport } from './daily-health';
