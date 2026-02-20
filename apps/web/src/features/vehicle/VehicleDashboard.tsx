@@ -8,6 +8,7 @@ import { Card, CardContent } from '@repo/ui/card'
 import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
 import { ScrollArea } from '@repo/ui/scroll-area'
+import { motion } from 'framer-motion'
 import {
     Home,
     Wrench,
@@ -20,7 +21,8 @@ import {
     ListTodo,
     Eye,
     EyeOff,
-    Settings
+    Settings,
+    MoreHorizontal // Adding icon for bento
 } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { format } from 'date-fns'
@@ -43,8 +45,6 @@ import { VehicleConfigModal } from '@/features/vehicle/components/VehicleConfigM
 import { ActivityDetailModal } from '@/features/vehicle/components/ActivityDetailModal'
 import { NeedsAttentionModal } from '@/features/vehicle/components/NeedsAttentionModal'
 import { getVehicleSlug } from '@/lib/vehicle-utils-client'
-
-// ... imports
 
 // --- Types ---
 
@@ -181,12 +181,12 @@ function RecentActivitySection({ activities, totalLogsCount, onActivityClick, on
         <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {visibleActivities.map((item, i) => (
-                    <div 
-                        key={i} 
+                    <div
+                        key={i}
                         onClick={() => onActivityClick(item)}
-                        className="flex gap-4 p-4 rounded-xl bg-card border border-border items-start shadow-xs hover:shadow-md transition-shadow cursor-pointer hover:bg-muted/50"
+                        className="flex gap-4 p-4 rounded-xl bg-card border border-border items-start shadow-xs hover:shadow-md transition-shadow cursor-pointer hover:bg-muted/50 group"
                     >
-                        <div className={`p-2 rounded-full shrink-0 ${getActivityColor(item.type)}`}>
+                        <div className={`p-2 rounded-full shrink-0 ${getActivityColor(item.type)} transition-transform group-hover:scale-110`}>
                             {getActivityIcon(item.type)}
                         </div>
                         <div className="min-w-0">
@@ -207,8 +207,8 @@ function RecentActivitySection({ activities, totalLogsCount, onActivityClick, on
             {visibleCount >= activities.length && (
                 <div className="text-center py-4">
                     {hasMore ? (
-                        <Button 
-                            variant="link" 
+                        <Button
+                            variant="link"
                             onClick={() => onNavigateToLogbook(21)}
                             className="text-primary hover:text-primary/80"
                         >
@@ -248,32 +248,35 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
         return type
     }
 
-    const StatItem = ({ label, value, unit, icon: Icon, subValue }: { label: string, value: React.ReactNode, unit?: string, icon?: React.ElementType, subValue?: string }) => (
-        <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 truncate w-full">{label}</span>
-            <div className={`flex items-baseline justify-center gap-0.5 ${typeof value === 'string' && value.length > 8 ? 'text-base' : 'text-lg'} font-bold text-foreground`}>
-                {Icon && <Icon className="w-4 h-4 mr-1 self-center text-muted-foreground" />}
-                <span className="truncate max-w-full">{value}</span>
-                {unit && <span className="text-xs font-normal text-muted-foreground">{unit}</span>}
+    // Bento Stat Card
+    const BentoTile = ({ label, value, unit, className, subValue, primary = false }: { label: string, value: React.ReactNode, unit?: string, className?: string, subValue?: string, primary?: boolean }) => (
+        <Card className={`overflow-hidden border-border bg-card/50 shadow-sm flex flex-col justify-center p-4 transition-all hover:bg-card/80 ${className || ''}`}>
+            <h3 className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1 opacity-80">{label}</h3>
+            <div className="flex items-baseline gap-1">
+                <span className={`font-bold text-foreground truncate ${primary ? 'text-3xl tracking-tight' : 'text-xl'}`}>{value}</span>
+                {unit && <span className="text-sm text-muted-foreground font-medium">{unit}</span>}
             </div>
-            {subValue && <span className="text-[10px] text-muted-foreground truncate max-w-full">{subValue}</span>}
-        </div>
+            {subValue && <span className="text-xs text-muted-foreground truncate mt-1">{subValue}</span>}
+        </Card>
     )
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                {/* Image Section (Desktop Left, Mobile 1st) */}
-                <div className="relative aspect-video md:aspect-auto md:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm order-1 md:order-1 group">
+                {/* Hero Image Section */}
+                <div className="relative aspect-video lg:aspect-auto lg:h-full w-full rounded-2xl overflow-hidden border border-border bg-muted shadow-sm col-span-1 lg:col-span-7 group">
                     {vehicleImage ? (
                         <>
-                            {/* Blurred Background Layer */}
+                            {/* Blurred Background Layer with Noise Overlay */}
+                            <div className="absolute inset-0 bg-gradient-brand opacity-60 z-0"></div>
+                            {/* SVG Noise pattern via inline data uri to add texture */}
+                            <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay z-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
                             <Image
                                 src={vehicleImage}
                                 alt="Vehicle Background"
                                 fill
-                                className="object-cover blur-xl opacity-40 scale-110"
+                                className="object-cover blur-2xl opacity-40 scale-125 z-0"
                                 unoptimized={true}
                                 aria-hidden="true"
                             />
@@ -291,170 +294,113 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
                             <Home className="w-16 h-16 text-muted-foreground opacity-20" />
                         </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent lg:hidden z-10" />
                 </div>
 
-                {/* Right Column: Actions & Stats (Desktop Right, Mobile 2nd) */}
-                <div className="grid grid-cols-6 gap-4 content-start order-2 md:order-2">
+                {/* Right Column: Actions & Bento Stats */}
+                <div className="col-span-1 lg:col-span-5 grid grid-cols-2 gap-4 content-start">
 
-                    {/* Row 1: Actions (Equal Width) */}
-
-                    <div className="col-span-6 grid grid-cols-3 gap-4">
+                    {/* Row 1: Actions */}
+                    <div className="col-span-2 grid grid-cols-3 gap-2">
                         <Button
                             variant="outline"
-                            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground h-auto py-2"
+                            className="bg-card hover:bg-secondary/20 border-border/60 shadow-xs h-auto py-3 text-secondary-foreground flex flex-col items-center gap-1 transition-all"
                             onClick={() => onAction('fuel')}
                         >
-                            <Fuel className="mr-2 h-4 w-4" /> <span>Log Fuel</span>
+                            <Fuel className="h-5 w-5 text-success" /> <span className="text-xs font-medium">Log Fuel</span>
                         </Button>
 
                         <Button
                             variant="outline"
-                            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground h-auto py-2"
+                            className="bg-card hover:bg-secondary/20 border-border/60 shadow-xs h-auto py-3 text-secondary-foreground flex flex-col items-center gap-1 transition-all"
                             onClick={() => onAction('job')}
                         >
-                            <Plus className="mr-2 h-4 w-4" /> <span>Log Job</span>
+                            <Plus className="h-5 w-5 text-primary" /> <span className="text-xs font-medium">Log Job</span>
                         </Button>
 
                         {isOwner && (
                             <Button
                                 variant="outline"
-                                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground h-auto py-2"
+                                className="bg-card hover:bg-secondary/20 border-border/60 shadow-xs h-auto py-3 text-secondary-foreground flex flex-col items-center gap-1 transition-all"
                                 onClick={onConfig}
                             >
-                                <Settings className="mr-2 h-4 w-4" /> <span>Config</span>
+                                <Settings className="h-5 w-5 text-muted-foreground" /> <span className="text-xs font-medium">Config</span>
                             </Button>
                         )}
                     </div>
 
-                    {/* Row 2: Vehicle Health (3 cols) */}
-                    <div className="col-span-6 md:col-span-3 h-full min-h-[160px]">
+                    {/* Row 2: Vehicle Health */}
+                    <div className="col-span-2 h-full min-h-[140px]">
                         <VehicleHealthSummary
                             averageMpg={stats.avgMpg}
                             factoryMpg={stats.factoryMpg}
                             inventoryStats={inventoryStats}
                             fuelType={stats.fuel_type}
                             onNeedsAttentionClick={onNeedsAttentionClick}
-                            onBuildClick={() => onAction('view_build')} // We might not need this if we handle navigation differently, but passing callback for now
+                            onBuildClick={() => onAction('view_build')}
                             recordCount={stats.record_count}
                             vehicleId={vehicleId}
                         />
                     </div>
 
-                    {/* Row 2: Consolidated Stats (3 cols) */}
-                    <Card className="col-span-6 md:col-span-3 bg-card/50 border-border shadow-sm flex flex-col h-full min-h-[160px]">
-                        <CardContent className="p-4 grid grid-cols-2 gap-y-6 gap-x-2 items-center justify-items-center h-full">
+                    {/* Bento Stats Grid */}
+                    <BentoTile label="Odometer" value={stats.odometer ? stats.odometer.toLocaleString() : '---'} unit="mi" className="col-span-2 sm:col-span-1" primary />
 
-                            {/* Row 1: Power & Torque */}
-                            <StatItem
-                                label="Power"
-                                value={stats.horsepower || '---'}
-                                unit="hp"
-                            />
-                            <StatItem
-                                label="Torque"
-                                value={stats.torque || '---'}
-                                unit="lb-ft"
-                            />
+                    <div className="col-span-2 sm:col-span-1 grid grid-cols-2 gap-2">
+                        <BentoTile label="Power" value={stats.horsepower || '---'} unit="hp" className="col-span-1" />
+                        <BentoTile label="Torque" value={stats.torque || '---'} unit="lb-ft" className="col-span-1" />
+                        <BentoTile label="Engine" value={stats.engine_size_l ? `${stats.engine_size_l}L` : '---'} className="col-span-2" />
+                    </div>
 
-                            {/* Row 2: Engine & Cylinders */}
-                            <StatItem
-                                label="Engine"
-                                value={stats.engine_size_l ? `${stats.engine_size_l}L` : '---'}
-                            />
-                            <StatItem
-                                label="Cylinders"
-                                value={stats.cylinders || '---'}
-                            />
+                    <BentoTile label="Drivetrain" value={formatDriveType(stats.drive_type) || '---'} className="col-span-1" />
 
-                            {/* Row 3: Drivetrain & Color */}
-                            <StatItem
-                                label="Drivetrain"
-                                value={formatDriveType(stats.drive_type) || '---'}
-                            />
-                            {((color) => {
-                                if (!color) return <StatItem label="Color" value="---" />
-
-                                const match = color.match(/^(.*?)\s*\((\d+),(\d+),(\d+)\)$/)
-                                if (match) {
-                                    const [, name, r, g, b] = match
-                                    return (
-                                        <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
-                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 truncate w-full">Color</span>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div
-                                                    className="w-6 h-6 rounded-full border border-border shadow-sm shrink-0"
-                                                    style={{ backgroundColor: `rgb(${r},${g},${b})` }}
-                                                    title={color}
-                                                />
-                                                <span className="text-xs font-bold leading-tight break-words max-w-[100px]" title={name?.trim()}>{name?.trim()}</span>
-                                            </div>
-                                        </div>
-                                    )
-                                }
-
+                    {/* Compact Color Tile */}
+                    <Card className="col-span-1 overflow-hidden border-border bg-card/50 shadow-sm flex flex-col justify-center p-4">
+                        <h3 className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2 opacity-80">Color</h3>
+                        {((color) => {
+                            if (!color) return <span className="font-bold text-lg">---</span>
+                            const match = color.match(/^(.*?)\s*\((\d+),(\d+),(\d+)\)$/)
+                            if (match) {
+                                const [, name, r, g, b] = match
                                 return (
-                                    <div className="flex flex-col items-center justify-center p-2 min-w-[30%] sm:min-w-[auto] text-center">
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Color</span>
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="w-6 h-6 rounded-full border border-border shadow-sm shrink-0" style={{ backgroundColor: color }} title={color} />
-                                            <span className="text-xs font-bold leading-tight break-words max-w-[100px]">{color}</span>
-                                        </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full border border-border shadow-xs shrink-0" style={{ backgroundColor: `rgb(${r},${g},${b})` }} title={color} />
+                                        <span className="text-sm font-bold leading-tight break-words line-clamp-2" title={name?.trim()}>{name?.trim()}</span>
                                     </div>
                                 )
-                            })(stats.vehicle_color)}
-
-                            {/* Row 4: Odometer & Dates */}
-                            <StatItem
-                                label="Odometer"
-                                value={stats.odometer ? stats.odometer.toLocaleString() : '---'}
-                                unit="mi"
-                            />
-
-                            {stats.ownership_end_date ? (
-                                <StatItem
-                                    label="Ownership Ended"
-                                    value={format(new Date(stats.ownership_end_date), 'MMM yyyy')}
-                                />
-                            ) : stats.acquisition_date ? (
-                                <StatItem
-                                    label="Acquired"
-                                    value={format(new Date(stats.acquisition_date), 'MMM yyyy')}
-                                />
-                            ) : (
-                                <StatItem
-                                    label="Acquired"
-                                    value="---"
-                                />
-                            )}
-
-                            {/* Row 5: VIN (Spans 2 cols) */}
-                            {stats.vin && (
-                                <div className="col-span-2 w-full mt-2 pt-2 border-t border-border/50">
-                                    <StatItem
-                                        label="VIN"
-                                        value={<span className="font-mono text-sm tracking-widest">{stats.vin}</span>}
-                                    />
+                            }
+                            return (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full border border-border shadow-xs shrink-0" style={{ backgroundColor: color }} title={color} />
+                                    <span className="text-sm font-bold leading-tight break-words line-clamp-2">{color}</span>
                                 </div>
-                            )}
-
-                        </CardContent>
+                            )
+                        })(stats.vehicle_color)}
                     </Card>
+
+                    {stats.vin && (
+                        <Card className="col-span-2 border-border bg-muted/20 shadow-none flex justify-between items-center px-4 py-3">
+                            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">VIN</span>
+                            <span className="font-mono text-sm tracking-widest text-foreground">{stats.vin}</span>
+                        </Card>
+                    )}
+
                 </div>
+            </div>
 
-
-                {/* Recent Activity (Mobile 4th - Order 3 in Grid main container) */}
-                <div className="order-3 col-span-1 md:col-span-2 mt-2">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Book className="w-5 h-5" /> Recent Activity
+            {/* Recent Activity Section */}
+            <div className="mt-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                        <Book className="w-5 h-5 text-primary" /> Recent Activity
                     </h3>
-                    <RecentActivitySection 
-                        activities={recentActivity}
-                        totalLogsCount={totalLogsCount}
-                        onActivityClick={onActivityClick}
-                        onNavigateToLogbook={onNavigateToLogbook}
-                    />
                 </div>
+                <RecentActivitySection
+                    activities={recentActivity}
+                    totalLogsCount={totalLogsCount}
+                    onActivityClick={onActivityClick}
+                    onNavigateToLogbook={onNavigateToLogbook}
+                />
             </div>
         </div>
     )
@@ -793,12 +739,12 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                 activity={activeActivity}
                 onClose={() => setActiveActivity(null)}
                 onViewInBuild={(partId) => {
-                   // This logic is tricky because we need to switch tabs to 'build' and optionally focus the node
-                   // For now, let's just switch the tab. The partId might need to be passed down if we want deep linking inside the diagram.
-                   // The Build Tab component is `TabBuild`. It renders `PartsDiagramContainer`.
-                   // Currently PartsDiagramContainer doesn't accept a focused part ID prop easily accessible here without more plumbing.
-                   // So we simply switch tabs.
-                   setActiveTab('build')
+                    // This logic is tricky because we need to switch tabs to 'build' and optionally focus the node
+                    // For now, let's just switch the tab. The partId might need to be passed down if we want deep linking inside the diagram.
+                    // The Build Tab component is `TabBuild`. It renders `PartsDiagramContainer`.
+                    // Currently PartsDiagramContainer doesn't accept a focused part ID prop easily accessible here without more plumbing.
+                    // So we simply switch tabs.
+                    setActiveTab('build')
                 }}
                 onViewInLogbook={(activityId) => {
                     setActiveActivity(null)

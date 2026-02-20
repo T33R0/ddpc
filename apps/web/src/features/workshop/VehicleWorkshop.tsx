@@ -122,11 +122,11 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
 
     const handleReorder = (newOrder: Job[]) => {
         if (!data) return;
-        
+
         // Optimistic update
         // We separate non-planned jobs to preserve them
         const otherJobs = data.jobs.filter(j => j.status !== 'planned');
-        
+
         setData({
             ...data,
             jobs: [...otherJobs, ...newOrder]
@@ -137,7 +137,7 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
             id: job.id,
             order_index: index
         }));
-        
+
         updateJobOrder(updates);
     };
 
@@ -165,29 +165,41 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
 
     if (!hasAccess) {
         return (
-            <div className="relative h-[calc(100vh-140px)] min-h-[600px] overflow-hidden">
+            <div className="relative h-[calc(100vh-140px)] min-h-[600px] overflow-hidden rounded-2xl border border-border mt-2">
                 {/* Blurred Content Overlay */}
-                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex items-center justify-center">
-                    <div className="text-center space-y-4 max-w-md p-6 bg-card border border-border rounded-xl shadow-2xl">
-                        <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Wrench className="w-8 h-8 text-primary" />
+                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="relative overflow-hidden text-center space-y-5 max-w-md p-8 bg-card/90 backdrop-blur-xl border border-border/80 rounded-[2rem] shadow-2xl group hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500">
+                        {/* CSS Shimmer Animation Injection */}
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
+                            @keyframes shimmerSheen { 0% { transform: translateX(-150%) skewX(-20deg); } 100% { transform: translateX(150%) skewX(-20deg); } }
+                        `}} />
+                        {/* Shimmer Element */}
+                        <div
+                            className="pointer-events-none absolute inset-0 w-[200%] bg-gradient-to-r from-transparent via-foreground/5 to-transparent"
+                            style={{ animation: 'shimmerSheen 4s ease-in-out infinite' }}
+                        />
+
+                        <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-2 relative">
+                            <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse opacity-50" />
+                            <Wrench className="w-10 h-10 text-primary relative z-10 drop-shadow-sm" />
                         </div>
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent pb-1">
                             Workshop Access Required
                         </h2>
-                        <p className="text-muted-foreground">
-                            The Workshop is a professional-grade tool for managing builds, parts, and jobs. Upgrade to Pro or Vanguard to unlock this feature.
+                        <p className="text-muted-foreground text-sm leading-relaxed px-2">
+                            The Workshop is a professional-grade tool for managing builds, parts, and jobs. Upgrade to Pro or Vanguard to unlock this workflow.
                         </p>
-                        <Button className="w-full" asChild>
-                            <a href="/pricing">View Plans</a>
-                        </Button>
+                        <div className="pt-2">
+                            <Button className="w-full h-12 rounded-xl text-base font-semibold shadow-md active:scale-95 transition-transform" asChild>
+                                <a href="/pricing">View Plans</a>
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Background Content (Blurred via overlay above, but actually rendering it gives the "peek" effect if we wanted, 
-                    but here the overlay div handles the blur. If we want the CONTENT to be blurred, we apply blur to this container) 
-                */}
-                <div className="h-full flex flex-col gap-4 filter blur-sm pointer-events-none select-none opacity-50">
+                {/* Background Content */}
+                <div className="h-full flex flex-col gap-4 filter blur-sm pointer-events-none select-none opacity-40">
                     <div className="grid grid-cols-1 md:grid-cols-2 grid-rows-2 gap-4 h-full">
                         {/* Mock Quadrants for visual texture */}
                         <Quadrant title="Sourcing" icon={ShoppingBag} badge={12}>
@@ -254,9 +266,9 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                     <div className="space-y-3">
                         {/* 1. Render Active Orders (skip empty ones where all parts have arrived) */}
                         {(data?.orders || []).filter(o => o.status === 'ordered' || o.status === 'shipped').map(order => {
-                             const orderParts = wishlist.filter(p => p.order_id === order.id);
-                             if (orderParts.length === 0) return null; // Skip empty orders
-                             return (
+                            const orderParts = wishlist.filter(p => p.order_id === order.id);
+                            if (orderParts.length === 0) return null; // Skip empty orders
+                            return (
                                 <div key={order.id} className="border border-primary/20 bg-primary/5 rounded-lg p-2 space-y-2">
                                     <div className="flex justify-between items-center text-xs text-primary font-medium px-1">
                                         <div className="flex items-center gap-2">
@@ -274,18 +286,18 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                                                 key={part.id}
                                                 item={{
                                                     ...part,
-                                                    priority: part.priority || 1, 
+                                                    priority: part.priority || 1,
                                                     purchase_price: part.purchase_price,
                                                     purchase_url: part.purchase_url,
                                                     vehicle_id: vehicleId,
-                                                    tracking_number: part.tracking_number, 
+                                                    tracking_number: part.tracking_number,
                                                     carrier: part.carrier
                                                 }}
                                                 onUpdate={refreshData}
                                                 onEdit={handleEditItem}
                                                 onMarkArrived={handleMarkArrived}
-                                                // Ordered parts in an order group usually don't need selection for *creating* an order, 
-                                                // but maybe we want to select them to move/remove? defaulting to not selectable for creation.
+                                            // Ordered parts in an order group usually don't need selection for *creating* an order, 
+                                            // but maybe we want to select them to move/remove? defaulting to not selectable for creation.
                                             />
                                         ))}
                                         {orderParts.length === 0 && <div className="text-xs text-muted-foreground italic pl-2">No parts linked</div>}
@@ -295,7 +307,7 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                                         <span>{order.status}</span>
                                     </div>
                                 </div>
-                             )
+                            )
                         })}
 
                         {/* 2. Render Unordered Wishlist Items */}
@@ -304,11 +316,11 @@ export default function VehicleWorkshop({ vehicleId, vehicleSlug, odometer }: Ve
                                 key={part.id}
                                 item={{
                                     ...part,
-                                    priority: part.priority || 1, 
+                                    priority: part.priority || 1,
                                     purchase_price: part.purchase_price,
                                     purchase_url: part.purchase_url,
                                     vehicle_id: vehicleId,
-                                    tracking_number: part.tracking_number, 
+                                    tracking_number: part.tracking_number,
                                     carrier: part.carrier
                                 }}
                                 onUpdate={refreshData}

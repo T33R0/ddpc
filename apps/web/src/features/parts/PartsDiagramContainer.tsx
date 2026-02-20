@@ -279,44 +279,62 @@ export default function PartsDiagramContainer({ vehicleId }: PartsDiagramContain
           )}
         </div>
 
-        {/* Zone 2: Blueprint */}
-        {/* Zone 2: Blueprint (Collapsible) */}
+        {/* Zone 2: Blueprint (Modal Trigger) */}
         <div className="space-y-4">
-          <div
-            className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/10 transition-colors rounded-sm px-1 py-1"
-            onClick={() => setIsBlueprintExpanded(!isBlueprintExpanded)}
-          >
+          <div className="flex items-center justify-between border-b pb-2 px-1 py-1">
             <h3 className="text-lg font-bold flex items-center gap-2">
               <span className="w-2 h-6 bg-info rounded-full" />
               Blueprint (Recommended)
-              <span className="text-xs font-normal text-muted-foreground ml-2">
-                {isBlueprintExpanded ? 'Hide' : 'Show'}
-              </span>
             </h3>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">{zone2Blueprint.length} items</span>
-              {isBlueprintExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </div>
           </div>
 
-          {isBlueprintExpanded && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in slide-in-from-top-2 duration-300">
-              {zone2Blueprint.map((slot) => (
-                <PartCard
-                  key={slot.id}
-                  slot={slot}
-                  currentOdometer={vehicle?.odometer || 0}
-                  onAddPart={handleAddPart}
-                  onViewDetails={handleViewDetails}
-                />
-              ))}
-            </div>
-          )}
+          <div className="p-4 border border-border/50 rounded-xl bg-card">
+            <p className="text-sm text-muted-foreground mb-4">
+              View recommended parts for this category based on standard configurations.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full justify-center"
+              onClick={() => setIsBlueprintExpanded(true)}
+            >
+              View Recommendations
+            </Button>
+          </div>
         </div>
-
-
-
       </section>
+
+      {/* Blueprint Recommendations Modal */}
+      {isBlueprintExpanded && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-5xl max-h-[90vh] rounded-xl shadow-lg border border-border flex flex-col">
+            <div className="p-4 border-b border-border flex justify-between items-center">
+              <h3 className="text-lg font-bold">Recommended Parts</h3>
+              <Button variant="ghost" size="sm" onClick={() => setIsBlueprintExpanded(false)}>
+                Close
+              </Button>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {zone2Blueprint.map((slot) => (
+                  <PartCard
+                    key={slot.id}
+                    slot={slot}
+                    currentOdometer={vehicle?.odometer || 0}
+                    onAddPart={(s) => {
+                      handleAddPart(s);
+                      setIsBlueprintExpanded(false); // Close modal when adding
+                    }}
+                    onViewDetails={handleViewDetails}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fluids Section — Phase 3 */}
       <Separator className="my-4" />

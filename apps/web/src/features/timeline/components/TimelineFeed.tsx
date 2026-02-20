@@ -155,105 +155,137 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
     )
   }
 
+  const handleToggle = (value: string) => {
+    let newFilters;
+    if (activeFilters.includes(value)) {
+      newFilters = activeFilters.filter(f => f !== value);
+    } else {
+      newFilters = [...activeFilters, value];
+    }
+    handleFilterChange(newFilters);
+  };
+
   return (
     <>
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <ToggleGroup type="multiple" value={activeFilters} onValueChange={handleFilterChange} className="justify-start gap-2 flex-wrap">
-          <ToggleGroupItem value="fuel" aria-label="Toggle fuel" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary data-[state=on]:!bg-secondary/10 data-[state=on]:!border-secondary flex-1 sm:flex-none justify-center">
+        <div className="flex flex-wrap gap-2">
+          {/* Note: In a real app the list of toggles could be dynamic. Hardcoding the 3 for now. */}
+          <button
+            type="button"
+            onClick={() => handleToggle('fuel')}
+            className={`h-9 px-3 rounded-full border transition-all flex items-center justify-center text-xs font-medium 
+              ${activeFilters.includes('fuel')
+                ? 'bg-secondary/10 text-secondary border-secondary shadow-sm'
+                : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'}`}
+          >
             <Fuel className="w-4 h-4 mr-2" />
-            <span className="text-xs font-medium">Fuel</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="job" aria-label="Toggle jobs" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary data-[state=on]:!bg-secondary/10 data-[state=on]:!border-secondary flex-1 sm:flex-none justify-center">
+            Fuel
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleToggle('job')}
+            className={`h-9 px-3 rounded-full border transition-all flex items-center justify-center text-xs font-medium 
+              ${activeFilters.includes('job')
+                ? 'bg-secondary/10 text-secondary border-secondary shadow-sm'
+                : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'}`}
+          >
             <Wrench className="w-4 h-4 mr-2" />
-            <span className="text-xs font-medium">Jobs</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="part" aria-label="Toggle parts" className="h-9 px-2 border transition-all bg-muted/50 text-muted-foreground border-transparent hover:bg-muted data-[state=on]:!text-secondary data-[state=on]:!bg-secondary/10 data-[state=on]:!border-secondary flex-1 sm:flex-none justify-center">
+            Jobs
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleToggle('part')}
+            className={`h-9 px-3 rounded-full border transition-all flex items-center justify-center text-xs font-medium 
+              ${activeFilters.includes('part')
+                ? 'bg-secondary/10 text-secondary border-secondary shadow-sm'
+                : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'}`}
+          >
             <Package className="w-4 h-4 mr-2" />
-            <span className="text-xs font-medium">Parts</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+            Parts
+          </button>
+        </div>
 
         <div className="bg-muted/30 px-3 py-1.5 rounded-lg border border-border/50 flex items-center gap-2 self-end sm:self-auto">
-             <div className="bg-background p-1 rounded-full">
-                 {/* Reusing Activity icon for consistency with health card, or History for logbook context. Using History here as it fits the page. */}
-                 <History className="w-3.5 h-3.5 text-muted-foreground" />
-             </div>
-             <div className="flex items-baseline gap-1.5">
-                <span className="text-sm font-bold text-foreground">{filteredEvents.length}</span>
-                <span className="text-xs text-muted-foreground font-medium">Records</span>
-             </div>
+          <div className="bg-background p-1 rounded-full">
+            {/* Reusing Activity icon for consistency with health card, or History for logbook context. Using History here as it fits the page. */}
+            <History className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm font-bold text-foreground">{filteredEvents.length}</span>
+            <span className="text-xs text-muted-foreground font-medium">Records</span>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="relative space-y-6 before:absolute before:inset-0 before:ml-[1.25rem] before:-translate-x-px md:before:ml-[1.25rem] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-border/0 before:via-border/80 before:to-border/0 py-4">
         {filteredEvents.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12 text-muted-foreground relative z-10">
             <p>No events match the selected filters.</p>
           </div>
         )}
         {filteredEvents.map((event) => (
-          <Card
-            key={event.id}
-            onClick={() => setSelectedEvent(event)}
-            className="bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border cursor-pointer active:scale-[0.99]"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  {getEventIcon(event.type)}
+          <div key={event.id} className="relative flex items-start gap-4 group">
+            <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-background border border-background shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-110 mt-1">
+              {getEventIcon(event.type)}
+            </div>
+
+            <Card
+              onClick={() => setSelectedEvent(event)}
+              className="flex-1 bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border cursor-pointer active:scale-[0.99] shadow-sm group-hover:shadow-md"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={`text-sm font-bold ${getEventTypeColor(event.type)}`}>
+                    <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                      <span className={`text-xs font-black uppercase tracking-wider ${getEventTypeColor(event.type)}`}>
                         {getEventTypeLabel(event.type)}
                       </span>
-                      {event.status && event.type === 'part' && (
-                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
-                          {event.status}
-                        </span>
-                      )}
-                      {event.status && event.type === 'modification' && (
-                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                      {event.status && (event.type === 'part' || event.type === 'modification') && (
+                        <span className="text-[10px] bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full font-medium border border-border/50">
                           {event.status}
                         </span>
                       )}
                     </div>
-                    <CardTitle className="text-lg font-bold text-foreground mb-1">
+                    <CardTitle className="text-lg font-bold text-foreground mb-1 leading-tight">
                       {event.title}
                     </CardTitle>
                     {event.description && (
-                      <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
+                      <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mt-2">
                         {event.description}
                       </p>
                     )}
                   </div>
+                  <div className="text-right flex-shrink-0 flex flex-col items-end">
+                    <span className="text-xs font-medium text-muted-foreground bg-secondary/50 px-2 py-1 rounded-md border border-border/50">
+                      {event.date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
+                    {event.odometer && (
+                      <span className="text-[10px] font-semibold text-muted-foreground mt-2 flex items-center gap-1 opacity-80">
+                        <Gauge className="w-3 h-3" />
+                        {event.odometer.toLocaleString()} mi
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm text-muted-foreground font-medium">
-                    {event.date.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </p>
-                  {event.odometer && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {event.odometer.toLocaleString()} miles
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            {(event.cost !== undefined && event.cost > 0) && (
-              <CardContent className="pt-0">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Cost:</span>
-                  <span className="text-sm font-semibold text-foreground">
-                    ${event.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </CardContent>
-            )}
-          </Card>
+              </CardHeader>
+              {(event.cost !== undefined && event.cost > 0) && (
+                <CardContent className="pt-0">
+                  <div className="flex justify-between items-center border-t border-border/40 pt-3 mt-1">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Cost</span>
+                    <span className="text-sm font-bold text-foreground">
+                      ${event.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          </div>
         ))}
       </div>
 
