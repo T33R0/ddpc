@@ -24,26 +24,28 @@ export const ZoomParallax = ({ images }: { images: { src: string; alt: string }[
   }
 
   return (
-    <div ref={container} className="relative h-[300vh] bg-background">
+    <div ref={container} className="relative bg-background">
       <div className="sticky top-0 h-screen overflow-hidden">
         {images.slice(0, 7).map((image, index) => {
           const scale = scales[index]!;
           const positionClasses = [
             '', // Main image, centered by default
-            '[&>div]:!-top-[30vh] [&>div]:!left-[5vw] [&>div]:!h-[30vh] [&>div]:!w-[35vw]', // Image 2
-            '[&>div]:!-top-[10vh] [&>div]:!-left-[25vw] [&>div]:!h-[45vh] [&>div]:!w-[20vw]', // Image 3
-            '[&>div]:!left-[27.5vw] [&>div]:!h-[25vh] [&>div]:!w-[25vw]', // Image 4
-            '[&>div]:!top-[27.5vh] [&>div]:!left-[5vw] [&>div]:!h-[25vh] [&>div]:!w-[20vw]', // Image 5
-            '[&>div]:!top-[27.5vh] [&>div]:!-left-[22.5vw] [&>div]:!h-[25vh] [&>div]:!w-[30vw]', // Image 6
-            '[&>div]:!top-[22.5vh] [&>div]:!left-[25vw] [&>div]:!h-[15vh] [&>div]:!w-[15vw]', // Image 7
+            '[&>div]:!-top-1/3 [&>div]:!left-12 [&>div]:!h-1/3 [&>div]:!w-1/3', // Image 2
+            '[&>div]:!-top-24 [&>div]:!-left-1/4 [&>div]:!h-2/5 [&>div]:!w-1/4', // Image 3
+            '[&>div]:!left-1/4 [&>div]:!h-1/4 [&>div]:!w-1/4', // Image 4
+            '[&>div]:!top-1/4 [&>div]:!left-12 [&>div]:!h-1/4 [&>div]:!w-1/5', // Image 5
+            '[&>div]:!top-1/4 [&>div]:!-left-1/4 [&>div]:!h-1/4 [&>div]:!w-1/3', // Image 6
+            '[&>div]:!top-1/4 [&>div]:!left-1/4 [&>div]:!h-1/4 [&>div]:!w-1/6', // Image 7
           ];
+
+          const motionStyle = { scale };
 
           return (
             <motion.div
               key={image.src}
-              style={{ scale }}
+              style={motionStyle}
               className={`absolute top-0 flex h-full w-full items-center justify-center ${positionClasses[index]}`}>
-              <div className="relative h-[25vh] w-[25vw]">
+              <div className="relative h-1/4 w-1/4">
                 <Image
                   src={image.src}
                   fill
@@ -55,6 +57,9 @@ export const ZoomParallax = ({ images }: { images: { src: string; alt: string }[
           );
         })}
       </div>
+      {/* Spacers to create 300vh combined height (100vh from sticky + two 100vh blocks) */}
+      <div className="h-screen w-full" />
+      <div className="h-screen w-full" />
     </div>
   );
 };

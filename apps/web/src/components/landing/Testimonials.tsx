@@ -33,7 +33,7 @@ export function Testimonials({ testimonials = [] }: { testimonials?: Testimonial
           </p>
         </div>
 
-        <div className="relative flex justify-center gap-8 max-h-[450px] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]">
+        <div className="relative flex justify-center gap-8 max-h-96 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]">
           {firstColumn.length > 0 && <TestimonialsColumn testimonials={firstColumn} duration={25} />}
           {secondColumn.length > 0 && <TestimonialsColumn testimonials={secondColumn} duration={30} />}
           {thirdColumn.length > 0 && <TestimonialsColumn testimonials={thirdColumn} duration={28} />}

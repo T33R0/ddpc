@@ -92,8 +92,8 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20 pointer-events-none"
       >
-        <div className="blur-[106px] h-56 bg-gradient-brand" />
-        <div className="blur-[106px] h-32 bg-gradient-brand-r" />
+        <div className="blur-3xl h-56 bg-gradient-brand" />
+        <div className="blur-3xl h-32 bg-gradient-brand-r" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -120,7 +120,7 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
             </button>
             <div className="relative flex flex-col items-center">
               {isAnnual && (
-                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-success text-[10px] font-bold whitespace-nowrap animate-in fade-in slide-in-from-bottom-1">
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-success text-xs font-bold whitespace-nowrap animate-in fade-in slide-in-from-bottom-1">
                   Save 17%
                 </span>
               )}
@@ -179,12 +179,6 @@ export function Pricing({ onPlanCtaClick }: PricingProps = {}) {
                   {plan.premium && typeof plan.spotsRemaining === 'number' && (
                     <div className="mt-2 text-xs font-semibold text-accent bg-accent/10 py-1 px-3 rounded-full inline-block">
                       {plan.spotsRemaining} / {plan.totalSpots} Spots Remaining
-                      <div className="w-full bg-accent/20 h-1 mt-1 rounded-full overflow-hidden">
-                        <div
-                          className="bg-accent h-full rounded-full"
-                          style={{ width: `${(plan.spotsRemaining / (plan.totalSpots || 100)) * 100}%` }}
-                        />
-                      </div>
                     </div>
                   )}
                 </div>

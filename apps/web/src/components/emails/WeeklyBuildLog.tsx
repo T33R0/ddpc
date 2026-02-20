@@ -53,7 +53,7 @@ export const WeeklyBuildLog = ({
                     {message && (
                         <Section style={section}>
                             <Text style={subHeader}>FROM THE SHOP</Text>
-                            <Text 
+                            <Text
                                 style={messageText}
                                 dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(message) }}
                             />
@@ -71,7 +71,7 @@ export const WeeklyBuildLog = ({
                                         <Text style={bullet}>•</Text>
                                     </Column>
                                     <Column>
-                                        <Text 
+                                        <Text
                                             style={itemText}
                                             dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(feature) }}
                                         />
@@ -90,7 +90,7 @@ export const WeeklyBuildLog = ({
                                         <Text style={bullet}>•</Text>
                                     </Column>
                                     <Column>
-                                        <Text 
+                                        <Text
                                             style={itemText}
                                             dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(fix) }}
                                         />
@@ -109,7 +109,7 @@ export const WeeklyBuildLog = ({
                                         <Text style={bullet}>•</Text>
                                     </Column>
                                     <Column>
-                                        <Text 
+                                        <Text
                                             style={itemText}
                                             dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(improvement) }}
                                         />
@@ -124,7 +124,7 @@ export const WeeklyBuildLog = ({
                     {proTip && (
                         <Section style={section}>
                             <Text style={subHeader}>💡 PIT CREW TIP</Text>
-                            <Text 
+                            <Text
                                 style={messageText}
                                 dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(proTip) }}
                             />
@@ -158,12 +158,12 @@ export const WeeklyBuildLog = ({
 
 // Styles
 const main = {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgb(255, 255, 255)',
     fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgb(255, 255, 255)',
     margin: '0 auto',
     padding: '20px 0 48px',
     marginBottom: '64px',
@@ -171,7 +171,7 @@ const container = {
 };
 
 const h1 = {
-    color: '#1a1a1a',
+    color: 'rgb(26, 26, 26)',
     fontSize: '24px',
     fontWeight: '700',
     letterSpacing: '-0.5px',
@@ -182,7 +182,7 @@ const h1 = {
 };
 
 const intro = {
-    color: '#444',
+    color: 'rgb(68, 68, 68)',
     fontSize: '15px',
     lineHeight: '1.4',
     margin: '0 0 24px',
@@ -194,7 +194,7 @@ const section = {
 };
 
 const subHeader = {
-    color: '#666',
+    color: 'rgb(102, 102, 102)',
     fontSize: '12px',
     fontWeight: '700',
     letterSpacing: '1px',
@@ -212,14 +212,14 @@ const bulletCol = {
 };
 
 const bullet = {
-    color: '#1a1a1a',
+    color: 'rgb(26, 26, 26)',
     fontSize: '14px',
     lineHeight: '1.5',
     margin: '0',
 };
 
 const itemText = {
-    color: '#1a1a1a',
+    color: 'rgb(26, 26, 26)',
     fontSize: '14px',
     lineHeight: '1.5',
     margin: '0',
@@ -228,7 +228,7 @@ const itemText = {
 const messageText = {
     fontSize: '16px',
     lineHeight: '1.6',
-    color: '#374151',
+    color: 'rgb(55, 65, 81)',
     marginTop: '0',
 };
 
@@ -239,9 +239,9 @@ const buttonSection = {
 };
 
 const button = {
-    backgroundColor: '#000000',
+    backgroundColor: 'rgb(0, 0, 0)',
     borderRadius: '6px',
-    color: '#ffffff',
+    color: 'rgb(255, 255, 255)',
     fontSize: '14px',
     fontWeight: '600',
     textDecoration: 'none',
@@ -251,7 +251,7 @@ const button = {
 };
 
 const divider = {
-    borderColor: '#e5e7eb',
+    borderColor: 'rgb(229, 231, 235)',
     margin: '32px 0',
 };
 
@@ -260,12 +260,12 @@ const footer = {
 };
 
 const footerText = {
-    color: '#6b7280',
+    color: 'rgb(107, 114, 128)',
     fontSize: '12px',
     lineHeight: '1.5',
 };
 
 const link = {
-    color: '#1a1a1a',
+    color: 'rgb(26, 26, 26)',
     textDecoration: 'underline',
 };

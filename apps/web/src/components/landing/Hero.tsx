@@ -9,8 +9,8 @@ export function Hero() {
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-20"
       >
-        <div className="blur-[106px] h-56 bg-gradient-brand" />
-        <div className="blur-[106px] h-32 bg-gradient-brand-r" />
+        <div className="blur-3xl h-56 bg-gradient-brand" />
+        <div className="blur-3xl h-32 bg-gradient-brand-r" />
       </div>
       <div className="relative max-w-4xl mx-auto text-center space-y-8">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tighter">
