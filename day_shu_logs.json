@@ -1,0 +1,1380 @@
+[dotenv@17.2.4] injecting env (16) from apps/web/.env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+All vehicles: [
+  'Platinum',
+  'Barron Brown;)',
+  'Base',
+  'Orange Thang',
+  'quattro',
+  'I Dont Care',
+  'Automatic',
+  'LE',
+  'Evolve+ e-4ORCE',
+  'raw_shu',
+  'YETI POOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO',
+  '2SS',
+  'Si',
+  '335xi',
+  'Engage+ e-4ORCE',
+  'M5 Competition',
+  'Stupid head in diapers poopy V.I.P very important poop',
+  '35t R-Sport',
+  'Flake',
+  'LX 5.0',
+  'Snow',
+  'rock lobstah',
+  '1.8T quattro',
+  'Base',
+  'I am a car',
+  'Nobody and I am not happy>:(',
+  'SE',
+  'Base',
+  'Carrera Turbo',
+  'Papa Stroll',
+  'quattro',
+  '>:*|l',
+  'eDrive40',
+  'Base',
+  'day_shu'
+]
+Found: { id: '71cdc8ed-2ba2-4c7a-a63d-104503213bca', nickname: 'day_shu' }
+Logs: [
+  {
+    "id": "d036d432-a2fd-4d4d-acb2-844383adb625",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": "c045478c-a171-4f10-b452-8b8d76af1969",
+    "cost": null,
+    "odometer": null,
+    "event_date": "2025-11-11T00:00:00+00:00",
+    "created_at": "2025-11-11T05:25:05.912315+00:00",
+    "notes": "Replace engine oil and oil filter.",
+    "service_provider": null,
+    "service_item_id": null,
+    "status": "History",
+    "job_plans": [],
+    "service_items": null
+  },
+  {
+    "id": "021dff2b-c044-4928-aee4-01d97178e4b3",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": "d6e71cca-63fd-4f45-b67b-bab694871106",
+    "cost": 250,
+    "odometer": 73000,
+    "event_date": "2025-11-11T00:00:00+00:00",
+    "created_at": "2025-11-11T22:23:41.169202+00:00",
+    "notes": "Replace brake fluid.",
+    "service_provider": "me",
+    "service_item_id": null,
+    "status": "History",
+    "job_plans": [],
+    "service_items": null
+  },
+  {
+    "id": "1c1ab662-34d7-4983-a3f3-fa6255c8c67d",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": "c045478c-a171-4f10-b452-8b8d76af1969",
+    "cost": 150,
+    "odometer": 73000,
+    "event_date": "2025-11-11T00:00:00+00:00",
+    "created_at": "2025-11-11T22:25:42.865305+00:00",
+    "notes": "Replace engine oil and oil filter.",
+    "service_provider": null,
+    "service_item_id": null,
+    "status": "History",
+    "job_plans": [],
+    "service_items": null
+  },
+  {
+    "id": "29a116b5-6ef4-4128-b1d3-0207b5f5076b",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 15,
+    "odometer": 73050,
+    "event_date": "2025-11-11T00:00:00+00:00",
+    "created_at": "2025-11-12T01:07:49.927104+00:00",
+    "notes": null,
+    "service_provider": "me",
+    "service_item_id": null,
+    "status": "History",
+    "job_plans": [],
+    "service_items": null
+  },
+  {
+    "id": "1c68f83c-66b6-435e-a816-c221deca34a6",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 301.5,
+    "odometer": 73052,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-11-15T16:28:34.661082+00:00",
+    "notes": "Used api, kept oems for rebuild",
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "History",
+    "job_plans": [
+      {
+        "id": "24b540a7-1c83-467b-85c5-e10906c46740",
+        "name": "CV Axle Replacement",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "65472daa-e747-43e0-a4b0-9736c273aa1f",
+            "notes": null,
+            "created_at": "2025-11-15T18:06:38.876912+00:00",
+            "step_order": 1,
+            "description": "Remove axle and replace",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "9dffd2f8-a48e-4878-8511-b4da724af86a",
+            "notes": null,
+            "created_at": "2025-11-15T18:06:24.139737+00:00",
+            "step_order": 2,
+            "description": "Remove axle from diff",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "61bca74f-14af-4e68-a69f-16c5a2613baa",
+            "notes": null,
+            "created_at": "2025-11-15T18:06:08.247396+00:00",
+            "step_order": 3,
+            "description": "Press out axle from hub",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "9c2d8bd2-d7cf-4c85-a9ff-906c573caab7",
+            "notes": "Torque 120ftlbs",
+            "created_at": "2025-11-15T18:05:39.859871+00:00",
+            "step_order": 4,
+            "description": "Unbolt lower control are from hub",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "4d2e4578-0ca4-4abf-983d-50a1a89319af",
+            "notes": null,
+            "created_at": "2025-11-15T18:05:24.757818+00:00",
+            "step_order": 5,
+            "description": "Remove brake rotor",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "ada0d50f-1f16-4e2b-8f82-570f6ae8f009",
+            "notes": null,
+            "created_at": "2025-11-15T18:05:17.375971+00:00",
+            "step_order": 6,
+            "description": "Remove brake caliper",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "7a53e5e3-43bb-4b04-ba90-e8f44188ee86",
+            "notes": null,
+            "created_at": "2025-11-15T17:26:06.820718+00:00",
+            "step_order": 7,
+            "description": "remove wheel",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "9bea3d36-0537-4257-9b27-5629143bcbbd",
+            "notes": null,
+            "created_at": "2025-11-15T17:25:55.243403+00:00",
+            "step_order": 8,
+            "description": "lift car",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "20c4bf5c-5a96-47a1-8d19-af623928e7fe",
+            "notes": "while car is still on the ground; retorque to 105ftlbs",
+            "created_at": "2025-11-15T17:25:36.440255+00:00",
+            "step_order": 9,
+            "description": "loosen wheel lug nuts",
+            "job_plan_id": "24b540a7-1c83-467b-85c5-e10906c46740",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-11-15T17:25:22.004733+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "1c68f83c-66b6-435e-a816-c221deca34a6"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "94660ad9-0a05-40d2-be40-3f83606e07ed",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": null,
+    "odometer": null,
+    "event_date": "2025-11-24T00:00:00+00:00",
+    "created_at": "2025-11-24T03:17:54.425032+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "e194b570-cddb-4bcd-8ad8-7469457bd0eb",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "e194b570-cddb-4bcd-8ad8-7469457bd0eb",
+      "name": "Engine Oil Change",
+      "category_id": "922de9df-ec1b-499a-b461-449842bf1e38",
+      "description": null
+    }
+  },
+  {
+    "id": "a2d62a51-8d99-4329-ab56-341a09a62fc4",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 940,
+    "odometer": 75101,
+    "event_date": "2025-11-24T00:00:00+00:00",
+    "created_at": "2025-11-24T23:15:41.178009+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "6b8af746-552e-4d55-9fc4-99232c718e0a",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "6b8af746-552e-4d55-9fc4-99232c718e0a",
+      "name": "Tire Replacement (New Set)",
+      "category_id": "dfdd07ba-41b9-4de6-91c0-4e6795d3ec1c",
+      "description": null
+    }
+  },
+  {
+    "id": "8b70b42e-d1ca-4ce0-8ca4-07f7656239f5",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 172,
+    "odometer": null,
+    "event_date": "2025-11-01T00:00:00+00:00",
+    "created_at": "2025-11-30T00:37:36.133181+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "2eb82a00-de3a-4660-82a2-a093d9101de8",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "2eb82a00-de3a-4660-82a2-a093d9101de8",
+      "name": "Fuel Filter Replacement",
+      "category_id": "922de9df-ec1b-499a-b461-449842bf1e38",
+      "description": null
+    }
+  },
+  {
+    "id": "97054160-abfb-4dc8-b495-7550a445ab1e",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 0,
+    "odometer": null,
+    "event_date": "2025-12-05T00:00:00+00:00",
+    "created_at": "2025-12-05T02:39:29.291532+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "055c5e5b-c481-49c7-ac9a-b840831da332",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "223fabed-c40a-401a-993f-8a7a7dd5aa8e",
+        "name": "Differential Fluid / Gear Oil Change",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "956e7437-6fc3-4211-a1b0-beea835e6321",
+            "notes": "Notes",
+            "created_at": "2025-12-05T02:39:45.962573+00:00",
+            "step_order": 1,
+            "description": "Then another",
+            "job_plan_id": "223fabed-c40a-401a-993f-8a7a7dd5aa8e",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "739ed274-972b-47f8-98f3-8c03558ceaec",
+            "notes": null,
+            "created_at": "2025-12-05T02:39:39.155883+00:00",
+            "step_order": 2,
+            "description": "Next step",
+            "job_plan_id": "223fabed-c40a-401a-993f-8a7a7dd5aa8e",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-05T02:39:31.7902+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "97054160-abfb-4dc8-b495-7550a445ab1e"
+      }
+    ],
+    "service_items": {
+      "id": "055c5e5b-c481-49c7-ac9a-b840831da332",
+      "name": "Differential Fluid / Gear Oil Change",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": null
+    }
+  },
+  {
+    "id": "5bbfbc51-5cc0-4e69-a8b6-c4eeafb47c0c",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 0,
+    "odometer": null,
+    "event_date": "2025-12-05T00:00:00+00:00",
+    "created_at": "2025-12-05T05:23:41.183859+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "5443bc07-840f-4311-ab92-1718f06b4135",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "5443bc07-840f-4311-ab92-1718f06b4135",
+      "name": "Transmission Fluid Change / Flush",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": null
+    }
+  },
+  {
+    "id": "0e80ad4a-63cd-45ab-b904-9e2f51e991d4",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 459.5,
+    "odometer": 75000,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-11-15T18:54:54.767928+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "Plan",
+    "job_plans": [
+      {
+        "id": "eae18e68-c434-4d56-9102-94bf1da69050",
+        "name": "RL CV Axle Replacement",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "9ae77064-4eb6-48dc-b5f1-fe7573ed64e2",
+            "notes": "Use axle press",
+            "created_at": "2025-11-15T19:00:34.392302+00:00",
+            "step_order": 2,
+            "description": "Press out axle from hub",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "8bd022b2-a886-43f0-a8a0-3aeb4cd7d267",
+            "notes": "100nm\n18mm",
+            "created_at": "2025-11-15T18:57:40.139089+00:00",
+            "step_order": 3,
+            "description": "Unbolt flca",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "027dfdd4-2b60-4fcb-80c0-1cb318a86b5c",
+            "notes": "100nm + 90deg\n18mm",
+            "created_at": "2025-11-15T18:57:09.885197+00:00",
+            "step_order": 5,
+            "description": "Unbolt rlca",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "bd07a60b-cbae-48c7-981d-028cdabe4a35",
+            "notes": "Torque 105ftlbs",
+            "created_at": "2025-11-15T18:55:44.740438+00:00",
+            "step_order": 9,
+            "description": "Remove wheel",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "7b4681c4-579b-4797-9f96-76b6d9d3680d",
+            "notes": null,
+            "created_at": "2025-11-15T18:55:22.682244+00:00",
+            "step_order": 10,
+            "description": "Lift car",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "ccec5645-0093-4825-b490-006827d14d1f",
+            "notes": "165nm (122ftlb)\n21mm w/ 21mm counter\nDriver's side bolt seized",
+            "created_at": "2025-11-15T18:57:20.981027+00:00",
+            "step_order": 4,
+            "description": "Unbolt lower knuckle",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "53b32d35-5be1-41a1-9bd2-69ab4ca04c0d",
+            "notes": null,
+            "created_at": "2025-11-15T18:55:15.917464+00:00",
+            "step_order": 11,
+            "description": "Loosen wheel lugs",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "01adda43-5642-410c-a072-e9ccadc9bd88",
+            "notes": "50nm (37ftlb) + 90deg\n16mm\n2x nuts",
+            "created_at": "2025-11-15T18:56:09.500229+00:00",
+            "step_order": 7,
+            "description": "Remove brake caliper",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "7aa87a81-5218-423d-91c8-42e0b9ab2a79",
+            "notes": "145nm (107ftlb) + 45deg\n30mm 12pt",
+            "created_at": "2025-11-15T18:57:55.002909+00:00",
+            "step_order": 8,
+            "description": "Remove axle nut from hub",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "9b281941-5211-4732-bd7c-5a24138b2de6",
+            "notes": "6mm allen",
+            "created_at": "2025-11-15T18:56:17.338648+00:00",
+            "step_order": 6,
+            "description": "Remove brake rotor",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "f1322e54-4eac-438d-b934-f2355c31d097",
+            "notes": "Use pry bar and 2x4",
+            "created_at": "2025-11-15T19:00:54.681715+00:00",
+            "step_order": 1,
+            "description": "Remove axle from diff",
+            "job_plan_id": "eae18e68-c434-4d56-9102-94bf1da69050",
+            "is_completed": true,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-11-15T18:54:57.497744+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "0e80ad4a-63cd-45ab-b904-9e2f51e991d4"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "bdd5e75c-7a64-41c8-8371-121ac44d42e8",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": null,
+    "odometer": 75500,
+    "event_date": "2025-12-01T00:00:00+00:00",
+    "created_at": "2025-12-03T03:46:16.475118+00:00",
+    "notes": "michelin pilot sport 4s, 235/40r18 front, 255/35r18 rear",
+    "service_provider": null,
+    "service_item_id": "6b8af746-552e-4d55-9fc4-99232c718e0a",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "6b8af746-552e-4d55-9fc4-99232c718e0a",
+      "name": "Tire Replacement (New Set)",
+      "category_id": "dfdd07ba-41b9-4de6-91c0-4e6795d3ec1c",
+      "description": null
+    }
+  },
+  {
+    "id": "ba3af7a2-1a36-46ce-929e-6562ba12029b",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 13.96,
+    "odometer": 71658,
+    "event_date": "2025-12-08T00:00:00+00:00",
+    "created_at": "2025-12-08T01:13:27.665653+00:00",
+    "notes": "Alerted yesterday after driving to Cheyenne, WY and back",
+    "service_provider": null,
+    "service_item_id": "35d51b8d-d424-4db6-8ddb-3ee63ea836e7",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "35d51b8d-d424-4db6-8ddb-3ee63ea836e7",
+      "name": "Engine Oil Top-Off",
+      "category_id": "922de9df-ec1b-499a-b461-449842bf1e38",
+      "description": null
+    }
+  },
+  {
+    "id": "b6fd2cda-de11-4f3d-8a98-2912312eaf33",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 301.5,
+    "odometer": 75000,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-12-04T06:13:07.251644+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+        "name": "RR CV Axle Replacement",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "7eadcd15-a456-4668-b481-2402f3808d36",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 1,
+            "description": "Press out axle from hub",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "1b49173e-c8da-49df-8a68-1b41e6db539f",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 10,
+            "description": "Lift car",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "49b5cbaf-d06f-4b4c-8795-650fbcec9a9a",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 3,
+            "description": "Unbolt lower knuckle",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "87277192-9c5d-4090-bb94-bd0f216dc8fa",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 2,
+            "description": "Unbolt flca",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "6d994227-071a-47a6-a67e-8fc24c3a4ca7",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 7,
+            "description": "Remove brake caliper",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "aac52aed-015d-42ee-a474-20b963a1dce8",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 9,
+            "description": "Remove wheel",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "0c0e54e6-2b41-4579-99df-d634e86b5114",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 6,
+            "description": "Remove axle from diff",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "34ddfb19-968c-4845-a8d1-a08a3ba523d4",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 5,
+            "description": "Remove brake rotor",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "578dde41-d9a8-4f3e-8bd9-782f03db3d62",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 12,
+            "description": "verify",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "2b8b9a48-9bfe-4273-bef4-d4feed66c3cf",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 4,
+            "description": "Unbolt rlca",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "c0ac81c9-b704-49e9-b2f9-f1563a74780e",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 8,
+            "description": "Remove axle nut from hub",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "42e46895-9df2-4251-9ebd-f420057a5c7f",
+            "notes": null,
+            "created_at": "2025-12-04T06:13:07.339831+00:00",
+            "step_order": 11,
+            "description": "Loosen wheel lugs",
+            "job_plan_id": "fd8a3a47-2988-4a56-b093-dc3703f84c0d",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-04T06:13:07.283639+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "b6fd2cda-de11-4f3d-8a98-2912312eaf33"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "0cd6fcc7-8609-4ca7-83b0-3c35bdba136d",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 0,
+    "odometer": null,
+    "event_date": "2025-12-05T00:00:00+00:00",
+    "created_at": "2025-12-05T05:24:14.119947+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "4bdf19b9-b9d6-463d-8bbb-dccc4903b19e",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "e6b1abd8-e75c-4c69-9c02-0514ba35daf5",
+        "name": "Post-Track Day Inspection",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [],
+        "created_at": "2025-12-05T05:24:18.575132+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "0cd6fcc7-8609-4ca7-83b0-3c35bdba136d"
+      }
+    ],
+    "service_items": {
+      "id": "4bdf19b9-b9d6-463d-8bbb-dccc4903b19e",
+      "name": "Post-Track Day Inspection",
+      "category_id": "93587e5e-5392-4087-a50e-f9da9d694f04",
+      "description": null
+    }
+  },
+  {
+    "id": "9827f779-3bf9-456e-aeac-c1a0e6a202eb",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 0,
+    "odometer": null,
+    "event_date": "2025-12-05T00:00:00+00:00",
+    "created_at": "2025-12-05T02:20:41.026528+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "a0dacd24-81fe-46cf-85b3-f225640e1f41",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "8aa14278-bfef-453a-a94a-972508c09504",
+        "name": "Cabin Air Filter Replacement",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "a1a8c8ec-4e8a-4b2f-9971-cfa50e0a2106",
+            "notes": "Notes",
+            "created_at": "2025-12-05T02:38:18.619489+00:00",
+            "step_order": 2,
+            "description": "Next step",
+            "job_plan_id": "8aa14278-bfef-453a-a94a-972508c09504",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "e1d44e7c-4d65-452b-af27-9533e2217db0",
+            "notes": null,
+            "created_at": "2025-12-05T02:20:49.300978+00:00",
+            "step_order": 1,
+            "description": "Step sss",
+            "job_plan_id": "8aa14278-bfef-453a-a94a-972508c09504",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-05T02:20:43.005041+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "9827f779-3bf9-456e-aeac-c1a0e6a202eb"
+      }
+    ],
+    "service_items": {
+      "id": "a0dacd24-81fe-46cf-85b3-f225640e1f41",
+      "name": "Cabin Air Filter Replacement",
+      "category_id": "600122ec-ae89-4826-a75c-a3d71a28d1f6",
+      "description": null
+    }
+  },
+  {
+    "id": "91368c26-b9e2-424a-bd47-63a6dc086bd9",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 459.5,
+    "odometer": 75000,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-12-13T00:26:26.255692+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+        "name": "RR CV Axle Replacement (Copy)",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "cd4297d1-12e2-40b3-a536-49e39c67a975",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 1,
+            "description": "Remove axle from diff",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "84c23ead-457e-449b-87a5-96cf711ff25d",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 2,
+            "description": "Press out axle from hub",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "8ca02b47-3672-4486-8d64-bc410c082dbd",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 3,
+            "description": "Unbolt flca",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "ec9e6ae6-d92d-4767-b51b-6c3f6074238a",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 4,
+            "description": "Unbolt lower knuckle",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "40cd80e1-1d77-41a3-af87-e8e371762e93",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 5,
+            "description": "Unbolt rlca",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "088f1ee5-4168-4599-b340-1203c1609b26",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 6,
+            "description": "Remove brake rotor",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "88de4374-50d8-45da-b35e-54740950c3df",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 7,
+            "description": "Remove brake caliper",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "59f5457d-aaf1-478e-933a-ab305e6ae146",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 8,
+            "description": "Remove axle nut from hub",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "523de060-f192-4042-8292-4653c6602faf",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 9,
+            "description": "Remove wheel",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "9a1734f9-fc03-4c11-ae38-ef3205a7ca68",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 10,
+            "description": "Lift car",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "b98829c8-a513-4562-b9fd-e7c392549b64",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:26.425664+00:00",
+            "step_order": 11,
+            "description": "Loosen wheel lugs",
+            "job_plan_id": "acf3635e-26e9-4709-aed5-d381babbbb3e",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-13T00:26:26.332611+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "91368c26-b9e2-424a-bd47-63a6dc086bd9"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "e26baa0e-31ae-4a92-9a81-c66730ea4574",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 459.5,
+    "odometer": 75000,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-12-13T00:26:41.952939+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+        "name": "RL CV Axle Replacement (Copy)",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "684a1264-0bc7-427e-b2fd-cb1529fae5d0",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 1,
+            "description": "Remove axle from diff",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "8f5a2c7e-42c5-468d-a1bb-9d3f3fa96c60",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 2,
+            "description": "Press out axle from hub",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "7d39d6cb-50a5-477e-92e9-8fe353372df4",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 3,
+            "description": "Unbolt flca",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "2ae19aeb-ed60-4a0c-8aa7-51d13099debb",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 4,
+            "description": "Unbolt lower knuckle",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "67adfede-18c9-47df-b7ec-a1926d4ccfbd",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 5,
+            "description": "Unbolt rlca",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "efa4fc2f-00db-4c45-8596-a46c284ad5ef",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 6,
+            "description": "Remove brake rotor",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "afae0487-abc6-4edf-93c1-67b517bf9c4a",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 7,
+            "description": "Remove brake caliper",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "e13ffe9e-55ea-4b35-87f5-ce5d46821281",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 8,
+            "description": "Remove axle nut from hub",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "511827f8-6b8c-417a-b8fe-173437d0540e",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 9,
+            "description": "Remove wheel",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "8858e877-5daf-48d2-90e2-5443ebbb1f83",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 10,
+            "description": "Lift car",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "85e4c41b-c46b-43ba-861d-570d916d1e6a",
+            "notes": null,
+            "created_at": "2025-12-13T00:26:42.057715+00:00",
+            "step_order": 11,
+            "description": "Loosen wheel lugs",
+            "job_plan_id": "a6ae248b-da16-435f-a6a2-da34fe826fc6",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-13T00:26:41.98957+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "e26baa0e-31ae-4a92-9a81-c66730ea4574"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "05bf5321-3bca-4456-8af0-1645d08e46d0",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 459.5,
+    "odometer": 75000,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-12-13T00:59:23.699114+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "Plan",
+    "job_plans": [
+      {
+        "id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+        "name": "RR CV Axle Replacement",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "d5a5ac68-b8c4-406e-8761-0e6676a0b3d2",
+            "notes": "Use pry bar and 2x4",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 1,
+            "description": "Remove axle from diff",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "c5d0fb06-16a0-4307-bcfc-b5d4980273de",
+            "notes": "Use axle press",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 2,
+            "description": "Press out axle from hub",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "ece318c1-a2d3-42d3-abdd-ad582560adab",
+            "notes": "100nm\n18mm",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 3,
+            "description": "Unbolt flca",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "34e235d3-9731-4134-9ce3-adeea7a7e653",
+            "notes": "165nm (122ftlb)\n21mm w/ 21mm counter\nDriver's side bolt seized",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 4,
+            "description": "Unbolt lower knuckle",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "26ab45de-500b-4e6a-861a-064dbfeb3aea",
+            "notes": "100nm + 90deg\n18mm",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 5,
+            "description": "Unbolt rlca",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "b5971293-3803-4a54-9d5d-37b1b93bdd0e",
+            "notes": null,
+            "created_at": "2025-12-21T00:01:26.406428+00:00",
+            "step_order": 12,
+            "description": "test",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "34787cb3-aa58-4fac-9178-c5025ddf277f",
+            "notes": "6mm allen",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 6,
+            "description": "Remove brake rotor",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "d24eded1-21b6-4ee4-8e2f-029d63593498",
+            "notes": "50nm (37ftlb) + 90deg\n16mm\n2x nuts",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 7,
+            "description": "Remove brake caliper",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "e7160721-0c11-4614-8c25-e9ddb9f771a0",
+            "notes": "145nm (107ftlb) + 45deg\n30mm 12pt",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 8,
+            "description": "Remove axle nut from hub",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "1e3390ac-c9b3-4c0f-93f2-22b01261e175",
+            "notes": "Torque 105ftlbs",
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 9,
+            "description": "Remove wheel",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "8a922eb3-9a0e-4664-ae13-d4a120a81caf",
+            "notes": null,
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 10,
+            "description": "Lift car",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "90cbf9ca-fc51-44ac-bbf8-6d00c9e28ce8",
+            "notes": null,
+            "created_at": "2025-12-13T00:59:23.808512+00:00",
+            "step_order": 11,
+            "description": "Loosen wheel lugs",
+            "job_plan_id": "8b2b9b2c-db51-4cae-931e-5180563916f4",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-13T00:59:23.740183+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "05bf5321-3bca-4456-8af0-1645d08e46d0"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "9330e348-0275-4976-bb16-14b8606c1f93",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 459.5,
+    "odometer": 75000,
+    "event_date": "2025-11-15T00:00:00+00:00",
+    "created_at": "2025-12-09T01:50:25.024445+00:00",
+    "notes": null,
+    "service_provider": null,
+    "service_item_id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+    "status": "Archive",
+    "job_plans": [
+      {
+        "id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+        "name": "RR CV Axle Replacement",
+        "user_id": "b9e8c442-5e0e-48ec-ac97-576682bf2251",
+        "job_steps": [
+          {
+            "id": "be95f276-ce73-4bb4-b5d3-b0474ba8e42b",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 1,
+            "description": "Remove axle from diff",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "402a0b63-eef9-4838-be89-e76d29aee45b",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 2,
+            "description": "Press out axle from hub",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "8a20cc37-8ea0-4df4-9143-270acc534c5a",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 3,
+            "description": "Unbolt flca",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "6124f71b-f01f-4f64-8ee4-1a7b6b37130a",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 4,
+            "description": "Unbolt lower knuckle",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "0922193e-7d7e-4a42-aad1-0069fbebad75",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 5,
+            "description": "Unbolt rlca",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "40b1a49f-d53f-4949-9551-72e4ae5575ec",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 6,
+            "description": "Remove brake rotor",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "4fe5e5b9-b125-4ad4-a822-93ea91e73d35",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 7,
+            "description": "Remove brake caliper",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "c4a1f2f0-fcdd-456c-bf42-22e9fe18e477",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 8,
+            "description": "Remove axle nut from hub",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "04ad856b-b521-429c-a0dd-b525d23472b3",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 9,
+            "description": "Remove wheel",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "19bb0b40-3a68-4df4-8b4e-2ed355944ad1",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 10,
+            "description": "Lift car",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          },
+          {
+            "id": "a382a3a6-9b6c-4289-8e5d-d63214f5d187",
+            "notes": null,
+            "created_at": "2025-12-09T01:50:25.17892+00:00",
+            "step_order": 11,
+            "description": "Loosen wheel lugs",
+            "job_plan_id": "8c4769c8-6586-42a9-aeb3-c629cf0ce9a5",
+            "is_completed": false,
+            "is_completed_reassembly": false
+          }
+        ],
+        "created_at": "2025-12-09T01:50:25.087193+00:00",
+        "mod_log_id": null,
+        "maintenance_log_id": "9330e348-0275-4976-bb16-14b8606c1f93"
+      }
+    ],
+    "service_items": {
+      "id": "378ee6bd-31d4-4937-a1be-adc6774a8152",
+      "name": "RR CV Axle Replacement",
+      "category_id": "78e93206-a732-4dd5-81f6-1c3a433122d2",
+      "description": "Replacement of one or more constant velocity (CV) axles."
+    }
+  },
+  {
+    "id": "77b8c281-4049-4a69-ac49-58e22f5c0f49",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 99,
+    "odometer": 101500,
+    "event_date": "2025-12-20T00:00:00+00:00",
+    "created_at": "2025-12-20T01:20:32.822249+00:00",
+    "notes": "test notes",
+    "service_provider": null,
+    "service_item_id": "981dc4be-d6de-435e-aa25-4bcec9ea533a",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "981dc4be-d6de-435e-aa25-4bcec9ea533a",
+      "name": "Chassis Lubrication",
+      "category_id": "600122ec-ae89-4826-a75c-a3d71a28d1f6",
+      "description": null
+    }
+  },
+  {
+    "id": "c1102e98-a695-4540-b670-496fc29e267d",
+    "user_vehicle_id": "71cdc8ed-2ba2-4c7a-a63d-104503213bca",
+    "service_interval_id": null,
+    "cost": 140,
+    "odometer": 72159,
+    "event_date": "2025-12-19T00:00:00+00:00",
+    "created_at": "2025-12-20T03:55:54.876388+00:00",
+    "notes": "AES ran a steering adaptation (from my MHD) and checked all the steering/suspension components.",
+    "service_provider": null,
+    "service_item_id": "a6dbbabd-023e-44a3-97bc-7b6031f71c9f",
+    "status": "History",
+    "job_plans": [],
+    "service_items": {
+      "id": "a6dbbabd-023e-44a3-97bc-7b6031f71c9f",
+      "name": "Suspension Bushing Inspection / Replacement",
+      "category_id": "c4a77664-2309-4506-ad86-5f4a3014d08d",
+      "description": null
+    }
+  }
+]

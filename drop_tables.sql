@@ -1,0 +1,10 @@
+BEGIN;
+DROP TABLE IF EXISTS public.job_steps CASCADE;
+DROP TABLE IF EXISTS public.service_items CASCADE;
+DROP TABLE IF EXISTS public.job_plans CASCADE;
+DROP TABLE IF EXISTS public.service_categories CASCADE;
+DROP TABLE IF EXISTS public.part_inventory CASCADE;
+DROP TABLE IF EXISTS public.mod_steps CASCADE;
+DROP TABLE IF EXISTS public.mod_plans CASCADE;
+DROP TABLE IF EXISTS public.maintenance_parts CASCADE;
+COMMIT;
