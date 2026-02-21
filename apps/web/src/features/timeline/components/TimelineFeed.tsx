@@ -168,12 +168,12 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
   return (
     <>
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto gap-2 no-scrollbar hide-scrollbar">
           {/* Note: In a real app the list of toggles could be dynamic. Hardcoding the 3 for now. */}
           <button
             type="button"
             onClick={() => handleToggle('fuel')}
-            className={`h-9 px-3 rounded-full border transition-all flex items-center justify-center text-xs font-medium 
+            className={`h-10 px-4 rounded-full border transition-all flex items-center justify-center text-sm font-medium whitespace-nowrap shrink-0 
               ${activeFilters.includes('fuel')
                 ? 'bg-secondary/10 text-secondary border-secondary shadow-sm'
                 : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'}`}
@@ -185,7 +185,7 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
           <button
             type="button"
             onClick={() => handleToggle('job')}
-            className={`h-9 px-3 rounded-full border transition-all flex items-center justify-center text-xs font-medium 
+            className={`h-10 px-4 rounded-full border transition-all flex items-center justify-center text-sm font-medium whitespace-nowrap shrink-0 
               ${activeFilters.includes('job')
                 ? 'bg-secondary/10 text-secondary border-secondary shadow-sm'
                 : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'}`}
@@ -197,7 +197,7 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
           <button
             type="button"
             onClick={() => handleToggle('part')}
-            className={`h-9 px-3 rounded-full border transition-all flex items-center justify-center text-xs font-medium 
+            className={`h-10 px-4 rounded-full border transition-all flex items-center justify-center text-sm font-medium whitespace-nowrap shrink-0 
               ${activeFilters.includes('part')
                 ? 'bg-secondary/10 text-secondary border-secondary shadow-sm'
                 : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'}`}
@@ -235,9 +235,9 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
               onClick={() => setSelectedEvent(event)}
               className="flex-1 bg-card rounded-2xl text-foreground hover:bg-accent/5 transition-colors border border-border cursor-pointer active:scale-[0.99] shadow-sm group-hover:shadow-md"
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+              <CardHeader className="p-4 sm:p-5 pb-3 sm:pb-4">
+                <div className="flex items-start justify-between gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center flex-wrap gap-2 mb-1.5">
                       <span className={`text-xs font-black uppercase tracking-wider ${getEventTypeColor(event.type)}`}>
                         {getEventTypeLabel(event.type)}
@@ -275,7 +275,7 @@ export function TimelineFeed({ events, initialFilters = ['job', 'fuel', 'part'] 
                 </div>
               </CardHeader>
               {(event.cost !== undefined && event.cost > 0) && (
-                <CardContent className="pt-0">
+                <CardContent className="px-4 sm:px-5 pt-0 pb-4">
                   <div className="flex justify-between items-center border-t border-border/40 pt-3 mt-1">
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Cost</span>
                     <span className="text-sm font-bold text-foreground">
