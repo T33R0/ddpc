@@ -22,7 +22,8 @@ import {
     Eye,
     EyeOff,
     Settings,
-    MoreHorizontal // Adding icon for bento
+    MoreHorizontal, // Adding icon for bento
+    ScanLine
 } from 'lucide-react'
 import { Vehicle } from '@repo/types'
 import { format } from 'date-fns'
@@ -36,6 +37,7 @@ import { WishlistDrawer } from '@/features/wishlist/components/WishlistDrawer'
 import { LogJobModal } from '@/features/vehicle/components/LogJobModal'
 
 import { toggleVehiclePrivacy } from './actions'
+import { ScannerDialog } from '@/features/scanner/components/ScannerDialog'
 import { TimelineFeed } from '@/features/timeline/components/TimelineFeed'
 
 import { VehicleEvent } from '@/features/timeline/lib/getVehicleEvents'
@@ -526,6 +528,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
     const [selectedMod, setSelectedMod] = useState<VehicleMod | null>(null)
     const [activeActivity, setActiveActivity] = useState<DashboardLog | null>(null)
     const [isNeedsAttentionOpen, setIsNeedsAttentionOpen] = useState(false)
+    const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [privacy, setPrivacy] = useState(vehicle.privacy || 'PRIVATE')
 
     // Set tab, update localStorage, do NOT set URL param (keep it clean)
@@ -664,7 +667,7 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
             </header>
 
             {/* Main Content */}
-            <main className="container mx-auto px-4 py-6">
+            <main className="container mx-auto px-4 py-6 pb-28 sm:pb-6">
                 {activeTab === 'overview' && (
                     <TabOverview
                         stats={stats}
@@ -685,6 +688,28 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                 {activeTab === 'logbook' && <TabLogbook logs={logs} />}
                 {activeTab === 'workshop' && <VehicleWorkshop vehicleId={vehicle.id} odometer={stats.odometer} vehicleSlug={getVehicleSlug(vehicle)} />}
             </main>
+
+            {/* Mobile Fast-Add Sticky Bar */}
+            {isOwner && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-background/95 backdrop-blur-md border-t border-border sm:hidden flex items-center justify-center gap-3 pb-6 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.5)]">
+                    <Button
+                        onClick={() => handleAction('fuel')}
+                        variant="outline"
+                        className="flex-1 h-14 bg-card/80 hover:bg-muted text-foreground font-semibold rounded-2xl border-border/60 shadow-xs"
+                    >
+                        <Fuel className="w-5 h-5 mr-2 text-success" />
+                        Fuel
+                    </Button>
+                    <Button
+                        onClick={() => handleAction('job')}
+                        className="flex-[1.5] h-14 font-semibold rounded-2xl shadow-xs"
+                    >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Log Job
+                    </Button>
+                </div>
+            )}
+
 
 
             <AddFuelDialog
@@ -761,6 +786,28 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                     setActiveTab('build')
                 }}
             />
+
+            {/* Receipt Scanner FAB + Dialog */}
+            {isOwner && (
+                <>
+                    <button
+                        onClick={() => setIsScannerOpen(true)}
+                        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
+                        aria-label="Scan receipt"
+                    >
+                        <ScanLine className="h-6 w-6" />
+                    </button>
+
+                    <ScannerDialog
+                        isOpen={isScannerOpen}
+                        onClose={() => {
+                            setIsScannerOpen(false)
+                            router.refresh()
+                        }}
+                        vehicleId={vehicle.id}
+                    />
+                </>
+            )}
         </div>
     )
 }
