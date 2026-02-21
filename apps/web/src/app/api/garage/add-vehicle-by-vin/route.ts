@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { trackGrowthEvent } from '@/lib/analytics';
 
 interface NhtsaVariable {
   Value: string | null;
@@ -156,6 +157,16 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+
+    // Track growth event
+    trackGrowthEvent('vehicle_added', user.id, {
+      vehicleId: newVehicle.id,
+      make: make,
+      model: model,
+      year: year,
+      method: 'vin',
+      matchFound,
+    })
 
     return NextResponse.json({
       success: true,

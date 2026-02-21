@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { VehicleSummary, TrimVariant } from '@repo/types';
+import { parsePrivacySettings } from '@/lib/vehicle-privacy-filter';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
         epa_combined_mpg,
         colors_exterior,
         spec_snapshot,
+        privacy_settings,
         user_profile (
             display_name
         )
@@ -94,6 +96,9 @@ export async function GET(request: NextRequest) {
 
     // Transform user vehicles into VehicleSummary format for compatibility with existing gallery
     const summaries: VehicleSummary[] = (userVehicles || []).map((vehicle: CommunityVehicle) => {
+      // Apply privacy filtering — respect per-vehicle field-level settings
+      const privacy = parsePrivacySettings(vehicle.privacy_settings)
+
       // Extract data from spec_snapshot if available, otherwise use direct fields
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const specData = (vehicle.spec_snapshot || {}) as Record<string, any>;
@@ -115,7 +120,7 @@ export async function GET(request: NextRequest) {
         model: vehicle.model || '',
         trim: vehicle.trim || '',
         trim_description: vehicle.title || specData.trim_description || '',
-        odometer: vehicle.odometer,
+        odometer: privacy.show_odometer ? vehicle.odometer : null,
         current_status: vehicle.current_status || 'inactive',
         vehicle_image: vehicle.vehicle_image || vehicle.photo_url || null, // Prioritize vehicle_image (user uploaded) over photo_url
         privacy: vehicle.privacy,

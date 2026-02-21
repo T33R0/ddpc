@@ -1,0 +1,222 @@
+<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0a0a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sidebarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f0f;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#161616;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f0f;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="cardShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Main Background -->
+  <rect width="1920" height="1080" fill="url(#bgGradient)"/>
+
+  <!-- Left Sidebar -->
+  <rect x="0" y="0" width="280" height="1080" fill="url(#sidebarGradient)" stroke="#262626" stroke-width="1"/>
+
+  <!-- Sidebar Header -->
+  <text x="20" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#e5e5e5" letter-spacing="0.5">GARAGE</text>
+
+  <!-- Vehicle Items in Sidebar -->
+  <!-- Item 1 - Active -->
+  <rect x="12" y="75" width="256" height="70" rx="8" fill="#1f2937" stroke="#dc2626" stroke-width="2"/>
+  <rect x="20" y="83" width="48" height="48" rx="6" fill="#374151"/>
+  <circle cx="44" cy="107" r="20" fill="#ef4444" opacity="0.1"/>
+  <text x="78" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f5f5f5">2016 BMW M235i</text>
+  <text x="78" y="118" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#a3a3a3">47,832 mi</text>
+
+  <!-- Item 2 -->
+  <rect x="12" y="160" width="256" height="70" rx="8" fill="#1a1a1a" stroke="#404040" stroke-width="1"/>
+  <rect x="20" y="168" width="48" height="48" rx="6" fill="#262626"/>
+  <text x="78" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#d4d4d4">2020 Tesla Model 3</text>
+  <text x="78" y="203" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#a3a3a3">12,450 mi</text>
+
+  <!-- Item 3 -->
+  <rect x="12" y="245" width="256" height="70" rx="8" fill="#1a1a1a" stroke="#404040" stroke-width="1"/>
+  <rect x="20" y="253" width="48" height="48" rx="6" fill="#262626"/>
+  <text x="78" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#d4d4d4">1985 Porsche 911</text>
+  <text x="78" y="288" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#a3a3a3">8,920 mi</text>
+
+  <!-- Divider -->
+  <line x1="20" y1="340" x2="260" y2="340" stroke="#404040" stroke-width="1"/>
+
+  <!-- Sidebar Footer Text -->
+  <text x="20" y="900" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">+ Add Vehicle</text>
+  <text x="20" y="960" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#525252">DDPC Mission Control v2.1</text>
+
+  <!-- Main Content Area -->
+  <rect x="280" y="0" width="1640" height="1080" fill="url(#bgGradient)"/>
+
+  <!-- Top Navigation Bar -->
+  <rect x="280" y="0" width="1640" height="80" fill="#0f0f0f" stroke="#262626" stroke-width="1"/>
+  
+  <!-- Vehicle Name -->
+  <text x="320" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#f5f5f5">2016 BMW M235i</text>
+  
+  <!-- Status Badge -->
+  <rect x="320" y="52" width="120" height="24" rx="12" fill="#065f46" opacity="0.3" stroke="#10b981" stroke-width="1"/>
+  <circle cx="333" cy="64" r="4" fill="#10b981"/>
+  <text x="345" y="67" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#10b981" font-weight="500">Active</text>
+
+  <!-- Top Right Items -->
+  <text x="1780" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#a3a3a3">Last updated: Today</text>
+
+  <!-- Main Content Grid -->
+  <!-- Health Score Card - Left Side, Large -->
+  <g filter="url(#cardShadow)">
+    <rect x="320" y="120" width="320" height="320" rx="12" fill="url(#cardGradient)" stroke="#262626" stroke-width="1"/>
+  </g>
+  
+  <!-- Health Score Label -->
+  <text x="340" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a3a3a3" text-transform="uppercase" letter-spacing="1">Vehicle Health</text>
+  
+  <!-- Health Circle Background -->
+  <circle cx="480" cy="250" r="85" fill="#1a1a1a" stroke="#262626" stroke-width="1"/>
+  
+  <!-- Health Circle Progress -->
+  <defs>
+    <circleGradient id="healthCircleGradient">
+      <stop offset="0%" style="stop-color:#ef4444"/>
+      <stop offset="50%" style="stop-color:#eab308"/>
+      <stop offset="100%" style="stop-color:#22c55e"/>
+    </circleGradient>
+  </defs>
+  
+  <circle cx="480" cy="250" r="85" fill="none" stroke="url(#healthGradient)" stroke-width="8" stroke-dasharray="476.5 612" opacity="0.8" filter="url(#glow)"/>
+  
+  <!-- Health Percentage -->
+  <text x="480" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="#22c55e" text-anchor="middle" dominant-baseline="middle">92%</text>
+  <text x="480" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#a3a3a3" text-anchor="middle">Excellent</text>
+
+  <!-- Health Status Details -->
+  <text x="340" y="440" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">Engine: Healthy</text>
+  <text x="340" y="460" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">Transmission: Good</text>
+  <text x="340" y="480" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">Brakes: Good</text>
+
+  <!-- Right Column - Bento Grid -->
+  <!-- Odometer Card -->
+  <g filter="url(#cardShadow)">
+    <rect x="680" y="120" width="420" height="150" rx="12" fill="url(#cardGradient)" stroke="#262626" stroke-width="1"/>
+  </g>
+  <text x="700" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a3a3a3" text-transform="uppercase" letter-spacing="1">Odometer</text>
+  <text x="700" y="210" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="#f5f5f5">47,832</text>
+  <text x="700" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#6b7280">miles</text>
+
+  <!-- Next Service Card -->
+  <g filter="url(#cardShadow)">
+    <rect x="1140" y="120" width="420" height="150" rx="12" fill="url(#cardGradient)" stroke="#262626" stroke-width="1"/>
+  </g>
+  <text x="1160" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a3a3a3" text-transform="uppercase" letter-spacing="1">Next Service</text>
+  <text x="1160" y="210" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#ef4444">Oil Change</text>
+  <text x="1160" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#a3a3a3">Due in 500 mi • 3 months</text>
+
+  <!-- Fuel Economy Card -->
+  <g filter="url(#cardShadow)">
+    <rect x="680" y="290" width="420" height="150" rx="12" fill="url(#cardGradient)" stroke="#262626" stroke-width="1"/>
+  </g>
+  <text x="700" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a3a3a3" text-transform="uppercase" letter-spacing="1">Fuel Economy</text>
+  <text x="700" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="#f5f5f5">28.4</text>
+  <text x="700" y="410" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#6b7280">mpg (avg)</text>
+
+  <!-- Tire Pressure Card -->
+  <g filter="url(#cardShadow)">
+    <rect x="1140" y="290" width="420" height="150" rx="12" fill="url(#cardGradient)" stroke="#262626" stroke-width="1"/>
+  </g>
+  <text x="1160" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a3a3a3" text-transform="uppercase" letter-spacing="1">Tire Pressure</text>
+  
+  <!-- Tire circles -->
+  <circle cx="1210" cy="380" r="30" fill="#1a1a1a" stroke="#262626" stroke-width="1"/>
+  <text x="1210" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#10b981" text-anchor="middle">FR</text>
+  <text x="1210" y="405" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#6b7280" text-anchor="middle">32 psi</text>
+
+  <circle cx="1290" cy="380" r="30" fill="#1a1a1a" stroke="#262626" stroke-width="1"/>
+  <text x="1290" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#10b981" text-anchor="middle">FL</text>
+  <text x="1290" y="405" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#6b7280" text-anchor="middle">32 psi</text>
+
+  <circle cx="1370" cy="380" r="30" fill="#1a1a1a" stroke="#262626" stroke-width="1"/>
+  <text x="1370" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#10b981" text-anchor="middle">RR</text>
+  <text x="1370" y="405" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#6b7280" text-anchor="middle">31 psi</text>
+
+  <circle cx="1450" cy="380" r="30" fill="#1a1a1a" stroke="#262626" stroke-width="1"/>
+  <text x="1450" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#fbbf24" text-anchor="middle">RL</text>
+  <text x="1450" y="405" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#6b7280" text-anchor="middle">29 psi</text>
+
+  <!-- Recent Activity Card - Wide -->
+  <g filter="url(#cardShadow)">
+    <rect x="680" y="460" width="880" height="380" rx="12" fill="url(#cardGradient)" stroke="#262626" stroke-width="1"/>
+  </g>
+  
+  <text x="700" y="490" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a3a3a3" text-transform="uppercase" letter-spacing="1">Recent Activity</text>
+
+  <!-- Activity Items -->
+  <!-- Item 1 -->
+  <circle cx="710" cy="540" r="6" fill="#ef4444"/>
+  <text x="735" y="535" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f5f5f5">Maintenance Record Added</text>
+  <text x="735" y="555" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">Oil and filter change completed - 47,832 mi</text>
+  <text x="1480" y="545" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">2 hours ago</text>
+
+  <!-- Divider -->
+  <line x1="710" y1="570" x2="1540" y2="570" stroke="#262626" stroke-width="1"/>
+
+  <!-- Item 2 -->
+  <circle cx="710" cy="610" r="6" fill="#10b981"/>
+  <text x="735" y="605" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f5f5f5">Fuel Log Entry</text>
+  <text x="735" y="625" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">15.2 gal at $3.45/gal - 47,750 mi</text>
+  <text x="1480" y="615" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">1 day ago</text>
+
+  <!-- Divider -->
+  <line x1="710" y1="640" x2="1540" y2="640" stroke="#262626" stroke-width="1"/>
+
+  <!-- Item 3 -->
+  <circle cx="710" cy="680" r="6" fill="#3b82f6"/>
+  <text x="735" y="675" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f5f5f5">Modification Installed</text>
+  <text x="735" y="695" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">Bilstein Performance Suspension Kit</text>
+  <text x="1480" y="685" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">5 days ago</text>
+
+  <!-- Divider -->
+  <line x1="710" y1="710" x2="1540" y2="710" stroke="#262626" stroke-width="1"/>
+
+  <!-- Item 4 -->
+  <circle cx="710" cy="750" r="6" fill="#8b5cf6"/>
+  <text x="735" y="745" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f5f5f5">Service Plan Created</text>
+  <text x="735" y="765" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">Quarterly detailing and inspection schedule</text>
+  <text x="1480" y="755" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">1 week ago</text>
+
+  <!-- Divider -->
+  <line x1="710" y1="780" x2="1540" y2="780" stroke="#262626" stroke-width="1"/>
+
+  <!-- Item 5 -->
+  <circle cx="710" cy="820" r="6" fill="#ec4899"/>
+  <text x="735" y="815" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f5f5f5">Part Added to Inventory</text>
+  <text x="735" y="835" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">OEM BMW Brake Pads - Front (qty: 2)</text>
+  <text x="1480" y="825" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">2 weeks ago</text>
+
+  <!-- View All Link -->
+  <text x="700" y="810" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#dc2626" font-weight="600" opacity="0">View all activity →</text>
+
+  <!-- Accent Line -->
+  <line x1="280" y1="80" x2="1920" y2="80" stroke="#262626" stroke-width="1"/>
+
+  <!-- Watermark/Footer -->
+  <text x="1900" y="1070" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#525252" text-anchor="end">Mission Control Dashboard Preview</text>
+</svg>

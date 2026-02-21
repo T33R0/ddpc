@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { validateAndRecordOdometerReading } from '@/lib/odometer-service';
 import { z } from 'zod';
 import { updateServiceInterval } from '@/lib/supabase/maintenance';
+import { trackGrowthEvent } from '@/lib/analytics';
 
 const logServiceSchema = z.object({
   vehicleId: z.string(),
@@ -109,6 +110,14 @@ export async function POST(request: NextRequest) {
     if (service_interval_id) {
       await updateServiceInterval(supabase, service_interval_id, vehicleId, odometerValue, event_date);
     }
+
+    // Track growth event
+    trackGrowthEvent('maintenance_logged', user.id, {
+      vehicleId,
+      serviceEntryId: serviceEntry.id,
+      hasOdometer: odometerValue !== null,
+      hasCost: costValue !== null,
+    })
 
     return NextResponse.json({
       success: true,

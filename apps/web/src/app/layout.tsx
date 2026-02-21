@@ -15,6 +15,7 @@ import {
   Toaster
 } from '../components/DynamicLayout';
 import { ScrollToTop } from '../components/ScrollToTop';
+import { HeartbeatTracker } from '../components/HeartbeatTracker';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -94,6 +95,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </div>
                 <LogoutModal />
                 <DDSRWidget />
+                <HeartbeatTracker />
               </ReportModalProvider>
             </PaywallProvider>
           </ThemeProvider>

@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from '@repo/ui/button'
-import { Check, ArrowRight, X } from 'lucide-react'
+import { Check, ArrowRight, X, Bell } from 'lucide-react'
+import { setServiceRemindersOptIn } from './actions'
 
 interface Step4DoneProps {
   vehicleName: string | null
@@ -11,11 +13,28 @@ interface Step4DoneProps {
 }
 
 export function Step4Done({ vehicleName, completedSteps, onDone, isFinishing }: Step4DoneProps) {
+  const [remindersEnabled, setRemindersEnabled] = useState(true)
+  const [isSavingPreference, setIsSavingPreference] = useState(false)
+
   const steps = [
     { number: 1, label: 'Vehicle added', detail: vehicleName },
     { number: 2, label: 'Oil change logged' },
     { number: 3, label: 'Service reminder set' },
   ]
+
+  const handleDone = async () => {
+    // Save the email preference before completing onboarding
+    setIsSavingPreference(true)
+    try {
+      await setServiceRemindersOptIn(remindersEnabled)
+    } catch {
+      // Non-blocking — don't prevent onboarding completion
+      console.error('[Step4Done] Failed to save reminder preference')
+    } finally {
+      setIsSavingPreference(false)
+    }
+    onDone()
+  }
 
   return (
     <div className="space-y-5">
@@ -67,9 +86,42 @@ export function Step4Done({ vehicleName, completedSteps, onDone, isFinishing }: 
         })}
       </div>
 
-      <Button onClick={onDone} disabled={isFinishing} className="w-full" size="lg">
-        {isFinishing ? 'Loading your garage...' : 'Go to Your Garage'}
-        {!isFinishing && <ArrowRight className="w-4 h-4 ml-1" />}
+      {/* Steward Activation — Email Reminder Opt-In */}
+      <div className="rounded-lg border border-border bg-card/50 p-4">
+        <button
+          type="button"
+          onClick={() => setRemindersEnabled(!remindersEnabled)}
+          className="flex items-start gap-3 w-full text-left"
+        >
+          <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${
+            remindersEnabled
+              ? 'bg-primary border-primary text-primary-foreground'
+              : 'border-input bg-background'
+          }`}>
+            {remindersEnabled && <Check className="w-3 h-3" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-sm font-medium text-foreground">
+                Email me when service is due
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Get a weekly digest when maintenance is approaching or overdue. You can change this anytime in account settings.
+            </p>
+          </div>
+        </button>
+      </div>
+
+      <Button
+        onClick={handleDone}
+        disabled={isFinishing || isSavingPreference}
+        className="w-full"
+        size="lg"
+      >
+        {isFinishing || isSavingPreference ? 'Loading your garage...' : 'Go to Your Garage'}
+        {!isFinishing && !isSavingPreference && <ArrowRight className="w-4 h-4 ml-1" />}
       </Button>
     </div>
   )

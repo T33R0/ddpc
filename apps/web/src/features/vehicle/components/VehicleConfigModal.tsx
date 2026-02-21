@@ -12,6 +12,7 @@ import { Settings, Lock, Image as ImageIcon, Car, Calendar, DollarSign, Calendar
 import { toast } from 'react-hot-toast'
 import { Vehicle } from '@repo/types'
 import { updateVehicleConfig } from '../actions'
+import { PrivacySettingsPanel } from './PrivacySettingsPanel'
 
 interface VehicleConfigModalProps {
     isOpen: boolean
@@ -20,6 +21,7 @@ interface VehicleConfigModalProps {
         vehicle_image?: string | null
         current_status?: string
         privacy?: string
+        privacy_settings?: unknown
         acquisition_date?: string | null
         acquisition_cost?: number | null
         acquisition_type?: string | null
@@ -123,6 +125,12 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                                     className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-muted-foreground data-[state=active]:text-foreground transition-all"
                                 >
                                     Ownership
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="privacy"
+                                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-muted-foreground data-[state=active]:text-foreground transition-all"
+                                >
+                                    Privacy
                                 </TabsTrigger>
                             </TabsList>
                         </div>
@@ -318,6 +326,14 @@ export function VehicleConfigModal({ isOpen, onClose, vehicle, isOwner }: Vehicl
                                         onChange={(e) => setOwnershipEndDate(e.target.value)}
                                     />
                                 </div>
+                            </TabsContent>
+
+                            <TabsContent value="privacy" className="space-y-4 mt-0">
+                                <PrivacySettingsPanel
+                                    vehicleId={vehicle.id}
+                                    initialSettings={vehicle.privacy_settings}
+                                    isPublic={privacy === 'PUBLIC'}
+                                />
                             </TabsContent>
                         </div>
                     </Tabs>

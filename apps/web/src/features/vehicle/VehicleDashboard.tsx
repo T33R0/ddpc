@@ -39,6 +39,7 @@ import { LogJobModal } from '@/features/vehicle/components/LogJobModal'
 import { toggleVehiclePrivacy } from './actions'
 import { ScannerDialog } from '@/features/scanner/components/ScannerDialog'
 import { TimelineFeed } from '@/features/timeline/components/TimelineFeed'
+import { QuickAddService, QuickServicePreset } from '@/features/vehicle/components/QuickAddService'
 
 import { VehicleEvent } from '@/features/timeline/lib/getVehicleEvents'
 import { VehicleMod } from '@/features/mods/lib/getVehicleModsData'
@@ -47,6 +48,8 @@ import { VehicleConfigModal } from '@/features/vehicle/components/VehicleConfigM
 import { ActivityDetailModal } from '@/features/vehicle/components/ActivityDetailModal'
 import { NeedsAttentionModal } from '@/features/vehicle/components/NeedsAttentionModal'
 import { getVehicleSlug } from '@/lib/vehicle-utils-client'
+import { VehicleHealthScore } from '@/features/vehicle/components/VehicleHealthScore'
+import type { VehicleHealthBreakdown } from '@/features/vehicle/lib/vehicle-health-score'
 
 // --- Types ---
 
@@ -117,6 +120,7 @@ interface VehicleDashboardProps {
     totalLogsCount: number
     mods: VehicleMod[]
     logs: DashboardLog[]
+    healthScore?: VehicleHealthBreakdown | null
 }
 
 // Recent Activity Section with Infinite Scroll
@@ -225,7 +229,7 @@ function RecentActivitySection({ activities, totalLogsCount, onActivityClick, on
     )
 }
 
-function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick, onNavigateToLogbook, vehicleId }: {
+function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleImage, isOwner, onConfig, inventoryStats, onActivityClick, onNeedsAttentionClick, onNavigateToLogbook, vehicleId, onQuickAdd, healthScore }: {
     stats: VehicleDashboardProps['stats'],
     inventoryStats?: VehicleDashboardProps['inventoryStats'],
     recentActivity: DashboardLog[],
@@ -238,6 +242,8 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
     onNeedsAttentionClick: () => void
     onNavigateToLogbook: (startIndex?: number) => void
     vehicleId: string
+    onQuickAdd?: (preset: QuickServicePreset) => void
+    healthScore?: VehicleHealthBreakdown | null
 }) {
     // Helper for drive type abbreviation
     const formatDriveType = (type: string | null | undefined) => {
@@ -390,6 +396,20 @@ function TabOverview({ stats, recentActivity, totalLogsCount, onAction, vehicleI
                 </div>
             </div>
 
+            {/* Vehicle Health Score */}
+            {healthScore && (
+                <div className="mt-8">
+                    <VehicleHealthScore health={healthScore} />
+                </div>
+            )}
+
+            {/* Quick Add Service Shortcuts */}
+            {isOwner && onQuickAdd && (
+                <div className="mt-8">
+                    <QuickAddService onSelect={onQuickAdd} />
+                </div>
+            )}
+
             {/* Recent Activity Section */}
             <div className="mt-8">
                 <div className="flex items-center justify-between mb-6">
@@ -494,7 +514,7 @@ function TabWorkshop({ mods, onModClick }: { mods: VehicleMod[], onModClick: (mo
 
 // --- Main Layout ---
 
-export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivity, totalLogsCount, mods, logs, inventoryStats }: VehicleDashboardProps) {
+export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivity, totalLogsCount, mods, logs, inventoryStats, healthScore }: VehicleDashboardProps) {
     const searchParams = useSearchParams()
     const router = useRouter()
     const pathname = usePathname()
@@ -523,6 +543,8 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
 
     const [isFuelModalOpen, setIsFuelModalOpen] = useState(false)
     const [isJobModalOpen, setIsJobModalOpen] = useState(false)
+    const [jobPrefillTitle, setJobPrefillTitle] = useState<string | undefined>(undefined)
+    const [jobPrefillType, setJobPrefillType] = useState<string | undefined>(undefined)
     const [isWishlistOpen, setIsWishlistOpen] = useState(false)
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
     const [selectedMod, setSelectedMod] = useState<VehicleMod | null>(null)
@@ -546,7 +568,17 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
 
     const handleAction = (type: string) => {
         if (type === 'fuel') setIsFuelModalOpen(true)
-        if (type === 'job') setIsJobModalOpen(true)
+        if (type === 'job') {
+            setJobPrefillTitle(undefined)
+            setJobPrefillType(undefined)
+            setIsJobModalOpen(true)
+        }
+    }
+
+    const handleQuickAdd = (preset: QuickServicePreset) => {
+        setJobPrefillTitle(preset.title)
+        setJobPrefillType('service')
+        setIsJobModalOpen(true)
     }
 
     const handleNavigateToLogbook = (startIndex?: number) => {
@@ -682,6 +714,8 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                         onNeedsAttentionClick={() => setIsNeedsAttentionOpen(true)}
                         onNavigateToLogbook={handleNavigateToLogbook}
                         vehicleId={vehicle.id}
+                        onQuickAdd={handleQuickAdd}
+                        healthScore={healthScore}
                     />
                 )}
                 {activeTab === 'build' && <TabBuild vehicleId={vehicle.id} />}
@@ -726,10 +760,14 @@ export default function VehicleDashboard({ vehicle, isOwner, stats, recentActivi
                 isOpen={isJobModalOpen}
                 onClose={() => {
                     setIsJobModalOpen(false)
+                    setJobPrefillTitle(undefined)
+                    setJobPrefillType(undefined)
                     router.refresh()
                 }}
                 vehicleId={vehicle.id}
                 currentOdometer={stats.odometer}
+                prefillTitle={jobPrefillTitle}
+                prefillType={jobPrefillType}
             />
 
             <WishlistDrawer

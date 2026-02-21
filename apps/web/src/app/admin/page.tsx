@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 const adminCards = [
   { href: '/admin/users', title: 'Manage Users', description: 'View user statistics, manage access, suspend users, and manage administrator roles.' },
+  { href: '/admin/growth', title: 'Growth Analytics', description: 'Signups, activation, retention, and engagement KPIs across the platform.' },
   { href: '/admin/issues', title: 'Reported Problems', description: 'Review and resolve issues reported by users.' },
   { href: '/admin/structure', title: 'App Structure', description: 'Overview of application routes, pages, and their usage.' },
   { href: '/admin/testimonials', title: 'Testimonials', description: 'Review and approve user submitted testimonials.' },

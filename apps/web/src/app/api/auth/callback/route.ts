@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email'
 import { render } from '@react-email/render'
 import { WelcomeEmail } from '@/emails/WelcomeEmail'
 import React from 'react'
+import { trackGrowthEvent } from '@/lib/analytics'
 
 // Helper function to generate a random suffix
 function createRandomSuffix(length = 4) {
@@ -79,6 +80,13 @@ export async function GET(request: Request) {
           console.error('Auth callback profile insert error:', profileError)
         } else {
           profileCreated = true
+        }
+
+        // Track signup event
+        if (profileCreated) {
+          trackGrowthEvent('signup', user.id, {
+            provider: user.app_metadata?.provider || 'email',
+          })
         }
 
         // Send welcome email if profile was successfully created

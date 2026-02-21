@@ -33,30 +33,32 @@ export default async function AdminLayout({
     }
   }
 
-  const navLinkClasses = "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-muted-foreground hover:border-border hover:text-foreground"
+  const navLinkClasses = "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-muted-foreground hover:border-border hover:text-foreground whitespace-nowrap"
 
   return (
     <div className="min-h-screen bg-muted/30">
       <nav className="fixed top-16 left-0 right-0 z-50 bg-card shadow border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between">
-            <div className="flex">
-              <div className="flex flex-shrink-0 items-center">
-                <Link href="/admin" className="text-xl font-bold text-foreground">
-                  Admin Console
-                </Link>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link href="/admin" className={navLinkClasses}>Dashboard</Link>
-                <Link href="/admin/users" className={navLinkClasses}>Users</Link>
-                <Link href="/admin/issues" className={navLinkClasses}>Issues</Link>
-                <Link href="/admin/structure" className={navLinkClasses}>Structure</Link>
-                <Link href="/admin/steward" className={navLinkClasses}>Steward</Link>
-                <Link href="/admin/email" className={navLinkClasses}>Email Ops</Link>
-              </div>
+          <div className="flex h-auto min-h-[4rem] flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 sm:py-0">
+            <div className="flex items-center justify-between">
+              <Link href="/admin" className="text-lg sm:text-xl font-bold text-foreground">
+                Admin Console
+              </Link>
+              <span className="text-xs text-muted-foreground sm:hidden truncate ml-3 max-w-[140px]">
+                {user.email?.split('@')[0]} {isBreakglass && '(SA)'}
+              </span>
             </div>
-            <div className="flex items-center">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:gap-4 pb-1 sm:pb-0">
+              <Link href="/admin" className={navLinkClasses}>Dashboard</Link>
+              <Link href="/admin/growth" className={navLinkClasses}>Growth</Link>
+              <Link href="/admin/users" className={navLinkClasses}>Users</Link>
+              <Link href="/admin/issues" className={navLinkClasses}>Issues</Link>
+              <Link href="/admin/structure" className={navLinkClasses}>Structure</Link>
+              <Link href="/admin/steward" className={navLinkClasses}>Steward</Link>
+              <Link href="/admin/email" className={navLinkClasses}>Email</Link>
+            </div>
+            <div className="hidden sm:flex items-center">
+              <span className="text-sm text-muted-foreground truncate max-w-[200px]">
                 {user.email} {isBreakglass && '(Super Admin)'}
               </span>
             </div>

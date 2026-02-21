@@ -6,12 +6,10 @@ import { GalleryLoadingSkeleton } from "../../components/gallery-loading-skeleto
 import type { VehicleSummary } from "@repo/types";
 import { AuthProvider } from '@/components/auth/auth-context';
 import { createClient } from '@/lib/supabase/client';
-import { Search, X, Wrench } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@repo/ui/input';
 import { useSearch } from '../../lib/hooks/useSearch';
 import { searchVehicleSummary } from '../../lib/search';
-import { useAuth } from '@/lib/auth';
-import { cn } from '@repo/ui/lib/utils';
 
 function CommunityContent() {
   const [allVehicles, setAllVehicles] = useState<VehicleSummary[]>([]);
@@ -30,9 +28,6 @@ function CommunityContent() {
   const [hasMore, setHasMore] = useState(true);
 
   const isInitialLoadRef = useRef(true);
-
-  const { profile } = useAuth();
-  const isAdmin = profile?.role === 'admin';
 
   const loadVehicles = useCallback(async (page: number, append: boolean = false) => {
     try {
@@ -99,26 +94,7 @@ function CommunityContent() {
 
   return (
     <div className="relative min-h-screen bg-background">
-      {!isAdmin && (
-        <div className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center mt-14">
-          <div className="text-center space-y-4 max-w-md p-6 bg-card border border-border rounded-xl shadow-2xl mx-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Wrench className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Community Coming Soon
-            </h2>
-            <p className="text-muted-foreground">
-              We're building a space for you to showcase your builds, share guides, and connect with other enthusiasts.
-            </p>
-            <p className="text-xs text-muted-foreground/60 italic pt-2">
-              (It's going to be worth the wait.)
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className={cn("transition-all duration-200", !isAdmin && "filter blur-sm pointer-events-none select-none opacity-50 h-[calc(100vh-60px)] overflow-hidden")}>
+      <div>
         <section className="relative py-12 min-h-screen bg-background text-foreground">
           <div className="relative container px-4 md:px-6 pt-24">
             {/* Page Header */}

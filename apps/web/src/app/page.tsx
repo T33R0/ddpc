@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import LandingLayout from './landing-layout';
 import { Button } from '@repo/ui/button';
 import { Card, CardContent } from '@repo/ui/card';
-import { Wrench, Fuel, Zap, ArrowRight, ShieldCheck, Gauge } from 'lucide-react';
+import { Wrench, Fuel, Zap, ArrowRight, ShieldCheck, Gauge, Car, ClipboardList, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '../lib/auth';
@@ -69,6 +69,65 @@ export default function Home() {
               start tracking free
               <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
             </Button>
+          </div>
+        </section>
+
+        {/* PRODUCT SCREENSHOT + HOW IT WORKS */}
+        <section className="w-full z-10 px-4 pb-16">
+          {/* Dashboard Screenshot */}
+          <div className="max-w-5xl mx-auto relative">
+            <div className="relative rounded-xl border border-border/50 bg-card/30 overflow-hidden shadow-2xl backdrop-blur-sm">
+              <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border/30 bg-muted/50">
+                <div className="w-3 h-3 rounded-full bg-destructive/60" />
+                <div className="w-3 h-3 rounded-full bg-warning/60" />
+                <div className="w-3 h-3 rounded-full bg-success/60" />
+                <span className="ml-3 text-xs text-muted-foreground font-mono">myddpc.com/vehicle</span>
+              </div>
+              <div className="relative aspect-[16/9] sm:aspect-[2/1]">
+                <Image
+                  src="/images/dashboard-preview.svg"
+                  alt="ddpc vehicle dashboard showing maintenance tracking, health score, and upcoming services"
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 768px) 100vw, 960px"
+                  unoptimized
+                />
+                {/* Gradient fade at bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
+              </div>
+            </div>
+          </div>
+
+          {/* 3-Step Flow */}
+          <div className="max-w-3xl mx-auto mt-16">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 ring-1 ring-primary/20">
+                  <Car className="w-7 h-7 text-primary" />
+                </div>
+                <span className="text-xs font-bold text-primary uppercase tracking-wider mb-1">step 1</span>
+                <h3 className="font-semibold lowercase text-foreground">add your vehicle</h3>
+                <p className="text-sm text-muted-foreground mt-1">vin decode or manual entry</p>
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 ring-1 ring-primary/20">
+                  <ClipboardList className="w-7 h-7 text-primary" />
+                </div>
+                <span className="text-xs font-bold text-primary uppercase tracking-wider mb-1">step 2</span>
+                <h3 className="font-semibold lowercase text-foreground">log maintenance</h3>
+                <p className="text-sm text-muted-foreground mt-1">services, fuel, mods, receipts</p>
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 ring-1 ring-primary/20">
+                  <Bell className="w-7 h-7 text-primary" />
+                </div>
+                <span className="text-xs font-bold text-primary uppercase tracking-wider mb-1">step 3</span>
+                <h3 className="font-semibold lowercase text-foreground">get reminders</h3>
+                <p className="text-sm text-muted-foreground mt-1">never miss an oil change again</p>
+              </div>
+            </div>
           </div>
         </section>
 

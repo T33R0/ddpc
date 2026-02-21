@@ -2,5 +2,15 @@
   "buildCommand": "turbo run build --filter=web",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": "apps/web/.next"
+  "outputDirectory": "apps/web/.next",
+  "crons": [
+    {
+      "path": "/api/steward/cron/daily",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/steward/cron/reminders",
+      "schedule": "0 14 * * 1"
+    }
+  ]
 }

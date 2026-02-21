@@ -9,6 +9,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { ZodError, z } from 'zod'
 import { NextResponse } from 'next/server'
+import { trackGrowthEvent } from '@/lib/analytics'
 
 // Your existing Zod schema
 const addVehicleSchema = z.object({
@@ -143,7 +144,16 @@ export async function POST(request: Request) {
     // --- END OF NEW SSI LOGIC ---
     //
 
-    // --- 4. (EXISTING LOGIC) Return Success ---
+    // --- 4. Track growth event ---
+    trackGrowthEvent('vehicle_added', user.id, {
+      vehicleId: newVehicle.id,
+      make: stockData.make,
+      model: stockData.model,
+      year: stockData.year,
+      method: 'manual',
+    })
+
+    // --- 5. (EXISTING LOGIC) Return Success ---
     return new NextResponse(
       JSON.stringify({ success: true, vehicleId: newVehicle.id }),
       { status: 201 }

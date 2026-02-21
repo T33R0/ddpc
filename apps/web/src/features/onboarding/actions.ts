@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { trackGrowthEvent } from '@/lib/analytics'
 
 export type OnboardingActionResponse = {
   success: boolean
@@ -182,6 +183,60 @@ export async function setQuickReminder(
 }
 
 /**
+ * Subscribe or unsubscribe from the service-reminders email channel.
+ * Called from the onboarding completion screen.
+ */
+export async function setServiceRemindersOptIn(
+  optIn: boolean
+): Promise<OnboardingActionResponse> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  try {
+    // Find the service-reminders channel
+    const { data: channel } = await supabase
+      .from('email_channels')
+      .select('id')
+      .eq('slug', 'service-reminders')
+      .single()
+
+    if (!channel) {
+      return { success: false, error: 'Email channel not found' }
+    }
+
+    // Upsert the user's preference
+    const { error: upsertError } = await supabase
+      .from('user_email_preferences')
+      .upsert(
+        {
+          user_id: user.id,
+          channel_id: channel.id,
+          is_subscribed: optIn,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,channel_id' }
+      )
+
+    if (upsertError) {
+      console.error('[setServiceRemindersOptIn] Upsert error:', upsertError)
+      return { success: false, error: upsertError.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('[setServiceRemindersOptIn] Unexpected error:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+
+/**
  * Mark the user's onboarding as complete.
  * Sets onboarding_completed=true on user_profile.
  */
@@ -211,6 +266,10 @@ export async function markOnboardingComplete(): Promise<OnboardingActionResponse
     }
 
     revalidatePath('/garage')
+
+    // Track growth event
+    trackGrowthEvent('onboarding_completed', user.id)
+
     return { success: true }
   } catch (error) {
     console.error('[markOnboardingComplete] Unexpected error:', error)

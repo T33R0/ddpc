@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { FuelLogSchema, FuelLogInputs } from './schema'
 import { recalculateMpg, updateVehicleAvgMpg } from './lib/fuel-calculations-server'
+import { trackGrowthEvent } from '@/lib/analytics'
 
 //
 // ACTION: The "Two-Write" (Log Fuel + Update Vehicle Odometer)
@@ -155,6 +156,12 @@ export async function logFuel(data: FuelLogInputs) {
       console.error('Error revalidating path:', revalidateError)
       // Don't fail the whole request if revalidation fails
     }
+
+    // Track growth event
+    trackGrowthEvent('fuel_logged', user.id, {
+      vehicleId: validatedData.user_vehicle_id,
+      logId: logEntry.id,
+    })
 
     return { success: true, logId: logEntry.id }
   } catch (e) {

@@ -8,6 +8,14 @@ import { getPublicVehicleBySlug } from '@/lib/public-vehicle-utils'
 import { VehicleMod } from '@/features/mods/lib/getVehicleModsData'
 import { calculateHealth, HealthResult } from '@/features/parts/lib/health'
 import { VehicleInstalledComponent } from '@/features/parts/types'
+import {
+  parsePrivacySettings,
+  filterStatsForPublicView,
+  filterLogsForPublicView,
+  filterModsForPublicView,
+  filterInventoryForPublicView,
+} from '@/lib/vehicle-privacy-filter'
+import { calculateVehicleHealthScore, type VehicleHealthBreakdown } from '@/features/vehicle/lib/vehicle-health-score'
 
 type VehiclePageProps = {
   params: Promise<{
@@ -93,7 +101,8 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     serviceIntervalsRes,
     primaryImageRes,
     jobsRes,
-    partsRes
+    partsRes,
+    allServiceIntervalsRes
   ] = await Promise.all([
     // Latest Odometer
     supabase.from('odometer_log').select('reading_mi').eq('user_vehicle_id', vehicleId).order('recorded_at', { ascending: false }).limit(1).single(),
@@ -110,7 +119,9 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     // Jobs (Recent Logic)
     supabase.from('jobs').select('*').eq('vehicle_id', vehicleId).eq('status', 'completed').order('date_completed', { ascending: false }),
     // Installed Parts (for Logbook)
-    supabase.from('inventory').select('*, part:master_parts(*)').eq('vehicle_id', vehicleId).eq('status', 'installed').order('installed_at', { ascending: false })
+    supabase.from('inventory').select('*, part:master_parts(*)').eq('vehicle_id', vehicleId).eq('status', 'installed').order('installed_at', { ascending: false }),
+    // All Service Intervals (for Health Score — count overdue)
+    supabase.from('service_intervals').select('due_date, due_miles').eq('user_vehicle_id', vehicleId),
   ])
 
   // --- 3. Process Data ---
@@ -276,8 +287,32 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
         .filter((p: any) => p.status === 'Warning' || p.status === 'Critical') as Array<{ id: string; name: string; status: 'Warning' | 'Critical'; healthPercentage: number; part_number?: string }>
   }
 
+  // --- 5. Calculate Vehicle Health Score ---
+  const allServiceIntervals = allServiceIntervalsRes.data || []
+  const now = new Date()
+  const overdueServiceCount = allServiceIntervals.filter((si: any) => {
+    const dueDateOverdue = si.due_date && new Date(si.due_date) < now
+    const dueMilesOverdue = si.due_miles && latestOdometer > si.due_miles
+    return dueDateOverdue || dueMilesOverdue
+  }).length
+
+  const lastActivityDate = rawLogs[0]?.date || null
+
+  const vehicleHealthScore: VehicleHealthBreakdown = calculateVehicleHealthScore({
+    overdueServiceCount,
+    totalServiceIntervals: allServiceIntervals.length,
+    averagePartHealth: averageHealthScore,
+    totalTrackedParts: scorablePartsCount,
+    lastActivityDate,
+    totalRecords: rawLogs.length,
+    completedMods: completedMods.length,
+  })
+
   // Recent Activity (Up to 21 for infinite scroll)
   const recentActivity = rawLogs.slice(0, 21)
+
+  // --- 6. Apply Privacy Filtering for Non-Owners ---
+  const privacySettings = parsePrivacySettings(vehicle.privacy_settings)
 
   // Vehicle Object Construction
   const vehicleWithData: Vehicle = {
@@ -307,40 +342,51 @@ export default async function VehicleDetailPage({ params }: VehiclePageProps) {
     redirect(`/vehicle/${encodeURIComponent(vehicle.id)}`)
   }
 
+  // Build raw stats object
+  const rawStats = {
+    odometer: latestOdometer,
+    serviceCount: maintenanceLogs.length,
+    avgMpg,
+    lastServiceDate,
+    lastFuelDate,
+    nextServiceDate,
+    totalCompletedMods,
+    totalCompletedModCost,
+    horsepower: vehicleWithData.horsepower_hp ? Number(vehicleWithData.horsepower_hp) : null,
+    torque: vehicleWithData.torque_ft_lbs ? Number(vehicleWithData.torque_ft_lbs) : null,
+    factoryMpg: vehicleWithData.epa_combined_mpg ? Number(vehicleWithData.epa_combined_mpg) :
+      (vehicleWithData as any).combined_mpg ? Number((vehicleWithData as any).combined_mpg) :
+        ((vehicleWithData as any).city_mpg && (vehicleWithData as any).highway_mpg) ?
+          (Number((vehicleWithData as any).city_mpg) + Number((vehicleWithData as any).highway_mpg)) / 2 : undefined,
+    engine_size_l: vehicleWithData.engine_size_l || null,
+    cylinders: vehicleWithData.cylinders || null,
+    drive_type: vehicleWithData.drive_type || null,
+    fuel_type: vehicleWithData.fuel_type || null,
+    vehicle_color: (vehicleWithData as any).vehicle_color || (vehicleWithData as any).color || null,
+    acquisition_date: (vehicleWithData as any).acquisition_date || null,
+    ownership_end_date: (vehicleWithData as any).ownership_end_date || null,
+    vin: (vehicleWithData as any).vin || null,
+    record_count: totalRecords
+  }
+
+  // Apply privacy filtering for non-owners
+  const filteredStats = isOwner ? rawStats : filterStatsForPublicView(rawStats, privacySettings)
+  const filteredRecentActivity = isOwner ? recentActivity : filterLogsForPublicView(recentActivity, privacySettings)
+  const filteredMods = isOwner ? mappedMods : filterModsForPublicView(mappedMods as any, privacySettings) as unknown as VehicleMod[]
+  const filteredLogs = isOwner ? rawLogs : filterLogsForPublicView(rawLogs, privacySettings)
+  const filteredInventory = isOwner ? inventoryHealth : filterInventoryForPublicView(inventoryHealth, privacySettings)
+
   return (
     <VehicleDashboard
       vehicle={vehicleWithData}
       isOwner={isOwner}
-      stats={{
-        odometer: latestOdometer,
-        serviceCount: maintenanceLogs.length,
-        avgMpg,
-        lastServiceDate,
-        lastFuelDate,
-        nextServiceDate,
-        totalCompletedMods,
-        totalCompletedModCost,
-        horsepower: vehicleWithData.horsepower_hp ? Number(vehicleWithData.horsepower_hp) : null,
-        torque: vehicleWithData.torque_ft_lbs ? Number(vehicleWithData.torque_ft_lbs) : null,
-        factoryMpg: vehicleWithData.epa_combined_mpg ? Number(vehicleWithData.epa_combined_mpg) :
-          (vehicleWithData as any).combined_mpg ? Number((vehicleWithData as any).combined_mpg) :
-            ((vehicleWithData as any).city_mpg && (vehicleWithData as any).highway_mpg) ?
-              (Number((vehicleWithData as any).city_mpg) + Number((vehicleWithData as any).highway_mpg)) / 2 : undefined,
-        engine_size_l: vehicleWithData.engine_size_l || null,
-        cylinders: vehicleWithData.cylinders || null,
-        drive_type: vehicleWithData.drive_type || null,
-        fuel_type: vehicleWithData.fuel_type || null,
-        vehicle_color: (vehicleWithData as any).vehicle_color || (vehicleWithData as any).color || null,
-        acquisition_date: (vehicleWithData as any).acquisition_date || null,
-        ownership_end_date: (vehicleWithData as any).ownership_end_date || null,
-        vin: (vehicleWithData as any).vin || null,
-        record_count: totalRecords
-      }}
-      inventoryStats={inventoryHealth}
-      recentActivity={recentActivity}
-      totalLogsCount={rawLogs.length}
-      mods={mappedMods}
-      logs={rawLogs}
+      stats={filteredStats as any}
+      inventoryStats={filteredInventory as any}
+      recentActivity={filteredRecentActivity as any}
+      totalLogsCount={filteredLogs.length}
+      mods={filteredMods}
+      logs={filteredLogs as any}
+      healthScore={isOwner ? vehicleHealthScore : null}
     />
   )
 }

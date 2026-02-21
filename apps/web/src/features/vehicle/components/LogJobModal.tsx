@@ -24,6 +24,8 @@ interface LogJobModalProps {
     onClose: () => void;
     vehicleId: string;
     currentOdometer: number;
+    prefillTitle?: string;
+    prefillType?: string;
 }
 
 interface JobFormData {
@@ -41,7 +43,7 @@ interface PartEntry {
     category: PartCategory
 }
 
-export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: LogJobModalProps) {
+export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer, prefillTitle, prefillType }: LogJobModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [formData, setFormData] = useState<JobFormData>({
@@ -56,12 +58,12 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
     const [hasParts, setHasParts] = useState(false)
     const [parts, setParts] = useState<PartEntry[]>([{ name: '', category: 'engine' }])
 
-    // Reset form when modal opens
+    // Reset form when modal opens, applying prefill values if provided
     useEffect(() => {
         if (isOpen) {
             setFormData({
-                type: 'service',
-                title: '',
+                type: prefillType || 'service',
+                title: prefillTitle || '',
                 date: new Date().toISOString().split('T')[0] || '',
                 odometer: currentOdometer?.toString() || '',
                 cost: '',
@@ -72,7 +74,7 @@ export function LogJobModal({ isOpen, onClose, vehicleId, currentOdometer }: Log
             setParts([{ name: '', category: 'engine' }])
             setError(null)
         }
-    }, [isOpen, currentOdometer])
+    }, [isOpen, currentOdometer, prefillTitle, prefillType])
 
     const handleInputChange = (field: keyof JobFormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }))

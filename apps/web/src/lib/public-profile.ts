@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { User, Vehicle } from '@repo/types'
+import { User } from '@repo/types'
 
 /**
  * Fetches a user profile by username.
@@ -24,10 +24,10 @@ export async function getUserProfileByUsername(username: string): Promise<User |
   if (!data) return null
 
   // Map snake_case database fields to camelCase User interface
+  // Sensitive fields (email, plan, banned, stripe_customer_id) are intentionally omitted
   return {
     id: data.user_id || data.id, // Handle potential schema variations
     username: data.username,
-    email: data.email, // Note: Email might not be returned publicly depending on privacy, but it's in the type
     avatarUrl: data.avatar_url,
     displayName: data.display_name,
     location: data.location,
@@ -37,8 +37,6 @@ export async function getUserProfileByUsername(username: string): Promise<User |
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     role: data.role,
-    plan: data.plan,
-    banned: data.banned
   } as User
 }
 
