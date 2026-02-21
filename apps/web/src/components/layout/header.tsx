@@ -98,7 +98,7 @@ export function Header({
             </Link>
           </div>
 
-          <nav className="flex items-center gap-8">
+          <nav className="flex items-center gap-4 sm:gap-8 text-sm sm:text-base font-medium">
             <Link href={buildHref('/explore')} className="text-foreground/80 hover:text-foreground transition-colors">
               Explore
             </Link>
