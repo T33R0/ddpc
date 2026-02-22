@@ -14,6 +14,7 @@ import {
   Sparkles,
   AlertCircle
 } from 'lucide-react';
+import { useAuth } from '../../lib/auth';
 
 interface UserAccountDropdownProps {
   user?: {
@@ -46,6 +47,8 @@ export function UserAccountDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const ref = useClickOutside(() => setIsOpen(false));
+  const { profile } = useAuth();
+  const hasPaidPlan = profile?.plan === 'pro' || profile?.plan === 'vanguard';
 
   const handleSignOut = async () => {
     if (!onSignOut || isSigningOut) {
@@ -197,15 +200,17 @@ export function UserAccountDropdown({
             <div className="h-px bg-border mx-1 my-1" />
 
             <div className="p-1">
-              {/* Upgrade to Pro */}
-              <Link
-                href="/pricing"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-accent rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <Sparkles size={16} />
-                <span>Upgrade to Pro</span>
-              </Link>
+              {/* Upgrade to Pro - hidden for paid plans */}
+              {!hasPaidPlan && (
+                <Link
+                  href="/pricing"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-accent rounded-md transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Sparkles size={16} />
+                  <span>Upgrade to Pro</span>
+                </Link>
+              )}
 
               {/* Logout */}
               <button

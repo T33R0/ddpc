@@ -11,6 +11,14 @@ import { Textarea } from '@repo/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/toggle-group';
 import { Switch } from '@repo/ui/switch';
 import { AuthModal } from '@/components/auth/auth-modal';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@repo/ui/dialog';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -53,6 +61,7 @@ export default function AccountPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
+  const [showBillingPortalDialog, setShowBillingPortalDialog] = useState(false);
 
   // Polling state
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
@@ -293,6 +302,11 @@ export default function AccountPage() {
 
 
   const handleManageBilling = async () => {
+    setShowBillingPortalDialog(true);
+  };
+
+  const confirmManageBilling = async () => {
+    setShowBillingPortalDialog(false);
     setIsRedirecting(true);
     try {
       const response = await fetch('/api/stripe/portal', {
@@ -321,27 +335,7 @@ export default function AccountPage() {
       return;
     }
     setIsRedirecting(true);
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ priceId }),
-      });
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error('Failed to redirect to checkout');
-        setIsRedirecting(false);
-      }
-    } catch (error) {
-      console.error('Error redirecting to checkout:', error);
-      toast.error('Failed to redirect to checkout');
-      setIsRedirecting(false);
-    }
+    router.push(`/checkout?priceId=${priceId}`);
   };
 
   // Handle Upgrade from URL
@@ -387,7 +381,7 @@ export default function AccountPage() {
 
       try {
         const supabase = createClient();
-      const { error: metadataError } = await supabase.auth.updateUser({
+        const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             username: usernameSlug,
             preferred_username: normalizedUsername,
@@ -781,6 +775,30 @@ export default function AccountPage() {
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
+
+          <Dialog open={showBillingPortalDialog} onOpenChange={setShowBillingPortalDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Manage Billing</DialogTitle>
+                <DialogDescription>
+                  You are going to be redirected to Stripe's secure portal to manage your subscription and billing details. Do you want to continue?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowBillingPortalDialog(false)}>Cancel</Button>
+                <Button onClick={confirmManageBilling}>
+                  {isRedirecting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Redirecting...
+                    </>
+                  ) : (
+                    'Continue to Stripe'
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Tab Content */}
           <div className="space-y-6">
@@ -1456,11 +1474,10 @@ export default function AccountPage() {
                       ].map((level) => (
                         <label
                           key={level.value}
-                          className={`flex flex-col p-4 rounded-lg cursor-pointer transition-all border ${
-                            skillLevel === level.value
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:border-muted-foreground'
-                          }`}
+                          className={`flex flex-col p-4 rounded-lg cursor-pointer transition-all border ${skillLevel === level.value
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border hover:border-muted-foreground'
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <input

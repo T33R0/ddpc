@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
           },
         ],
         mode: mode,
-        success_url: `${req.headers.get('origin')}/account?billing_status=success`,
-        cancel_url: `${req.headers.get('origin')}/account?billing_status=canceled`,
+        ui_mode: 'embedded',
+        return_url: `${req.headers.get('origin')}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
         client_reference_id: user.id,
         allow_promotion_codes: true,
       });
@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
             },
           ],
           mode: mode,
-          success_url: `${req.headers.get('origin')}/account?billing_status=success`,
-          cancel_url: `${req.headers.get('origin')}/account?billing_status=canceled`,
+          ui_mode: 'embedded',
+          return_url: `${req.headers.get('origin')}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
           client_reference_id: user.id,
           allow_promotion_codes: true,
         });
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ clientSecret: session.client_secret });
   } catch (error: any) {
     console.error('Stripe Checkout Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
