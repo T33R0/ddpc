@@ -20,7 +20,7 @@ export function PaywallProvider({ children }: { children: React.ReactNode }) {
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    setIsPro(profile?.plan === 'pro');
+    setIsPro(profile?.plan === 'pro' || profile?.plan === 'vanguard');
   }, [profile]);
 
   const triggerPaywall = useCallback(() => {

@@ -19,8 +19,9 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const [error, setError] = useState<string | null>(null)
   const [showCamera, setShowCamera] = useState(false)
+  const [cameraReady, setCameraReady] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   const validateAndEmit = useCallback(
@@ -43,16 +44,33 @@ export function ImageUploader({
 
   // ── Camera ──
 
+  // Callback ref: attaches the stream when the <video> element mounts.
+  // This fixes the race condition where openCamera() would try to set
+  // srcObject before React had rendered the video element.
+  const videoCallbackRef = useCallback(
+    (node: HTMLVideoElement | null) => {
+      videoRef.current = node
+      if (node && streamRef.current) {
+        node.srcObject = streamRef.current
+        node.play().catch(() => {
+          // Autoplay blocked — user interaction required on some browsers
+        })
+      }
+    },
+    // Re-run when showCamera flips so ref fires on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showCamera]
+  )
+
   async function openCamera() {
     setError(null)
+    setCameraReady(false)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
       })
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
+      // Render the <video> element — the callback ref will attach the stream
       setShowCamera(true)
     } catch {
       setError('Camera access denied or unavailable. Try uploading a file instead.')
@@ -62,13 +80,14 @@ export function ImageUploader({
   function capturePhoto() {
     if (!videoRef.current) return
 
+    const video = videoRef.current
     const canvas = document.createElement('canvas')
-    canvas.width = videoRef.current.videoWidth
-    canvas.height = videoRef.current.videoHeight
+    canvas.width = video.videoWidth || 1920
+    canvas.height = video.videoHeight || 1080
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    ctx.drawImage(videoRef.current, 0, 0)
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob(
       (blob) => {
         if (blob) {
@@ -87,6 +106,10 @@ export function ImageUploader({
       streamRef.current.getTracks().forEach((t) => t.stop())
       streamRef.current = null
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setCameraReady(false)
     setShowCamera(false)
   }
 
@@ -106,15 +129,21 @@ export function ImageUploader({
       <div className="space-y-3">
         <div className="relative rounded-lg overflow-hidden bg-muted aspect-[4/3]">
           <video
-            ref={videoRef}
+            ref={videoCallbackRef}
             autoPlay
             playsInline
             muted
+            onPlaying={() => setCameraReady(true)}
             className="w-full h-full object-cover"
           />
+          {!cameraReady && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <RotateCcw className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
-          <Button type="button" onClick={capturePhoto} className="flex-1">
+          <Button type="button" onClick={capturePhoto} disabled={!cameraReady} className="flex-1">
             Capture
           </Button>
           <Button type="button" variant="outline" onClick={stopCamera} className="flex-1">

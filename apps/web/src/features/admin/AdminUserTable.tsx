@@ -245,11 +245,13 @@ export function AdminUserTable({
                     <span className="capitalize">{user.provider || 'Email'}</span>
                     <div className="mt-1">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        user.plan === 'pro'
+                        user.plan === 'vanguard'
                           ? 'bg-primary/10 text-primary'
+                          : user.plan === 'pro'
+                          ? 'bg-warning/10 text-warning'
                           : 'bg-muted text-muted-foreground'
                       }`}>
-                        {user.plan === 'pro' ? 'Pro' : 'Free'}
+                        {user.plan === 'vanguard' ? 'Vanguard' : user.plan === 'pro' ? 'Pro' : 'Free'}
                       </span>
                     </div>
                   </div>
@@ -288,12 +290,12 @@ export function AdminUserTable({
                     <div className="flex items-center space-x-2">
                       <Switch
                         id={`pro-toggle-${user.user_id}`}
-                        checked={user.plan === 'pro'}
+                        checked={user.plan === 'pro' || user.plan === 'vanguard'}
                         onCheckedChange={(checked) => handleGrantPro(user.user_id, checked)}
-                        disabled={isPending}
+                        disabled={isPending || user.plan === 'vanguard'}
                       />
                       <Label htmlFor={`pro-toggle-${user.user_id}`} className="text-sm font-normal text-muted-foreground">
-                        {user.plan === 'pro' ? 'Pro' : 'Free'}
+                        {user.plan === 'vanguard' ? 'Vanguard' : user.plan === 'pro' ? 'Pro' : 'Free'}
                       </Label>
                     </div>
                    </div>

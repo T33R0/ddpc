@@ -254,9 +254,10 @@ export default function AccountPage() {
         const updatedUser = await fetchUserProfile(false);
         attempts++;
 
-        if (updatedUser?.plan === 'pro') {
+        if (updatedUser?.plan === 'pro' || updatedUser?.plan === 'vanguard') {
           // Success!
-          toast.success('You are now a Pro member!', { id: toastId });
+          const msg = updatedUser.plan === 'vanguard' ? 'Welcome to the Vanguard!' : 'You are now a Pro member!';
+          toast.success(msg, { id: toastId });
           if (pollingRef.current) clearInterval(pollingRef.current);
           setIsPolling(false);
           router.replace('/account?tab=billing'); // Clear query param
@@ -688,6 +689,7 @@ export default function AccountPage() {
     switch (plan) {
       case 'free': return 'text-muted-foreground';
       case 'pro': return 'text-warning';
+      case 'vanguard': return 'text-primary';
       default: return 'text-muted-foreground';
     }
   };
@@ -696,6 +698,7 @@ export default function AccountPage() {
     switch (plan) {
       case 'free': return '🧱'; // Foundation/Maintainer
       case 'pro': return '🔧';
+      case 'vanguard': return '🛡️';
       default: return '🧱';
     }
   };
@@ -730,7 +733,7 @@ export default function AccountPage() {
                   <div className="flex items-center gap-2">
                     <Crown className={`h-4 w-4 ${getPlanColor(user.plan)}`} />
                     <span className={`text-sm font-medium ${getPlanColor(user.plan)}`}>
-                      {getPlanIcon(user.plan)} {user.plan === 'pro' ? 'Pro' : 'Maintainer'} Plan
+                      {getPlanIcon(user.plan)} {user.plan === 'vanguard' ? 'Vanguard' : user.plan === 'pro' ? 'Pro' : 'Maintainer'} Plan
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
